@@ -24,7 +24,7 @@
     .font-controls{display:flex;gap:5px}
     .font-btn{background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.3);color:white;padding:5px 10px;border-radius:5px;cursor:pointer;font-size:14px;font-weight:bold;transition:all 0.3s ease;min-width:30px}
     .font-btn:hover{background:rgba(255,255,255,0.3);transform:translateY(-1px)}
-    .container{max-width:1400px;margin:20px auto;padding:0 20px}
+    .container{max-width:100%;margin:20px auto;padding:0 20px}
     .admin-banner{text-align:center;margin-bottom:30px;background:rgba(255,255,255,0.1);padding:20px;border-radius:15px;backdrop-filter:blur(10px)}
     .admin-badge{display:inline-block;background:linear-gradient(45deg,#FFD700,#FFA500);color:#003366;padding:8px 20px;border-radius:25px;font-weight:bold;margin-bottom:15px;font-size:1.1rem}
     .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;margin-bottom:30px}
@@ -47,6 +47,8 @@
     .users-table th,.users-table td,.activities-table th,.activities-table td{padding:15px 12px;text-align:left;border-bottom:1px solid rgba(0,51,102,0.1)}
     .users-table th,.activities-table th{background:#003366;color:white;font-weight:bold;font-size:14px}
     .users-table tr:hover,.activities-table tr:hover{background:rgba(255,215,0,0.1)}
+    .activities-table-container{width:100%;overflow-x:auto}
+    .activities-table{min-width:620px}
     .status-badge{display:inline-block;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:bold;text-transform:uppercase}
     .badge-active{background:#4CAF50;color:white}
     .badge-inactive{background:#f44336;color:white}
@@ -107,7 +109,8 @@
     .role-name{font-weight:bold;font-size:1.1rem;margin-bottom:5px}
     .role-desc{font-size:0.9rem;opacity:0.8}
     .role-control{margin-left:15px}
-    @media(max-width:768px){.header{flex-direction:column;gap:15px}.controls{flex-direction:column}.stats-grid{grid-template-columns:repeat(2,1fr)}.users-table{font-size:12px}.users-table th,.users-table td{padding:8px 6px}.action-buttons{flex-direction:column}.nav-links{flex-direction:column;width:100%}.role-settings-grid{grid-template-columns:1fr}}
+    @media(max-width:768px){.header{flex-direction:column;gap:15px}.controls{flex-direction:column}.stats-grid{grid-template-columns:repeat(2,1fr)}.users-table{font-size:12px}.users-table th,.users-table td{padding:8px 6px}.action-buttons{flex-direction:column}.nav-links{flex-direction:column;width:100%}.role-settings-grid{grid-template-columns:1fr}.activities-table-container{overflow-x:auto}.activities-table{min-width:600px}.activities-table th,.activities-table td{font-size:11px;padding:8px 6px}}
+    @media(min-width:769px){.activities-table-container{overflow-x:visible}.activities-table{min-width:100%}.activities-table th,.activities-table td{padding:15px 12px}}
   </style>
 </head>
 <body>
@@ -309,14 +312,14 @@
       </div>
       
       <div class="activities-table-container" style="width: 100%; background: rgba(255,255,255,0.95); border-radius: 15px; overflow: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
-        <table class="activities-table" style="width: 100%; color: #003366; border-collapse: collapse; min-width: 800px;">
+        <table class="activities-table" style="width: 100%; color: #003366; border-collapse: collapse;">
           <thead style="background: #003366; color: white;">
             <tr>
-              <th style="padding: 15px 12px; text-align: left; font-weight: bold;">👤 User</th>
-              <th style="padding: 15px 12px; text-align: left; font-weight: bold;">📝 Activity</th>
-              <th style="padding: 15px 12px; text-align: center; font-weight: bold;">📅 Date</th>
-              <th style="padding: 15px 12px; text-align: center; font-weight: bold;">⏰ Time</th>
-              <th style="padding: 15px 12px; text-align: center; font-weight: bold;">🌐 Source</th>
+              <th style="padding: 15px 12px; text-align: left; font-weight: bold; min-width: 120px;">👤 User</th>
+              <th style="padding: 15px 12px; text-align: left; font-weight: bold; min-width: 200px;">📝 Activity</th>
+              <th style="padding: 15px 12px; text-align: center; font-weight: bold; min-width: 100px;">📅 Date</th>
+              <th style="padding: 15px 12px; text-align: center; font-weight: bold; min-width: 80px;">⏰ Time</th>
+              <th style="padding: 15px 12px; text-align: center; font-weight: bold; min-width: 120px;">🌐 Source</th>
             </tr>
           </thead>
           <tbody id="activitiesTableBody">
