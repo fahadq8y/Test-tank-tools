@@ -43,10 +43,10 @@
     .btn-warning{background:linear-gradient(45deg,#ff9800,#f57c00);color:white}
     .btn-danger{background:linear-gradient(45deg,#f44336,#d32f2f);color:white}
     .btn:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(0,0,0,0.3)}
-    .users-table{width:100%;background:rgba(255,255,255,0.95);border-radius:15px;overflow:hidden;color:#003366;box-shadow:0 5px 15px rgba(0,0,0,0.2)}
-    .users-table th,.users-table td{padding:15px 12px;text-align:left;border-bottom:1px solid rgba(0,51,102,0.1)}
-    .users-table th{background:#003366;color:white;font-weight:bold;font-size:14px}
-    .users-table tr:hover{background:rgba(255,215,0,0.1)}
+    .users-table,.activities-table{width:100%;background:rgba(255,255,255,0.95);border-radius:15px;overflow:hidden;color:#003366;box-shadow:0 5px 15px rgba(0,0,0,0.2);border-collapse:collapse}
+    .users-table th,.users-table td,.activities-table th,.activities-table td{padding:15px 12px;text-align:left;border-bottom:1px solid rgba(0,51,102,0.1)}
+    .users-table th,.activities-table th{background:#003366;color:white;font-weight:bold;font-size:14px}
+    .users-table tr:hover,.activities-table tr:hover{background:rgba(255,215,0,0.1)}
     .status-badge{display:inline-block;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:bold;text-transform:uppercase}
     .badge-active{background:#4CAF50;color:white}
     .badge-inactive{background:#f44336;color:white}
@@ -308,15 +308,15 @@
         <button class="btn btn-secondary" onclick="refreshActivities()">🔄 Refresh</button>
       </div>
       
-      <div class="activities-table-container" style="background: rgba(255,255,255,0.95); border-radius: 15px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
-        <table class="activities-table" style="width: 100%; color: #003366; border-collapse: collapse; table-layout: fixed;">
+      <div class="activities-table-container" style="width: 100%; background: rgba(255,255,255,0.95); border-radius: 15px; overflow: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
+        <table class="activities-table" style="width: 100%; color: #003366; border-collapse: collapse; min-width: 800px;">
           <thead style="background: #003366; color: white;">
             <tr>
-              <th style="padding: 15px 8px; text-align: left; font-weight: bold; width: 12%;">👤 User</th>
-              <th style="padding: 15px 8px; text-align: left; font-weight: bold; width: 28%;">📝 Activity</th>
-              <th style="padding: 15px 8px; text-align: center; font-weight: bold; width: 18%;">📅 Date</th>
-              <th style="padding: 15px 8px; text-align: center; font-weight: bold; width: 12%;">⏰ Time</th>
-              <th style="padding: 15px 8px; text-align: center; font-weight: bold; width: 30%;">🌐 Source</th>
+              <th style="padding: 15px 12px; text-align: left; font-weight: bold;">👤 User</th>
+              <th style="padding: 15px 12px; text-align: left; font-weight: bold;">📝 Activity</th>
+              <th style="padding: 15px 12px; text-align: center; font-weight: bold;">📅 Date</th>
+              <th style="padding: 15px 12px; text-align: center; font-weight: bold;">⏰ Time</th>
+              <th style="padding: 15px 12px; text-align: center; font-weight: bold;">🌐 Source</th>
             </tr>
           </thead>
           <tbody id="activitiesTableBody">
@@ -645,6 +645,28 @@
 
     // Update statistics
     function updateStatistics() {
+      // Check if elements exist before updating
+      const totalUsersEl = document.getElementById('totalUsers');
+      const activeUsersEl = document.getElementById('activeUsers');
+      const pendingUsersEl = document.getElementById('pendingUsers');
+      const usersWithLiveTanksEl = document.getElementById('usersWithLiveTanks');
+      const totalActivitiesEl = document.getElementById('totalActivities');
+      
+      if (!totalUsersEl || !activeUsersEl || !pendingUsersEl || !usersWithLiveTanksEl || !totalActivitiesEl) {
+        console.error('Statistics elements not found');
+        return;
+      }
+      
+      // Ensure allUsers is defined
+      if (!allUsers || !Array.isArray(allUsers)) {
+        allUsers = [];
+      }
+      
+      // Ensure allActivities is defined
+      if (!allActivities || !Array.isArray(allActivities)) {
+        allActivities = [];
+      }
+      
       const totalUsers = allUsers.length;
       const activeUsers = allUsers.filter(u => u.isActive).length;
       const pendingUsers = allUsers.filter(u => !u.isActive).length;
@@ -669,18 +691,23 @@
         return activityDate === today && activity.action === 'user_login';
       }).length;
 
-      document.getElementById('totalUsers').textContent = totalUsers;
-      document.getElementById('activeUsers').textContent = activeUsers;
-      document.getElementById('pendingUsers').textContent = pendingUsers;
-      document.getElementById('usersWithLiveTanks').textContent = usersWithAccess;
-      document.getElementById('totalActivities').textContent = allActivities.length;
+      totalUsersEl.textContent = totalUsers;
+      activeUsersEl.textContent = activeUsers;
+      pendingUsersEl.textContent = pendingUsers;
+      usersWithLiveTanksEl.textContent = usersWithAccess;
+      totalActivitiesEl.textContent = allActivities.length;
     }
 
     // Display users in table
     function displayUsers(users) {
       const container = document.getElementById('usersContainer');
       
-      if (users.length === 0) {
+      if (!container) {
+        console.error('usersContainer element not found');
+        return;
+      }
+      
+      if (!users || !Array.isArray(users) || users.length === 0) {
         container.innerHTML = '<div class="loading">No users found in Firebase database.</div>';
         return;
       }
@@ -789,34 +816,100 @@
       return nameMap[role] || 'User';
     }
 
-    // Display activities
+    // Display activities in table format
     function displayActivities(activities) {
-      const container = document.getElementById('activitiesContainer');
+      const tbody = document.getElementById('activitiesTableBody');
       
       if (activities.length === 0) {
-        container.innerHTML = '<div class="activities-container"><p style="text-align:center;color:#666;padding:20px;">No activities found.</p></div>';
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" style="padding: 30px; text-align: center; color: #666;">
+              📭 No activities found
+            </td>
+          </tr>
+        `;
         return;
       }
       
-      let html = '<div class="activities-container">';
-      
-      activities.forEach(activity => {
-        const timestamp = activity.timestamp?.toDate?.() || new Date(activity.timestamp?.seconds * 1000) || new Date();
-        const timeStr = timestamp.toLocaleString();
-        
-        html += `
-          <div class="activity-item">
-            <div class="activity-info">
-              <div class="activity-user">👤 ${activity.username || 'System'}</div>
-              <div class="activity-action">📝 ${activity.action}</div>
-            </div>
-            <div class="activity-time">⏰ ${timeStr}</div>
-          </div>
-        `;
+      // Sort by timestamp (newest first)
+      activities.sort((a, b) => {
+        const timeA = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(a.timestamp);
+        const timeB = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(b.timestamp);
+        return timeB - timeA;
       });
       
-      html += '</div>';
-      container.innerHTML = html;
+      // Take first 50 activities
+      const displayActivities = activities.slice(0, 50);
+      
+      tbody.innerHTML = displayActivities.map(activity => {
+        const timestamp = activity.timestamp?.toDate ? activity.timestamp.toDate() : new Date(activity.timestamp);
+        const date = timestamp.toLocaleDateString('en-GB');
+        const time = timestamp.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+        
+        let activityText = activity.action || 'Unknown activity';
+        let activityIcon = '📝';
+        let sourceIcon = '🌐';
+        
+        // Clean up activity text - make it shorter and clearer
+        if (activityText.includes('تم حساب Tank') && activityText.includes('PBCR Calculator')) {
+          const tankMatch = activityText.match(/Tank (\d+)/);
+          const tankNumber = tankMatch ? tankMatch[1] : 'Unknown';
+          activityText = `PBCR Calculation - Tank ${tankNumber}`;
+          activityIcon = '🧮';
+        } else if (activityText.includes('دخول المستخدم') || activityText.includes('login')) {
+          activityText = 'User Login';
+          activityIcon = '🔐';
+        } else if (activityText.includes('admin_dashboard_loaded')) {
+          activityText = 'Dashboard Access';
+          activityIcon = '👨‍💼';
+        } else if (activityText.includes('Live Tanks')) {
+          activityText = 'Live Tanks Activity';
+          activityIcon = '🛢️';
+        }
+        
+        // Determine source
+        let source = 'Unknown';
+        if (activity.page === 'pbcr-calculator' || activityText.includes('PBCR')) {
+          source = 'PBCR Calculator';
+          sourceIcon = '🧮';
+        } else if (activity.page === 'live-tanks' || activityText.includes('Live Tanks')) {
+          source = 'Live Tanks';
+          sourceIcon = '🛢️';
+        } else if (activity.page === 'login' || activityText.includes('Login')) {
+          source = 'Login Page';
+          sourceIcon = '🔐';
+        } else if (activity.ip === 'admin-dashboard' || activityText.includes('Dashboard')) {
+          source = 'Admin Dashboard';
+          sourceIcon = '👨‍💼';
+        }
+        
+        return `
+          <tr style="border-bottom: 1px solid rgba(0,51,102,0.1);" onmouseover="this.style.background='rgba(255,215,0,0.1)'" onmouseout="this.style.background=''">
+            <td style="padding: 15px 12px; font-weight: bold; color: #003366; white-space: nowrap;">
+              👤 ${activity.username || 'Unknown'}
+            </td>
+            <td style="padding: 15px 12px; color: #003366;">
+              ${activityIcon} ${activityText}
+            </td>
+            <td style="padding: 15px 12px; color: #666; white-space: nowrap; text-align: center; font-size: 13px;">
+              📅 ${date}
+            </td>
+            <td style="padding: 15px 12px; color: #666; white-space: nowrap; text-align: center; font-size: 13px;">
+              ⏰ ${time}
+            </td>
+            <td style="padding: 15px 12px; color: #666; text-align: center; font-size: 13px;">
+              ${sourceIcon} ${source}
+            </td>
+          </tr>
+        `;
+      }).join('');
+      
+      // Update pagination info
+      document.getElementById('activitiesStart').textContent = '1';
+      document.getElementById('activitiesEnd').textContent = displayActivities.length;
+      document.getElementById('activitiesTotal').textContent = activities.length;
+      document.getElementById('currentPage').textContent = '1';
+      document.getElementById('totalPages').textContent = '1';
     }
 
     // Edit user
@@ -1067,10 +1160,17 @@
     async function loadActivities() {
       try {
         console.log('Loading activities...');
+        
+        const tbody = document.getElementById('activitiesTableBody');
+        if (!tbody) {
+          console.error('activitiesTableBody element not found');
+          return;
+        }
+        
         const activitiesSnapshot = await getDocs(collection(db, 'activities'));
         
         if (activitiesSnapshot.empty) {
-          document.getElementById('activitiesTableBody').innerHTML = `
+          tbody.innerHTML = `
             <tr>
               <td colspan="5" style="padding: 30px; text-align: center; color: #666;">
                 📭 No activities found
@@ -1085,98 +1185,23 @@
           activities.push({ id: doc.id, ...doc.data() });
         });
         
-        // Sort by timestamp (newest first)
-        activities.sort((a, b) => {
-          const timeA = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(a.timestamp);
-          const timeB = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(b.timestamp);
-          return timeB - timeA;
-        });
-        
-        // Take first 50 activities
-        const displayActivities = activities.slice(0, 50);
-        
-        const tbody = document.getElementById('activitiesTableBody');
-        tbody.innerHTML = displayActivities.map(activity => {
-          const timestamp = activity.timestamp?.toDate ? activity.timestamp.toDate() : new Date(activity.timestamp);
-          const date = timestamp.toLocaleDateString('en-GB');
-          const time = timestamp.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-          
-          let activityText = activity.action || 'Unknown activity';
-          let activityIcon = '📝';
-          let sourceIcon = '🌐';
-          
-          // Clean up activity text - make it shorter and clearer
-          if (activityText.includes('تم حساب Tank') && activityText.includes('PBCR Calculator')) {
-            const tankMatch = activityText.match(/Tank (\d+)/);
-            const tankNumber = tankMatch ? tankMatch[1] : 'Unknown';
-            activityText = `PBCR Calculation - Tank ${tankNumber}`;
-            activityIcon = '🧮';
-          } else if (activityText.includes('دخول المستخدم') || activityText.includes('login')) {
-            activityText = 'User Login';
-            activityIcon = '🔐';
-          } else if (activityText.includes('admin_dashboard_loaded')) {
-            activityText = 'Dashboard Access';
-            activityIcon = '👨‍💼';
-          } else if (activityText.includes('Live Tanks')) {
-            activityText = 'Live Tanks Activity';
-            activityIcon = '🛢️';
-          }
-          
-          // Determine source
-          let source = 'Unknown';
-          if (activity.page === 'pbcr-calculator' || activityText.includes('PBCR')) {
-            source = 'PBCR Calculator';
-            sourceIcon = '🧮';
-          } else if (activity.page === 'live-tanks' || activityText.includes('Live Tanks')) {
-            source = 'Live Tanks';
-            sourceIcon = '🛢️';
-          } else if (activity.page === 'login' || activityText.includes('Login')) {
-            source = 'Login Page';
-            sourceIcon = '🔐';
-          } else if (activity.ip === 'admin-dashboard' || activityText.includes('Dashboard')) {
-            source = 'Admin Dashboard';
-            sourceIcon = '👨‍💼';
-          }
-          
-          return `
-            <tr style="border-bottom: 1px solid rgba(0,51,102,0.1);" onmouseover="this.style.background='rgba(255,215,0,0.1)'" onmouseout="this.style.background=''">
-              <td style="padding: 8px; font-weight: bold; color: #003366; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                👤 ${activity.username || 'Unknown'}
-              </td>
-              <td style="padding: 8px; color: #003366; overflow: hidden; text-overflow: ellipsis;">
-                ${activityIcon} ${activityText}
-              </td>
-              <td style="padding: 8px; color: #666; white-space: nowrap; text-align: center; font-size: 12px;">
-                📅 ${date}
-              </td>
-              <td style="padding: 8px; color: #666; white-space: nowrap; text-align: center; font-size: 12px;">
-                ⏰ ${time}
-              </td>
-              <td style="padding: 8px; color: #666; text-align: center; font-size: 12px; overflow: hidden; text-overflow: ellipsis;">
-                ${sourceIcon} ${source}
-              </td>
-            </tr>
-          `;
-        }).join('');
-        
-        // Update info
-        document.getElementById('activitiesStart').textContent = '1';
-        document.getElementById('activitiesEnd').textContent = displayActivities.length;
-        document.getElementById('activitiesTotal').textContent = activities.length;
-        document.getElementById('currentPage').textContent = '1';
-        document.getElementById('totalPages').textContent = '1';
+        // Use displayActivities function
+        displayActivities(activities);
         
         console.log('Activities loaded successfully');
         
       } catch (error) {
         console.error('Error loading activities:', error);
-        document.getElementById('activitiesTableBody').innerHTML = `
-          <tr>
-            <td colspan="5" style="padding: 30px; text-align: center; color: #f44336;">
-              ❌ Error loading activities: ${error.message}
-            </td>
-          </tr>
-        `;
+        const tbody = document.getElementById('activitiesTableBody');
+        if (tbody) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="5" style="padding: 30px; text-align: center; color: #f44336;">
+                ❌ Error loading activities: ${error.message}
+              </td>
+            </tr>
+          `;
+        }
       }
     }
 
