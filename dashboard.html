@@ -1071,60 +1071,40 @@
       displayUsers(filteredUsers);
     }
 
-    // Activities pagination variables
-    let allActivities = [];
-    let filteredActivities = [];
-    let currentActivitiesPage = 1;
-    let activitiesPerPage = 25;
-
-    // Load activities with pagination
+    // Load activities with simple approach
     async function loadActivities() {
       try {
-        const activitiesQuery = query(
-          collection(db, 'activities'),
-          orderBy('timestamp', 'desc')
-        );
+        console.log('Loading activities...');
+        const activitiesSnapshot = await getDocs(collection(db, 'activities'));
         
-        const snapshot = await getDocs(activitiesQuery);
-        allActivities = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
+        if (activitiesSnapshot.empty) {
+          document.getElementById('activitiesTableBody').innerHTML = `
+            <tr>
+              <td colspan="5" style="padding: 30px; text-align: center; color: #666;">
+                📭 No activities found
+              </td>
+            </tr>
+          `;
+          return;
+        }
         
-        filteredActivities = [...allActivities];
-        currentActivitiesPage = 1;
-        displayActivities();
+        const activities = [];
+        activitiesSnapshot.forEach((doc) => {
+          activities.push({ id: doc.id, ...doc.data() });
+        });
         
-      } catch (error) {
-        console.error('Error loading activities:', error);
-        document.getElementById('activitiesTableBody').innerHTML = `
-          <tr>
-            <td colspan="5" style="padding: 30px; text-align: center; color: #f44336;">
-              ❌ Error loading activities: ${error.message}
-            </td>
-          </tr>
-        `;
-      }
-    }
-
-    // Display activities with pagination
-    function displayActivities() {
-      const startIndex = (currentActivitiesPage - 1) * activitiesPerPage;
-      const endIndex = startIndex + activitiesPerPage;
-      const pageActivities = filteredActivities.slice(startIndex, endIndex);
-      
-      const tbody = document.getElementById('activitiesTableBody');
-      
-      if (pageActivities.length === 0) {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="5" style="padding: 30px; text-align: center; color: #666;">
-              📭 No activities found
-            </td>
-          </tr>
-        `;
-      } else {
-        tbody.innerHTML = pageActivities.map(activity => {
+        // Sort by timestamp (newest first)
+        activities.sort((a, b) => {
+          const timeA = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(a.timestamp);
+          const timeB = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(b.timestamp);
+          return timeB - timeA;
+        });
+        
+        // Take first 50 activities
+        const displayActivities = activities.slice(0, 50);
+        
+        const tbody = document.getElementById('activitiesTableBody');
+        tbody.innerHTML = displayActivities.map(activity => {
           const timestamp = activity.timestamp?.toDate ? activity.timestamp.toDate() : new Date(activity.timestamp);
           const date = timestamp.toLocaleDateString('en-GB');
           const time = timestamp.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
@@ -1180,75 +1160,26 @@
             </tr>
           `;
         }).join('');
-      }
-      
-      updatePaginationInfo();
-    }
-
-    // Update pagination info
-    function updatePaginationInfo() {
-      const totalActivities = filteredActivities.length;
-      const totalPages = Math.ceil(totalActivities / activitiesPerPage);
-      const startIndex = (currentActivitiesPage - 1) * activitiesPerPage + 1;
-      const endIndex = Math.min(currentActivitiesPage * activitiesPerPage, totalActivities);
-      
-      document.getElementById('activitiesStart').textContent = totalActivities > 0 ? startIndex : 0;
-      document.getElementById('activitiesEnd').textContent = endIndex;
-      document.getElementById('activitiesTotal').textContent = totalActivities;
-      document.getElementById('currentPage').textContent = currentActivitiesPage;
-      document.getElementById('totalPages').textContent = totalPages;
-      
-      document.getElementById('prevBtn').disabled = currentActivitiesPage <= 1;
-      document.getElementById('nextBtn').disabled = currentActivitiesPage >= totalPages;
-    }
-
-    // Filter activities
-    function filterActivities() {
-      const searchTerm = document.getElementById('activitySearch').value.toLowerCase();
-      const filterType = document.getElementById('activityFilter').value;
-      
-      filteredActivities = allActivities.filter(activity => {
-        const matchesSearch = !searchTerm || 
-          (activity.action && activity.action.toLowerCase().includes(searchTerm)) ||
-          (activity.username && activity.username.toLowerCase().includes(searchTerm));
         
-        const matchesFilter = !filterType || 
-          (filterType === 'login' && activity.action && activity.action.includes('دخول')) ||
-          (filterType === 'pbcr_calculation' && activity.originalAction === 'pbcr_calculation') ||
-          (filterType === 'live_tanks' && activity.action && activity.action.includes('Live Tanks')) ||
-          (filterType === 'admin' && activity.action && activity.action.includes('admin'));
+        // Update info
+        document.getElementById('activitiesStart').textContent = '1';
+        document.getElementById('activitiesEnd').textContent = displayActivities.length;
+        document.getElementById('activitiesTotal').textContent = activities.length;
+        document.getElementById('currentPage').textContent = '1';
+        document.getElementById('totalPages').textContent = '1';
         
-        return matchesSearch && matchesFilter;
-      });
-      
-      currentActivitiesPage = 1;
-      displayActivities();
-    }
-
-    // Pagination functions
-    function previousPage() {
-      if (currentActivitiesPage > 1) {
-        currentActivitiesPage--;
-        displayActivities();
+        console.log('Activities loaded successfully');
+        
+      } catch (error) {
+        console.error('Error loading activities:', error);
+        document.getElementById('activitiesTableBody').innerHTML = `
+          <tr>
+            <td colspan="5" style="padding: 30px; text-align: center; color: #f44336;">
+              ❌ Error loading activities: ${error.message}
+            </td>
+          </tr>
+        `;
       }
-    }
-
-    function nextPage() {
-      const totalPages = Math.ceil(filteredActivities.length / activitiesPerPage);
-      if (currentActivitiesPage < totalPages) {
-        currentActivitiesPage++;
-        displayActivities();
-      }
-    }
-
-    function changePageSize() {
-      activitiesPerPage = parseInt(document.getElementById('pageSize').value);
-      currentActivitiesPage = 1;
-      displayActivities();
-    }
-
-    function refreshActivities() {
-      loadActivities();
     }
 
     // Add activity to Firebase
@@ -1307,12 +1238,8 @@
       // Load data after Firebase initialization
       setTimeout(() => {
         loadDashboardData();
-        loadActivities(); // Load activities with pagination
+        loadActivities(); // Load activities with simple approach
       }, 1000);
-      
-      // Add event listeners for activities
-      document.getElementById('activitySearch').addEventListener('input', filterActivities);
-      document.getElementById('activityFilter').addEventListener('change', filterActivities);
     });
 
     // Make functions globally available
@@ -1330,11 +1257,7 @@
     window.resetToDefault = resetToDefault;
     window.logout = logout;
     window.loadActivities = loadActivities;
-    window.filterActivities = filterActivities;
-    window.previousPage = previousPage;
-    window.nextPage = nextPage;
-    window.changePageSize = changePageSize;
-    window.refreshActivities = refreshActivities;
+    window.refreshActivities = () => loadActivities();
 
     // Font size control functions
     let currentFontSize = parseInt(localStorage.getItem('tanktools_font_size_dashboard') || '14');
