@@ -279,7 +279,7 @@
       <form id="addTankForm">
         <div class="form-group">
           <label class="form-label">🏭 Department:</label>
-          <select class="form-select" id="addDepartment" onchange="updateProductOptions()" disabled>
+          <select class="form-select" id="addDepartment" onchange="updateProductOptions()" readonly>
             <option value="">Select Department</option>
             <option value="PBCR">PBCR</option>
             <option value="WASHERY">WASHERY</option>
@@ -1385,6 +1385,8 @@
     document.getElementById('addTankForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       
+      console.log('🚀 Starting tank addition...');
+      
       const department = document.getElementById('addDepartment').value;
       const tankNumber = document.getElementById('addTankNumber').value;
       const product = document.getElementById('addProduct').value;
@@ -1392,7 +1394,28 @@
       const finishTime = document.getElementById('addFinishTime').value;
       const notes = document.getElementById('addNotes').value;
       
+      console.log('📋 Form data:', { department, tankNumber, product, finishDate, finishTime });
+      
+      // Validation
+      if (!department) {
+        showMessage('❌ Please select a department!', 'error');
+        return;
+      }
+      if (!tankNumber) {
+        showMessage('❌ Please enter tank number!', 'error');
+        return;
+      }
+      if (!product) {
+        showMessage('❌ Please select a product!', 'error');
+        return;
+      }
+      if (!finishDate || !finishTime) {
+        showMessage('❌ Please set finish date and time!', 'error');
+        return;
+      }
+      
       try {
+        console.log('💾 Saving to Firebase...');
         const finishDateTime = new Date(finishDate + ' ' + finishTime);
         
         const tankData = {
@@ -1415,14 +1438,24 @@
           }]
         };
         
+        console.log('📊 Tank data:', tankData);
+        
         await addDoc(collection(db, 'liveTanks'), tankData);
+        console.log('✅ Tank saved to Firebase');
         
         await addActivity('live_tank_added', currentUser.username, tankData);
+        console.log('✅ Activity logged');
+        
         showMessage('✅ Tank added successfully!', 'success');
         closeAddModal();
         
+        // Refresh the page data
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+        
       } catch (error) {
-        console.error('Error adding tank:', error);
+        console.error('❌ Error adding tank:', error);
         showMessage('❌ Error adding tank: ' + error.message, 'error');
       }
     });
