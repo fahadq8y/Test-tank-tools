@@ -51,10 +51,36 @@
     .tank-row-critical{background:#ffebee!important;color:#c62828!important;font-weight:bold!important}
     .tank-row-warning{background:#ffffff!important;color:#d32f2f!important;font-weight:bold!important}
     .tank-row-normal{background:#ffffff!important;color:#2e7d32!important}
-    .tank-number{font-weight:bold;font-size:15px}
-    .tank-row-critical .tank-number{color:#c62828!important}
-    .tank-row-warning .tank-number{color:#d32f2f!important}
-    .tank-row-normal .tank-number{color:#2e7d32!important}
+    .tank-number{
+      font-weight:bold;
+      font-size:18px;
+      background:linear-gradient(45deg,#003366,#004488);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      background-clip:text;
+      text-shadow:0 1px 2px rgba(0,0,0,0.1);
+      padding:2px 6px;
+      border-radius:6px;
+      display:inline-block;
+    }
+    .tank-row-critical .tank-number{
+      background:linear-gradient(45deg,#c62828,#d32f2f)!important;
+      -webkit-background-clip:text!important;
+      -webkit-text-fill-color:transparent!important;
+      background-clip:text!important;
+    }
+    .tank-row-warning .tank-number{
+      background:linear-gradient(45deg,#d32f2f,#f44336)!important;
+      -webkit-background-clip:text!important;
+      -webkit-text-fill-color:transparent!important;
+      background-clip:text!important;
+    }
+    .tank-row-normal .tank-number{
+      background:linear-gradient(45deg,#2e7d32,#4caf50)!important;
+      -webkit-background-clip:text!important;
+      -webkit-text-fill-color:transparent!important;
+      background-clip:text!important;
+    }
     .product-badge{padding:4px 8px;border-radius:8px;font-size:12px;font-weight:bold;text-transform:uppercase;white-space:nowrap}
     .product-lsfo{background:#e91e63;color:white}
     .product-ego-10{background:#9c27b0;color:white}
@@ -210,10 +236,12 @@
       <div id="messageContainer"></div>
 
       <!-- PBCR Department -->
-      <div class="section-title">
-        <span class="department-badge badge-pbcr">PBCR Department</span>
-        <span class="tank-count" id="pbcrCount">(0 tanks)</span>
-        <button class="add-tank-btn" id="addPBCRBtn" onclick="openAddModal('PBCR')" style="display:none;margin-left:auto">
+      <div class="section-title" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; gap: 15px;">
+          <span class="department-badge badge-pbcr">PBCR Department</span>
+          <span class="tank-count" id="pbcrCount" style="background: rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 15px; font-size: 0.9rem;">(0 tanks)</span>
+        </div>
+        <button class="add-tank-btn" id="addPBCRBtn" onclick="openAddModal('PBCR')" style="display:none;">
           ➕ Add PBCR Tank
         </button>
       </div>
@@ -225,10 +253,12 @@
       </div>
 
       <!-- WASHERY Department -->
-      <div class="section-title">
-        <span class="department-badge badge-washery">WASHERY Department</span>
-        <span class="tank-count" id="washeryCount">(0 tanks)</span>
-        <button class="add-tank-btn" id="addWasheryBtn" onclick="openAddModal('WASHERY')" style="display:none;margin-left:auto">
+      <div class="section-title" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; gap: 15px;">
+          <span class="department-badge badge-washery">WASHERY Department</span>
+          <span class="tank-count" id="washeryCount" style="background: rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 15px; font-size: 0.9rem;">(0 tanks)</span>
+        </div>
+        <button class="add-tank-btn" id="addWasheryBtn" onclick="openAddModal('WASHERY')" style="display:none;">
           ➕ Add WASHERY Tank
         </button>
       </div>
@@ -240,10 +270,12 @@
       </div>
 
       <!-- PLCR Department -->
-      <div class="section-title">
-        <span class="department-badge badge-plcr">PLCR Department</span>
-        <span class="tank-count" id="plcrCount">(0 tanks)</span>
-        <button class="add-tank-btn" id="addPLCRBtn" onclick="openAddModal('PLCR')" style="display:none;margin-left:auto">
+      <div class="section-title" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; gap: 15px;">
+          <span class="department-badge badge-plcr">PLCR Department</span>
+          <span class="tank-count" id="plcrCount" style="background: rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 15px; font-size: 0.9rem;">(0 tanks)</span>
+        </div>
+        <button class="add-tank-btn" id="addPLCRBtn" onclick="openAddModal('PLCR')" style="display:none;">
           ➕ Add PLCR Tank
         </button>
       </div>
@@ -279,7 +311,7 @@
       <form id="addTankForm">
         <div class="form-group">
           <label class="form-label">🏭 Department:</label>
-          <select class="form-select" id="addDepartment" onchange="updateProductOptions()" readonly>
+          <select class="form-select" id="addDepartment" onchange="updateProductOptions()" required>
             <option value="">Select Department</option>
             <option value="PBCR">PBCR</option>
             <option value="WASHERY">WASHERY</option>
@@ -1178,10 +1210,12 @@
     }
 
     function openAddModal(department) {
+      console.log('🚀 Opening add modal for department:', department);
       document.getElementById('addModalTitle').textContent = `➕ Add ${department} Tank`;
       document.getElementById('addDepartment').value = department;
       updateProductOptions();
       document.getElementById('addTankModal').classList.add('show');
+      console.log('✅ Modal opened, department set to:', department);
     }
 
     function closeAddModal() {
@@ -1193,15 +1227,21 @@
       const department = document.getElementById('addDepartment').value;
       const productSelect = document.getElementById('addProduct');
       
+      console.log('🔄 Updating product options for department:', department);
+      
       productSelect.innerHTML = '<option value="">Select Product</option>';
       
       if (department && productsByDepartment[department]) {
+        console.log('📋 Available products:', productsByDepartment[department]);
         productsByDepartment[department].forEach(product => {
           const option = document.createElement('option');
           option.value = product;
           option.textContent = product;
           productSelect.appendChild(option);
         });
+        console.log('✅ Product options updated');
+      } else {
+        console.log('❌ No department selected or no products found');
       }
     }
 
@@ -1433,7 +1473,7 @@
           history: [{
             action: 'Tank Created',
             modifiedBy: currentUser.username,
-            timestamp: serverTimestamp(),
+            timestamp: new Date(),
             notes: `Tank ${tankNumber} created in ${department}`
           }]
         };
