@@ -300,6 +300,7 @@
         <button class="close-btn" onclick="closeAddModal()">&times;</button>
       </div>
       <form id="addTankForm">
+        <!-- السطر الأول: القسم -->
         <div class="form-group">
           <label class="form-label">🏭 Department:</label>
           <select class="form-select" id="addDepartment" onchange="updateProductOptions()" required>
@@ -310,18 +311,33 @@
           </select>
         </div>
         
-        <div class="form-group">
-          <label class="form-label">🏷️ Tank Number:</label>
-          <input type="number" class="form-input" id="addTankNumber" placeholder="e.g. 225" onchange="updateAddRateUnit()" required>
+        <!-- السطر الثاني: رقم التانك + المنتج -->
+        <div class="form-row" style="display:flex;gap:10px">
+          <div class="form-group" style="flex:1">
+            <label class="form-label">🏷️ Tank Number:</label>
+            <input type="number" class="form-input" id="addTankNumber" placeholder="e.g. 225" onchange="updateAddRateUnit()" required>
+          </div>
+          <div class="form-group" style="flex:1">
+            <label class="form-label">🛢️ Product Type:</label>
+            <select class="form-select" id="addProduct" required>
+              <option value="">Select Product</option>
+            </select>
+          </div>
         </div>
         
-        <div class="form-group">
-          <label class="form-label">🛢️ Product Type:</label>
-          <select class="form-select" id="addProduct" required>
-            <option value="">Select Product</option>
-          </select>
+        <!-- السطر الثالث: Current Level + meter -->
+        <div class="form-row" style="display:flex;gap:10px">
+          <div class="form-group" style="flex:1">
+            <label class="form-label">📏 Current Level:</label>
+            <input type="number" step="any" class="form-input" id="addCurrentLevel" placeholder="Enter current level" onchange="calculateAddTime()" required>
+          </div>
+          <div class="form-group" style="flex:1">
+            <label class="form-label">📏 Unit:</label>
+            <input type="text" class="form-input" value="meter" readonly style="background:#f5f5f5;color:#666">
+          </div>
         </div>
         
+        <!-- السطر الرابع: Target Value + Target Type -->
         <div class="form-row" style="display:flex;gap:10px">
           <div class="form-group" style="flex:1">
             <label class="form-label">📊 Target Value:</label>
@@ -338,33 +354,31 @@
           </div>
         </div>
         
+        <!-- السطر الخامس: Flow Rate + Rate Unit -->
         <div class="form-row" style="display:flex;gap:10px">
-          <div class="form-group" style="flex:1">
-            <label class="form-label">📏 Current Level:</label>
-            <input type="number" step="any" class="form-input" id="addCurrentLevel" placeholder="Enter current level" onchange="calculateAddTime()" required>
-          </div>
           <div class="form-group" style="flex:1">
             <label class="form-label">⚡ Flow Rate:</label>
             <input type="number" step="any" class="form-input" id="addRate" placeholder="Rate" onchange="calculateAddTime()" required>
           </div>
-        </div>
-        
-        <div class="form-row" style="display:flex;gap:10px">
           <div class="form-group" style="flex:1">
             <label class="form-label">📏 Rate Unit:</label>
             <input type="text" class="form-input" id="addRateUnit" readonly style="background:#f5f5f5" value="bbl/hr">
           </div>
+        </div>
+        
+        <!-- السطر السادس: التاريخ + الوقت -->
+        <div class="form-row" style="display:flex;gap:10px">
           <div class="form-group" style="flex:1">
             <label class="form-label">📅 Finish Date:</label>
             <input type="date" class="form-input" id="addFinishDate" required>
           </div>
+          <div class="form-group" style="flex:1">
+            <label class="form-label">⏰ Finish Time:</label>
+            <input type="time" class="form-input" id="addFinishTime" required>
+          </div>
         </div>
         
-        <div class="form-group">
-          <label class="form-label">⏰ Finish Time:</label>
-          <input type="time" class="form-input" id="addFinishTime" required>
-        </div>
-        
+        <!-- السطر السابع: Notes -->
         <div class="form-group">
           <label class="form-label">📝 Notes (Optional):</label>
           <textarea class="form-textarea" id="addNotes" placeholder="Additional information..."></textarea>
@@ -386,11 +400,13 @@
         <button class="close-btn" onclick="closeEditModal()">&times;</button>
       </div>
       <form id="editTankForm">
+        <!-- السطر الأول: القسم -->
         <div class="form-group">
           <label class="form-label">🏭 Department:</label>
-          <input type="text" class="form-input" id="editDepartment" readonly>
+          <input type="text" class="form-input" id="editDepartment" readonly style="background:#f5f5f5">
         </div>
         
+        <!-- السطر الثاني: رقم التانك + المنتج -->
         <div class="form-row" style="display:flex;gap:10px">
           <div class="form-group" style="flex:1">
             <label class="form-label">🏷️ Tank Number:</label>
@@ -404,6 +420,19 @@
           </div>
         </div>
         
+        <!-- السطر الثالث: Current Level + meter -->
+        <div class="form-row" style="display:flex;gap:10px">
+          <div class="form-group" style="flex:1">
+            <label class="form-label">📏 Current Level:</label>
+            <input type="number" step="any" class="form-input" id="editCurrentLevel" placeholder="Enter current level" oninput="calculateActualRate()">
+          </div>
+          <div class="form-group" style="flex:1">
+            <label class="form-label">📏 Unit:</label>
+            <input type="text" class="form-input" value="meter" readonly style="background:#f5f5f5;color:#666">
+          </div>
+        </div>
+        
+        <!-- السطر الرابع: Target Value + Target Type -->
         <div class="form-row" style="display:flex;gap:10px">
           <div class="form-group" style="flex:1">
             <label class="form-label">📊 Target Value:</label>
@@ -420,17 +449,7 @@
           </div>
         </div>
         
-        <div class="form-row" style="display:flex;gap:10px">
-          <div class="form-group" style="flex:1">
-            <label class="form-label">📏 Current Level:</label>
-            <input type="number" step="any" class="form-input" id="editCurrentLevel" placeholder="Enter current level" oninput="calculateActualRate()">
-          </div>
-          <div class="form-group" style="flex:1">
-            <label class="form-label">📋 Previous Level:</label>
-            <input type="number" step="any" class="form-input" id="editPreviousLevel" readonly style="background:#f5f5f5">
-          </div>
-        </div>
-        
+        <!-- السطر الخامس: Flow Rate + Rate Unit -->
         <div class="form-row" style="display:flex;gap:10px">
           <div class="form-group" style="flex:1">
             <label class="form-label">⚡ Flow Rate:</label>
@@ -442,6 +461,7 @@
           </div>
         </div>
         
+        <!-- السطر السادس: التاريخ + الوقت -->
         <div class="form-row" style="display:flex;gap:10px">
           <div class="form-group" style="flex:1">
             <label class="form-label">📅 Finish Date:</label>
@@ -453,14 +473,19 @@
           </div>
         </div>
         
+        <!-- السطر السابع: Notes -->
         <div class="form-group">
           <label class="form-label">📝 Notes:</label>
           <textarea class="form-textarea" id="editNotes" placeholder="Additional information..."></textarea>
         </div>
         
+        <!-- Previous Level (مخفي للمرجع) -->
+        <input type="hidden" id="editPreviousLevel">
+        
         <div class="modal-buttons">
           <button type="button" class="btn btn-secondary" onclick="closeEditModal()">❌ Cancel</button>
           <button type="submit" class="btn btn-primary">💾 Update Tank</button>
+          <button type="button" class="btn btn-danger" onclick="confirmDeleteTank()">🗑️ Delete Tank</button>
         </div>
       </form>
     </div>
@@ -1533,12 +1558,12 @@
         console.log('✅ Activity logged');
         
         showMessage('✅ Tank added successfully!', 'success');
-        closeAddModal();
         
-        // Refresh the page data
+        // إغلاق القائمة تلقائياً بعد الإضافة
         setTimeout(() => {
+          closeAddModal();
           window.location.reload();
-        }, 1500);
+        }, 1000);
         
       } catch (error) {
         console.error('❌ Error adding tank:', error);
@@ -1625,12 +1650,12 @@
         await updateDoc(doc(db, 'liveTanks', currentEditingTank.id), updateData);
         
         await addActivity('live_tank_updated', currentUser.username, currentEditingTank, changes);
-        showMessage('✅ تم التعديل!', 'success');
+        showMessage('✅ Tank updated successfully!', 'success');
         
-        // Auto close modal after 1 second
+        // إغلاق القائمة تلقائياً بعد التعديل
         setTimeout(() => {
           closeEditModal();
-          closeTankDetails();
+          window.location.reload();
         }, 1000);
         
       } catch (error) {
@@ -1865,6 +1890,39 @@
       }
     }
 
+    // إضافة function تأكيد الحذف
+    function confirmDeleteTank() {
+      if (!currentEditingTank) return;
+      
+      const tankNumber = currentEditingTank.tankNumber;
+      const department = currentEditingTank.department;
+      
+      if (confirm(`⚠️ هل أنت متأكد من حذف التانك ${tankNumber} في قسم ${department}؟\n\nهذا الإجراء لا يمكن التراجع عنه!`)) {
+        deleteTankConfirmed();
+      }
+    }
+    
+    async function deleteTankConfirmed() {
+      if (!currentEditingTank) return;
+      
+      try {
+        await deleteDoc(doc(db, 'liveTanks', currentEditingTank.id));
+        
+        await addActivity('live_tank_deleted', currentUser.username, currentEditingTank);
+        showMessage('✅ Tank deleted successfully!', 'success');
+        
+        // إغلاق القائمة تلقائياً بعد الحذف
+        setTimeout(() => {
+          closeEditModal();
+          window.location.reload();
+        }, 1000);
+        
+      } catch (error) {
+        console.error('Error deleting tank:', error);
+        showMessage('❌ Error deleting tank: ' + error.message, 'error');
+      }
+    }
+
     // Make functions globally available
     window.openAddModal = openAddModal;
     window.closeAddModal = closeAddModal;
@@ -1873,6 +1931,7 @@
     window.calculateAddTime = calculateAddTime;
     window.editTank = editTank;
     window.closeEditModal = closeEditModal;
+    window.confirmDeleteTank = confirmDeleteTank;
     window.deleteTank = deleteTank;
     window.logout = logout;
     window.goToLogin = goToLogin;
