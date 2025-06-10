@@ -295,7 +295,7 @@
         
         <div class="form-group">
           <label class="form-label">🏷️ Tank Number:</label>
-          <input type="number" class="form-input" id="addTankNumber" placeholder="e.g. 225" required>
+          <input type="number" class="form-input" id="addTankNumber" placeholder="e.g. 225" onchange="updateAddRateUnit()" required>
         </div>
         
         <div class="form-group">
@@ -305,9 +305,42 @@
           </select>
         </div>
         
-        <div class="form-group">
-          <label class="form-label">📅 Finish Date:</label>
-          <input type="date" class="form-input" id="addFinishDate" required>
+        <div class="form-row" style="display:flex;gap:10px">
+          <div class="form-group" style="flex:1">
+            <label class="form-label">📊 Target Value:</label>
+            <input type="number" step="any" class="form-input" id="addTargetValue" placeholder="Enter target value" onchange="calculateAddTime()" required>
+          </div>
+          <div class="form-group" style="flex:1">
+            <label class="form-label">🎯 Target Type:</label>
+            <select class="form-select" id="addTargetType" onchange="calculateAddTime()" required>
+              <option value="">Select Target Type</option>
+              <option value="pumpable">Pumpable</option>
+              <option value="ullage">Ullage</option>
+              <option value="level">Level</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="form-row" style="display:flex;gap:10px">
+          <div class="form-group" style="flex:1">
+            <label class="form-label">📏 Current Level:</label>
+            <input type="number" step="any" class="form-input" id="addCurrentLevel" placeholder="Enter current level" onchange="calculateAddTime()" required>
+          </div>
+          <div class="form-group" style="flex:1">
+            <label class="form-label">⚡ Flow Rate:</label>
+            <input type="number" step="any" class="form-input" id="addRate" placeholder="Rate" onchange="calculateAddTime()" required>
+          </div>
+        </div>
+        
+        <div class="form-row" style="display:flex;gap:10px">
+          <div class="form-group" style="flex:1">
+            <label class="form-label">📏 Rate Unit:</label>
+            <input type="text" class="form-input" id="addRateUnit" readonly style="background:#f5f5f5" value="bbl/hr">
+          </div>
+          <div class="form-group" style="flex:1">
+            <label class="form-label">📅 Finish Date:</label>
+            <input type="date" class="form-input" id="addFinishDate" required>
+          </div>
         </div>
         
         <div class="form-group">
@@ -1404,11 +1437,16 @@
       const department = document.getElementById('addDepartment').value;
       const tankNumber = document.getElementById('addTankNumber').value;
       const product = document.getElementById('addProduct').value;
+      const targetValue = document.getElementById('addTargetValue').value;
+      const targetType = document.getElementById('addTargetType').value;
+      const currentLevel = document.getElementById('addCurrentLevel').value;
+      const rate = document.getElementById('addRate').value;
+      const rateUnit = document.getElementById('addRateUnit').value;
       const finishDate = document.getElementById('addFinishDate').value;
       const finishTime = document.getElementById('addFinishTime').value;
       const notes = document.getElementById('addNotes').value;
       
-      console.log('📋 Form data:', { department, tankNumber, product, finishDate, finishTime });
+      console.log('📋 Form data:', { department, tankNumber, product, targetValue, targetType, currentLevel, rate, rateUnit, finishDate, finishTime });
       
       // Validation
       if (!department) {
@@ -1421,6 +1459,18 @@
       }
       if (!product) {
         showMessage('❌ Please select a product!', 'error');
+        return;
+      }
+      if (!targetValue || !targetType) {
+        showMessage('❌ Please set target value and type!', 'error');
+        return;
+      }
+      if (!currentLevel) {
+        showMessage('❌ Please enter current level!', 'error');
+        return;
+      }
+      if (!rate || !rateUnit) {
+        showMessage('❌ Please enter flow rate!', 'error');
         return;
       }
       if (!finishDate || !finishTime) {
@@ -1436,6 +1486,11 @@
           department: department,
           tankNumber: tankNumber,
           product: product,
+          targetValue: parseFloat(targetValue),
+          targetType: targetType,
+          currentLevel: parseFloat(currentLevel),
+          rate: parseFloat(rate),
+          rateUnit: rateUnit,
           addedBy: currentUser.username,
           userName: currentUser.fullName || currentUser.username,
           finishTime: finishTime,
@@ -1515,19 +1570,19 @@
         const updateData = {
           tankNumber: tankNumber,
           product: product,
-          targetType: targetType,
-          targetValue: parseFloat(targetValue),
-          previousLevel: parseFloat(previousLevel),
-          currentLevel: currentLevel ? parseFloat(currentLevel) : currentEditingTank.currentLevel,
-          rate: parseFloat(rate),
-          rateUnit: rateUnit,
+          targetType: targetType || null,
+          targetValue: targetValue ? parseFloat(targetValue) : null,
+          previousLevel: previousLevel ? parseFloat(previousLevel) : null,
+          currentLevel: currentLevel ? parseFloat(currentLevel) : (currentEditingTank.currentLevel || null),
+          rate: rate ? parseFloat(rate) : null,
+          rateUnit: rateUnit || null,
           finishTime: finishTime,
           finishDate: finishDate,
           finishDateTime: finishDateTime,
-          notes: notes,
+          notes: notes || '',
           lastModified: serverTimestamp(),
           modifiedBy: currentUser.username,
-          lastLevelUpdate: currentLevel ? serverTimestamp() : currentEditingTank.lastLevelUpdate
+          lastLevelUpdate: currentLevel ? serverTimestamp() : (currentEditingTank.lastLevelUpdate || null)
         };
         
         // Always add history record for any edit
@@ -1728,10 +1783,77 @@
     // Apply saved font size on page load
     applyFontSize();
 
+    // Add Tank calculation functions
+    function updateAddRateUnit() {
+      const tankNumber = document.getElementById('addTankNumber').value;
+      const rateUnitField = document.getElementById('addRateUnit');
+      
+      if (tankNumber && tanks[tankNumber]) {
+        // Set default rate unit based on tank data (same as PBCR logic)
+        rateUnitField.value = 'bbl/hr';
+      }
+    }
+
+    function calculateAddTime() {
+      const targetType = document.getElementById('addTargetType').value;
+      const targetValue = parseFloat(document.getElementById('addTargetValue').value);
+      const currentLevel = parseFloat(document.getElementById('addCurrentLevel').value);
+      const rate = parseFloat(document.getElementById('addRate').value);
+      const rateUnit = document.getElementById('addRateUnit').value;
+      const tankNumber = document.getElementById('addTankNumber').value;
+      
+      if (!targetType || !targetValue || !currentLevel || !rate || !tankNumber) return;
+      
+      // Get tank data from tanks object
+      const tankData = tanks[tankNumber];
+      if (!tankData) return;
+      
+      const c = tankData.comment; // capacity factor
+      const m = tankData.min;     // minimum level
+      const x = tankData.max;     // maximum level
+      
+      // Calculate target level based on type
+      let targetLevel = 0;
+      if (targetType === "pumpable") {
+        targetLevel = (targetValue / c) + m;
+      } else if (targetType === "ullage") {
+        targetLevel = x - (targetValue / c);
+      } else if (targetType === "level") {
+        targetLevel = targetValue;
+      }
+      
+      // Calculate difference
+      const levelDiff = Math.abs(targetLevel - currentLevel);
+      
+      // Calculate time based on rate unit
+      let timeHours = 0;
+      if (rateUnit === "mtr/hr") {
+        timeHours = levelDiff / rate;
+      } else {
+        const volumeDiff = levelDiff * c;
+        const flowRate = rateUnit === "m3/hr" ? rate * 6.28 : rate;
+        timeHours = volumeDiff / flowRate;
+      }
+      
+      if (timeHours > 0) {
+        const now = new Date();
+        const finishTime = new Date(now.getTime() + timeHours * 3600000);
+        
+        // Update date and time fields
+        const finishDate = `${finishTime.getFullYear()}-${String(finishTime.getMonth()+1).padStart(2,'0')}-${String(finishTime.getDate()).padStart(2,'0')}`;
+        const finishTimeStr = `${String(finishTime.getHours()).padStart(2,'0')}:${String(finishTime.getMinutes()).padStart(2,'0')}`;
+        
+        document.getElementById('addFinishDate').value = finishDate;
+        document.getElementById('addFinishTime').value = finishTimeStr;
+      }
+    }
+
     // Make functions globally available
     window.openAddModal = openAddModal;
     window.closeAddModal = closeAddModal;
     window.updateProductOptions = updateProductOptions;
+    window.updateAddRateUnit = updateAddRateUnit;
+    window.calculateAddTime = calculateAddTime;
     window.editTank = editTank;
     window.closeEditModal = closeEditModal;
     window.deleteTank = deleteTank;
