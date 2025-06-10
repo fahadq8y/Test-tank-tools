@@ -297,7 +297,7 @@
     </div>
 
     <!-- Recent Activities -->
-    <div class="section">
+    <div style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 15px; padding: 25px; margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.2); width: 100%; max-width: none;">
       <div class="section-title">📋 Recent Activities</div>
       <div class="activities-controls" style="margin-bottom: 20px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
         <input type="text" id="activitySearch" placeholder="🔍 Search activities..." style="padding: 10px 15px; border: none; border-radius: 8px; background: rgba(255,255,255,0.9); color: #003366; flex: 1; min-width: 250px;">
@@ -311,15 +311,15 @@
         <button class="btn btn-secondary" onclick="refreshActivities()">🔄 Refresh</button>
       </div>
       
-      <div class="activities-table-container" style="width: 100%; background: rgba(255,255,255,0.95); border-radius: 15px; overflow: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
-        <table class="activities-table" style="width: 100%; color: #003366; border-collapse: collapse;">
+      <div style="width: 100%; background: rgba(255,255,255,0.95); border-radius: 15px; overflow-x: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
+        <table style="width: 100%; min-width: 800px; color: #003366; border-collapse: collapse;">
           <thead style="background: #003366; color: white;">
             <tr>
-              <th style="padding: 15px 12px; text-align: left; font-weight: bold; min-width: 120px;">👤 User</th>
-              <th style="padding: 15px 12px; text-align: left; font-weight: bold; min-width: 200px;">📝 Activity</th>
-              <th style="padding: 15px 12px; text-align: center; font-weight: bold; min-width: 100px;">📅 Date</th>
-              <th style="padding: 15px 12px; text-align: center; font-weight: bold; min-width: 80px;">⏰ Time</th>
-              <th style="padding: 15px 12px; text-align: center; font-weight: bold; min-width: 120px;">🌐 Source</th>
+              <th style="padding: 15px 20px; text-align: left; font-weight: bold; width: 15%;">👤 User</th>
+              <th style="padding: 15px 20px; text-align: left; font-weight: bold; width: 35%;">📝 Activity</th>
+              <th style="padding: 15px 20px; text-align: center; font-weight: bold; width: 15%;">📅 Date</th>
+              <th style="padding: 15px 20px; text-align: center; font-weight: bold; width: 15%;">⏰ Time</th>
+              <th style="padding: 15px 20px; text-align: center; font-weight: bold; width: 20%;">🌐 Source</th>
             </tr>
           </thead>
           <tbody id="activitiesTableBody">
@@ -934,19 +934,19 @@
         
         return `
           <tr style="border-bottom: 1px solid rgba(0,51,102,0.1);" onmouseover="this.style.background='rgba(255,215,0,0.1)'" onmouseout="this.style.background=''">
-            <td style="padding: 15px 12px; font-weight: bold; color: #003366; white-space: nowrap;">
+            <td style="padding: 15px 20px; font-weight: bold; color: #003366; white-space: nowrap;">
               👤 ${activity.username || 'Unknown'}
             </td>
-            <td style="padding: 15px 12px; color: #003366;">
+            <td style="padding: 15px 20px; color: #003366;">
               ${activityIcon} ${activityText}
             </td>
-            <td style="padding: 15px 12px; color: #666; white-space: nowrap; text-align: center; font-size: 13px;">
+            <td style="padding: 15px 20px; color: #666; white-space: nowrap; text-align: center; font-size: 13px;">
               📅 ${date}
             </td>
-            <td style="padding: 15px 12px; color: #666; white-space: nowrap; text-align: center; font-size: 13px;">
+            <td style="padding: 15px 20px; color: #666; white-space: nowrap; text-align: center; font-size: 13px;">
               ⏰ ${time}
             </td>
-            <td style="padding: 15px 12px; color: #666; text-align: center; font-size: 13px;">
+            <td style="padding: 15px 20px; color: #666; text-align: center; font-size: 13px;">
               ${sourceIcon} ${source}
             </td>
           </tr>
