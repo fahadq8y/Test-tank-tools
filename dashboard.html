@@ -1113,48 +1113,54 @@
           let activityIcon = '📝';
           let sourceIcon = '🌐';
           
-          // Determine activity type and icon
-          if (activityText.includes('دخول') || activityText.includes('login')) {
-            activityIcon = '🔐';
-          } else if (activityText.includes('حساب') || activityText.includes('calculation')) {
+          // Clean up activity text - make it shorter and clearer
+          if (activityText.includes('تم حساب Tank') && activityText.includes('PBCR Calculator')) {
+            const tankMatch = activityText.match(/Tank (\d+)/);
+            const tankNumber = tankMatch ? tankMatch[1] : 'Unknown';
+            activityText = `PBCR Calculation - Tank ${tankNumber}`;
             activityIcon = '🧮';
-          } else if (activityText.includes('Live Tanks') || activityText.includes('تانك')) {
-            activityIcon = '🛢️';
-          } else if (activityText.includes('admin') || activityText.includes('Admin')) {
+          } else if (activityText.includes('دخول المستخدم') || activityText.includes('login')) {
+            activityText = 'User Login';
+            activityIcon = '🔐';
+          } else if (activityText.includes('admin_dashboard_loaded')) {
+            activityText = 'Dashboard Access';
             activityIcon = '👨‍💼';
+          } else if (activityText.includes('Live Tanks')) {
+            activityText = 'Live Tanks Activity';
+            activityIcon = '🛢️';
           }
           
           // Determine source
-          let source = activity.page || activity.ip || 'Unknown';
-          if (activity.page === 'pbcr-calculator') {
+          let source = 'Unknown';
+          if (activity.page === 'pbcr-calculator' || activityText.includes('PBCR')) {
             source = 'PBCR Calculator';
             sourceIcon = '🧮';
-          } else if (activity.page === 'live-tanks') {
+          } else if (activity.page === 'live-tanks' || activityText.includes('Live Tanks')) {
             source = 'Live Tanks';
             sourceIcon = '🛢️';
-          } else if (activity.page === 'login') {
+          } else if (activity.page === 'login' || activityText.includes('Login')) {
             source = 'Login Page';
             sourceIcon = '🔐';
-          } else if (source === 'admin-dashboard') {
+          } else if (activity.ip === 'admin-dashboard' || activityText.includes('Dashboard')) {
             source = 'Admin Dashboard';
             sourceIcon = '👨‍💼';
           }
           
           return `
             <tr style="border-bottom: 1px solid rgba(0,51,102,0.1);" onmouseover="this.style.background='rgba(255,215,0,0.1)'" onmouseout="this.style.background=''">
-              <td style="padding: 12px; font-weight: bold; color: #003366;">
+              <td style="padding: 12px; font-weight: bold; color: #003366; white-space: nowrap;">
                 👤 ${activity.username || 'Unknown'}
               </td>
-              <td style="padding: 12px; max-width: 300px; word-wrap: break-word;">
+              <td style="padding: 12px; color: #003366; max-width: 200px; word-wrap: break-word;">
                 ${activityIcon} ${activityText}
               </td>
-              <td style="padding: 12px; color: #666; white-space: nowrap;">
+              <td style="padding: 12px; color: #666; white-space: nowrap; text-align: center;">
                 📅 ${date}
               </td>
-              <td style="padding: 12px; color: #666; white-space: nowrap;">
+              <td style="padding: 12px; color: #666; white-space: nowrap; text-align: center;">
                 ⏰ ${time}
               </td>
-              <td style="padding: 12px; color: #666; white-space: nowrap;">
+              <td style="padding: 12px; color: #666; white-space: nowrap; text-align: center;">
                 ${sourceIcon} ${source}
               </td>
             </tr>
