@@ -308,15 +308,15 @@
         <button class="btn btn-secondary" onclick="refreshActivities()">🔄 Refresh</button>
       </div>
       
-      <div class="activities-table-container" style="background: rgba(255,255,255,0.95); border-radius: 15px; overflow-x: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
-        <table class="activities-table" style="width: 100%; min-width: 800px; color: #003366; border-collapse: collapse;">
+      <div class="activities-table-container" style="background: rgba(255,255,255,0.95); border-radius: 15px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
+        <table class="activities-table" style="width: 100%; color: #003366; border-collapse: collapse; table-layout: fixed;">
           <thead style="background: #003366; color: white;">
             <tr>
-              <th style="padding: 15px 12px; text-align: left; font-weight: bold; width: 15%;">👤 User</th>
-              <th style="padding: 15px 12px; text-align: left; font-weight: bold; width: 35%;">📝 Activity</th>
-              <th style="padding: 15px 12px; text-align: center; font-weight: bold; width: 15%;">📅 Date</th>
-              <th style="padding: 15px 12px; text-align: center; font-weight: bold; width: 15%;">⏰ Time</th>
-              <th style="padding: 15px 12px; text-align: center; font-weight: bold; width: 20%;">🌐 Source</th>
+              <th style="padding: 15px 8px; text-align: left; font-weight: bold; width: 12%;">👤 User</th>
+              <th style="padding: 15px 8px; text-align: left; font-weight: bold; width: 28%;">📝 Activity</th>
+              <th style="padding: 15px 8px; text-align: center; font-weight: bold; width: 18%;">📅 Date</th>
+              <th style="padding: 15px 8px; text-align: center; font-weight: bold; width: 12%;">⏰ Time</th>
+              <th style="padding: 15px 8px; text-align: center; font-weight: bold; width: 30%;">🌐 Source</th>
             </tr>
           </thead>
           <tbody id="activitiesTableBody">
@@ -337,15 +337,7 @@
           Showing <span id="activitiesStart">0</span> - <span id="activitiesEnd">0</span> of <span id="activitiesTotal">0</span> activities
         </div>
         <div class="pagination-controls" style="display: flex; gap: 10px; align-items: center;">
-          <button class="btn btn-secondary" onclick="previousPage()" id="prevBtn" disabled>← Previous</button>
-          <select id="pageSize" onchange="changePageSize()" style="padding: 8px 12px; border: none; border-radius: 6px; background: rgba(255,255,255,0.9); color: #003366;">
-            <option value="10">10 per page</option>
-            <option value="25" selected>25 per page</option>
-            <option value="50">50 per page</option>
-            <option value="100">100 per page</option>
-          </select>
           <span style="color: rgba(255,255,255,0.8); font-size: 14px;">Page <span id="currentPage">1</span> of <span id="totalPages">1</span></span>
-          <button class="btn btn-secondary" onclick="nextPage()" id="nextBtn" disabled>Next →</button>
         </div>
       </div>
     </div>
@@ -1148,19 +1140,19 @@
           
           return `
             <tr style="border-bottom: 1px solid rgba(0,51,102,0.1);" onmouseover="this.style.background='rgba(255,215,0,0.1)'" onmouseout="this.style.background=''">
-              <td style="padding: 12px; font-weight: bold; color: #003366; white-space: nowrap;">
+              <td style="padding: 8px; font-weight: bold; color: #003366; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                 👤 ${activity.username || 'Unknown'}
               </td>
-              <td style="padding: 12px; color: #003366; max-width: 200px; word-wrap: break-word;">
+              <td style="padding: 8px; color: #003366; overflow: hidden; text-overflow: ellipsis;">
                 ${activityIcon} ${activityText}
               </td>
-              <td style="padding: 12px; color: #666; white-space: nowrap; text-align: center;">
+              <td style="padding: 8px; color: #666; white-space: nowrap; text-align: center; font-size: 12px;">
                 📅 ${date}
               </td>
-              <td style="padding: 12px; color: #666; white-space: nowrap; text-align: center;">
+              <td style="padding: 8px; color: #666; white-space: nowrap; text-align: center; font-size: 12px;">
                 ⏰ ${time}
               </td>
-              <td style="padding: 12px; color: #666; white-space: nowrap; text-align: center;">
+              <td style="padding: 8px; color: #666; text-align: center; font-size: 12px; overflow: hidden; text-overflow: ellipsis;">
                 ${sourceIcon} ${source}
               </td>
             </tr>
