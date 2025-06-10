@@ -1367,7 +1367,7 @@
         // No need to save deletion history since tank is being deleted
         await deleteDoc(doc(db, 'liveTanks', tankId));
         
-        await addActivity('live_tank_deleted', currentUser.username);
+        await addActivity('live_tank_deleted', currentUser.username, tank);
         showMessage('✅ تم حذف التانك!', 'success');
         
         // Auto close modal after 1 second
@@ -1417,7 +1417,7 @@
         
         await addDoc(collection(db, 'liveTanks'), tankData);
         
-        await addActivity('live_tank_added', currentUser.username);
+        await addActivity('live_tank_added', currentUser.username, tankData);
         showMessage('✅ Tank added successfully!', 'success');
         closeAddModal();
         
@@ -1505,7 +1505,7 @@
         
         await updateDoc(doc(db, 'liveTanks', currentEditingTank.id), updateData);
         
-        await addActivity('live_tank_updated', currentUser.username);
+        await addActivity('live_tank_updated', currentUser.username, currentEditingTank, changes);
         showMessage('✅ تم التعديل!', 'success');
         
         // Auto close modal after 1 second
@@ -1531,7 +1531,7 @@
       }, 2000);
     }
 
-    async function addActivity(action, username) {
+    async function addActivity(action, username, tankData = null, changes = null) {
       try {
         const userIP = await fetch('https://api.ipify.org?format=json').then(r => r.json()).then(data => data.ip).catch(() => 'Unknown');
         const timestamp = new Date();
@@ -1539,22 +1539,55 @@
         const dateStr = timestamp.toLocaleDateString('en-GB');
         
         let detailedAction = action;
+        let activityDetails = null;
+        
         if (action === 'live_tank_added') {
-          const lastTank = window.currentTanks?.[window.currentTanks.length - 1];
+          const lastTank = tankData || window.currentTanks?.[window.currentTanks.length - 1];
           if (lastTank) {
-            detailedAction = `تم إضافة Tank ${lastTank.tankNumber} في Live Tanks (${lastTank.department}) بواسطة ${username} في ${timeStr} - ${dateStr}`;
+            detailedAction = `Tank ${lastTank.tankNumber} - Added`;
+            activityDetails = {
+              tankNumber: lastTank.tankNumber,
+              department: lastTank.department,
+              product: lastTank.product,
+              action: 'added',
+              details: `New tank created in ${lastTank.department}`
+            };
           } else {
-            detailedAction = `تم إضافة tank جديد في Live Tanks بواسطة ${username} في ${timeStr} - ${dateStr}`;
+            detailedAction = `New Tank - Added`;
           }
         } else if (action === 'live_tank_updated') {
-          detailedAction = `تم تعديل tank في Live Tanks بواسطة ${username} في ${timeStr} - ${dateStr}`;
+          if (tankData && changes) {
+            detailedAction = `Tank ${tankData.tankNumber} - Updated`;
+            activityDetails = {
+              tankNumber: tankData.tankNumber,
+              department: tankData.department,
+              action: 'updated',
+              changes: changes,
+              details: Object.keys(changes).map(key => {
+                const change = changes[key];
+                return `${key}: ${change.from} → ${change.to}`;
+              }).join(', ')
+            };
+          } else {
+            detailedAction = `Tank - Updated`;
+          }
         } else if (action === 'live_tank_deleted') {
-          detailedAction = `تم مسح tank من Live Tanks بواسطة ${username} في ${timeStr} - ${dateStr}`;
+          if (tankData) {
+            detailedAction = `Tank ${tankData.tankNumber} - Deleted`;
+            activityDetails = {
+              tankNumber: tankData.tankNumber,
+              department: tankData.department,
+              action: 'deleted',
+              details: `Tank removed from ${tankData.department}`
+            };
+          } else {
+            detailedAction = `Tank - Deleted`;
+          }
         } else if (action === 'live_tanks_accessed') {
-          detailedAction = `تم دخول ${username} إلى صفحة Live Tanks في ${timeStr} - ${dateStr}`;
+          detailedAction = `Live Tanks Access`;
         }
         
-        await addDoc(collection(db, 'activities'), {
+        const activityData = {
           action: detailedAction,
           originalAction: action,
           username: username,
@@ -1562,7 +1595,14 @@
           ip: userIP,
           userAgent: navigator.userAgent.substring(0, 100),
           page: 'live-tanks'
-        });
+        };
+        
+        // Add detailed information if available
+        if (activityDetails) {
+          activityData.details = activityDetails;
+        }
+        
+        await addDoc(collection(db, 'activities'), activityData);
       } catch (error) {
         console.error('Error adding activity:', error);
       }

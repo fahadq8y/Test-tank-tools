@@ -895,7 +895,7 @@
       // Take first 50 activities
       const displayActivities = activities.slice(0, 50);
       
-      tbody.innerHTML = displayActivities.map(activity => {
+      tbody.innerHTML = displayActivities.map((activity, index) => {
         const timestamp = activity.timestamp?.toDate ? activity.timestamp.toDate() : new Date(activity.timestamp);
         const date = timestamp.toLocaleDateString('en-GB');
         const time = timestamp.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
@@ -903,6 +903,14 @@
         let activityText = activity.action || 'Unknown activity';
         let activityIcon = '📝';
         let sourceIcon = '🌐';
+        let hasDetails = false;
+        let detailsButton = '';
+        
+        // Check if activity has detailed information
+        if (activity.details && activity.details.changes) {
+          hasDetails = true;
+          detailsButton = ` <span class="details-btn" onclick="showActivityDetails(${index})" style="cursor: pointer; color: #ff6b35; font-weight: bold; font-size: 16px;" title="Click to view details">❗</span>`;
+        }
         
         // Clean up activity text - make it shorter and clearer
         if (activityText.includes('تم حساب Tank') && activityText.includes('PBCR Calculator')) {
@@ -916,6 +924,12 @@
         } else if (activityText.includes('admin_dashboard_loaded')) {
           activityText = 'Dashboard Access';
           activityIcon = '👨‍💼';
+        } else if (activityText.includes('Tank') && activityText.includes('Updated')) {
+          activityIcon = '🛢️';
+        } else if (activityText.includes('Tank') && activityText.includes('Added')) {
+          activityIcon = '➕';
+        } else if (activityText.includes('Tank') && activityText.includes('Deleted')) {
+          activityIcon = '🗑️';
         } else if (activityText.includes('Live Tanks')) {
           activityText = 'Live Tanks Activity';
           activityIcon = '🛢️';
@@ -926,7 +940,7 @@
         if (activity.page === 'pbcr-calculator' || activityText.includes('PBCR')) {
           source = 'PBCR Calculator';
           sourceIcon = '🧮';
-        } else if (activity.page === 'live-tanks' || activityText.includes('Live Tanks')) {
+        } else if (activity.page === 'live-tanks' || activityText.includes('Live Tanks') || activityText.includes('Tank')) {
           source = 'Live Tanks';
           sourceIcon = '🛢️';
         } else if (activity.page === 'login' || activityText.includes('Login')) {
@@ -943,7 +957,7 @@
               👤 ${activity.username || 'Unknown'}
             </td>
             <td style="padding: 15px 20px; color: #003366;">
-              ${activityIcon} ${activityText}
+              ${activityIcon} ${activityText}${detailsButton}
             </td>
             <td style="padding: 15px 20px; color: #666; white-space: nowrap; text-align: center; font-size: 13px;">
               📅 ${date}
@@ -958,12 +972,109 @@
         `;
       }).join('');
       
+      // Store activities globally for details popup
+      window.currentActivities = displayActivities;
+      
       // Update pagination info
       document.getElementById('activitiesStart').textContent = '1';
       document.getElementById('activitiesEnd').textContent = displayActivities.length;
       document.getElementById('activitiesTotal').textContent = activities.length;
       document.getElementById('currentPage').textContent = '1';
       document.getElementById('totalPages').textContent = '1';
+    }
+
+    // Show activity details popup
+    function showActivityDetails(index) {
+      const activity = window.currentActivities[index];
+      if (!activity || !activity.details) return;
+      
+      const details = activity.details;
+      const timestamp = activity.timestamp?.toDate ? activity.timestamp.toDate() : new Date(activity.timestamp);
+      const dateTime = timestamp.toLocaleString('en-GB');
+      
+      let detailsHTML = `
+        <div style="background: rgba(255,255,255,0.95); border-radius: 15px; padding: 25px; max-width: 600px; margin: 20px auto; box-shadow: 0 10px 30px rgba(0,0,0,0.3); color: #003366;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #003366; padding-bottom: 15px;">
+            <h3 style="margin: 0; color: #003366;">📊 Tank ${details.tankNumber} Changes</h3>
+            <button onclick="closeActivityDetails()" style="background: #ff4444; color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-size: 16px;">×</button>
+          </div>
+          
+          <div style="margin-bottom: 15px;">
+            <strong>🏭 Department:</strong> ${details.department}<br>
+            <strong>👤 Modified by:</strong> ${activity.username}<br>
+            <strong>📅 Date & Time:</strong> ${dateTime}
+          </div>
+      `;
+      
+      if (details.action === 'updated' && details.changes) {
+        detailsHTML += `<div style="background: #f8f9fa; border-radius: 10px; padding: 15px; margin: 15px 0;">
+          <h4 style="margin: 0 0 15px 0; color: #003366;">🔄 Changes Made:</h4>`;
+        
+        Object.keys(details.changes).forEach(key => {
+          const change = details.changes[key];
+          const fieldName = key.charAt(0).toUpperCase() + key.slice(1);
+          detailsHTML += `
+            <div style="margin: 10px 0; padding: 10px; background: white; border-radius: 8px; border-left: 4px solid #4CAF50;">
+              <strong>${fieldName}:</strong><br>
+              <span style="color: #ff4444;">❌ Before: ${change.from || 'Not set'}</span><br>
+              <span style="color: #4CAF50;">✅ After: ${change.to}</span>
+            </div>
+          `;
+        });
+        
+        detailsHTML += `</div>`;
+      } else if (details.action === 'added') {
+        detailsHTML += `
+          <div style="background: #e8f5e8; border-radius: 10px; padding: 15px; margin: 15px 0; border-left: 4px solid #4CAF50;">
+            <h4 style="margin: 0 0 10px 0; color: #4CAF50;">➕ Tank Added</h4>
+            <p style="margin: 0;">${details.details}</p>
+          </div>
+        `;
+      } else if (details.action === 'deleted') {
+        detailsHTML += `
+          <div style="background: #ffe8e8; border-radius: 10px; padding: 15px; margin: 15px 0; border-left: 4px solid #ff4444;">
+            <h4 style="margin: 0 0 10px 0; color: #ff4444;">🗑️ Tank Deleted</h4>
+            <p style="margin: 0;">${details.details}</p>
+          </div>
+        `;
+      }
+      
+      detailsHTML += `</div>`;
+      
+      // Create overlay
+      const overlay = document.createElement('div');
+      overlay.id = 'activityDetailsOverlay';
+      overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.7);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(5px);
+      `;
+      overlay.innerHTML = detailsHTML;
+      
+      // Close on overlay click
+      overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) {
+          closeActivityDetails();
+        }
+      });
+      
+      document.body.appendChild(overlay);
+    }
+    
+    // Close activity details popup
+    function closeActivityDetails() {
+      const overlay = document.getElementById('activityDetailsOverlay');
+      if (overlay) {
+        overlay.remove();
+      }
     }
 
     // Edit user
