@@ -296,10 +296,56 @@
     <!-- Recent Activities -->
     <div class="section">
       <div class="section-title">📋 Recent Activities</div>
-      <div id="activitiesContainer">
-        <div class="loading">
-          <div class="loading-spinner"></div>
-          <div>Loading activities...</div>
+      <div class="activities-controls" style="margin-bottom: 20px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+        <input type="text" id="activitySearch" placeholder="🔍 Search activities..." style="padding: 10px 15px; border: none; border-radius: 8px; background: rgba(255,255,255,0.9); color: #003366; flex: 1; min-width: 250px;">
+        <select id="activityFilter" style="padding: 10px 15px; border: none; border-radius: 8px; background: rgba(255,255,255,0.9); color: #003366;">
+          <option value="">All Activities</option>
+          <option value="login">Login</option>
+          <option value="pbcr_calculation">PBCR Calculations</option>
+          <option value="live_tanks">Live Tanks</option>
+          <option value="admin">Admin Actions</option>
+        </select>
+        <button class="btn btn-secondary" onclick="refreshActivities()">🔄 Refresh</button>
+      </div>
+      
+      <div class="activities-table-container" style="background: rgba(255,255,255,0.95); border-radius: 15px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
+        <table class="activities-table" style="width: 100%; color: #003366;">
+          <thead style="background: #003366; color: white;">
+            <tr>
+              <th style="padding: 15px 12px; text-align: left; font-weight: bold;">👤 User</th>
+              <th style="padding: 15px 12px; text-align: left; font-weight: bold;">📝 Activity</th>
+              <th style="padding: 15px 12px; text-align: left; font-weight: bold;">📅 Date</th>
+              <th style="padding: 15px 12px; text-align: left; font-weight: bold;">⏰ Time</th>
+              <th style="padding: 15px 12px; text-align: left; font-weight: bold;">🌐 Source</th>
+            </tr>
+          </thead>
+          <tbody id="activitiesTableBody">
+            <tr>
+              <td colspan="5" style="padding: 30px; text-align: center; color: #666;">
+                <div class="loading">
+                  <div class="loading-spinner"></div>
+                  <div>Loading activities...</div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="pagination-container" style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+        <div class="pagination-info" style="color: rgba(255,255,255,0.8); font-size: 14px;">
+          Showing <span id="activitiesStart">0</span> - <span id="activitiesEnd">0</span> of <span id="activitiesTotal">0</span> activities
+        </div>
+        <div class="pagination-controls" style="display: flex; gap: 10px; align-items: center;">
+          <button class="btn btn-secondary" onclick="previousPage()" id="prevBtn" disabled>← Previous</button>
+          <select id="pageSize" onchange="changePageSize()" style="padding: 8px 12px; border: none; border-radius: 6px; background: rgba(255,255,255,0.9); color: #003366;">
+            <option value="10">10 per page</option>
+            <option value="25" selected>25 per page</option>
+            <option value="50">50 per page</option>
+            <option value="100">100 per page</option>
+          </select>
+          <span style="color: rgba(255,255,255,0.8); font-size: 14px;">Page <span id="currentPage">1</span> of <span id="totalPages">1</span></span>
+          <button class="btn btn-secondary" onclick="nextPage()" id="nextBtn" disabled>Next →</button>
         </div>
       </div>
     </div>
@@ -1025,6 +1071,186 @@
       displayUsers(filteredUsers);
     }
 
+    // Activities pagination variables
+    let allActivities = [];
+    let filteredActivities = [];
+    let currentActivitiesPage = 1;
+    let activitiesPerPage = 25;
+
+    // Load activities with pagination
+    async function loadActivities() {
+      try {
+        const activitiesQuery = query(
+          collection(db, 'activities'),
+          orderBy('timestamp', 'desc')
+        );
+        
+        const snapshot = await getDocs(activitiesQuery);
+        allActivities = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        
+        filteredActivities = [...allActivities];
+        currentActivitiesPage = 1;
+        displayActivities();
+        
+      } catch (error) {
+        console.error('Error loading activities:', error);
+        document.getElementById('activitiesTableBody').innerHTML = `
+          <tr>
+            <td colspan="5" style="padding: 30px; text-align: center; color: #f44336;">
+              ❌ Error loading activities: ${error.message}
+            </td>
+          </tr>
+        `;
+      }
+    }
+
+    // Display activities with pagination
+    function displayActivities() {
+      const startIndex = (currentActivitiesPage - 1) * activitiesPerPage;
+      const endIndex = startIndex + activitiesPerPage;
+      const pageActivities = filteredActivities.slice(startIndex, endIndex);
+      
+      const tbody = document.getElementById('activitiesTableBody');
+      
+      if (pageActivities.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" style="padding: 30px; text-align: center; color: #666;">
+              📭 No activities found
+            </td>
+          </tr>
+        `;
+      } else {
+        tbody.innerHTML = pageActivities.map(activity => {
+          const timestamp = activity.timestamp?.toDate ? activity.timestamp.toDate() : new Date(activity.timestamp);
+          const date = timestamp.toLocaleDateString('en-GB');
+          const time = timestamp.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+          
+          let activityText = activity.action || 'Unknown activity';
+          let activityIcon = '📝';
+          let sourceIcon = '🌐';
+          
+          // Determine activity type and icon
+          if (activityText.includes('دخول') || activityText.includes('login')) {
+            activityIcon = '🔐';
+          } else if (activityText.includes('حساب') || activityText.includes('calculation')) {
+            activityIcon = '🧮';
+          } else if (activityText.includes('Live Tanks') || activityText.includes('تانك')) {
+            activityIcon = '🛢️';
+          } else if (activityText.includes('admin') || activityText.includes('Admin')) {
+            activityIcon = '👨‍💼';
+          }
+          
+          // Determine source
+          let source = activity.page || activity.ip || 'Unknown';
+          if (activity.page === 'pbcr-calculator') {
+            source = 'PBCR Calculator';
+            sourceIcon = '🧮';
+          } else if (activity.page === 'live-tanks') {
+            source = 'Live Tanks';
+            sourceIcon = '🛢️';
+          } else if (activity.page === 'login') {
+            source = 'Login Page';
+            sourceIcon = '🔐';
+          } else if (source === 'admin-dashboard') {
+            source = 'Admin Dashboard';
+            sourceIcon = '👨‍💼';
+          }
+          
+          return `
+            <tr style="border-bottom: 1px solid rgba(0,51,102,0.1);" onmouseover="this.style.background='rgba(255,215,0,0.1)'" onmouseout="this.style.background=''">
+              <td style="padding: 12px; font-weight: bold; color: #003366;">
+                👤 ${activity.username || 'Unknown'}
+              </td>
+              <td style="padding: 12px; max-width: 300px; word-wrap: break-word;">
+                ${activityIcon} ${activityText}
+              </td>
+              <td style="padding: 12px; color: #666; white-space: nowrap;">
+                📅 ${date}
+              </td>
+              <td style="padding: 12px; color: #666; white-space: nowrap;">
+                ⏰ ${time}
+              </td>
+              <td style="padding: 12px; color: #666; white-space: nowrap;">
+                ${sourceIcon} ${source}
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+      
+      updatePaginationInfo();
+    }
+
+    // Update pagination info
+    function updatePaginationInfo() {
+      const totalActivities = filteredActivities.length;
+      const totalPages = Math.ceil(totalActivities / activitiesPerPage);
+      const startIndex = (currentActivitiesPage - 1) * activitiesPerPage + 1;
+      const endIndex = Math.min(currentActivitiesPage * activitiesPerPage, totalActivities);
+      
+      document.getElementById('activitiesStart').textContent = totalActivities > 0 ? startIndex : 0;
+      document.getElementById('activitiesEnd').textContent = endIndex;
+      document.getElementById('activitiesTotal').textContent = totalActivities;
+      document.getElementById('currentPage').textContent = currentActivitiesPage;
+      document.getElementById('totalPages').textContent = totalPages;
+      
+      document.getElementById('prevBtn').disabled = currentActivitiesPage <= 1;
+      document.getElementById('nextBtn').disabled = currentActivitiesPage >= totalPages;
+    }
+
+    // Filter activities
+    function filterActivities() {
+      const searchTerm = document.getElementById('activitySearch').value.toLowerCase();
+      const filterType = document.getElementById('activityFilter').value;
+      
+      filteredActivities = allActivities.filter(activity => {
+        const matchesSearch = !searchTerm || 
+          (activity.action && activity.action.toLowerCase().includes(searchTerm)) ||
+          (activity.username && activity.username.toLowerCase().includes(searchTerm));
+        
+        const matchesFilter = !filterType || 
+          (filterType === 'login' && activity.action && activity.action.includes('دخول')) ||
+          (filterType === 'pbcr_calculation' && activity.originalAction === 'pbcr_calculation') ||
+          (filterType === 'live_tanks' && activity.action && activity.action.includes('Live Tanks')) ||
+          (filterType === 'admin' && activity.action && activity.action.includes('admin'));
+        
+        return matchesSearch && matchesFilter;
+      });
+      
+      currentActivitiesPage = 1;
+      displayActivities();
+    }
+
+    // Pagination functions
+    function previousPage() {
+      if (currentActivitiesPage > 1) {
+        currentActivitiesPage--;
+        displayActivities();
+      }
+    }
+
+    function nextPage() {
+      const totalPages = Math.ceil(filteredActivities.length / activitiesPerPage);
+      if (currentActivitiesPage < totalPages) {
+        currentActivitiesPage++;
+        displayActivities();
+      }
+    }
+
+    function changePageSize() {
+      activitiesPerPage = parseInt(document.getElementById('pageSize').value);
+      currentActivitiesPage = 1;
+      displayActivities();
+    }
+
+    function refreshActivities() {
+      loadActivities();
+    }
+
     // Add activity to Firebase
     async function addActivity(action, username) {
       try {
@@ -1079,7 +1305,14 @@
       document.getElementById('roleFilter').addEventListener('change', filterUsers);
       
       // Load data after Firebase initialization
-      setTimeout(loadDashboardData, 1000);
+      setTimeout(() => {
+        loadDashboardData();
+        loadActivities(); // Load activities with pagination
+      }, 1000);
+      
+      // Add event listeners for activities
+      document.getElementById('activitySearch').addEventListener('input', filterActivities);
+      document.getElementById('activityFilter').addEventListener('change', filterActivities);
     });
 
     // Make functions globally available
@@ -1096,6 +1329,12 @@
     window.saveGlobalSettings = saveGlobalSettings;
     window.resetToDefault = resetToDefault;
     window.logout = logout;
+    window.loadActivities = loadActivities;
+    window.filterActivities = filterActivities;
+    window.previousPage = previousPage;
+    window.nextPage = nextPage;
+    window.changePageSize = changePageSize;
+    window.refreshActivities = refreshActivities;
 
     // Font size control functions
     let currentFontSize = parseInt(localStorage.getItem('tanktools_font_size_dashboard') || '14');
