@@ -458,13 +458,15 @@
         setTimeout(() => window.location.href = 'login.html', 2000);
         return false;
       }
-        // Load dashboard data
+    }
+
+    // Load dashboard data
     async function loadDashboardData() {
+      if (!checkAdminAccess()) return;
+      
+      showMessage('🔄 Loading dashboard data from Firebase...', 'info');
+      
       try {
-        if (!checkAdminAccess()) return;
-        
-        showMessage('🔄 Loading dashboard data from Firebase...', 'info');
-        
         // Load users
         const usersSnapshot = await getDocs(collection(db, 'users'));
         allUsers = [];
@@ -472,6 +474,17 @@
         usersSnapshot.forEach((doc) => {
           const userData = { id: doc.id, ...doc.data() };
           allUsers.push(userData);
+        });
+
+        // Load activities
+        const activitiesSnapshot = await getDocs(
+          query(collection(db, 'activities'), orderBy('timestamp', 'desc'), limit(50))
+        );
+        allActivities = [];
+        
+        activitiesSnapshot.forEach((doc) => {
+          const activityData = { id: doc.id, ...doc.data() };
+          allActivities.push(activityData);
         });
 
         // Load Live Tanks settings
@@ -482,6 +495,9 @@
         
         // Display users
         displayUsers(allUsers);
+        
+        // Display activities
+        displayActivities(allActivities);
         
         showMessage('✅ Dashboard data loaded successfully!', 'success');
         
