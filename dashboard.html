@@ -109,8 +109,13 @@
     .role-name{font-weight:bold;font-size:1.1rem;margin-bottom:5px}
     .role-desc{font-size:0.9rem;opacity:0.8}
     .role-control{margin-left:15px}
-    @media(max-width:768px){.header{flex-direction:column;gap:15px}.controls{flex-direction:column}.stats-grid{grid-template-columns:repeat(2,1fr)}.users-table{font-size:12px}.users-table th,.users-table td{padding:8px 6px}.action-buttons{flex-direction:column}.nav-links{flex-direction:column;width:100%}.role-settings-grid{grid-template-columns:1fr}.activities-table-container{overflow-x:auto}.activities-table{min-width:600px}.activities-table th,.activities-table td{font-size:11px;padding:8px 6px}}
-    @media(min-width:769px){.activities-table-container{overflow-x:visible}.activities-table{min-width:100%}.activities-table th,.activities-table td{padding:15px 12px}}
+    @media(max-width:768px){.header{flex-direction:column;gap:15px}.controls{flex-direction:column}.stats-grid{grid-template-columns:repeat(2,1fr)}.users-table{font-size:12px}.users-table th,.users-table td{padding:8px 6px}.action-buttons{flex-direction:column}.nav-links{flex-direction:column;width:100%}.role-settings-grid{grid-template-columns:1fr}}
+    /* Force activities table to stay full width on all screen sizes */
+    .activities-table-container{overflow-x:auto !important;width:100% !important}
+    .activities-table{min-width:800px !important;width:100% !important}
+    .activities-table th,.activities-table td{padding:15px 20px !important;white-space:nowrap !important}
+    .activities-table th{font-size:14px !important}
+    .activities-table td{font-size:13px !important}
   </style>
 </head>
 <body>
@@ -311,8 +316,8 @@
         <button class="btn btn-secondary" onclick="refreshActivities()">🔄 Refresh</button>
       </div>
       
-      <div style="width: 100%; background: rgba(255,255,255,0.95); border-radius: 15px; overflow-x: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
-        <table style="width: 100%; min-width: 800px; color: #003366; border-collapse: collapse;">
+      <div class="activities-table-container" style="width: 100%; background: rgba(255,255,255,0.95); border-radius: 15px; overflow-x: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
+        <table class="activities-table" style="width: 100%; min-width: 800px; color: #003366; border-collapse: collapse;">
           <thead style="background: #003366; color: white;">
             <tr>
               <th style="padding: 15px 20px; text-align: left; font-weight: bold; width: 15%;">👤 User</th>
