@@ -308,15 +308,15 @@
         <button class="btn btn-secondary" onclick="refreshActivities()">🔄 Refresh</button>
       </div>
       
-      <div class="activities-table-container" style="background: rgba(255,255,255,0.95); border-radius: 15px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
-        <table class="activities-table" style="width: 100%; color: #003366;">
+      <div class="activities-table-container" style="background: rgba(255,255,255,0.95); border-radius: 15px; overflow-x: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
+        <table class="activities-table" style="width: 100%; min-width: 800px; color: #003366; border-collapse: collapse;">
           <thead style="background: #003366; color: white;">
             <tr>
-              <th style="padding: 15px 12px; text-align: left; font-weight: bold;">👤 User</th>
-              <th style="padding: 15px 12px; text-align: left; font-weight: bold;">📝 Activity</th>
-              <th style="padding: 15px 12px; text-align: left; font-weight: bold;">📅 Date</th>
-              <th style="padding: 15px 12px; text-align: left; font-weight: bold;">⏰ Time</th>
-              <th style="padding: 15px 12px; text-align: left; font-weight: bold;">🌐 Source</th>
+              <th style="padding: 15px 12px; text-align: left; font-weight: bold; width: 15%;">👤 User</th>
+              <th style="padding: 15px 12px; text-align: left; font-weight: bold; width: 35%;">📝 Activity</th>
+              <th style="padding: 15px 12px; text-align: center; font-weight: bold; width: 15%;">📅 Date</th>
+              <th style="padding: 15px 12px; text-align: center; font-weight: bold; width: 15%;">⏰ Time</th>
+              <th style="padding: 15px 12px; text-align: center; font-weight: bold; width: 20%;">🌐 Source</th>
             </tr>
           </thead>
           <tbody id="activitiesTableBody">
