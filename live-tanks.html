@@ -1506,7 +1506,8 @@
         timeHours = levelDiff / rate;
       } else {
         const volumeDiff = levelDiff * c;
-        const flowRate = rateUnit === "m3/hr" ? rate * 6.28 : rate;
+        // Check for all m³ variations
+        const flowRate = (rateUnit === "m3/hr" || rateUnit === "m3" || rateUnit === "m³/hr" || rateUnit === "m³") ? rate * 6.28 : rate;
         timeHours = volumeDiff / flowRate;
       }
       
