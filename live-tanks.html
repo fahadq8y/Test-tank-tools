@@ -1364,8 +1364,15 @@
     function calculateActualRate() {
       const currentLevel = parseFloat(document.getElementById('editCurrentLevel').value);
       const previousLevel = parseFloat(document.getElementById('editPreviousLevel').value);
+      const rateUnit = document.getElementById('editRateUnit').value;
       
       if (!currentLevel || !previousLevel || !currentEditingTank) return;
+      
+      console.log('📊 Calculating actual rate:', {
+        currentLevel,
+        previousLevel,
+        rateUnit
+      });
       
       // Get time difference
       const now = new Date();
@@ -1378,7 +1385,10 @@
       if (timeDiffHours <= 0) return;
       
       // Calculate level difference (previous - current for consumption)
-      const levelDiff = previousLevel - currentLevel;
+      const levelDiff = Math.abs(previousLevel - currentLevel);
+      
+      console.log('📏 Level difference:', levelDiff, 'meters');
+      console.log('⏰ Time difference:', timeDiffHours, 'hours');
       
       // Get tank data for capacity calculation
       const tankNumber = document.getElementById('editTankNumber').value;
@@ -1388,14 +1398,31 @@
       
       const c = tankData.comment; // capacity factor
       
-      // Convert level difference to volume
-      const volumeDiff = Math.abs(levelDiff * c);
+      let actualRate = 0;
       
-      // Calculate actual rate (volume per hour)
-      const actualRate = volumeDiff / timeDiffHours;
+      // Calculate rate based on the selected unit
+      if (rateUnit === "mtr/hr") {
+        // Rate in meters per hour
+        actualRate = levelDiff / timeDiffHours;
+        console.log('📐 Calculated rate (mtr/hr):', actualRate);
+      } else if (rateUnit === "m3/hr") {
+        // Rate in cubic meters per hour
+        const volumeDiff = levelDiff * c;
+        actualRate = volumeDiff / timeDiffHours;
+        // Convert from barrels to m³ (1 barrel = 0.158987 m³)
+        actualRate = actualRate * 0.158987;
+        console.log('🧊 Calculated rate (m³/hr):', actualRate);
+      } else {
+        // Default: bbl/hr (barrels per hour)
+        const volumeDiff = levelDiff * c;
+        actualRate = volumeDiff / timeDiffHours;
+        console.log('🛢️ Calculated rate (bbl/hr):', actualRate);
+      }
       
       // Update rate field
       document.getElementById('editRate').value = Math.round(actualRate);
+      
+      console.log('✅ Rate updated to:', Math.round(actualRate), rateUnit);
       
       // Recalculate finish time
       calculateEditTime();
