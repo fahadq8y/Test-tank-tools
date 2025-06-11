@@ -1407,10 +1407,13 @@
         console.log('📐 Calculated rate (mtr/hr):', actualRate);
       } else if (rateUnit === "m3/hr") {
         // Rate in cubic meters per hour
-        const volumeDiff = levelDiff * c;
-        actualRate = volumeDiff / timeDiffHours;
+        // First calculate volume in barrels
+        const volumeDiffBarrels = levelDiff * c;
+        const rateBarrels = volumeDiffBarrels / timeDiffHours;
         // Convert from barrels to m³ (1 barrel = 0.158987 m³)
-        actualRate = actualRate * 0.158987;
+        actualRate = rateBarrels * 0.158987;
+        console.log('🧊 Volume in barrels:', volumeDiffBarrels);
+        console.log('🧊 Rate in barrels:', rateBarrels);
         console.log('🧊 Calculated rate (m³/hr):', actualRate);
       } else {
         // Default: bbl/hr (barrels per hour)
