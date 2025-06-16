@@ -1746,10 +1746,35 @@
         
         // تحديث في Firebase
         const userDocRef = doc(db, 'users', username);
-        await updateDoc(userDocRef, {
-          maxDevices: maxDevices,
-          updatedAt: new Date()
-        });
+        
+        // التحقق من وجود المستند أولاً
+        try {
+          const userDoc = await getDoc(userDocRef);
+          
+          if (userDoc.exists()) {
+            // المستند موجود - تحديث فقط
+            await updateDoc(userDocRef, {
+              maxDevices: maxDevices,
+              updatedAt: new Date()
+            });
+            console.log('User document updated successfully');
+          } else {
+            // المستند غير موجود - إنشاء مستند جديد
+            await setDoc(userDocRef, {
+              username: username,
+              maxDevices: maxDevices,
+              devices: [],
+              isActive: true,
+              role: 'user',
+              createdAt: new Date(),
+              updatedAt: new Date()
+            });
+            console.log('New user document created successfully');
+          }
+        } catch (firebaseError) {
+          console.error('Firebase operation failed:', firebaseError);
+          throw firebaseError;
+        }
         
         // تحديث في localStorage إذا كان متوفراً
         try {
