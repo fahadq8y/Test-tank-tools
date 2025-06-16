@@ -1752,10 +1752,14 @@
         });
         
         // تحديث في localStorage إذا كان متوفراً
-        const users = await loadUsers();
-        if (users[username]) {
-          users[username].maxDevices = maxDevices;
-          await saveUsers(users);
+        try {
+          const users = await loadUsers();
+          if (users && users[username]) {
+            users[username].maxDevices = maxDevices;
+            await saveUsers(users);
+          }
+        } catch (localError) {
+          console.log('LocalStorage update failed, but Firebase updated successfully');
         }
         
         showMessage(`✅ تم تحديث عدد الأجهزة للمستخدم ${username} إلى ${maxDevices}`, 'success');
