@@ -352,6 +352,9 @@ Thank you.`;
         // Login successful
         console.log('Login successful, device access granted');
         
+        // Set session active flag FIRST
+        sessionStorage.setItem('tanktools_session', 'active');
+        
         const sessionData = {
           username: username,
           fullName: userData.fullName,
@@ -370,8 +373,7 @@ Thank you.`;
           sessionStorage.setItem('tanktools_current_user', JSON.stringify(sessionData));
         }
         
-        // Set session active flag
-        sessionStorage.setItem('tanktools_session', 'active');
+        console.log('Session data saved successfully:', sessionData);
         
         showMessage('Login successful! Redirecting...', 'success');
         
@@ -722,7 +724,8 @@ Thank you.`;
       }
     });
 
-    // Service Worker Registration
+    // Service Worker Registration - DISABLED temporarily to fix navigation issues
+    /*
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function() {
         navigator.serviceWorker.register('/sw.js')
@@ -734,6 +737,7 @@ Thank you.`;
           });
       });
     }
+    */
 
     console.log('🔥 Tank Tools Login System v5.0 - Device Management Ready');
   </script>
