@@ -361,11 +361,17 @@ Thank you.`;
           deviceId: generateDeviceFingerprint()
         };
         
+        // Save session with correct names that match permissions.js
         if (rememberMe) {
           localStorage.setItem('tankToolsSession', JSON.stringify(sessionData));
+          localStorage.setItem('tanktools_current_user', JSON.stringify(sessionData));
         } else {
           sessionStorage.setItem('tankToolsSession', JSON.stringify(sessionData));
+          sessionStorage.setItem('tanktools_current_user', JSON.stringify(sessionData));
         }
+        
+        // Set session active flag
+        sessionStorage.setItem('tanktools_session', 'active');
         
         showMessage('Login successful! Redirecting...', 'success');
         
