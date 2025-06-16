@@ -594,3 +594,364 @@ window.hideAccessDenied = hideAccessDenied;
 window.hasPermission = hasPermission;
 
 
+
+
+// ===== نظام إدارة الأجهزة =====
+
+// إنشاء بصمة فريدة للجهاز
+function generateDeviceFingerprint() {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.textBaseline = 'top';
+  ctx.font = '14px Arial';
+  ctx.fillText('Device fingerprint', 2, 2);
+  
+  const fingerprint = btoa(
+    navigator.userAgent + 
+    screen.width + 'x' + screen.height + 
+    screen.colorDepth + 
+    new Date().getTimezoneOffset() +
+    navigator.language +
+    (navigator.platform || '') +
+    canvas.toDataURL()
+  ).substring(0, 32);
+  
+  console.log('Generated device fingerprint:', fingerprint);
+  return fingerprint;
+}
+
+// الحصول على معلومات الجهاز
+function getDeviceInfo() {
+  const userAgent = navigator.userAgent;
+  let deviceName = 'Unknown Device';
+  
+  // تحديد نوع الجهاز
+  if (/iPhone/i.test(userAgent)) {
+    deviceName = 'iPhone';
+  } else if (/iPad/i.test(userAgent)) {
+    deviceName = 'iPad';
+  } else if (/Android/i.test(userAgent)) {
+    if (/Mobile/i.test(userAgent)) {
+      deviceName = 'Android Phone';
+    } else {
+      deviceName = 'Android Tablet';
+    }
+  } else if (/Windows/i.test(userAgent)) {
+    deviceName = 'Windows PC';
+  } else if (/Mac/i.test(userAgent)) {
+    deviceName = 'Mac';
+  } else if (/Linux/i.test(userAgent)) {
+    deviceName = 'Linux PC';
+  }
+  
+  return {
+    id: generateDeviceFingerprint(),
+    name: deviceName,
+    userAgent: userAgent,
+    lastUsed: new Date().toISOString(),
+    screen: `${screen.width}x${screen.height}`,
+    language: navigator.language
+  };
+}
+
+// فحص صلاحية الجهاز للمستخدم
+async function checkDeviceAccess(username) {
+  console.log('checkDeviceAccess: Checking device access for user:', username);
+  
+  try {
+    const currentDevice = getDeviceInfo();
+    console.log('checkDeviceAccess: Current device info:', currentDevice);
+    
+    // الحصول على بيانات المستخدم
+    const users = await loadUsers();
+    const user = users[username];
+    
+    if (!user) {
+      console.log('checkDeviceAccess: User not found');
+      return { allowed: false, reason: 'user_not_found' };
+    }
+    
+    // التأكد من وجود حقول الأجهزة
+    if (!user.devices) {
+      user.devices = [];
+    }
+    if (!user.maxDevices) {
+      user.maxDevices = 1; // الافتراضي جهاز واحد
+    }
+    
+    console.log('checkDeviceAccess: User device data:', {
+      maxDevices: user.maxDevices,
+      currentDevices: user.devices.length,
+      devices: user.devices
+    });
+    
+    // البحث عن الجهاز الحالي في قائمة الأجهزة المسموحة
+    const existingDevice = user.devices.find(device => device.id === currentDevice.id);
+    
+    if (existingDevice) {
+      // الجهاز موجود - تحديث آخر استخدام
+      existingDevice.lastUsed = currentDevice.lastUsed;
+      await saveUsers(users);
+      console.log('checkDeviceAccess: Device found and updated');
+      return { allowed: true, reason: 'device_registered' };
+    }
+    
+    // الجهاز غير موجود - فحص إذا كان هناك مساحة لجهاز جديد
+    if (user.devices.length < user.maxDevices) {
+      // إضافة الجهاز الجديد
+      user.devices.push(currentDevice);
+      await saveUsers(users);
+      console.log('checkDeviceAccess: New device added');
+      return { allowed: true, reason: 'device_added' };
+    }
+    
+    // تجاوز العدد المسموح
+    console.log('checkDeviceAccess: Device limit exceeded');
+    return { 
+      allowed: false, 
+      reason: 'device_limit_exceeded',
+      maxDevices: user.maxDevices,
+      currentDevices: user.devices
+    };
+    
+  } catch (error) {
+    console.error('checkDeviceAccess: Error checking device access:', error);
+    return { allowed: false, reason: 'error' };
+  }
+}
+
+// إزالة جهاز من قائمة المستخدم
+async function removeUserDevice(username, deviceId) {
+  console.log('removeUserDevice: Removing device', deviceId, 'for user', username);
+  
+  try {
+    const users = await loadUsers();
+    const user = users[username];
+    
+    if (!user || !user.devices) {
+      return false;
+    }
+    
+    user.devices = user.devices.filter(device => device.id !== deviceId);
+    await saveUsers(users);
+    
+    console.log('removeUserDevice: Device removed successfully');
+    return true;
+  } catch (error) {
+    console.error('removeUserDevice: Error removing device:', error);
+    return false;
+  }
+}
+
+// عرض modal إدارة الأجهزة
+function showDeviceManagementModal(deviceData) {
+  const modal = document.createElement('div');
+  modal.className = 'device-modal';
+  modal.innerHTML = `
+    <div class="device-modal-content">
+      <div class="device-modal-header">
+        <h3>🔒 إدارة الأجهزة</h3>
+        <span class="device-modal-close">&times;</span>
+      </div>
+      <div class="device-modal-body">
+        <div class="device-warning">
+          <p><strong>تم تجاوز العدد المسموح من الأجهزة!</strong></p>
+          <p>العدد المسموح: <span class="highlight">${deviceData.maxDevices}</span> جهاز</p>
+          <p>الأجهزة المستخدمة حالياً: <span class="highlight">${deviceData.currentDevices.length}</span> جهاز</p>
+        </div>
+        
+        <div class="current-devices">
+          <h4>الأجهزة المسجلة:</h4>
+          <div class="devices-list">
+            ${deviceData.currentDevices.map((device, index) => `
+              <div class="device-item">
+                <div class="device-info">
+                  <strong>${device.name}</strong>
+                  <small>آخر استخدام: ${new Date(device.lastUsed).toLocaleString('ar-SA')}</small>
+                </div>
+                <button class="remove-device-btn" data-device-id="${device.id}">
+                  🗑️ إزالة
+                </button>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        
+        <div class="device-actions">
+          <p>لتسجيل الدخول من هذا الجهاز، يجب إزالة أحد الأجهزة السابقة.</p>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  // إضافة الـ CSS
+  if (!document.querySelector('#device-modal-styles')) {
+    const styles = document.createElement('style');
+    styles.id = 'device-modal-styles';
+    styles.textContent = `
+      .device-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.8);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 10000;
+        backdrop-filter: blur(5px);
+      }
+      
+      .device-modal-content {
+        background: white;
+        border-radius: 15px;
+        max-width: 500px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      }
+      
+      .device-modal-header {
+        background: linear-gradient(45deg, #f44336, #d32f2f);
+        color: white;
+        padding: 20px;
+        border-radius: 15px 15px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      
+      .device-modal-close {
+        font-size: 24px;
+        cursor: pointer;
+        opacity: 0.8;
+      }
+      
+      .device-modal-close:hover {
+        opacity: 1;
+      }
+      
+      .device-modal-body {
+        padding: 20px;
+        color: #333;
+      }
+      
+      .device-warning {
+        background: rgba(244, 67, 54, 0.1);
+        border: 1px solid rgba(244, 67, 54, 0.3);
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+        text-align: center;
+      }
+      
+      .highlight {
+        color: #f44336;
+        font-weight: bold;
+      }
+      
+      .current-devices h4 {
+        margin-bottom: 15px;
+        color: #333;
+      }
+      
+      .device-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        background: #f9f9f9;
+      }
+      
+      .device-info strong {
+        display: block;
+        color: #333;
+      }
+      
+      .device-info small {
+        color: #666;
+        font-size: 12px;
+      }
+      
+      .remove-device-btn {
+        background: #f44336;
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 12px;
+        transition: all 0.3s ease;
+      }
+      
+      .remove-device-btn:hover {
+        background: #d32f2f;
+        transform: translateY(-1px);
+      }
+      
+      .device-actions {
+        background: rgba(33, 150, 243, 0.1);
+        border: 1px solid rgba(33, 150, 243, 0.3);
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 20px;
+        text-align: center;
+        color: #1976d2;
+      }
+    `;
+    document.head.appendChild(styles);
+  }
+  
+  document.body.appendChild(modal);
+  
+  // إضافة event listeners
+  modal.querySelector('.device-modal-close').addEventListener('click', () => {
+    document.body.removeChild(modal);
+  });
+  
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      document.body.removeChild(modal);
+    }
+  });
+  
+  // إضافة event listeners لأزرار الحذف
+  modal.querySelectorAll('.remove-device-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const deviceId = e.target.getAttribute('data-device-id');
+      const username = getCurrentUsername();
+      
+      if (confirm('هل أنت متأكد من إزالة هذا الجهاز؟')) {
+        const success = await removeUserDevice(username, deviceId);
+        if (success) {
+          alert('تم حذف الجهاز بنجاح! يمكنك الآن تسجيل الدخول.');
+          document.body.removeChild(modal);
+          // إعادة تحميل الصفحة لإعادة فحص الأجهزة
+          window.location.reload();
+        } else {
+          alert('حدث خطأ أثناء حذف الجهاز. حاول مرة أخرى.');
+        }
+      }
+    });
+  });
+}
+
+// الحصول على اسم المستخدم الحالي
+function getCurrentUsername() {
+  const userData = localStorage.getItem('tanktools_current_user');
+  if (userData) {
+    try {
+      const user = JSON.parse(userData);
+      return user.username;
+    } catch (error) {
+      console.error('Error parsing current user data:', error);
+    }
+  }
+  return null;
+}
+
