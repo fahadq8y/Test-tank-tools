@@ -74,6 +74,15 @@
     .product-mogas-91{background:#9c27b0;color:white}
     .product-go{background:#3f51b5;color:white}
     .product-kero{background:#2196f3;color:white}
+    /* ألوان المنتجات المفقودة في PLCR */
+    .product-napha{background:#ff5722;color:white}
+    .product-reformate{background:#795548;color:white}
+    .product-foil{background:#607d8b;color:white}
+    .product-mogas{background:#e91e63;color:white}
+    .product-vgo{background:#9e9e9e;color:white}
+    .product-kkero{background:#2196f3;color:white}
+    .product-methanol{background:#00e676;color:white}
+    .product-default{background:#666;color:white}
     .status-badge{display:inline-block;padding:4px 8px;border-radius:8px;font-size:11px;font-weight:bold;text-transform:uppercase}
     .badge-active{background:#4CAF50;color:white}
     .badge-completed{background:#ff9800;color:white}
@@ -1369,17 +1378,18 @@
       // Get current level from form or use saved data
       let currentLevel = parseFloat(document.getElementById('editCurrentLevel').value);
       
-      // If no current level in form, use the saved current level from tank data
+      // If no current level in form, use the saved current level from tank data for calculation only
       if (!currentLevel && currentEditingTank && currentEditingTank.currentLevel) {
         currentLevel = currentEditingTank.currentLevel;
-        // Auto-fill the form field
-        document.getElementById('editCurrentLevel').value = currentLevel;
+        // DO NOT auto-fill the form field - keep it empty for user input
+        // document.getElementById('editCurrentLevel').value = currentLevel;
       }
       
-      // If still no current level, try to get from tank data
+      // If still no current level, try to get from tank data for calculation only
       if (!currentLevel && tankData.currentLevel) {
         currentLevel = tankData.currentLevel;
-        document.getElementById('editCurrentLevel').value = currentLevel;
+        // DO NOT auto-fill the form field - keep it empty for user input
+        // document.getElementById('editCurrentLevel').value = currentLevel;
       }
       
       // If still no current level, cannot calculate
@@ -1982,7 +1992,15 @@
         'MOGAS 91': 'product-mogas-91',
         'GO': 'product-go',
         'KERO': 'product-kero',
-        'Slop': 'product-slop'
+        'Slop': 'product-slop',
+        // إضافة ألوان للمنتجات المفقودة في PLCR
+        'NAPHA': 'product-napha',
+        'REFORMATE': 'product-reformate',
+        'F.OIL': 'product-foil',
+        'MOGAS': 'product-mogas',
+        'VGO': 'product-vgo',
+        'KKERO': 'product-kkero',
+        'METHANOL': 'product-methanol'
       };
       return classMap[product] || 'product-default';
     }
