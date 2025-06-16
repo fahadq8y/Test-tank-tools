@@ -421,11 +421,23 @@
           </div>
         </div>
         
-        <!-- السطر الثالث: Current Level + meter -->
+        <!-- السطر الثالث: Previous Level (readonly) + Current Level (editable) -->
         <div class="form-row" style="display:flex;gap:10px">
           <div class="form-group" style="flex:1">
+            <label class="form-label">📏 Last Level Added:</label>
+            <input type="number" step="any" class="form-input" id="editPreviousLevelDisplay" readonly style="background:#f5f5f5;color:#666">
+          </div>
+          <div class="form-group" style="flex:1">
             <label class="form-label">📏 Current Level:</label>
-            <input type="number" step="any" class="form-input" id="editCurrentLevel" placeholder="Enter current level" oninput="calculateActualRate()">
+            <input type="number" step="any" class="form-input" id="editCurrentLevel" placeholder="Enter new current level" oninput="calculateActualRate()">
+          </div>
+        </div>
+        
+        <!-- Unit row -->
+        <div class="form-row" style="display:flex;gap:10px">
+          <div class="form-group" style="flex:1">
+            <label class="form-label">📏 Unit:</label>
+            <input type="text" class="form-input" value="meter" readonly style="background:#f5f5f5;color:#666">
           </div>
           <div class="form-group" style="flex:1">
             <label class="form-label">📏 Unit:</label>
@@ -967,6 +979,13 @@
         
         <div class="tank-detail-section">
           <div class="tank-detail-single">
+            <div class="tank-detail-label">📏 Last Level Added</div>
+            <div class="tank-detail-value">${tank.currentLevel || tank.initialLevel || '-'} meter</div>
+          </div>
+        </div>
+        
+        <div class="tank-detail-section">
+          <div class="tank-detail-single">
             <div class="tank-detail-label">🔄 Last Edit</div>
             <div class="tank-detail-value">${lastEditInfo}</div>
           </div>
@@ -1314,9 +1333,11 @@
         
         // Auto-fill current level from saved data
         if (tank.currentLevel) {
-          document.getElementById('editCurrentLevel').value = tank.currentLevel;
-          console.log('✅ Auto-filled current level:', tank.currentLevel);
+          document.getElementById('editPreviousLevelDisplay').value = tank.currentLevel;
+          document.getElementById('editCurrentLevel').value = ''; // Leave empty for new input
+          console.log('✅ Auto-filled previous level:', tank.currentLevel);
         } else {
+          document.getElementById('editPreviousLevelDisplay').value = '';
           document.getElementById('editCurrentLevel').value = '';
           console.log('⚠️ No current level found in tank data');
         }
@@ -1340,6 +1361,28 @@
             option.selected = product === tank.product;
             editProductSelect.appendChild(option);
           });
+        }
+        
+        // Handle "Other" product type - check if product is not in standard list
+        const isOtherProduct = tank.product && !productsByDepartment[tank.department]?.includes(tank.product);
+        if (isOtherProduct) {
+          // Add "Other" option if not exists
+          let otherOption = editProductSelect.querySelector('option[value="Other"]');
+          if (!otherOption) {
+            otherOption = document.createElement('option');
+            otherOption.value = 'Other';
+            otherOption.textContent = 'Other';
+            editProductSelect.appendChild(otherOption);
+          }
+          
+          // Select "Other" and show the custom product name in notes
+          otherOption.selected = true;
+          
+          // Add custom product name to notes if not already there
+          const currentNotes = tank.notes || '';
+          if (!currentNotes.includes(tank.product)) {
+            document.getElementById('editNotes').value = `Product: ${tank.product}\n${currentNotes}`;
+          }
         }
         
         // Trigger calculation after form is filled
