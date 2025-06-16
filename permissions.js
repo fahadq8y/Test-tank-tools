@@ -91,30 +91,54 @@ const PAGE_NAMES = {
 // الحصول على بيانات المستخدم الحالي
 async function getCurrentUser() {
   console.log('getCurrentUser: Starting...');
+  
+  // التحقق من الجلسة أولاً
   const session = sessionStorage.getItem('tanktools_session');
   if (session !== 'active') {
     console.log('getCurrentUser: Session not active, returning null.');
     return null;
   }
   
+  // الحصول على بيانات المستخدم من localStorage
   const userData = localStorage.getItem('tanktools_current_user');
   let user = null;
+  
   if (userData) {
     try {
       user = JSON.parse(userData);
       console.log('getCurrentUser: User data from localStorage:', user);
     } catch (e) {
       console.error('getCurrentUser: Error parsing user data from localStorage:', e);
+      // إذا كانت البيانات تالفة، امسح الجلسة
+      sessionStorage.removeItem('tanktools_session');
+      localStorage.removeItem('tanktools_current_user');
       return null;
     }
   }
 
   if (!user || !user.username) {
-    console.log('getCurrentUser: No valid user in localStorage, returning null.');
+    console.log('getCurrentUser: No valid user in localStorage, clearing session.');
+    sessionStorage.removeItem('tanktools_session');
+    localStorage.removeItem('tanktools_current_user');
     return null;
   }
 
-  // Always try to update from Firebase for the latest permissions
+  // التحقق من صحة الجلسة (عمر الجلسة)
+  if (user.loginTime) {
+    const loginTime = new Date(user.loginTime);
+    const now = new Date();
+    const sessionAge = (now - loginTime) / (1000 * 60 * 60); // بالساعات
+    
+    // إذا كانت الجلسة أكبر من 24 ساعة، امسحها
+    if (sessionAge > 24) {
+      console.log('getCurrentUser: Session expired, clearing data.');
+      sessionStorage.removeItem('tanktools_session');
+      localStorage.removeItem('tanktools_current_user');
+      return null;
+    }
+  }
+
+  // محاولة تحديث البيانات من Firebase (اختياري)
   try {
     if (window.db && window.doc && window.getDoc) {
       console.log('getCurrentUser: Attempting to fetch latest user data from Firebase...');
@@ -123,33 +147,33 @@ async function getCurrentUser() {
       
       if (userDoc.exists()) {
         const firebaseUser = userDoc.data();
-        // Merge Firebase data with local data, Firebase data takes precedence
-        const updatedUser = { ...user, ...firebaseUser };
-        // Ensure customPages is an array
+        // دمج البيانات مع إعطاء الأولوية لبيانات Firebase
+        const updatedUser = { ...user, ...firebaseUser, loginTime: user.loginTime };
+        
+        // التأكد من أن customPages مصفوفة
         if (updatedUser.customPages && !Array.isArray(updatedUser.customPages)) {
           updatedUser.customPages = [];
         }
-        // Ensure customPermissions is an object
+        // التأكد من أن customPermissions كائن
         if (updatedUser.customPermissions && typeof updatedUser.customPermissions !== 'object') {
           updatedUser.customPermissions = {};
         }
+        
         localStorage.setItem('tanktools_current_user', JSON.stringify(updatedUser));
         console.log('getCurrentUser: Successfully updated user data from Firebase:', updatedUser);
         return updatedUser;
       } else {
         console.log('getCurrentUser: User not found in Firebase, using local data.');
-        // If user not in Firebase, clear local storage to prevent stale data issues
-        localStorage.removeItem('tanktools_current_user');
-        return null;
+        return user;
       }
     }
   } catch (error) {
     console.error('getCurrentUser: Error updating user data from Firebase:', error);
-    // Fallback to local data if Firebase update fails
+    // في حالة فشل Firebase، استخدم البيانات المحلية
     return user;
   }
   
-  console.log('getCurrentUser: Returning local user data (Firebase not available or failed):', user);
+  console.log('getCurrentUser: Returning local user data (Firebase not available):', user);
   return user;
 }
 
