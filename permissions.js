@@ -686,9 +686,29 @@ async function checkDeviceAccess(username) {
     const currentDevice = getDeviceInfo();
     console.log('checkDeviceAccess: Current device info:', currentDevice);
     
-    // الحصول على بيانات المستخدم
-    const users = await loadUsers();
-    const user = users[username];
+    // الحصول على بيانات المستخدم من Firebase مباشرة
+    let user = null;
+    
+    if (window.db && window.doc && window.getDoc) {
+      try {
+        const userRef = window.doc(window.db, 'users', username.toLowerCase());
+        const userDoc = await window.getDoc(userRef);
+        
+        if (userDoc.exists()) {
+          user = userDoc.data();
+          console.log('checkDeviceAccess: User data from Firebase:', user);
+        } else {
+          console.log('checkDeviceAccess: User not found in Firebase');
+          return { allowed: false, reason: 'user_not_found' };
+        }
+      } catch (firebaseError) {
+        console.error('checkDeviceAccess: Firebase error:', firebaseError);
+        return { allowed: false, reason: 'firebase_error' };
+      }
+    } else {
+      console.log('checkDeviceAccess: Firebase not available');
+      return { allowed: false, reason: 'firebase_not_available' };
+    }
     
     if (!user) {
       console.log('checkDeviceAccess: User not found');
@@ -713,20 +733,40 @@ async function checkDeviceAccess(username) {
     const existingDevice = user.devices.find(device => device.id === currentDevice.id);
     
     if (existingDevice) {
-      // الجهاز موجود - تحديث آخر استخدام
+      // الجهاز موجود - تحديث آخر استخدام في Firebase
       existingDevice.lastUsed = currentDevice.lastUsed;
-      await saveUsers(users);
-      console.log('checkDeviceAccess: Device found and updated');
-      return { allowed: true, reason: 'device_registered' };
+      
+      try {
+        const userRef = window.doc(window.db, 'users', username.toLowerCase());
+        await window.updateDoc(userRef, {
+          devices: user.devices,
+          updatedAt: new Date()
+        });
+        console.log('checkDeviceAccess: Device found and updated in Firebase');
+        return { allowed: true, reason: 'device_registered' };
+      } catch (updateError) {
+        console.error('checkDeviceAccess: Error updating device in Firebase:', updateError);
+        return { allowed: true, reason: 'device_registered' }; // السماح بالدخول حتى لو فشل التحديث
+      }
     }
     
     // الجهاز غير موجود - فحص إذا كان هناك مساحة لجهاز جديد
     if (user.devices.length < user.maxDevices) {
-      // إضافة الجهاز الجديد
+      // إضافة الجهاز الجديد وحفظه في Firebase
       user.devices.push(currentDevice);
-      await saveUsers(users);
-      console.log('checkDeviceAccess: New device added');
-      return { allowed: true, reason: 'device_added' };
+      
+      try {
+        const userRef = window.doc(window.db, 'users', username.toLowerCase());
+        await window.updateDoc(userRef, {
+          devices: user.devices,
+          updatedAt: new Date()
+        });
+        console.log('checkDeviceAccess: New device added and saved to Firebase');
+        return { allowed: true, reason: 'device_added' };
+      } catch (saveError) {
+        console.error('checkDeviceAccess: Error saving device to Firebase:', saveError);
+        return { allowed: false, reason: 'save_error' };
+      }
     }
     
     // تجاوز العدد المسموح
@@ -749,18 +789,25 @@ async function removeUserDevice(username, deviceId) {
   console.log('removeUserDevice: Removing device', deviceId, 'for user', username);
   
   try {
-    const users = await loadUsers();
-    const user = users[username];
-    
-    if (!user || !user.devices) {
-      return false;
+    if (window.db && window.doc && window.getDoc && window.updateDoc) {
+      const userRef = window.doc(window.db, 'users', username.toLowerCase());
+      const userDoc = await window.getDoc(userRef);
+      
+      if (userDoc.exists()) {
+        const user = userDoc.data();
+        if (user.devices) {
+          user.devices = user.devices.filter(device => device.id !== deviceId);
+          await window.updateDoc(userRef, {
+            devices: user.devices,
+            updatedAt: new Date()
+          });
+          console.log('removeUserDevice: Device removed successfully');
+          return true;
+        }
+      }
     }
+    return false;
     
-    user.devices = user.devices.filter(device => device.id !== deviceId);
-    await saveUsers(users);
-    
-    console.log('removeUserDevice: Device removed successfully');
-    return true;
   } catch (error) {
     console.error('removeUserDevice: Error removing device:', error);
     return false;
