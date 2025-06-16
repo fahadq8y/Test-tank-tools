@@ -1641,11 +1641,18 @@
         
         // Auto-fill current level from saved data
         if (tank.currentLevel) {
-          document.getElementById('editCurrentLevel').value = tank.currentLevel;
-          console.log('✅ Auto-filled current level:', tank.currentLevel);
-        } else {
+          document.getElementById('editPreviousLevelDisplay').value = tank.currentLevel;
+          document.getElementById('editCurrentLevel').value = ''; // Always leave empty for new input
+          console.log('✅ Auto-filled previous level:', tank.currentLevel);
+        } else if (tank.initialLevel) {
+          // If no currentLevel, use initialLevel as fallback
+          document.getElementById('editPreviousLevelDisplay').value = tank.initialLevel;
           document.getElementById('editCurrentLevel').value = '';
-          console.log('⚠️ No current level found in tank data');
+          console.log('✅ Auto-filled previous level from initial:', tank.initialLevel);
+        } else {
+          document.getElementById('editPreviousLevelDisplay').value = '';
+          document.getElementById('editCurrentLevel').value = '';
+          console.log('⚠️ No level found in tank data');
         }
         
         // ✅ FIXED: Proper Previous Level handling for all departments
@@ -1700,17 +1707,27 @@
             editProductSelect.appendChild(otherOption);
           }
           
-          // Select "Other" and show the custom product name in notes
+          // Select "Other" and show the custom product name in the Other Product field
           otherOption.selected = true;
           
-          // Add custom product name to notes if not already there
-          const currentNotes = tank.notes || '';
-          if (!currentNotes.includes(tank.product)) {
-            document.getElementById('editNotes').value = `Product: ${tank.product}\n${currentNotes}`;
-          }
+          // Show the Other Product field and fill it with the custom product name
+          document.getElementById('editOtherProductGroup').style.display = 'block';
+          document.getElementById('editOtherProduct').value = tank.product;
+          document.getElementById('editOtherProduct').required = true;
+          
+          // Clean up notes - remove "Product: [name]" if it exists
+          let cleanNotes = tank.notes || '';
+          const productPattern = new RegExp(`Product:\\s*${tank.product}\\s*\\n?`, 'i');
+          cleanNotes = cleanNotes.replace(productPattern, '').trim();
+          document.getElementById('editNotes').value = cleanNotes;
+        } else {
+          // Hide Other Product field for standard products
+          document.getElementById('editOtherProductGroup').style.display = 'none';
+          document.getElementById('editOtherProduct').required = false;
+          document.getElementById('editOtherProduct').value = '';
         }
         
-        // Check if OTHER product is selected and show field
+        // Check if OTHER product is selected and show field (legacy support)
         if (tank.product === 'OTHER' && tank.otherProduct) {
           document.getElementById('editOtherProductGroup').style.display = 'block';
           document.getElementById('editOtherProduct').value = tank.otherProduct;
