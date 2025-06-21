@@ -1246,8 +1246,12 @@
         (tank.finishDateTime.toDate ? tank.finishDateTime.toDate() : new Date(tank.finishDateTime)) :
         new Date(tank.finishDate + ' ' + tank.finishTime);
       
-      const reminderDate = finishDateTime.toISOString().split('T')[0].replace(/-/g, '');
-      const reminderTime = finishDateTime.toTimeString().slice(0, 5).replace(':', '') + '00';
+      // Fix timezone issue - Kuwait is UTC+3
+      const kuwaitOffset = 3; // UTC+3
+      const correctedDateTime = new Date(finishDateTime.getTime() - (kuwaitOffset * 60 * 60 * 1000));
+      
+      const reminderDate = correctedDateTime.toISOString().split('T')[0].replace(/-/g, '');
+      const reminderTime = correctedDateTime.toISOString().slice(11, 16).replace(':', '') + '00';
       
       const eventTitle = `Tank ${tank.tankNumber} - ${tank.product} (${tank.department})`;
       const eventDetails = `Target: ${tank.targetValue || 'N/A'} ${tank.targetType || ''}\\nRate: ${tank.rate || 'N/A'} ${tank.rateUnit || ''}\\nNotes: ${tank.notes || 'No notes'}`;
@@ -1490,6 +1494,20 @@
       const finishDate = document.getElementById('editFinishDate').value;
       const finishTime = document.getElementById('editFinishTime').value;
       const notes = document.getElementById('editNotes').value;
+      
+      // ✅ VALIDATION: Current Level is required
+      if (!currentLevel || currentLevel.trim() === '') {
+        alert('⚠️ Current Level is required!\n\nPlease enter the new current level before updating the tank.');
+        document.getElementById('editCurrentLevel').focus();
+        return;
+      }
+      
+      // Additional validation: Current Level must be a valid number
+      if (isNaN(parseFloat(currentLevel))) {
+        alert('⚠️ Current Level must be a valid number!\n\nPlease enter a numeric value for the current level.');
+        document.getElementById('editCurrentLevel').focus();
+        return;
+      }
       
       try {
         const finishDateTime = new Date(finishDate + ' ' + finishTime);
