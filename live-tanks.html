@@ -1248,7 +1248,7 @@
       
       // Fix timezone issue - Kuwait is UTC+3
       const kuwaitOffset = 3; // UTC+3
-      const correctedDateTime = new Date(finishDateTime.getTime() - (kuwaitOffset * 60 * 60 * 1000));
+      const correctedDateTime = new Date(finishDateTime.getTime() + (kuwaitOffset * 60 * 60 * 1000));
       
       const reminderDate = correctedDateTime.toISOString().split('T')[0].replace(/-/g, '');
       const reminderTime = correctedDateTime.toISOString().slice(11, 16).replace(':', '') + '00';
