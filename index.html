@@ -267,21 +267,34 @@ const products={
 async function fetchTankSpecifications() {
     const departments = ['pbcr', 'plcr', 'washery'];
     let allTanks = {};
-    for (const dept of departments) {
-        try {
+    
+    try {
+        for (const dept of departments) {
+            // المسار الصحيح هو: "tankData" -> (اسم القسم) -> "tanks"
             const tanksCollectionRef = collection(db, "tankData", dept, "tanks");
             const querySnapshot = await getDocs(tanksCollectionRef);
-            querySnapshot.forEach((doc) => { allTanks[doc.id] = doc.data(); });
-        } catch (e) { console.warn(`Could not fetch tanks for department: ${dept}`, e); }
+            querySnapshot.forEach((doc) => {
+                allTanks[doc.id] = doc.data();
+            });
+        }
+        
+        if (Object.keys(allTanks).length === 0) {
+            throw new Error("No tank specifications found in any department.");
+        }
+        
+        tankSpecsData = allTanks;
+        console.log("✅ All tank specifications loaded successfully from Firebase!");
+        
+        // إخفاء شاشة التحميل وإظهار المحتوى الرئيسي
+        document.getElementById('loadingOverlay').style.display = 'none';
+        document.getElementById('mainContent').style.display = 'block';
+
+    } catch (error) {
+        console.error("❌ Critical error fetching tank specifications:", error);
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        // عرض رسالة خطأ واضحة للمستخدم في حال الفشل
+        loadingOverlay.innerHTML = `<p style="color:red; font-size:18px; text-align:center; padding:20px;">Error: Failed to load tank specifications.<br>Please check console (F12) and contact administrator.</p>`;
     }
-    if (Object.keys(allTanks).length === 0) {
-        document.getElementById('loadingOverlay').innerHTML = '<p style="color:red; font-size:18px;">Error: Failed to load tank specifications. Please try again.</p>';
-        return;
-    }
-    tankSpecsData = allTanks;
-    console.log("✅ All tank specifications loaded successfully from Firebase!");
-    document.getElementById('loadingOverlay').style.display = 'none';
-    document.getElementById('mainContent').style.display = 'block';
 }
 
 function initApp() {
@@ -297,7 +310,9 @@ window.loadTank = () => {
     c = tankSpecsData[id].comment;
     m = tankSpecsData[id].min;
     x = tankSpecsData[id].max;
-  } else { c = m = x = 0; }
+  } else {
+    c = m = x = 0;
+  }
   calculate();
 };
 
