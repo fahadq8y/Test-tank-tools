@@ -270,7 +270,6 @@ async function fetchTankSpecifications() {
     
     try {
         for (const dept of departments) {
-            // المسار الصحيح هو: "tankData" -> (اسم القسم) -> "tanks"
             const tanksCollectionRef = collection(db, "tankData", dept, "tanks");
             const querySnapshot = await getDocs(tanksCollectionRef);
             querySnapshot.forEach((doc) => {
@@ -285,14 +284,12 @@ async function fetchTankSpecifications() {
         tankSpecsData = allTanks;
         console.log("✅ All tank specifications loaded successfully from Firebase!");
         
-        // إخفاء شاشة التحميل وإظهار المحتوى الرئيسي
         document.getElementById('loadingOverlay').style.display = 'none';
         document.getElementById('mainContent').style.display = 'block';
 
     } catch (error) {
         console.error("❌ Critical error fetching tank specifications:", error);
         const loadingOverlay = document.getElementById('loadingOverlay');
-        // عرض رسالة خطأ واضحة للمستخدم في حال الفشل
         loadingOverlay.innerHTML = `<p style="color:red; font-size:18px; text-align:center; padding:20px;">Error: Failed to load tank specifications.<br>Please check console (F12) and contact administrator.</p>`;
     }
 }
