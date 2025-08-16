@@ -267,30 +267,21 @@ const products={
 async function fetchTankSpecifications() {
     const departments = ['pbcr', 'plcr', 'washery'];
     let allTanks = {};
-    
     try {
         for (const dept of departments) {
             const tanksCollectionRef = collection(db, "tankData", dept, "tanks");
             const querySnapshot = await getDocs(tanksCollectionRef);
-            querySnapshot.forEach((doc) => {
-                allTanks[doc.id] = doc.data();
-            });
+            querySnapshot.forEach((doc) => { allTanks[doc.id] = doc.data(); });
         }
-        
-        if (Object.keys(allTanks).length === 0) {
-            throw new Error("No tank specifications found in any department.");
-        }
-        
+        if (Object.keys(allTanks).length === 0) { throw new Error("No tank specifications found."); }
         tankSpecsData = allTanks;
         console.log("✅ All tank specifications loaded successfully from Firebase!");
-        
         document.getElementById('loadingOverlay').style.display = 'none';
         document.getElementById('mainContent').style.display = 'block';
-
     } catch (error) {
         console.error("❌ Critical error fetching tank specifications:", error);
         const loadingOverlay = document.getElementById('loadingOverlay');
-        loadingOverlay.innerHTML = `<p style="color:red; font-size:18px; text-align:center; padding:20px;">Error: Failed to load tank specifications.<br>Please check console (F12) and contact administrator.</p>`;
+        loadingOverlay.innerHTML = `<p style="color:red;">Error: Failed to load tank specifications.</p>`;
     }
 }
 
@@ -307,25 +298,41 @@ window.loadTank = () => {
     c = tankSpecsData[id].comment;
     m = tankSpecsData[id].min;
     x = tankSpecsData[id].max;
-  } else {
-    c = m = x = 0;
-  }
+  } else { c = m = x = 0; }
   calculate();
 };
 
-window.addEventListener('load',()=>setTimeout(checkLogin,100));
-function checkLogin(){const s=sessionStorage.getItem('tanktools_session'),u=localStorage.getItem('tanktools_current_user');if(s!=='active'||!u){showAccess();return}try{currentUser=JSON.parse(u);if(!currentUser||!currentUser.username){showAccess();return}initApp()}catch{showAccess()}}
-function showAccess(){
+// --- بداية التعديل المهم ---
+async function checkLogin() {
+    // الآن، checkPageAccess هي نقطة البداية بعد تحميل الصفحة
+    const hasAccess = await window.checkPageAccess();
+    
+    if (hasAccess) {
+        // إذا تم منح الوصول، نحصل على بيانات المستخدم ونبدأ التطبيق
+        currentUser = await window.getCurrentUser();
+        if (currentUser) {
+            initApp();
+        } else {
+            // هذا لا يفترض أن يحدث إذا كان hasAccess صحيحًا، ولكنه إجراء احترازي
+            window.showAccessDenied();
+        }
+    }
+    // إذا لم يتم منح الوصول، فإن checkPageAccess ستقوم باللازم (إظهار شاشة الرفض)
+    // ونحن نخفي شاشة التحميل في كل الأحوال
     document.getElementById('loadingOverlay').style.display = 'none';
-    document.getElementById('accessDenied').style.display='flex';
 }
-window.goToLogin=()=>{sessionStorage.setItem('tanktools_redirect','index.html');window.location.href='login.html'};
+
+// نستدعي checkLogin عند تحميل الصفحة
+window.addEventListener('load', () => setTimeout(checkLogin, 100));
+// --- نهاية التعديل المهم ---
+
+
 function loadUser(){if(!currentUser)return;document.getElementById('userName').textContent=currentUser.username;document.getElementById('userAvatar').textContent=(currentUser.fullName||currentUser.username).charAt(0).toUpperCase();if(currentUser.username==='fam030'||currentUser.role==='admin')document.getElementById('adminLink').style.display='inline-block';
-  checkLiveTanksAccess();
+  // checkLiveTanksAccess is now handled by permissions.js
 }
-window.logout=()=>{sessionStorage.removeItem('tanktools_session');localStorage.removeItem('tanktools_current_user');window.location.href='login.html'};
+
 window.calculate=()=>{const level=parseFloat(document.getElementById("level").value||0),target=parseFloat(document.getElementById("target").value||0),flowRaw=parseFloat(document.getElementById("flowrate").value||0),unit=document.getElementById("flowUnit").value,mode=document.getElementById("mode").value;const available=document.getElementById("availablePumpable"),ullageDiv=document.getElementById("currentUllage"),levelEst=document.getElementById("levelEstimate"),valueDiff=document.getElementById("valueDiff"),output=document.getElementById("output"),calendar=document.getElementById("calendarLink");calcData=null;document.getElementById('add-to-live-tanks-btn').style.display='none';if(!c||isNaN(level)){available.innerText=ullageDiv.innerText=valueDiff.innerText=levelEst.innerText=output.innerHTML="";return}const availablePumpable=(level-m)*c,currentUllage=(x-level)*c;available.innerText=`Available Pumpable: ${availablePumpable.toFixed(2)} bbl`;ullageDiv.innerText=`Current Ullage: ${currentUllage.toFixed(2)} bbl`;if(!isNaN(target)){let estLevel=0;if(mode==="pumpable")estLevel=(target/c)+m;else if(mode==="ullage")estLevel=x-(target/c);else if(mode==="level")estLevel=target;const levelDiff=estLevel-level;let estText=`Level Estimate: ${estLevel.toFixed(2)} m\nLevel Difference: ${levelDiff.toFixed(2)} m`;if(estLevel>=x-0.5||estLevel<m){levelEst.style.color="#ff5555";estText+=`\nHigh Level = ${x.toFixed(2)} m`}else{levelEst.style.color="#00ffff"}levelEst.innerText=estText;let diff=0;if(mode==="pumpable"){diff=target-availablePumpable;valueDiff.innerText=`Difference: ${diff.toLocaleString()} bbl`}else if(mode==="ullage"){diff=currentUllage-target;valueDiff.innerText=`To leave ${target.toLocaleString()} bbl ullage, fill: ${diff.toLocaleString()} bbl`}else if(mode==="level"){const meters=level-target;diff=meters*c;valueDiff.innerText=`Level Difference: ${Math.abs(meters).toFixed(2)} m`}const flow=unit==="m3"?flowRaw*6.28:unit==="mtr"?flowRaw:flowRaw;let time=0;if(unit==="mtr"&&mode!=="level"){time=Math.abs(diff/c)/flowRaw}else if(mode==="level"&&unit==="mtr"){time=Math.abs(level-target)/flowRaw}else{time=Math.abs(diff)/flow}if(!isNaN(time)&&time>0){const hrs=Math.floor(time),mins=Math.round((time%1)*60),now=new Date(),finish=new Date(now.getTime()+time*3600000);let ft,fd;try{ft=finish.toLocaleTimeString('en-GB',{hour:"2-digit",minute:"2-digit",hour12:false});fd=finish.toLocaleDateString('en-GB')}catch{ft=`${finish.getHours().toString().padStart(2,'0')}:${finish.getMinutes().toString().padStart(2,'0')}`;fd=`${finish.getDate()}/${finish.getMonth()+1}/${finish.getFullYear()}`}output.innerHTML=`Time Needed: ${hrs} hr ${mins} min<br>Finish Time: ${ft}<br>Finish Date: ${fd}`;const s=new Date(finish.getTime()-600000),e=new Date(s.getTime()+900000);calendar.href=`https://calendar.google.com/calendar/render?action=TEMPLATE&text=Tank+${document.getElementById("tankInput").value||"Tank"}+Reminder&dates=${s.toISOString().replace(/[-:]|\.\d{3}/g,"")}/${e.toISOString().replace(/[-:]|\.\d{3}/g,"")}`;output.style.color=isSameShift(now,finish)?"red":"lightgreen";calcData={tankNumber:document.getElementById("tankInput").value,finishDate:`${finish.getFullYear()}-${String(finish.getMonth()+1).padStart(2,'0')}-${String(finish.getDate()).padStart(2,'0')}`,finishTime:ft};
-checkAddToLiveTanksPermission();
+// checkAddToLiveTanksPermission is now handled by permissions.js
 if(currentUser&&document.getElementById("tankInput").value){logPBCRCalculation(document.getElementById("tankInput").value,hrs,mins,ft,fd);}}}
 function isSameShift(now,finish){const getShift=h=>{const m=h.getHours()*60+h.getMinutes();return m>=360&&m<840?"morning":m>=840&&m<1320?"evening":"night"};const currentShift=getShift(now),finishShift=getShift(finish);if(currentShift!==finishShift)return false;if(currentShift==="night"){const nowHour=now.getHours(),finishHour=finish.getHours();if(nowHour>=0&&nowHour<6){if(finishHour>=0&&finishHour<6)return Math.floor((finish.getTime()-now.getTime())/(24*60*60*1000))<=1;else if(finishHour>=22)return Math.floor((finish.getTime()-now.getTime())/(24*60*60*1000))===0}else if(nowHour>=22){if(finishHour>=22)return now.toDateString()===finish.toDateString();else if(finishHour>=0&&finishHour<6)return Math.floor((finish.getTime()-now.getTime())/(24*60*60*1000))===1}return false}return now.toDateString()===finish.toDateString()}
 window.addToTable=()=>{if(!calcData||!calcData.tankNumber){alert("Please calculate a tank first!");return}const table=document.getElementById("tankTable").getElementsByTagName("tbody")[0],row=table.insertRow();const now=new Date();const finishDateTime=new Date(`${calcData.finishDate} ${calcData.finishTime}`);const sameShift=isSameShift(now,finishDateTime);row.className=sameShift?'same-shift':'next-shift';row.innerHTML=`<td>${calcData.tankNumber}</td><td>${calcData.finishDate}</td><td>${calcData.finishTime}</td><td><button class="delete-btn" onclick="this.parentNode.parentNode.remove();saveData()">Delete</button></td>`;saveData()};
@@ -360,13 +367,8 @@ const message=`📅 How to use Calendar Reminder:\n\n1. Calculate your tank fini
 window.showCalendarHelp=showCalendarHelp;
 async function logPBCRCalculation(tankNumber,hours,minutes,finishTime,finishDate){if(!currentUser)return;try{const userIP=await fetch('https://api.ipify.org?format=json').then(r=>r.json()).then(data=>data.ip).catch(()=>'Unknown');const timestamp=new Date();const detailedAction=`Calculated Tank ${tankNumber} in PBCR - Result: ${hours}h ${minutes}m (Finish: ${finishTime} - ${finishDate}) by ${currentUser.username}`;await addDoc(collection(db,'activities'),{action:detailedAction,originalAction:'pbcr_calculation',username:currentUser.username,tankNumber:tankNumber,calculationResult:`${hours}h ${minutes}m`,finishTime:finishTime,finishDate:finishDate,timestamp:serverTimestamp(),ip:userIP,userAgent:navigator.userAgent.substring(0,100),page:'pbcr-calculator'});}catch(error){console.error('Error logging PBCR calculation:',error);}}
 function showLiveTanksHelp(){alert('🔴 Add to Live Tanks:\n\nAdds your tank to the live monitoring system for all users to see. Requires panel operator or admin access.');}
-async function checkLiveTanksAccess(){try{const canViewLiveTanks=await hasPermission('canViewLiveTanks');const liveTanksButton=document.getElementById('live-tanks-btn');if(canViewLiveTanks){if(liveTanksButton)liveTanksButton.style.display='inline-block';}else{if(liveTanksButton)liveTanksButton.style.display='none';}}catch(error){console.error('Error checking Live Tanks access permission:',error);const liveTanksButton=document.getElementById('live-tanks-btn');if(liveTanksButton)liveTanksButton.style.display='none';}}
-async function checkAddToLiveTanksPermission(){try{if(!calcData||!calcData.tankNumber)return;const canAddToLiveTanks=await hasPermission('canAddToLiveTanks');const addButton=document.getElementById('add-to-live-tanks-btn');const helpButton=document.getElementById('add-to-live-tanks-help');if(canAddToLiveTanks){if(addButton){addButton.style.display='inline-flex';addButton.disabled=false;}
-if(helpButton){helpButton.style.display='inline-flex';helpButton.disabled=false;}}else{if(addButton){addButton.style.display='none';addButton.disabled=true;}
-if(helpButton){helpButton.style.display='none';helpButton.disabled=true;}}}catch(error){console.error('Error checking Add to Live Tanks permission:',error);const addButton=document.getElementById('add-to-live-tanks-btn');const helpButton=document.getElementById('add-to-live-tanks-help');if(addButton){addButton.style.display='none';addButton.disabled=true;}
-if(helpButton){helpButton.style.display='none';helpButton.disabled=true;}}}
 function showTableHelp(){alert('📊 Add to Table:\n\nAdds tank to your personal table below. Only you can see this table.');}
-window.showLiveTanksHelp=showLiveTanksHelp;window.showTableHelp=showTableHelp;window.checkAddToLiveTanksPermission=checkAddToLiveTanksPermission;window.checkLiveTanksAccess=checkLiveTanksAccess;
+window.showLiveTanksHelp=showLiveTanksHelp;window.showTableHelp=showTableHelp;
 </script>
 <footer>
   By <a href="#" class="whatsapp-link" onclick="window.open('https://wa.me/96555222550','_blank'); return false;">Fahad - 17877</a> – Version v5 - FIXED
