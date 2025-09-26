@@ -112,11 +112,23 @@
     .role-control{margin-left:15px}
     @media(max-width:768px){.header{flex-direction:column;gap:15px}.controls{flex-direction:column}.stats-grid{grid-template-columns:repeat(2,1fr)}.users-table{font-size:12px}.users-table th,.users-table td{padding:8px 6px}.action-buttons{flex-direction:column}.nav-links{flex-direction:column;width:100%}.role-settings-grid{grid-template-columns:1fr}}
     /* Force activities table to stay full width on all screen sizes */
-    .activities-table-container{overflow-x:auto !important;width:100% !important}
+    .activities-table-container{overflow-x:auto !important;width:100% !important;-webkit-overflow-scrolling:touch !important}
     .activities-table{min-width:800px !important;width:100% !important}
     .activities-table th,.activities-table td{padding:15px 20px !important;white-space:nowrap !important}
     .activities-table th{font-size:14px !important}
     .activities-table td{font-size:13px !important}
+    
+    /* Users table mobile scroll fix */
+    .users-table-container{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;background:rgba(255,255,255,0.95);border-radius:15px;box-shadow:0 5px 15px rgba(0,0,0,0.2)}
+    .users-table{min-width:900px;width:100%;color:#003366;border-collapse:collapse}
+    
+    /* Pagination styles */
+    .pagination-buttons{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .page-btn{padding:8px 12px;border:none;border-radius:6px;cursor:pointer;font-weight:600;transition:all 0.3s ease;min-width:35px;height:35px;display:flex;align-items:center;justify-content:center}
+    .page-btn.active{background:linear-gradient(45deg,#FFD700,#FFA500);color:#003366}
+    .page-btn:not(.active){background:rgba(255,255,255,0.2);color:white;border:1px solid rgba(255,255,255,0.3)}
+    .page-btn:hover:not(.active){background:rgba(255,255,255,0.3);transform:translateY(-1px)}
+    .page-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none}
   </style>
 </head>
 <body>
@@ -344,10 +356,15 @@
       
       <div class="pagination-container" style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
         <div class="pagination-info" style="color: rgba(255,255,255,0.8); font-size: 14px;">
-          Showing <span id="activitiesStart">0</span> - <span id="activitiesEnd">0</span> of <span id="activitiesTotal">0</span> activities
+          عرض <span id="activitiesStart">0</span> - <span id="activitiesEnd">0</span> من أصل <span id="activitiesTotal">0</span> نشاط
         </div>
         <div class="pagination-controls" style="display: flex; gap: 10px; align-items: center;">
-          <span style="color: rgba(255,255,255,0.8); font-size: 14px;">Page <span id="currentPage">1</span> of <span id="totalPages">1</span></span>
+          <div class="pagination-buttons">
+            <button class="page-btn" id="prevPageBtn" onclick="goToPreviousPage()" title="الصفحة السابقة">‹</button>
+            <div id="pageNumbers" style="display: flex; gap: 5px;"></div>
+            <button class="page-btn" id="nextPageBtn" onclick="goToNextPage()" title="الصفحة التالية">›</button>
+          </div>
+          <span style="color: rgba(255,255,255,0.8); font-size: 14px; margin-left: 10px;">صفحة <span id="currentPage">1</span> من <span id="totalPages">1</span></span>
         </div>
       </div>
     </div>
@@ -473,6 +490,11 @@
     let allUsers = [];
     let allActivities = [];
     let globalLiveTanksSettings = null;
+    
+    // Pagination variables
+    let currentActivitiesPage = 1;
+    let activitiesPerPage = 50;
+    let filteredActivities = [];
 
     // Check admin access
     function checkAdminAccess() {
@@ -547,9 +569,9 @@
         console.log(`Loaded ${allUsers.length} users`);
 
         console.log('Loading activities from Firebase...');
-        // Load activities
+        // Load ALL activities (no limit)
         const activitiesSnapshot = await getDocs(
-          query(collection(db, 'activities'), orderBy('timestamp', 'desc'), limit(50))
+          query(collection(db, 'activities'), orderBy('timestamp', 'desc'))
         );
         allActivities = [];
         
@@ -782,22 +804,23 @@
       });
       
       let html = `
-        <table class="users-table">
-          <thead>
-            <tr>
-              <th>Avatar</th>
-              <th>Full Name</th>
-              <th>Username</th>
-              <th>Email</th>
-              <th>Specialization</th>
-              <th>Pages Access</th>
-              <th>Live Tanks</th>
-              <th>Status</th>
-              <th>Last Login</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
+        <div class="users-table-container">
+          <table class="users-table">
+            <thead>
+              <tr>
+                <th>👤 Avatar</th>
+                <th>📛 Full Name</th>
+                <th>🔑 Username</th>
+                <th>📧 Email</th>
+                <th>🏢 Specialization</th>
+                <th>📄 Pages Access</th>
+                <th>🛢️ Live Tanks</th>
+                <th>🔄 Status</th>
+                <th>⏰ Last Login</th>
+                <th>⚙️ Actions</th>
+              </tr>
+            </thead>
+            <tbody>
       `;
       
       uniqueUsers.forEach(user => {
@@ -845,7 +868,7 @@
         `;
       });
       
-      html += '</tbody></table>';
+      html += '</tbody></table></div>';
       container.innerHTML = html;
     }
 
@@ -983,32 +1006,42 @@
       return 'Dashboard';
     }
 
-    // Display activities in table format
+    // Display activities in table format with pagination
     function displayActivities(activities) {
       const tbody = document.getElementById('activitiesTableBody');
       
-      if (activities.length === 0) {
+      // Store all activities for pagination
+      filteredActivities = activities.slice();
+      
+      if (filteredActivities.length === 0) {
         tbody.innerHTML = `
           <tr>
             <td colspan="5" style="padding: 30px; text-align: center; color: #666;">
-              📭 No activities found
+              📭 لا توجد أنشطة
             </td>
           </tr>
         `;
+        updatePaginationInfo(0, 0, 0);
         return;
       }
       
       // Sort by timestamp (newest first)
-      activities.sort((a, b) => {
+      filteredActivities.sort((a, b) => {
         const timeA = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(a.timestamp);
         const timeB = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(b.timestamp);
         return timeB - timeA;
       });
       
-      // Take first 50 activities
-      const displayActivities = activities.slice(0, 50);
+      // Calculate pagination
+      const totalActivities = filteredActivities.length;
+      const totalPages = Math.ceil(totalActivities / activitiesPerPage);
+      const startIndex = (currentActivitiesPage - 1) * activitiesPerPage;
+      const endIndex = Math.min(startIndex + activitiesPerPage, totalActivities);
       
-      tbody.innerHTML = displayActivities.map((activity, index) => {
+      // Get activities for current page
+      const pageActivities = filteredActivities.slice(startIndex, endIndex);
+      
+      tbody.innerHTML = pageActivities.map((activity, index) => {
         const timestamp = activity.timestamp?.toDate ? activity.timestamp.toDate() : new Date(activity.timestamp);
         const date = timestamp.toLocaleDateString('en-GB');
         const time = timestamp.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
@@ -1086,14 +1119,111 @@
       }).join('');
       
       // Store activities globally for details popup
-      window.currentActivities = displayActivities;
+      window.currentActivities = pageActivities;
       
-      // Update pagination info
-      document.getElementById('activitiesStart').textContent = '1';
-      document.getElementById('activitiesEnd').textContent = displayActivities.length;
-      document.getElementById('activitiesTotal').textContent = activities.length;
-      document.getElementById('currentPage').textContent = '1';
-      document.getElementById('totalPages').textContent = '1';
+      // Update pagination info and controls
+      updatePaginationInfo(startIndex + 1, endIndex, totalActivities);
+      updatePaginationControls(currentActivitiesPage, totalPages);
+    }
+    
+    // Update pagination information
+    function updatePaginationInfo(start, end, total) {
+      document.getElementById('activitiesStart').textContent = start;
+      document.getElementById('activitiesEnd').textContent = end;
+      document.getElementById('activitiesTotal').textContent = total;
+      document.getElementById('currentPage').textContent = currentActivitiesPage;
+      
+      const totalPages = Math.ceil(total / activitiesPerPage);
+      document.getElementById('totalPages').textContent = totalPages;
+    }
+    
+    // Update pagination controls
+    function updatePaginationControls(currentPage, totalPages) {
+      const pageNumbersContainer = document.getElementById('pageNumbers');
+      const prevBtn = document.getElementById('prevPageBtn');
+      const nextBtn = document.getElementById('nextPageBtn');
+      
+      // Update previous/next buttons
+      prevBtn.disabled = currentPage <= 1;
+      nextBtn.disabled = currentPage >= totalPages;
+      
+      // Generate page numbers
+      pageNumbersContainer.innerHTML = '';
+      
+      let startPage = Math.max(1, currentPage - 2);
+      let endPage = Math.min(totalPages, currentPage + 2);
+      
+      // Ensure we show at least 5 pages when possible
+      if (endPage - startPage < 4) {
+        if (startPage === 1) {
+          endPage = Math.min(totalPages, startPage + 4);
+        } else {
+          startPage = Math.max(1, endPage - 4);
+        }
+      }
+      
+      for (let i = startPage; i <= endPage; i++) {
+        const pageBtn = document.createElement('button');
+        pageBtn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+        pageBtn.textContent = i;
+        pageBtn.onclick = () => goToPage(i);
+        pageNumbersContainer.appendChild(pageBtn);
+      }
+      
+      // Add dots if needed
+      if (startPage > 1) {
+        const firstPageBtn = document.createElement('button');
+        firstPageBtn.className = 'page-btn';
+        firstPageBtn.textContent = '1';
+        firstPageBtn.onclick = () => goToPage(1);
+        pageNumbersContainer.insertBefore(firstPageBtn, pageNumbersContainer.firstChild);
+        
+        if (startPage > 2) {
+          const dots = document.createElement('span');
+          dots.textContent = '...';
+          dots.style.padding = '8px';
+          dots.style.color = 'rgba(255,255,255,0.6)';
+          pageNumbersContainer.insertBefore(dots, pageNumbersContainer.children[1]);
+        }
+      }
+      
+      if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+          const dots = document.createElement('span');
+          dots.textContent = '...';
+          dots.style.padding = '8px';
+          dots.style.color = 'rgba(255,255,255,0.6)';
+          pageNumbersContainer.appendChild(dots);
+        }
+        
+        const lastPageBtn = document.createElement('button');
+        lastPageBtn.className = 'page-btn';
+        lastPageBtn.textContent = totalPages;
+        lastPageBtn.onclick = () => goToPage(totalPages);
+        pageNumbersContainer.appendChild(lastPageBtn);
+      }
+    }
+    
+    // Navigation functions
+    function goToPage(page) {
+      const totalPages = Math.ceil(filteredActivities.length / activitiesPerPage);
+      if (page >= 1 && page <= totalPages) {
+        currentActivitiesPage = page;
+        displayActivities(filteredActivities);
+      }
+    }
+    
+    function goToPreviousPage() {
+      if (currentActivitiesPage > 1) {
+        goToPage(currentActivitiesPage - 1);
+      }
+    }
+    
+    function goToNextPage() {
+      const totalPages = Math.ceil(filteredActivities.length / activitiesPerPage);
+      if (currentActivitiesPage < totalPages) {
+        goToPage(currentActivitiesPage + 1);
+      }
     }
 
     // Show activity details popup
@@ -1829,6 +1959,11 @@
         navigator.clipboard.writeText(whatsappURL).then(()=>alert(`تم نسخ رابط الواتساب:\n${whatsappURL}`)).catch(()=>alert(`رابط الواتساب:\n${whatsappURL}`))
       }
     };
+    
+    // Make pagination functions globally available
+    window.goToPage = goToPage;
+    window.goToPreviousPage = goToPreviousPage; 
+    window.goToNextPage = goToNextPage;
   </script>
 
   <footer style="text-align:center;padding:20px;background:rgba(0,0,0,0.3);color:white;margin-top:30px">
