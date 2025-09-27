@@ -17,7 +17,7 @@
 <meta name="msapplication-TileColor" content="#003366">
 <meta name="msapplication-config" content="browserconfig.xml">
 
-<script src="permissions.js"></script>
+<!-- Removed permissions.js - using simple authentication like tank-management.html -->
 <style>
 *{margin:0;padding:0;box-sizing:border-box}body{background:linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.5)),url('background.jpg');background-size:cover;background-position:center;background-attachment:fixed;color:white;font-family:Arial,sans-serif;padding:20px;min-height:100vh}
 .nav-bar{display:flex;justify-content:space-between;align-items:center;padding:10px 20px;background:rgba(0,0,0,0.5);border-radius:10px;margin-bottom:20px;flex-wrap:wrap}
@@ -296,6 +296,45 @@ window.getDocs = getDocs;
 <script>
 let currentUser = null, c = 0, m = 0, x = 0, calcData = null;
 let tankSpecsData = {};
+
+// Check admin access - same as tank-management.html
+function checkAdminAccess() {
+  const session = sessionStorage.getItem('tanktools_session');
+  const userData = localStorage.getItem('tanktools_current_user');
+  
+  if (session !== 'active' || !userData) {
+    showMessage('❌ Login required to access this page', 'error');
+    setTimeout(() => window.location.href = 'login.html', 3000);
+    return false;
+  }
+  
+  try {
+    currentUser = JSON.parse(userData);
+    
+    // Allow all logged in users to access index (unlike tank-management)
+    // No role restriction for the main calculator page
+    
+    return true;
+    
+  } catch (error) {
+    console.error('Error parsing user data:', error);
+    showMessage('❌ Error in user data', 'error');
+    setTimeout(() => window.location.href = 'login.html', 3000);
+    return false;
+  }
+}
+
+// Show message function - same as tank-management.html
+function showMessage(text, type = 'info') {
+  // Create a simple alert for now - can be enhanced later
+  if (type === 'error') {
+    alert('❌ ' + text);
+  } else if (type === 'success') {
+    alert('✅ ' + text);
+  } else {
+    console.log(text);
+  }
+}
 
 const products={
   "PBCR":["LSFO","EGO 10PPM","EGO 500PPM","RHN","PCNA","NMOGAS","OLMOGAS","ATK","ARDR","IC5","ISOM","SLOP","OTHER"],
@@ -1068,20 +1107,14 @@ async function checkLogin() {
     
     console.log('✅ Firebase initialized successfully');
     
-    // Check page access after Firebase is ready
-    const hasAccess = await window.checkPageAccess();
+    // Use simple authentication check like tank-management.html
+    if (!checkAdminAccess()) {
+        return; // checkAdminAccess handles showing error and redirecting
+    }
     
-    if (hasAccess) {
-        console.log('✅ Access granted to PBCR Calculator');
-        
-        // Get user data if authenticated
-        currentUser = await window.getCurrentUser();
-        if (currentUser) {
-            console.log('✅ User authenticated:', currentUser.username);
-            loadUser();
-        } else {
-            console.log('⚠️ No user authentication - will redirect to login');
-        }
+    console.log('✅ Access granted to PBCR Calculator');
+    console.log('✅ User authenticated:', currentUser.username);
+    loadUser();
         
         // Load basic app functions
         loadData();
@@ -1123,12 +1156,6 @@ async function checkLogin() {
                 `;
             }
         }
-    } else {
-        console.log('❌ Access denied to PBCR Calculator');
-        // Access denied - checkPageAccess handles showing denial UI
-        // Hide loading overlay since we're not loading anything
-        document.getElementById('loadingOverlay').style.display = 'none';
-    }
 }
 // نستدعي checkLogin عند تحميل الصفحة
 window.addEventListener('load', () => {
