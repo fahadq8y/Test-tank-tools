@@ -340,7 +340,7 @@
         // Check the exact structure used in other pages
         console.log('🔍 Checking tankData structure from other pages...');
         try {
-          const departments = ['pbcr', 'plcr', 'washery'];
+          const departments = ['pbcr', 'plcr'];
           for (const dept of departments) {
             const tanksCollectionRef = collection(db, "tankData", dept, "tanks");
             const querySnapshot = await getDocs(tanksCollectionRef);
@@ -414,7 +414,10 @@
         
         console.log('🔍 Starting to load tanks from Firebase...');
         
-        for (const dept of departments) {
+        // Focus on existing departments first 
+        const existingDepartments = ['pbcr', 'plcr'];
+        
+        for (const dept of existingDepartments) {
           console.log(`🔍 Loading ${dept} tanks...`);
           
           try {
@@ -424,11 +427,16 @@
             console.log(`📊 ${dept} collection size:`, querySnapshot.size);
             
             querySnapshot.forEach((doc) => {
+              const data = doc.data();
               const tankData = { 
                 id: doc.id, 
                 department: dept,
-                ...doc.data(),
-                lastModified: doc.data().lastModified || 'غير محدد'
+                min: parseFloat(data.min || 0),
+                max: parseFloat(data.max || 0),
+                comment: parseFloat(data.comment || 0),
+                factor: parseFloat(data.factor || 0),
+                gross: parseFloat(data.gross || 0),
+                lastModified: data.lastModified || 'غير محدد'
               };
               console.log(`✅ Loaded tank ${doc.id} from ${dept}:`, tankData);
               allTanks.push(tankData);
@@ -554,16 +562,18 @@
         const deptClass = `dept-${tank.department}`;
         const deptName = tank.department.toUpperCase();
         
-        // Calculate total capacity
-        const capacity = tank.comment || tank.factor || 0;
-        const totalCapacity = capacity * (tank.max - tank.min);
+        // Calculate total capacity safely
+        const capacity = parseFloat(tank.comment || tank.factor || 0);
+        const minLevel = parseFloat(tank.min || 0);
+        const maxLevel = parseFloat(tank.max || 0);
+        const totalCapacity = capacity * (maxLevel - minLevel);
         
         return `
           <tr>
             <td><span class="tank-id">${tank.id}</span></td>
             <td><span class="dept-badge ${deptClass}">${deptName}</span></td>
-            <td>${(tank.min || 0).toFixed(2)}</td>
-            <td>${(tank.max || 0).toFixed(2)}</td>
+            <td>${minLevel.toFixed(2)}</td>
+            <td>${maxLevel.toFixed(2)}</td>
             <td>${capacity.toFixed(3)}</td>
             <td>${totalCapacity.toLocaleString()} برميل</td>
             <td><small>${formatDate(tank.lastModified)}</small></td>
