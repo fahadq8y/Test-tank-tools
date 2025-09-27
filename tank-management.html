@@ -179,15 +179,16 @@
               <th>🏢 Department</th>
               <th>📊 Min Level (m)</th>
               <th>📈 Max Level (m)</th>
-              <th>🧮 Capacity Factor</th>
-              <th>📦 Total Capacity</th>
+              <th>🧮 Comment (bbl/m)</th>
+              <th>⚗️ Factor</th>
+              <th>📦 Gross Capacity</th>
               <th>📅 Last Modified</th>
               <th>⚙️ Actions</th>
             </tr>
           </thead>
           <tbody id="tanksTableBody">
             <tr>
-              <td colspan="8" style="padding: 50px; text-align: center;">
+              <td colspan="9" style="padding: 50px; text-align: center;">
                 <div class="loading">
                   <div class="loading-spinner"></div>
                   <div>Loading Tank Data...</div>
@@ -229,17 +230,19 @@
           <label class="form-label">📈 Maximum Level (meters):</label>
           <input type="number" step="0.01" class="form-input" id="editMaxLevel" required>
         </div>
-        <div class="form-group">
-          <label class="form-label">🧮 Capacity Factor (bbl/meter):</label>
-          <input type="number" step="0.001" class="form-input" id="editCapacity" required>
+        <div class="form-group" id="commentFields">
+          <label class="form-label">🧮 Comment - Barrels per Meter (PBCR/WASHERY):</label>
+          <input type="number" step="0.001" class="form-input" id="editComment" placeholder="e.g. 1234.567">
         </div>
-        <div class="form-group" id="plcrFields" style="display:none">
-          <label class="form-label">⚗️ PLCR Factor:</label>
-          <input type="number" step="0.001" class="form-input" id="editPlcrFactor">
-        </div>
-        <div class="form-group" id="grossFields" style="display:none">
-          <label class="form-label">📦 Gross Capacity:</label>
-          <input type="number" step="0.01" class="form-input" id="editGross">
+        <div id="plcrFields" style="display:none">
+          <div class="form-group">
+            <label class="form-label">⚗️ Factor (PLCR):</label>
+            <input type="number" step="0.001" class="form-input" id="editPlcrFactor" placeholder="e.g. 0.158" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">📦 Gross Capacity (PLCR):</label>
+            <input type="number" step="0.01" class="form-input" id="editGross" placeholder="e.g. 50000">
+          </div>
         </div>
         <div style="display:flex;gap:15px;justify-content:flex-end;margin-top:30px">
           <button type="button" class="btn btn-secondary" onclick="closeTankModal()">❌ Cancel</button>
@@ -512,7 +515,7 @@
         const tbody = document.getElementById('tanksTableBody');
         tbody.innerHTML = `
           <tr>
-            <td colspan="8" style="padding: 50px; text-align: center; color: #f44336;">
+            <td colspan="9" style="padding: 50px; text-align: center; color: #f44336;">
               ❌ Failed to load tank data
               <br><small>Error: ${error.message}</small>
               <br><small>Check Console for more details</small>
@@ -542,7 +545,7 @@
       if (tanks.length === 0) {
         tbody.innerHTML = `
           <tr>
-            <td colspan="8" style="padding: 50px; text-align: center; color: #666;">
+            <td colspan="9" style="padding: 50px; text-align: center; color: #666;">
               📭 No tanks found
             </td>
           </tr>
@@ -562,11 +565,12 @@
         const deptClass = `dept-${tank.department}`;
         const deptName = tank.department.toUpperCase();
         
-        // Calculate total capacity safely
-        const capacity = parseFloat(tank.comment || tank.factor || 0);
+        // Parse all values safely
         const minLevel = parseFloat(tank.min || 0);
         const maxLevel = parseFloat(tank.max || 0);
-        const totalCapacity = capacity * (maxLevel - minLevel);
+        const comment = parseFloat(tank.comment || 0);
+        const factor = parseFloat(tank.factor || 0);
+        const gross = parseFloat(tank.gross || 0);
         
         return `
           <tr>
@@ -574,8 +578,9 @@
             <td><span class="dept-badge ${deptClass}">${deptName}</span></td>
             <td>${minLevel.toFixed(2)}</td>
             <td>${maxLevel.toFixed(2)}</td>
-            <td>${capacity.toFixed(3)}</td>
-            <td>${totalCapacity.toLocaleString()} bbl</td>
+            <td><strong>${comment > 0 ? comment.toFixed(3) : '-'}</strong></td>
+            <td>${factor > 0 ? factor.toFixed(3) : '-'}</td>
+            <td>${gross > 0 ? gross.toLocaleString() : '-'}</td>
             <td><small>${formatDate(tank.lastModified)}</small></td>
             <td>
               <div class="action-buttons">
@@ -616,15 +621,35 @@
       // Department change in modal
       document.getElementById('editDepartment').addEventListener('change', function() {
         const dept = this.value;
+        const commentFields = document.getElementById('commentFields');
         const plcrFields = document.getElementById('plcrFields');
-        const grossFields = document.getElementById('grossFields');
         
         if (dept === 'plcr') {
+          // PLCR uses factor and gross capacity
+          commentFields.style.display = 'none';
           plcrFields.style.display = 'block';
-          grossFields.style.display = 'block';
+          
+          // Clear and disable comment field
+          document.getElementById('editComment').value = '';
+          document.getElementById('editComment').required = false;
+          
+          // Enable PLCR fields
+          document.getElementById('editPlcrFactor').required = true;
+          document.getElementById('editGross').required = false;
+          
         } else {
+          // PBCR/WASHERY uses comment (barrels per meter)
+          commentFields.style.display = 'block';
           plcrFields.style.display = 'none';
-          grossFields.style.display = 'none';
+          
+          // Clear PLCR fields
+          document.getElementById('editPlcrFactor').value = '';
+          document.getElementById('editGross').value = '';
+          document.getElementById('editPlcrFactor').required = false;
+          document.getElementById('editGross').required = false;
+          
+          // Enable comment field
+          document.getElementById('editComment').required = true;
         }
       });
       
@@ -687,17 +712,34 @@
       document.getElementById('editDepartment').value = tank.department;
       document.getElementById('editMinLevel').value = tank.min || 0;
       document.getElementById('editMaxLevel').value = tank.max || 0;
-      document.getElementById('editCapacity').value = tank.comment || tank.factor || 0;
       
-      // PLCR specific fields
+      // Fill department-specific fields
+      const commentFields = document.getElementById('commentFields');
+      const plcrFields = document.getElementById('plcrFields');
+      
       if (tank.department === 'plcr') {
+        // PLCR uses factor and gross capacity
+        commentFields.style.display = 'none';
+        plcrFields.style.display = 'block';
+        
+        // Clear comment and fill PLCR fields
+        document.getElementById('editComment').value = '';
+        document.getElementById('editComment').required = false;
         document.getElementById('editPlcrFactor').value = tank.factor || 0;
+        document.getElementById('editPlcrFactor').required = true;
         document.getElementById('editGross').value = tank.gross || 0;
-        document.getElementById('plcrFields').style.display = 'block';
-        document.getElementById('grossFields').style.display = 'block';
+        
       } else {
-        document.getElementById('plcrFields').style.display = 'none';
-        document.getElementById('grossFields').style.display = 'none';
+        // PBCR/WASHERY uses comment (barrels per meter)
+        commentFields.style.display = 'block';
+        plcrFields.style.display = 'none';
+        
+        // Fill comment and clear PLCR fields
+        document.getElementById('editComment').value = tank.comment || 0;
+        document.getElementById('editComment').required = true;
+        document.getElementById('editPlcrFactor').value = '';
+        document.getElementById('editPlcrFactor').required = false;
+        document.getElementById('editGross').value = '';
       }
       
       document.getElementById('tankModal').classList.add('show');
@@ -712,8 +754,7 @@
           tankId: document.getElementById('editTankId').value.trim(),
           department: document.getElementById('editDepartment').value,
           min: parseFloat(document.getElementById('editMinLevel').value),
-          max: parseFloat(document.getElementById('editMaxLevel').value),
-          capacity: parseFloat(document.getElementById('editCapacity').value)
+          max: parseFloat(document.getElementById('editMaxLevel').value)
         };
         
         // Validation
@@ -736,10 +777,28 @@
         };
         
         if (formData.department === 'plcr') {
-          tankData.factor = formData.capacity;
-          tankData.gross = parseFloat(document.getElementById('editGross').value) || 0;
+          // PLCR uses factor and gross capacity
+          const plcrFactor = parseFloat(document.getElementById('editPlcrFactor').value);
+          const grossCapacity = parseFloat(document.getElementById('editGross').value);
+          
+          if (isNaN(plcrFactor) || plcrFactor <= 0) {
+            showMessage('❌ PLCR Factor is required and must be greater than 0', 'error');
+            return;
+          }
+          
+          tankData.factor = plcrFactor;
+          tankData.gross = grossCapacity || 0;
+          
         } else {
-          tankData.comment = formData.capacity;
+          // PBCR/WASHERY uses comment (barrels per meter)
+          const commentValue = parseFloat(document.getElementById('editComment').value);
+          
+          if (isNaN(commentValue) || commentValue <= 0) {
+            showMessage('❌ Comment (barrels per meter) is required and must be greater than 0', 'error');
+            return;
+          }
+          
+          tankData.comment = commentValue;
         }
         
         // Save to Firebase
