@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار Index بدون حماية</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+        h1 { text-align: center; color: #ffeb3b; margin-bottom: 30px; }
+        .loading { color: #ff9800; text-align: center; padding: 20px; }
+        .success { color: #4caf50; }
+        .error { color: #f44336; }
+        select, input { 
+            width: 100%; 
+            padding: 10px; 
+            margin: 10px 0; 
+            border: none; 
+            border-radius: 5px; 
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        .tank-info {
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 اختبار صفحة Index (بدون نظام حماية)</h1>
+        
+        <div id="status" class="loading">
+            ⏳ جاري تحميل بيانات الخزانات من Firebase...
+        </div>
+        
+        <div id="calculator" style="display: none;">
+            <h2>🧮 PBCR Calculator</h2>
+            
+            <label>اختر رقم الخزان:</label>
+            <select id="tankSelect" onchange="loadSelectedTank()">
+                <option value="">اختر خزان...</option>
+            </select>
+            
+            <div id="tankInfo" class="tank-info" style="display: none;"></div>
+            
+            <label>Current Level:</label>
+            <input type="number" id="currentLevel" step="0.01" placeholder="أدخل المستوى الحالي">
+            
+            <button onclick="calculate()">🧮 احسب</button>
+            
+            <div id="result" style="margin-top: 20px;"></div>
+        </div>
+        
+        <div id="tanksList" style="margin-top: 20px;"></div>
+    </div>
+
+    <!-- Firebase SDK v10 (same as actual Index page) -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, doc, getDoc, collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // ✅ EXACT same Firebase config as fixed Index page
+        const app = initializeApp({
+            apiKey: "AIzaSyBCdv37V6vOFMe42rGlPyl9lVq-9JldEPg",
+            authDomain: "tank-tools-knpc-c2d95.firebaseapp.com",
+            projectId: "tank-tools-knpc-c2d95",
+            storageBucket: "tank-tools-knpc-c2d95.appspot.com",
+            messagingSenderId: "678793823159",
+            appId: "1:678793823159:web:7a7b1398aefdb7f24462b9"
+        });
+
+        const db = getFirestore(app);
+        let tankSpecsData = {};
+        
+        console.log('✅ Firebase initialized (no auth required for testing)');
+
+        // Load tank data (same logic as Index page)
+        async function loadTankData() {
+            try {
+                console.log('🔄 Loading tank specifications from Firebase...');
+                
+                const tanksRef = collection(db, 'tankData', 'pbcr', 'tanks');
+                const querySnapshot = await getDocs(tanksRef);
+                
+                if (querySnapshot.empty) {
+                    throw new Error('No tanks found in Firebase');
+                }
+                
+                let tankCount = 0;
+                const tankSelect = document.getElementById('tankSelect');
+                const previouslyBrokenTanks = ['221', '460', '462', '834', '833', '520', '521'];
+                let fixedTanks = [];
+                
+                querySnapshot.forEach((doc) => {
+                    const tankData = doc.data();
+                    tankSpecsData[doc.id] = tankData;
+                    tankCount++;
+                    
+                    // Add to select dropdown
+                    const option = document.createElement('option');
+                    option.value = doc.id;
+                    option.textContent = `خزان ${doc.id}`;
+                    
+                    // Highlight previously broken tanks if they work now
+                    if (previouslyBrokenTanks.includes(doc.id)) {
+                        // Test reading logic
+                        let bmpValue = tankData.BPM || tankData.bmp || tankData.comment || tankData.Comment || tankData.capacity;
+                        let minValue = tankData.min || tankData.Min || tankData.minimum;
+                        let maxValue = tankData.max || tankData.Max || tankData.maximum;
+                        
+                        if (bmpValue && minValue && maxValue) {
+                            option.textContent += ' ✅ (مُصلح!)';
+                            option.style.background = '#4caf50';
+                            option.style.color = 'white';
+                            fixedTanks.push(doc.id);
+                        } else {
+                            option.textContent += ' ❌ (ما زال مكسور)';
+                            option.style.background = '#f44336';
+                            option.style.color = 'white';
+                        }
+                    }
+                    
+                    tankSelect.appendChild(option);
+                });
+                
+                document.getElementById('status').innerHTML = `
+                    <div class="success">
+                        ✅ تم تحميل ${tankCount} خزان بنجاح من Firebase!<br>
+                        🎯 ${fixedTanks.length}/${previouslyBrokenTanks.length} من الخزانات المكسورة سابقاً يعمل الآن!
+                    </div>
+                `;
+                
+                document.getElementById('calculator').style.display = 'block';
+                
+                // Show fixed tanks list
+                if (fixedTanks.length > 0) {
+                    document.getElementById('tanksList').innerHTML = `
+                        <div style="background: #4caf50; padding: 15px; border-radius: 8px; text-align: center;">
+                            <strong>🎉 الخزانات المُصلحة:</strong><br>
+                            ${fixedTanks.join(', ')}
+                        </div>
+                    `;
+                }
+                
+                console.log('✅ Tank data loaded successfully');
+                console.log('🎯 Fixed tanks:', fixedTanks);
+                
+            } catch (error) {
+                console.error('❌ Failed to load tank data:', error);
+                document.getElementById('status').innerHTML = `
+                    <div class="error">
+                        ❌ فشل في تحميل بيانات الخزانات<br>
+                        ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // Load selected tank info
+        window.loadSelectedTank = function() {
+            const tankId = document.getElementById('tankSelect').value;
+            const tankInfo = document.getElementById('tankInfo');
+            
+            if (!tankId) {
+                tankInfo.style.display = 'none';
+                return;
+            }
+            
+            const tankData = tankSpecsData[tankId];
+            if (!tankData) {
+                tankInfo.innerHTML = '❌ بيانات الخزان غير موجودة';
+                tankInfo.style.display = 'block';
+                return;
+            }
+            
+            // Use same reading logic as Index page
+            let bmpValue = tankData.BPM || tankData.bmp || tankData.comment || tankData.Comment || tankData.capacity;
+            let minValue = tankData.min || tankData.Min || tankData.minimum;
+            let maxValue = tankData.max || tankData.Max || tankData.maximum;
+            
+            tankInfo.innerHTML = `
+                <h3>خزان ${tankId}</h3>
+                <div>📊 BMP: ${bmpValue || 'غير محدد'}</div>
+                <div>📉 Min: ${minValue || 'غير محدد'}</div>
+                <div>📈 Max: ${maxValue || 'غير محدد'}</div>
+                <div style="margin-top: 10px; color: ${bmpValue && minValue && maxValue ? '#4caf50' : '#f44336'};">
+                    ${bmpValue && minValue && maxValue ? '✅ جميع البيانات متاحة - الخزان يعمل!' : '❌ بيانات مفقودة - الخزان لا يعمل'}
+                </div>
+            `;
+            tankInfo.style.display = 'block';
+        };
+
+        // Simple calculation
+        window.calculate = function() {
+            const tankId = document.getElementById('tankSelect').value;
+            const currentLevel = parseFloat(document.getElementById('currentLevel').value);
+            const result = document.getElementById('result');
+            
+            if (!tankId || isNaN(currentLevel)) {
+                result.innerHTML = '<div class="error">يرجى اختيار خزان وإدخال المستوى الحالي</div>';
+                return;
+            }
+            
+            const tankData = tankSpecsData[tankId];
+            if (!tankData) {
+                result.innerHTML = '<div class="error">خطأ: بيانات الخزان غير متاحة</div>';
+                return;
+            }
+            
+            let bmpValue = tankData.BPM || tankData.bmp || tankData.comment || tankData.Comment || tankData.capacity;
+            let minValue = tankData.min || tankData.Min || tankData.minimum;
+            let maxValue = tankData.max || tankData.Max || tankData.maximum;
+            
+            if (!bmpValue || !minValue || !maxValue) {
+                result.innerHTML = '<div class="error">❌ لا يمكن الحساب - بيانات الخزان مفقودة</div>';
+                return;
+            }
+            
+            const volume = currentLevel * parseFloat(bmpValue);
+            const capacity = parseFloat(maxValue) * parseFloat(bmpValue);
+            const percentage = (currentLevel / parseFloat(maxValue)) * 100;
+            
+            result.innerHTML = `
+                <div class="success">
+                    <h3>📊 نتائج الحساب:</h3>
+                    <div>📏 المستوى: ${currentLevel} متر</div>
+                    <div>🛢️ الحجم: ${volume.toFixed(2)} برميل</div>
+                    <div>📊 السعة الإجمالية: ${capacity.toFixed(2)} برميل</div>
+                    <div>📈 النسبة: ${percentage.toFixed(1)}%</div>
+                    <div style="margin-top: 10px; padding: 10px; background: #4caf50; border-radius: 5px;">
+                        ✅ <strong>الحساب تم بنجاح باستخدام بيانات Firebase!</strong>
+                    </div>
+                </div>
+            `;
+        };
+
+        // Start loading when page loads
+        window.addEventListener('load', () => {
+            console.log('🚀 Test page loaded, starting tank data loading...');
+            loadTankData();
+        });
+    </script>
+</body>
+</html>
