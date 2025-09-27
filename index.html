@@ -272,15 +272,17 @@ input,select{background:rgba(255,255,255,0.9);border-radius:12px;border:none;col
 </div>
 </div>
 <script type="module">
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js';
-import { getFirestore, doc, getDoc, setDoc, collection, addDoc, serverTimestamp, getDocs } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js';
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getFirestore, doc, getDoc, setDoc, collection, addDoc, serverTimestamp, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+// ✅ FIXED: Using correct Firebase config (same as dashboard & other pages)
 const app = initializeApp({
-    apiKey: "AIzaSyDGpAHia_wEmrhnmYjrPf1n1TrAzwEMiAI",
-    authDomain: "tank-tools.firebaseapp.com",
-    projectId: "tank-tools",
-    storageBucket: "tank-tools.appspot.com",
-    messagingSenderId: "278680662267",
-    appId: "1:278680662267:web:d4185d8b6fb96c4df8c2dc"
+    apiKey: "AIzaSyD7lJcoY33FEC9d6eWy67QIO9SV4lS24pg",
+    authDomain: "tank-tools-knpc-c2d95.firebaseapp.com",
+    projectId: "tank-tools-knpc-c2d95",
+    storageBucket: "tank-tools-knpc-c2d95.firebasestorage.app",
+    messagingSenderId: "510062594324",
+    appId: "1:510062594324:web:b892fd02007a5ca2f0da01"
 });
 window.db = getFirestore(app);
 window.doc = doc;
