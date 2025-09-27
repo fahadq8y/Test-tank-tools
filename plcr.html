@@ -181,6 +181,11 @@
     .btn-secondary{background:linear-gradient(45deg,#6c757d,#5a6268);color:white}
     .modal-buttons{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
     
+    /* Loading overlay styles */
+    .loading-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:flex;justify-content:center;align-items:center;z-index:10000;flex-direction:column;gap:15px}
+    .loading-spinner{width:50px;height:50px;border:5px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 1s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    
     @media (max-width:600px){
       .nav-bar{flex-direction:column;gap:15px;padding:15px}
       .nav-links{order:1;justify-content:center;width:100%}
@@ -201,6 +206,12 @@
   </style>
 </head>
 <body>
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-spinner"></div>
+    <p>Loading PLCR Tank Data from Firebase...</p>
+  </div>
+
   <!-- Security Modal -->
   <div id="securityModal" class="security-modal">
     <div class="security-modal-content">
@@ -234,6 +245,7 @@
         <a class="nav-link" href="index.html">PBCR</a>
         <a class="nav-link active" href="plcr.html">PLCR</a>
         <a class="nav-link" href="NMOGASBL.html">NMOGAS</a>
+        <a class="nav-link" href="notifications.html">🔔 المنبه</a>
         <a class="nav-link" href="tank-management.html" id="tank-management-btn" style="display:none">🛢️ Tanks</a>
         <a class="nav-link" href="live-tanks.html" id="live-tanks-btn" style="display:none">🔴 Live Tanks</a>
         <a class="nav-admin" href="dashboard.html" id="adminLink" style="display:none">🔐 Dashboard</a>
@@ -417,43 +429,101 @@
     const WHATSAPP_NUMBER="96555222550";
     let currentUser=null;
     
-    // Tank conversion data (compressed)
-    const tankConversions={"101":{factor:0.206,gross:7.746},"204":{factor:0.605,gross:7.266},"221":{factor:0.737,gross:8.86},"253":{factor:1.128,gross:8.86},"255":{factor:1.528,gross:9.047},"256":{factor:1.528,gross:9.047},"272":{factor:0.759,gross:9.506},"273":{factor:0.437,gross:9.506},"274":{factor:0.437,gross:9.506},"275":{factor:0.999,gross:8.874},"278":{factor:0.99,gross:9.506},"279":{factor:0.455,gross:9.506},"281":{factor:0.282,gross:7.881},"282":{factor:0.282,gross:7.881},"424":{factor:2.272,gross:9.843},"425":{factor:2.414,gross:9.047},"426":{factor:2.414,gross:9.047},"456":{factor:1.321,gross:8.873},"460":{factor:1.640,gross:8.860},"461":{factor:1.640,gross:8.860},"462":{factor:1.494,gross:8.874},"467":{factor:1.358,gross:9.054},"468":{factor:1.358,gross:9.054},"469":{factor:1.358,gross:9.054},"470":{factor:1.358,gross:9.054},"521":{factor:0.508,gross:8.168},"522":{factor:1.476,gross:8.168},"531":{factor:1.506,gross:8.168},"532":{factor:1.506,gross:8.168},"533":{factor:1.506,gross:8.168},"534":{factor:1.506,gross:8.168},"600":{factor:1.227,gross:7.736},"601":{factor:1.227,gross:7.736},"603":{factor:1.519,gross:7.700},"620":{factor:4.560,gross:7.640},"621":{factor:4.560,gross:7.640},"622":{factor:0.645,gross:7.764},"664":{factor:0.914,gross:7.727},"665":{factor:0.914,gross:7.727},"668":{factor:2.154,gross:7.740},"669":{factor:2.154,gross:7.740},"670":{factor:2.154,gross:7.740},"671":{factor:2.011,gross:7.830},"672":{factor:2.011,gross:7.830},"702":{factor:1.917,gross:6.763},"703":{factor:1.917,gross:6.763},"757":{factor:1.626,gross:7.000},"758":{factor:3.040,gross:6.787},"833":{factor:0.960,gross:7.768},"834":{factor:0.960,gross:7.768},"302":{factor:0.860,gross:7.758},"301":{factor:0.860,gross:7.758},"835":{factor:0.960,gross:7.748},"836":{factor:0.960,gross:7.748}};
-
-    // Combined tank data (static + Firebase)
-    let allTankConversions = {...tankConversions};
+    // RADICAL FIX: Pure Firebase Architecture - NO LOCAL DATA
+    // Removed all hardcoded tank conversions for pure Firebase dependency
     
-    // Load additional tanks from Firebase
+    // Pure Firebase tank data - NO local fallbacks
+    let allTankConversions = {};
+    
+    // Load ALL tanks from Firebase - Pure Firebase Architecture
     async function loadFirebaseTanks() {
       try {
         if (!window.db || !window.getDocs || !window.collection) {
-          console.log('Firebase not ready yet, retrying...');
+          console.log('🔄 Firebase not ready yet, retrying...');
           setTimeout(loadFirebaseTanks, 1000);
           return;
         }
         
-        const tanksRef = window.collection(window.db, 'tankData', 'plcr', 'tanks');
-        const snapshot = await window.getDocs(tanksRef);
+        console.log('🔄 Loading PLCR tanks from Firebase...');
         
-        snapshot.forEach((doc) => {
-          const tankNumber = doc.id;
-          const tankData = doc.data();
+        // Load from all departments for comprehensive tank data
+        const departments = ['plcr', 'pbcr', 'washery'];
+        let totalLoaded = 0;
+        
+        for (const dept of departments) {
+          const tanksRef = window.collection(window.db, 'tankData', dept, 'tanks');
+          const snapshot = await window.getDocs(tanksRef);
           
-          // Add to combined tank conversions if not already present
-          if (!allTankConversions[tankNumber] && tankData.factor && tankData.gross) {
-            allTankConversions[tankNumber] = {
-              factor: tankData.factor,
-              gross: tankData.gross
-            };
-            console.log(`Added tank ${tankNumber} from Firebase:`, tankData);
-          }
-        });
+          snapshot.forEach((doc) => {
+            const tankNumber = doc.id;
+            const tankData = doc.data();
+            
+            // Handle different field names and extract factor/gross data
+            let factor = tankData.factor || tankData.Factor;
+            let gross = tankData.gross || tankData.Gross;
+            
+            // For tanks with different data structure, try to compute from other fields
+            if (!factor && tankData.comment && tankData.capacity) {
+              // Try to compute factor from BPM data (this might need adjustment)
+              console.log(`⚠️ Tank ${tankNumber} missing factor, has BPM data:`, tankData);
+            }
+            
+            // Add tank if we have complete data
+            if (factor && gross) {
+              allTankConversions[tankNumber] = {
+                factor: factor,
+                gross: gross,
+                department: dept.toUpperCase()
+              };
+              totalLoaded++;
+              console.log(`✅ Added tank ${tankNumber} from ${dept.toUpperCase()}: factor=${factor}, gross=${gross}`);
+            } else {
+              console.warn(`⚠️ Tank ${tankNumber} from ${dept} missing required data:`, {
+                factor: factor,
+                gross: gross,
+                available: Object.keys(tankData)
+              });
+            }
+          });
+        }
         
-        console.log('Firebase tanks loaded successfully');
+        console.log(`🎯 Successfully loaded ${totalLoaded} PLCR tanks from Firebase!`);
+        
+        // Hide loading overlay
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        if (loadingOverlay) {
+          loadingOverlay.style.display = 'none';
+        }
+        
+        if (totalLoaded === 0) {
+          console.error('❌ No PLCR tanks loaded from Firebase!');
+          alert('⚠️ No PLCR tank data found in Firebase.\n\nPlease use Tank Management page to add PLCR tank specifications.\n\nRequired fields: factor, gross');
+        }
+        
         updateTankDropdown();
         
       } catch (error) {
-        console.error('Error loading Firebase tanks:', error);
+        console.error('❌ Error loading Firebase tanks:', error);
+        
+        // Hide loading overlay even on error
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        if (loadingOverlay) {
+          loadingOverlay.innerHTML = `
+            <div style="color:red; text-align: center; padding: 20px;">
+              <h3>❌ Failed to Load PLCR Tank Data</h3>
+              <p>Unable to connect to Firebase database.</p>
+              <p style="font-size: 14px; margin-top: 15px;">Error: ${error.message}</p>
+              <button onclick="location.reload()" style="
+                background: linear-gradient(45deg, #4CAF50, #45a049);
+                color: white; border: none; padding: 12px 24px;
+                border-radius: 8px; cursor: pointer; margin-top: 15px;
+                font-size: 16px; font-weight: bold;
+              ">🔄 Retry</button>
+              <br><br>
+              <small style="opacity: 0.8;">Contact Fahad - 17877 if this persists</small>
+            </div>
+          `;
+        }
       }
     }
     
@@ -492,7 +562,16 @@
     function checkLoginStatus(){
       const session=sessionStorage.getItem('tanktools_session'),userData=localStorage.getItem('tanktools_current_user');
       if(session!=='active'||!userData){showAccessDenied();return}
-      try{currentUser=JSON.parse(userData);initializeApp();logActivity('plcr_accessed',currentUser.username)}catch{showAccessDenied()}
+      try{
+        currentUser=JSON.parse(userData);
+        initializeApp();
+        
+        // Load Firebase tank data - CRITICAL FOR PURE FIREBASE ARCHITECTURE
+        console.log('🔄 Initializing PLCR with pure Firebase architecture...');
+        setTimeout(loadFirebaseTanks, 1000); // Give Firebase time to initialize
+        
+        logActivity('plcr_accessed',currentUser.username);
+      }catch{showAccessDenied()}
     }
     
     function showAccessDenied(){document.getElementById('mainContent').style.display='none';document.getElementById('accessDenied').style.display='flex'}
@@ -587,8 +666,20 @@
 
     window.calculate=()=>{
       const tk=document.getElementById("tk").value.trim(),value=parseFloat(document.getElementById("value").value),resultDiv=document.getElementById("result");
-      if(!allTankConversions[tk]){resultDiv.textContent="Tank number not found in database.";return}
+      
+      // Pure Firebase dependency check
+      if(!allTankConversions[tk]){
+        resultDiv.innerHTML=`❌ Tank ${tk} not found in Firebase database.<br><br>Use Tank Management page to add this tank's specifications.<br>Required: factor, gross values`;
+        return;
+      }
+      
       const tank=allTankConversions[tk],mode=modeSelect.value;
+      
+      // Validate tank data completeness
+      if (!tank.factor || !tank.gross) {
+        resultDiv.innerHTML=`❌ Tank ${tk} has incomplete data in Firebase.<br><br>Missing: ${!tank.factor ? 'factor' : ''} ${!tank.gross ? 'gross' : ''}<br><br>Use Tank Management page to complete this tank's data.`;
+        return;
+      }
       let metricTon,barrels,level;
       switch(mode){
         case "levelToBarrels":

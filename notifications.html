@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#003366">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Tank Tools - منبه">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <!-- iOS Safari specific settings -->
+    <meta name="format-detection" content="telephone=no">
+    <meta name="apple-touch-fullscreen" content="yes">
+    
+    <!-- Prevent zoom on focus -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <title>Tank Tools - تنبيهات ومنبه مستمر</title>
+    
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="/icon.png" type="image/png">
+    <link rel="apple-touch-icon" href="/icon.png">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: white;
+            direction: rtl;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .notification-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .section-title {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title .icon {
+            font-size: 1.5rem;
+        }
+
+        .permission-status {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-left: 10px;
+        }
+
+        .status-granted {
+            background-color: #4CAF50;
+        }
+
+        .status-denied {
+            background-color: #f44336;
+        }
+
+        .status-default {
+            background-color: #FF9800;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-warning {
+            background: linear-gradient(45deg, #FF9800, #F57C00);
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #f44336, #d32f2f);
+        }
+
+        .alarm-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .time-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 12px;
+            color: white;
+            font-size: 16px;
+            text-align: center;
+            direction: ltr;
+        }
+
+        .time-input:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.3);
+        }
+
+        .alarm-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .alarm-time {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .alarm-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-small {
+            padding: 8px 15px;
+            font-size: 14px;
+            width: auto;
+            margin: 0;
+        }
+
+        .persistent-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(76, 175, 80, 0.95);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+
+        .notification-sound-controls {
+            margin-top: 20px;
+        }
+
+        .sound-option {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .sound-option input[type="radio"] {
+            margin-left: 10px;
+        }
+
+        .volume-control {
+            margin-top: 15px;
+        }
+
+        .volume-slider {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            padding: 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .alarm-controls {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-btn" onclick="goBack()">←</button>
+    
+    <div class="container">
+        <div class="header">
+            <h1>🔔 تنبيهات ومنبه مستمر</h1>
+            <p>إعداد التنبيهات والمنبه للتطبيق</p>
+        </div>
+
+        <!-- صلاحيات التنبيهات -->
+        <div class="notification-section">
+            <div class="section-title">
+                <span class="icon">🔐</span>
+                صلاحيات التنبيهات
+            </div>
+            
+            <div class="permission-status" id="permissionStatus">
+                <span>حالة صلاحيات التنبيهات:</span>
+                <div style="display: flex; align-items: center;">
+                    <span id="permissionText">جاري التحقق...</span>
+                    <div class="status-indicator status-default" id="permissionIndicator"></div>
+                </div>
+            </div>
+
+            <button class="btn" id="requestPermissionBtn" onclick="requestNotificationPermission()">
+                طلب صلاحية التنبيهات
+            </button>
+        </div>
+
+        <!-- اختبار التنبيهات -->
+        <div class="notification-section">
+            <div class="section-title">
+                <span class="icon">📢</span>
+                اختبار التنبيهات
+            </div>
+            
+            <button class="btn btn-warning" onclick="testNotification()">
+                إرسال تنبيه تجريبي
+            </button>
+            
+            <button class="btn btn-warning" onclick="testPersistentNotification()">
+                إرسال تنبيه مستمر تجريبي
+            </button>
+        </div>
+
+        <!-- المنبه المستمر -->
+        <div class="notification-section">
+            <div class="section-title">
+                <span class="icon">⏰</span>
+                المنبه المستمر
+            </div>
+            
+            <div class="alarm-controls">
+                <input type="time" id="alarmTime" class="time-input" value="07:00">
+                <button class="btn" onclick="setAlarm()">تفعيل المنبه</button>
+            </div>
+            
+            <div id="activeAlarms"></div>
+            
+            <button class="btn btn-danger" onclick="stopAllAlarms()" style="margin-top: 15px;">
+                إيقاف جميع المنبهات
+            </button>
+        </div>
+
+        <!-- إعدادات الصوت -->
+        <div class="notification-section">
+            <div class="section-title">
+                <span class="icon">🔊</span>
+                إعدادات الصوت
+            </div>
+            
+            <div class="notification-sound-controls">
+                <div class="sound-option">
+                    <input type="radio" name="notificationSound" value="default" id="soundDefault" checked>
+                    <label for="soundDefault">الصوت الافتراضي</label>
+                </div>
+                <div class="sound-option">
+                    <input type="radio" name="notificationSound" value="beep" id="soundBeep">
+                    <label for="soundBeep">صوت بيب متكرر</label>
+                </div>
+                <div class="sound-option">
+                    <input type="radio" name="notificationSound" value="alarm" id="soundAlarm">
+                    <label for="soundAlarm">صوت منبه قوي</label>
+                </div>
+                
+                <div class="volume-control">
+                    <label for="volumeRange">مستوى الصوت:</label>
+                    <input type="range" id="volumeRange" class="volume-slider" min="0" max="100" value="80">
+                    <span id="volumeValue">80%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- التنبيهات التلقائية -->
+        <div class="notification-section">
+            <div class="section-title">
+                <span class="icon">🤖</span>
+                التنبيهات التلقائية
+            </div>
+            
+            <button class="btn" onclick="scheduleHourlyReminders()">
+                تفعيل التذكير كل ساعة
+            </button>
+            
+            <button class="btn btn-warning" onclick="scheduleWorkReminders()">
+                تذكير أوقات العمل (كل 30 دقيقة)
+            </button>
+            
+            <button class="btn btn-danger" onclick="clearAllReminders()">
+                إلغاء جميع التذكيرات
+            </button>
+        </div>
+    </div>
+
+    <!-- التنبيه المستمر -->
+    <div class="persistent-notification" id="persistentNotification">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span>منبه نشط - اضغط لإيقافه</span>
+            <button onclick="closePersistentNotification()" style="background: none; border: none; color: white; font-size: 18px; cursor: pointer;">×</button>
+        </div>
+    </div>
+
+    <!-- ملفات الصوت للمنبه -->
+    <audio id="alarmBeep" preload="auto" loop>
+        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwYAzyA0OzdiwQAZFl1FQ==" type="audio/wav">
+    </audio>
+    
+    <audio id="alarmSound" preload="auto" loop>
+        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwYAzyA0OzdiwQAZFl1FQ==" type="audio/wav">
+    </audio>
+
+    <script>
+        // متغيرات عامة
+        let activeAlarms = [];
+        let alarmIntervals = [];
+        let persistentAlarmInterval = null;
+        let notificationPermission = 'default';
+
+        // تحديد صلاحيات التنبيهات عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            checkNotificationPermission();
+            updateVolumeDisplay();
+            loadSavedSettings();
+        });
+
+        // تحديث عرض مستوى الصوت
+        function updateVolumeDisplay() {
+            const volumeRange = document.getElementById('volumeRange');
+            const volumeValue = document.getElementById('volumeValue');
+            
+            volumeRange.addEventListener('input', function() {
+                volumeValue.textContent = this.value + '%';
+                updateAudioVolume();
+            });
+        }
+
+        // تحديث مستوى صوت الملفات الصوتية
+        function updateAudioVolume() {
+            const volume = document.getElementById('volumeRange').value / 100;
+            document.getElementById('alarmBeep').volume = volume;
+            document.getElementById('alarmSound').volume = volume;
+        }
+
+        // حفظ الإعدادات
+        function saveSettings() {
+            const settings = {
+                volume: document.getElementById('volumeRange').value,
+                soundType: document.querySelector('input[name="notificationSound"]:checked').value,
+                activeAlarms: activeAlarms
+            };
+            localStorage.setItem('tankToolsNotificationSettings', JSON.stringify(settings));
+        }
+
+        // تحميل الإعدادات المحفوظة
+        function loadSavedSettings() {
+            const saved = localStorage.getItem('tankToolsNotificationSettings');
+            if (saved) {
+                const settings = JSON.parse(saved);
+                document.getElementById('volumeRange').value = settings.volume || 80;
+                document.getElementById('volumeValue').textContent = (settings.volume || 80) + '%';
+                
+                if (settings.soundType) {
+                    document.getElementById('sound' + settings.soundType.charAt(0).toUpperCase() + settings.soundType.slice(1)).checked = true;
+                }
+                
+                if (settings.activeAlarms) {
+                    activeAlarms = settings.activeAlarms;
+                    displayActiveAlarms();
+                }
+                
+                updateAudioVolume();
+            }
+        }
+
+        // فحص صلاحيات التنبيهات
+        function checkNotificationPermission() {
+            if ('Notification' in window) {
+                notificationPermission = Notification.permission;
+                updatePermissionDisplay();
+            } else {
+                document.getElementById('permissionText').textContent = 'غير مدعوم في هذا المتصفح';
+                document.getElementById('permissionIndicator').className = 'status-indicator status-denied';
+                document.getElementById('requestPermissionBtn').disabled = true;
+            }
+        }
+
+        // تحديث عرض حالة الصلاحيات
+        function updatePermissionDisplay() {
+            const permissionText = document.getElementById('permissionText');
+            const permissionIndicator = document.getElementById('permissionIndicator');
+            const requestBtn = document.getElementById('requestPermissionBtn');
+
+            switch(notificationPermission) {
+                case 'granted':
+                    permissionText.textContent = 'مسموح ✓';
+                    permissionIndicator.className = 'status-indicator status-granted';
+                    requestBtn.textContent = 'الصلاحيات مفعلة';
+                    requestBtn.disabled = true;
+                    break;
+                case 'denied':
+                    permissionText.textContent = 'مرفوض ✗';
+                    permissionIndicator.className = 'status-indicator status-denied';
+                    requestBtn.textContent = 'الصلاحيات مرفوضة - فعلها من إعدادات المتصفح';
+                    requestBtn.disabled = true;
+                    break;
+                default:
+                    permissionText.textContent = 'في انتظار الموافقة';
+                    permissionIndicator.className = 'status-indicator status-default';
+                    requestBtn.textContent = 'طلب صلاحية التنبيهات';
+                    requestBtn.disabled = false;
+            }
+        }
+
+        // طلب صلاحية التنبيهات
+        async function requestNotificationPermission() {
+            if ('Notification' in window) {
+                const permission = await Notification.requestPermission();
+                notificationPermission = permission;
+                updatePermissionDisplay();
+                
+                if (permission === 'granted') {
+                    showSuccessMessage('تم منح صلاحيات التنبيهات بنجاح! 🎉');
+                }
+            }
+        }
+
+        // إرسال تنبيه تجريبي
+        function testNotification() {
+            if (notificationPermission !== 'granted') {
+                alert('يجب منح صلاحيات التنبيهات أولاً');
+                return;
+            }
+
+            const notification = new Notification('Tank Tools - تنبيه تجريبي', {
+                body: 'هذا تنبيه تجريبي من تطبيق Tank Tools',
+                icon: '/icon.png',
+                tag: 'test-notification'
+            });
+
+            playNotificationSound();
+
+            notification.onclick = function() {
+                window.focus();
+                notification.close();
+            };
+
+            setTimeout(() => {
+                notification.close();
+            }, 5000);
+        }
+
+        // إرسال تنبيه مستمر تجريبي
+        function testPersistentNotification() {
+            if (notificationPermission !== 'granted') {
+                alert('يجب منح صلاحيات التنبيهات أولاً');
+                return;
+            }
+
+            createPersistentAlarm('تنبيه مستمر تجريبي', 'هذا تنبيه مستمر - اضغط لإيقافه');
+        }
+
+        // إنشاء منبه مستمر
+        function createPersistentAlarm(title, message) {
+            // إظهار التنبيه المستمر في الواجهة
+            const persistentDiv = document.getElementById('persistentNotification');
+            persistentDiv.querySelector('span').textContent = title;
+            persistentDiv.style.display = 'block';
+
+            // تشغيل الصوت المستمر
+            playAlarmSound();
+
+            // إرسال تنبيهات متكررة
+            persistentAlarmInterval = setInterval(() => {
+                if (notificationPermission === 'granted') {
+                    const notification = new Notification(title, {
+                        body: message,
+                        icon: '/icon.png',
+                        tag: 'persistent-alarm',
+                        requireInteraction: true
+                    });
+
+                    notification.onclick = function() {
+                        closePersistentNotification();
+                    };
+                }
+            }, 10000); // كل 10 ثواني
+
+            // اهتزاز إذا كان مدعوماً
+            if ('vibrate' in navigator) {
+                navigator.vibrate([200, 100, 200, 100, 200]);
+            }
+        }
+
+        // إغلاق التنبيه المستمر
+        function closePersistentNotification() {
+            document.getElementById('persistentNotification').style.display = 'none';
+            
+            if (persistentAlarmInterval) {
+                clearInterval(persistentAlarmInterval);
+                persistentAlarmInterval = null;
+            }
+
+            stopAlarmSound();
+        }
+
+        // تشغيل صوت التنبيه
+        function playNotificationSound() {
+            const soundType = document.querySelector('input[name="notificationSound"]:checked').value;
+            
+            if (soundType === 'beep') {
+                const beepSound = document.getElementById('alarmBeep');
+                beepSound.play().catch(e => console.log('لا يمكن تشغيل الصوت:', e));
+            } else if (soundType === 'alarm') {
+                const alarmSound = document.getElementById('alarmSound');
+                alarmSound.play().catch(e => console.log('لا يمكن تشغيل الصوت:', e));
+            }
+        }
+
+        // تشغيل صوت المنبه المستمر
+        function playAlarmSound() {
+            const soundType = document.querySelector('input[name="notificationSound"]:checked').value;
+            
+            if (soundType === 'beep') {
+                const beepSound = document.getElementById('alarmBeep');
+                beepSound.loop = true;
+                beepSound.play().catch(e => console.log('لا يمكن تشغيل الصوت:', e));
+            } else if (soundType === 'alarm') {
+                const alarmSound = document.getElementById('alarmSound');
+                alarmSound.loop = true;
+                alarmSound.play().catch(e => console.log('لا يمكن تشغيل الصوت:', e));
+            }
+        }
+
+        // إيقاف صوت المنبه
+        function stopAlarmSound() {
+            document.getElementById('alarmBeep').pause();
+            document.getElementById('alarmSound').pause();
+            document.getElementById('alarmBeep').currentTime = 0;
+            document.getElementById('alarmSound').currentTime = 0;
+        }
+
+        // تعيين منبه
+        function setAlarm() {
+            const timeInput = document.getElementById('alarmTime');
+            const alarmTime = timeInput.value;
+            
+            if (!alarmTime) {
+                alert('يرجى اختيار وقت للمنبه');
+                return;
+            }
+
+            if (notificationPermission !== 'granted') {
+                alert('يجب منح صلاحيات التنبيهات أولاً');
+                return;
+            }
+
+            const alarm = {
+                id: Date.now(),
+                time: alarmTime,
+                active: true
+            };
+
+            activeAlarms.push(alarm);
+            scheduleAlarm(alarm);
+            displayActiveAlarms();
+            saveSettings();
+
+            showSuccessMessage(`تم تعيين المنبه لـ ${alarmTime} ⏰`);
+        }
+
+        // جدولة المنبه
+        function scheduleAlarm(alarm) {
+            const now = new Date();
+            const [hours, minutes] = alarm.time.split(':');
+            let alarmDate = new Date(now);
+            alarmDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+
+            // إذا كان الوقت قد مضى اليوم، اجعله غداً
+            if (alarmDate <= now) {
+                alarmDate.setDate(alarmDate.getDate() + 1);
+            }
+
+            const timeUntilAlarm = alarmDate.getTime() - now.getTime();
+
+            const timeoutId = setTimeout(() => {
+                triggerAlarm(alarm);
+            }, timeUntilAlarm);
+
+            alarmIntervals.push({
+                id: alarm.id,
+                timeoutId: timeoutId
+            });
+        }
+
+        // تفعيل المنبه
+        function triggerAlarm(alarm) {
+            createPersistentAlarm(
+                `⏰ منبه Tank Tools - ${alarm.time}`,
+                'حان وقت المنبه! اضغط لإيقافه'
+            );
+
+            // جدولة المنبه للغد
+            setTimeout(() => {
+                if (alarm.active) {
+                    scheduleAlarm(alarm);
+                }
+            }, 1000);
+        }
+
+        // عرض المنبهات النشطة
+        function displayActiveAlarms() {
+            const container = document.getElementById('activeAlarms');
+            container.innerHTML = '';
+
+            activeAlarms.forEach(alarm => {
+                const alarmDiv = document.createElement('div');
+                alarmDiv.className = 'alarm-item';
+                alarmDiv.innerHTML = `
+                    <div>
+                        <div class="alarm-time">${alarm.time}</div>
+                        <div style="font-size: 0.9rem; opacity: 0.8;">منبه نشط</div>
+                    </div>
+                    <div class="alarm-actions">
+                        <button class="btn btn-danger btn-small" onclick="deleteAlarm(${alarm.id})">حذف</button>
+                    </div>
+                `;
+                container.appendChild(alarmDiv);
+            });
+        }
+
+        // حذف منبه
+        function deleteAlarm(alarmId) {
+            activeAlarms = activeAlarms.filter(alarm => alarm.id !== alarmId);
+            
+            // إلغاء المؤقت
+            const intervalIndex = alarmIntervals.findIndex(interval => interval.id === alarmId);
+            if (intervalIndex !== -1) {
+                clearTimeout(alarmIntervals[intervalIndex].timeoutId);
+                alarmIntervals.splice(intervalIndex, 1);
+            }
+
+            displayActiveAlarms();
+            saveSettings();
+            showSuccessMessage('تم حذف المنبه');
+        }
+
+        // إيقاف جميع المنبهات
+        function stopAllAlarms() {
+            activeAlarms = [];
+            alarmIntervals.forEach(interval => clearTimeout(interval.timeoutId));
+            alarmIntervals = [];
+            
+            closePersistentNotification();
+            displayActiveAlarms();
+            saveSettings();
+            
+            showSuccessMessage('تم إيقاف جميع المنبهات');
+        }
+
+        // جدولة تذكيرات كل ساعة
+        function scheduleHourlyReminders() {
+            if (notificationPermission !== 'granted') {
+                alert('يجب منح صلاحيات التنبيهات أولاً');
+                return;
+            }
+
+            // إلغاء التذكيرات السابقة
+            clearAllReminders();
+
+            const hourlyInterval = setInterval(() => {
+                const now = new Date();
+                const notification = new Notification('Tank Tools - تذكير كل ساعة', {
+                    body: `الوقت الآن ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`,
+                    icon: '/icon.png',
+                    tag: 'hourly-reminder'
+                });
+
+                playNotificationSound();
+
+                setTimeout(() => notification.close(), 10000);
+            }, 60 * 60 * 1000); // كل ساعة
+
+            localStorage.setItem('tankToolsHourlyReminder', hourlyInterval);
+            showSuccessMessage('تم تفعيل التذكير كل ساعة ⏰');
+        }
+
+        // جدولة تذكيرات أوقات العمل
+        function scheduleWorkReminders() {
+            if (notificationPermission !== 'granted') {
+                alert('يجب منح صلاحيات التنبيهات أولاً');
+                return;
+            }
+
+            const workInterval = setInterval(() => {
+                const now = new Date();
+                const hour = now.getHours();
+                
+                // أوقات العمل من 6 صباحاً إلى 6 مساءً
+                if (hour >= 6 && hour <= 18) {
+                    const notification = new Notification('Tank Tools - تذكير العمل', {
+                        body: 'تذكير: راجع حالة الخزانات والعمليات',
+                        icon: '/icon.png',
+                        tag: 'work-reminder'
+                    });
+
+                    playNotificationSound();
+
+                    setTimeout(() => notification.close(), 15000);
+                }
+            }, 30 * 60 * 1000); // كل 30 دقيقة
+
+            localStorage.setItem('tankToolsWorkReminder', workInterval);
+            showSuccessMessage('تم تفعيل تذكير أوقات العمل 💼');
+        }
+
+        // إلغاء جميع التذكيرات
+        function clearAllReminders() {
+            const hourlyReminder = localStorage.getItem('tankToolsHourlyReminder');
+            const workReminder = localStorage.getItem('tankToolsWorkReminder');
+
+            if (hourlyReminder) {
+                clearInterval(parseInt(hourlyReminder));
+                localStorage.removeItem('tankToolsHourlyReminder');
+            }
+
+            if (workReminder) {
+                clearInterval(parseInt(workReminder));
+                localStorage.removeItem('tankToolsWorkReminder');
+            }
+
+            showSuccessMessage('تم إلغاء جميع التذكيرات');
+        }
+
+        // عرض رسالة نجاح
+        function showSuccessMessage(message) {
+            const successDiv = document.createElement('div');
+            successDiv.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(76, 175, 80, 0.95);
+                color: white;
+                padding: 20px 30px;
+                border-radius: 10px;
+                z-index: 2000;
+                font-size: 16px;
+                text-align: center;
+            `;
+            successDiv.textContent = message;
+            document.body.appendChild(successDiv);
+
+            setTimeout(() => {
+                successDiv.remove();
+            }, 3000);
+        }
+
+        // العودة للصفحة السابقة
+        function goBack() {
+            if (document.referrer) {
+                window.history.back();
+            } else {
+                window.location.href = '/dashboard.html';
+            }
+        }
+
+        // تسجيل Service Worker للتنبيهات
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then(registration => {
+                    console.log('Service Worker registered for notifications');
+                })
+                .catch(error => {
+                    console.log('Service Worker registration failed:', error);
+                });
+        }
+
+        // منع إغلاق الصفحة عند وجود منبه نشط
+        window.addEventListener('beforeunload', function(e) {
+            if (persistentAlarmInterval) {
+                e.preventDefault();
+                e.returnValue = 'يوجد منبه نشط. هل تريد حقاً المغادرة؟';
+                return e.returnValue;
+            }
+        });
+
+        // الحفاظ على النشاط عند تشغيل المنبه
+        let wakeLock = null;
+
+        async function requestWakeLock() {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    console.log('Wake lock active');
+                }
+            } catch (err) {
+                console.log('Wake lock failed:', err);
+            }
+        }
+
+        function releaseWakeLock() {
+            if (wakeLock) {
+                wakeLock.release();
+                wakeLock = null;
+                console.log('Wake lock released');
+            }
+        }
+
+        // طلب Wake Lock عند تفعيل منبه
+        function setAlarmWithWakeLock() {
+            setAlarm();
+            requestWakeLock();
+        }
+
+        // تحديث زر المنبه لاستخدام Wake Lock
+        document.addEventListener('DOMContentLoaded', function() {
+            const alarmButton = document.querySelector('.alarm-controls .btn');
+            if (alarmButton) {
+                alarmButton.onclick = setAlarmWithWakeLock;
+            }
+        });
+    </script>
+</body>
+</html>

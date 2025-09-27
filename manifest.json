@@ -1,29 +1,35 @@
 {
   "name": "Tank Tools - KNPC System",
   "short_name": "Tank Tools",
-  "description": "Kuwait National Petroleum Company - Tank Management System by Fahad 17877",
-  "version": "3.0.0",
+  "description": "Kuwait National Petroleum Company - Tank Management System by Fahad 17877 مع دعم التنبيهات المستمرة",
+  "version": "3.1.0",
   "start_url": "/login.html",
   "scope": "/",
   "display": "standalone",
-  "orientation": "portrait-primary",
+  "orientation": "any",
   "theme_color": "#003366",
   "background_color": "#003366",
-  "lang": "en",
-  "dir": "ltr",
+  "lang": "ar",
+  "dir": "rtl",
   
   "icons": [
     {
       "src": "icon.png",
-      "sizes": "192x192",
+      "sizes": "72x72",
       "type": "image/png",
-      "purpose": "maskable any"
+      "purpose": "any"
     },
     {
       "src": "icon.png",
-      "sizes": "512x512",
+      "sizes": "96x96",
       "type": "image/png",
-      "purpose": "maskable any"
+      "purpose": "any"
+    },
+    {
+      "src": "icon.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "icon.png",
@@ -33,9 +39,27 @@
     },
     {
       "src": "icon.png",
-      "sizes": "72x72",
+      "sizes": "152x152",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "icon.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
     }
   ],
   
@@ -108,6 +132,19 @@
           "type": "image/png"
         }
       ]
+    },
+    {
+      "name": "تنبيهات المنبه",
+      "short_name": "المنبه",
+      "description": "إعداد التنبيهات والمنبه المستمر", 
+      "url": "/notifications.html",
+      "icons": [
+        {
+          "src": "icon.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
     }
   ],
 
@@ -165,5 +202,12 @@
   },
 
   "id": "tanktools-knpc-app",
-  "handle_links": "preferred"
+  "handle_links": "preferred",
+  
+  "display_override": ["standalone", "minimal-ui"],
+  
+  "permissions": [
+    "notifications",
+    "persistent-notification"
+  ]
 }

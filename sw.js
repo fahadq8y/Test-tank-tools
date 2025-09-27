@@ -2,8 +2,8 @@
 // Developer: Fahad - 17877
 // Version: 3.0.0
 
-const CACHE_NAME = 'tanktools-v3.0.0';
-const CACHE_VERSION = '3.0.0';
+const CACHE_NAME = 'tanktools-v3.1.0';
+const CACHE_VERSION = '3.1.0';
 
 // Files to cache for offline functionality
 const CORE_ASSETS = [
@@ -13,6 +13,7 @@ const CORE_ASSETS = [
   '/index.html',
   '/plcr.html',
   '/NMOGASBL.html',
+  '/notifications.html',
   '/icon.png',
   '/background.jpg',
   '/manifest.json'
@@ -353,30 +354,44 @@ self.addEventListener('push', event => {
   let notificationData = {};
   
   if (event.data) {
-    notificationData = event.data.json();
+    try {
+      notificationData = event.data.json();
+    } catch (e) {
+      notificationData = { title: event.data.text() };
+    }
   }
   
   const options = {
-    title: notificationData.title || 'Tank Tools Notification',
-    body: notificationData.body || 'You have a new notification',
+    title: notificationData.title || 'Tank Tools - منبه',
+    body: notificationData.body || 'لديك تنبيه جديد من Tank Tools',
     icon: '/icon.png',
     badge: '/icon.png',
-    tag: 'tanktools-notification',
-    requireInteraction: true,
+    tag: notificationData.tag || 'tanktools-notification',
+    requireInteraction: notificationData.persistent || false,
+    silent: false,
+    timestamp: Date.now(),
     actions: [
       {
         action: 'open',
-        title: 'Open App',
+        title: 'فتح التطبيق',
+        icon: '/icon.png'
+      },
+      {
+        action: 'snooze',
+        title: 'تأجيل 5 دقائق',
         icon: '/icon.png'
       },
       {
         action: 'dismiss',
-        title: 'Dismiss'
+        title: 'إغلاق'
       }
     ],
     data: {
-      url: notificationData.url || '/dashboard.html'
-    }
+      url: notificationData.url || '/notifications.html',
+      persistent: notificationData.persistent || false,
+      alarmId: notificationData.alarmId
+    },
+    vibrate: [200, 100, 200, 100, 200] // اهتزاز للهواتف
   };
   
   event.waitUntil(
@@ -386,32 +401,80 @@ self.addEventListener('push', event => {
 
 // Handle notification clicks
 self.addEventListener('notificationclick', event => {
-  console.log('👆 Tank Tools SW: Notification clicked');
+  console.log('👆 Tank Tools SW: Notification clicked, action:', event.action);
   
+  const notification = event.notification;
+  const action = event.action;
+  const data = notification.data || {};
+  
+  if (action === 'dismiss') {
+    event.notification.close();
+    return;
+  }
+  
+  if (action === 'snooze') {
+    event.notification.close();
+    
+    // جدولة تنبيه جديد بعد 5 دقائق
+    setTimeout(() => {
+      self.registration.showNotification('Tank Tools - منبه مؤجل', {
+        body: 'انتهت فترة التأجيل - ' + (notification.body || ''),
+        icon: '/icon.png',
+        badge: '/icon.png',
+        tag: 'snoozed-' + Date.now(),
+        requireInteraction: data.persistent || false,
+        vibrate: [200, 100, 200, 100, 200],
+        actions: [
+          {
+            action: 'open',
+            title: 'فتح التطبيق'
+          },
+          {
+            action: 'snooze',
+            title: 'تأجيل 5 دقائق أخرى'
+          },
+          {
+            action: 'dismiss',
+            title: 'إغلاق'
+          }
+        ],
+        data: data
+      });
+    }, 5 * 60 * 1000); // 5 دقائق
+    
+    return;
+  }
+  
+  // الإجراء الافتراضي أو فتح التطبيق
   event.notification.close();
   
-  if (event.action === 'open') {
-    const urlToOpen = event.notification.data?.url || '/dashboard.html';
-    
-    event.waitUntil(
-      clients.matchAll({
-        type: 'window',
-        includeUncontrolled: true
-      }).then(clientList => {
-        // If app is already open, focus it
-        for (const client of clientList) {
-          if (client.url.includes(urlToOpen) && 'focus' in client) {
-            return client.focus();
-          }
+  const urlToOpen = data.url || '/notifications.html';
+  
+  event.waitUntil(
+    clients.matchAll({
+      type: 'window',
+      includeUncontrolled: true
+    }).then(clientList => {
+      // البحث عن نافذة مفتوحة للتطبيق
+      for (const client of clientList) {
+        if (client.url.includes(self.location.origin) && 'focus' in client) {
+          return client.focus().then(() => {
+            // إرسال رسالة للعميل لفتح صفحة التنبيهات
+            client.postMessage({
+              type: 'NOTIFICATION_CLICKED',
+              url: urlToOpen,
+              data: data
+            });
+          });
         }
-        
-        // Otherwise open new window
-        if (clients.openWindow) {
-          return clients.openWindow(urlToOpen);
-        }
-      })
-    );
-  }
+      }
+      
+      // إذا لم توجد نافذة مفتوحة، افتح نافذة جديدة
+      if (clients.openWindow) {
+        return clients.openWindow(urlToOpen);
+      }
+    })
+  );
 });
 
 // Handle messages from main thread
@@ -439,6 +502,109 @@ self.addEventListener('unhandledrejection', event => {
   console.error('❌ Tank Tools SW: Unhandled promise rejection:', event.reason);
 });
 
-console.log('🚀 Tank Tools Service Worker v3.0.0 loaded successfully');
+// Persistent alarm functionality
+let persistentAlarmInterval = null;
+
+// Handle periodic background sync for persistent alarms
+self.addEventListener('sync', event => {
+  console.log('🔄 Tank Tools SW: Background sync triggered:', event.tag);
+  
+  if (event.tag === 'tanktools-sync') {
+    event.waitUntil(syncOfflineData());
+  }
+  
+  if (event.tag === 'tanktools-alarm-check') {
+    event.waitUntil(checkScheduledAlarms());
+  }
+});
+
+// Check and trigger scheduled alarms
+async function checkScheduledAlarms() {
+  try {
+    // This would typically fetch alarm data from IndexedDB or similar
+    console.log('🕐 Checking scheduled alarms...');
+    
+    // For now, this is a placeholder
+    // In a full implementation, you would:
+    // 1. Read scheduled alarms from storage
+    // 2. Check which ones should trigger now
+    // 3. Show notifications for due alarms
+    
+  } catch (error) {
+    console.error('❌ Error checking alarms:', error);
+  }
+}
+
+// Enhanced notification for persistent alarms
+function showPersistentAlarm(title, body, alarmId) {
+  const options = {
+    title: title || 'Tank Tools - منبه',
+    body: body || 'حان وقت المنبه!',
+    icon: '/icon.png',
+    badge: '/icon.png',
+    tag: 'persistent-alarm-' + alarmId,
+    requireInteraction: true,
+    silent: false,
+    persistent: true,
+    timestamp: Date.now(),
+    actions: [
+      {
+        action: 'stop',
+        title: 'إيقاف المنبه'
+      },
+      {
+        action: 'snooze',
+        title: 'تأجيل 5 دقائق'
+      }
+    ],
+    data: {
+      url: '/notifications.html',
+      persistent: true,
+      alarmId: alarmId,
+      startTime: Date.now()
+    },
+    vibrate: [500, 200, 500, 200, 500]
+  };
+  
+  return self.registration.showNotification(options.title, options);
+}
+
+// Handle background message for alarms
+self.addEventListener('message', event => {
+  console.log('💬 Tank Tools SW: Message received:', event.data);
+  
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+  
+  if (event.data && event.data.type === 'GET_VERSION') {
+    event.ports[0].postMessage({
+      version: CACHE_VERSION,
+      cacheName: CACHE_NAME
+    });
+  }
+  
+  if (event.data && event.data.type === 'SET_PERSISTENT_ALARM') {
+    const { title, body, alarmId, duration } = event.data;
+    
+    // Store alarm in service worker
+    persistentAlarmInterval = setInterval(() => {
+      showPersistentAlarm(title, body, alarmId);
+    }, duration || 30000); // كل 30 ثانية بشكل افتراضي
+    
+    // Initial alarm
+    showPersistentAlarm(title, body, alarmId);
+  }
+  
+  if (event.data && event.data.type === 'STOP_PERSISTENT_ALARM') {
+    if (persistentAlarmInterval) {
+      clearInterval(persistentAlarmInterval);
+      persistentAlarmInterval = null;
+    }
+  }
+});
+
+console.log('🚀 Tank Tools Service Worker v3.1.0 loaded successfully');
+console.log('🔔 Enhanced with persistent notifications and mobile support');
 console.log('🔒 Developed by Fahad - 17877');
 console.log('🏢 Kuwait National Petroleum Company');
