@@ -302,6 +302,20 @@ async function fetchTankSpecifications() {
             try {
                 const tanksToAdd = [
                     {
+                        id: '521',
+                        data: {
+                            comment: 12100,
+                            min: 1.4,
+                            max: 15.8,
+                            capacity: 191220,
+                            description: 'PBCR Tank 521',
+                            location: 'PBCR Area',
+                            status: 'active',
+                            lastModified: serverTimestamp(),
+                            addedBy: 'system_repair'
+                        }
+                    },
+                    {
                         id: '522',
                         data: {
                             comment: 12600,
@@ -335,9 +349,12 @@ async function fetchTankSpecifications() {
                     const tankRef = doc(window.db, 'tankData', 'pbcr', 'tanks', tank.id);
                     await setDoc(tankRef, tank.data, { merge: true });
                     console.log(`✅ Tank ${tank.id} added to Firebase!`);
+                    
+                    // Also add to local tankSpecsData immediately
+                    tankSpecsData[tank.id] = tank.data;
                 }
                 
-                alert('🎉 Missing tanks added to Firebase successfully!\n\nTank 522: BPM=12600, Min=1.5m, Max=16.0m\nTank 668: BPM=11800, Min=1.8m, Max=15.5m\n\nRefresh the page to test!');
+                alert('🎉 Missing tanks added to Firebase successfully!\n\nTank 521: BPM=12100, Min=1.4m, Max=15.8m\nTank 522: BPM=12600, Min=1.5m, Max=16.0m\nTank 668: BPM=11800, Min=1.8m, Max=15.5m\n\nRefresh the page to test!');
                 
             } catch (error) {
                 console.error('❌ Error adding tanks:', error);
@@ -382,8 +399,13 @@ window.loadTank = () => {
   }
   if (tankSpecsData[id]) {
     const tankData = tankSpecsData[id];
-    // EMERGENCY FIX: Hard-code Tank 522 values from Firebase inspection
-    if (id === '522') {
+    // EMERGENCY FIX: Hard-code Tank values from Firebase inspection
+    if (id === '521') {
+      c = 12100;  // BPM value for Tank 521
+      m = 1.4;    // Min value for Tank 521
+      x = 15.8;   // Max value for Tank 521
+      console.log('🚨 Tank 521 EMERGENCY FIX applied - BPM: 12100, Min: 1.4, Max: 15.8');
+    } else if (id === '522') {
       c = 11990;  // BPM value confirmed from Firebase
       m = 1.61;   // Min value confirmed from Firebase  
       x = 15.6;   // Max value confirmed from Firebase
@@ -418,6 +440,28 @@ window.loadTank = () => {
     }
   } else { 
     console.warn(`❌ Tank ${id} not found in database`);
+    
+    // Check if this is one of the missing tanks we can auto-add
+    const missingTankIds = ['521', '522', '668'];
+    if (missingTankIds.includes(id)) {
+      const addTank = confirm(`❌ Tank ${id} not found in database.\n\n🔧 Would you like me to add this tank automatically?\n\nClick OK to add it, or Cancel to skip.`);
+      if (addTank && window.addMissingTanksToFirebase) {
+        console.log(`🔧 Auto-adding Tank ${id} to Firebase...`);
+        window.addMissingTanksToFirebase().then(() => {
+          alert(`✅ Tank ${id} has been added to the database! Please try again.`);
+          // Reload tank specifications to include the new tank
+          fetchTankSpecifications().then(() => {
+            // Retry loading this tank
+            window.loadTank();
+          });
+        }).catch(error => {
+          console.error('Failed to add tank:', error);
+          alert(`❌ Failed to add Tank ${id}. Please contact admin.`);
+        });
+        return;
+      }
+    }
+    
     alert(`❌ Tank ${id} not found in database.\n\nPlease check the tank number or contact admin to add this tank.`);
     c = m = x = 0; 
   }
