@@ -165,6 +165,9 @@ input,select{background:rgba(255,255,255,0.9);border-radius:12px;border:none;col
 <button onclick="directAddTank460()" class="action-btn" style="background: linear-gradient(45deg, #4CAF50, #45a049); color: white; box-shadow: 0 2px 8px rgba(76,175,80,0.3)">⚡ Direct Add Tank 460</button>
 </div>
 <div class="button-row">
+<button onclick="forceReloadAllTanks()" class="action-btn" style="background: linear-gradient(45deg, #9C27B0, #7B1FA2); color: white; box-shadow: 0 2px 8px rgba(156,39,176,0.3)">🔄 Force Reload All Tanks</button>
+</div>
+<div class="button-row">
 <button onclick="reloadAllTanksFromFirebase()" class="action-btn" style="background: linear-gradient(45deg, #9C27B0, #7B1FA2); color: white; box-shadow: 0 2px 8px rgba(156,39,176,0.3)">🔄 Reload All Tanks</button>
 </div>
 </div>
@@ -299,9 +302,20 @@ async function fetchTankSpecifications() {
             const deptTanks = [];
             
             querySnapshot.forEach((doc) => { 
-                allTanks[doc.id] = doc.data(); 
+                const tankData = doc.data();
+                allTanks[doc.id] = tankData; 
                 deptTanks.push(doc.id);
                 deptCount++;
+                
+                // Special logging for user-requested tanks
+                const userRequestedTanks = ['460', '301', '834', '533', '532'];
+                if (userRequestedTanks.includes(doc.id)) {
+                    console.log(`🎯 FOUND USER TANK ${doc.id} in ${dept.toUpperCase()}:`, {
+                        BPM: tankData.comment || 'N/A',
+                        Min: tankData.min || 'N/A', 
+                        Max: tankData.max || 'N/A'
+                    });
+                }
             });
             
             console.log(`✅ Loaded ${deptCount} tanks from ${dept.toUpperCase()}`);
@@ -431,6 +445,69 @@ async function fetchTankSpecifications() {
             } catch (error) {
                 console.error('❌ Reload error:', error);
                 alert('❌ Reload failed: ' + error.message);
+            }
+        };
+
+        // Function to force reload all tanks from Firebase
+        window.forceReloadAllTanks = async function() {
+            console.log('🔄 FORCE RELOAD: Loading ALL tanks from Firebase...');
+            
+            try {
+                const departments = ['pbcr', 'plcr', 'washery'];
+                let newAllTanks = {};
+                let totalLoaded = 0;
+                
+                for (const dept of departments) {
+                    console.log(`🔄 Force loading ${dept.toUpperCase()}...`);
+                    
+                    const tanksRef = collection(window.db, 'tankData', dept, 'tanks');
+                    const snapshot = await getDocs(tanksRef);
+                    
+                    let deptCount = 0;
+                    snapshot.forEach((doc) => {
+                        const tankData = doc.data();
+                        newAllTanks[doc.id] = tankData;
+                        deptCount++;
+                        totalLoaded++;
+                        
+                        // Log user requested tanks
+                        const userTanks = ['460', '301', '834', '533', '532'];
+                        if (userTanks.includes(doc.id)) {
+                            console.log(`🎯 USER TANK FOUND: ${doc.id} in ${dept}:`, {
+                                BPM: tankData.comment || 'N/A',
+                                Min: tankData.min || 'N/A',
+                                Max: tankData.max || 'N/A'
+                            });
+                        }
+                    });
+                    
+                    console.log(`✅ Force loaded ${deptCount} tanks from ${dept.toUpperCase()}`);
+                }
+                
+                // Update global tankSpecsData
+                tankSpecsData = newAllTanks;
+                
+                console.log(`🎉 FORCE RELOAD COMPLETE: ${totalLoaded} total tanks loaded!`);
+                
+                // Check user tanks specifically
+                const userRequestedTanks = ['460', '301', '834', '533', '532'];
+                let foundCount = 0;
+                let missingTanks = [];
+                
+                userRequestedTanks.forEach(tankNum => {
+                    if (tankSpecsData[tankNum]) {
+                        foundCount++;
+                        console.log(`✅ Tank ${tankNum} is now available in PBCR`);
+                    } else {
+                        missingTanks.push(tankNum);
+                    }
+                });
+                
+                alert(`🔄 Force Reload Complete!\n\n📊 Total tanks: ${totalLoaded}\n🎯 Your tanks found: ${foundCount}/${userRequestedTanks.length}\n\n${foundCount > 0 ? '✅ Found: ' + userRequestedTanks.filter(t => tankSpecsData[t]).join(', ') : ''}\n${missingTanks.length > 0 ? '❌ Missing: ' + missingTanks.join(', ') : ''}\n\nTry your tanks again!`);
+                
+            } catch (error) {
+                console.error('❌ Force reload error:', error);
+                alert('❌ Force reload failed: ' + error.message);
             }
         };
 
@@ -1039,7 +1116,7 @@ window.showAddTanksHelp = function() {
   alert('🔧 Add Missing PBCR Tanks\n\n• Adds common PBCR tank numbers to Firebase\n• Uses standard BPM values for each tank\n• Solves "tank not found" errors\n• Only adds missing tanks - existing data is safe\n• Direct addition to Firebase tankData/pbcr collection\n\n💡 Use this if you see "Tank XXX not found" messages.');
 };
 
-window.showLiveTanksHelp=showLiveTanksHelp;window.showTableHelp=showTableHelp;window.addMissingTanks=addMissingTanks;window.showAddTanksHelp=showAddTanksHelp;window.directAddTank460=directAddTank460;window.reloadAllTanksFromFirebase=reloadAllTanksFromFirebase;
+window.showLiveTanksHelp=showLiveTanksHelp;window.showTableHelp=showTableHelp;window.addMissingTanks=addMissingTanks;window.showAddTanksHelp=showAddTanksHelp;window.directAddTank460=directAddTank460;window.forceReloadAllTanks=forceReloadAllTanks;window.reloadAllTanksFromFirebase=reloadAllTanksFromFirebase;
 </script>
 <footer>
   By <a href="#" class="whatsapp-link" onclick="window.open('https://wa.me/96555222550','_blank'); return false;">Fahad - 17877</a> – Version v5 - FIXED
