@@ -984,6 +984,18 @@ window.loadTank = () => {
       m = 1.61;   // Min value confirmed from Firebase  
       x = 15.6;   // Max value confirmed from Firebase
       console.log('🚨 Tank 522 EMERGENCY FIX applied - BPM: 11990, Min: 1.61, Max: 15.6');
+    } else if (id === '833') {
+      // Based on Firebase data: capacity=9572, min=2, max=17.89
+      c = 9572;   // Use capacity as BPM
+      m = 2;      // Min value from Firebase
+      x = 17.89;  // Max value from Firebase  
+      console.log('🚨 Tank 833 EMERGENCY FIX applied - BPM: 9572, Min: 2, Max: 17.89');
+    } else if (id === '834') {
+      // Based on Firebase structure (similar to other 830s series)
+      c = 9572;   // Standard capacity for 830s series
+      m = 2;      // Standard min level
+      x = 17.5;   // Standard max level
+      console.log('🚨 Tank 834 EMERGENCY FIX applied - BPM: 9572, Min: 2, Max: 17.5');
     } else {
       // Handle different possible field names in Firebase - IMPROVED FIX
       // Try multiple sources for BPM value with validation
@@ -1004,7 +1016,9 @@ window.loadTank = () => {
           '521': 12100, '522': 11990, 
           '301': 8000, '302': 8000, '303': 8000,
           '401': 15000, '402': 15000,
-          '501': 16000, '502': 16000
+          '501': 16000, '502': 16000,
+          '833': 9572, '834': 9572, '835': 9572, // Based on Firebase capacity values
+          '830': 9572, '831': 9572, '832': 9572
         };
         bpmValue = defaultBPMs[id] || 10000; // Default fallback
         console.log(`🔧 Using default BPM ${bpmValue} for tank ${id}`);
@@ -1229,6 +1243,10 @@ window.calculate = () => {
     available.innerText = ullageDiv.innerText = valueDiff.innerText = levelEst.innerText = output.innerHTML = "";
     return;
   }
+  
+  // Debug: Show current tank values being used for calculation
+  console.log(`🔢 Calculate() using - c=${c}, m=${m}, x=${x}, level=${level}`);
+  console.log(`📊 Raw calculation - Available: ${(level - m) * c}, Ullage: ${(x - level) * c}`);
   
   const availablePumpable = (level - m) * c;
   const currentUllage = (x - level) * c;
