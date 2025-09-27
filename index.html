@@ -158,6 +158,9 @@ input,select{background:rgba(255,255,255,0.9);border-radius:12px;border:none;col
 <button onclick="addMissingTanks()" class="action-btn" style="background: linear-gradient(45deg, #FF9800, #F57C00); color: white; box-shadow: 0 2px 8px rgba(255,152,0,0.3)">🔧 Add Missing Tanks</button>
 <button onclick="showAddTanksHelp()" class="help-btn" title="About Adding Missing Tanks">ℹ️</button>
 </div>
+<div class="button-row">
+<button onclick="checkTank460()" class="action-btn" style="background: linear-gradient(45deg, #2196F3, #1976D2); color: white; box-shadow: 0 2px 8px rgba(33,150,243,0.3)">🔍 Check Tank 460</button>
+</div>
 </div>
 <h3 style="margin-top:40px">Your tanks finishing in current shift:</h3>
 <table id="tankTable">
@@ -296,6 +299,13 @@ async function fetchTankSpecifications() {
         if (Object.keys(allTanks).length === 0) { throw new Error("No tank specifications found."); }
         tankSpecsData = allTanks;
         console.log(`🎯 Successfully loaded ${Object.keys(allTanks).length} total tanks from Firebase!`);
+        
+        // Check if Tank 460 is already loaded
+        if (allTanks['460']) {
+            console.log('🎯 Tank 460 found in loaded tanks:', allTanks['460']);
+        } else {
+            console.log('❌ Tank 460 NOT found in loaded tanks');
+        }
         console.log('📋 Sample tank data:', Object.keys(allTanks).slice(0, 3).map(id => ({ id, data: allTanks[id] })));
         
         // Debug info removed - tanks load silently now
@@ -307,6 +317,25 @@ async function fetchTankSpecifications() {
         if (currentTankCount < 10) {
             console.log('⚠️ Few tanks found, will offer sync option when tank not found');
         }
+        
+        // Add function to check specific tank in Firebase
+        window.checkTank460 = async function() {
+            try {
+                const tankRef = doc(window.db, 'tankData', 'pbcr', 'tanks', '460');
+                const tankDoc = await getDoc(tankRef);
+                
+                if (tankDoc.exists()) {
+                    console.log('✅ Tank 460 EXISTS in Firebase:', tankDoc.data());
+                    alert('✅ Tank 460 found in Firebase:\n' + JSON.stringify(tankDoc.data(), null, 2));
+                } else {
+                    console.log('❌ Tank 460 NOT FOUND in Firebase');
+                    alert('❌ Tank 460 NOT found in Firebase');
+                }
+            } catch (error) {
+                console.error('Error checking Tank 460:', error);
+                alert('Error: ' + error.message);
+            }
+        };
         
         // Add function to add missing tanks directly to Firebase tankData/pbcr
         window.addMissingPBCRTanks = async function() {
@@ -374,6 +403,10 @@ async function fetchTankSpecifications() {
                         
                         console.log(`✅ Added Tank ${tank.id} - BPM: ${tank.bpm}`);
                         addedCount++;
+                        
+                        // Special logging for Tank 460
+                        if (tank.id === '460') {
+                            console.log('🎯 Tank 460 successfully added to Firebase tankData/pbcr!');
                     }
                 }
                 
@@ -489,6 +522,7 @@ window.loadTank = () => {
   }
   if (tankSpecsData[id]) {
     const tankData = tankSpecsData[id];
+    console.log(`🔍 Found Tank ${id} in tankSpecsData:`, tankData);
     // EMERGENCY FIX: Hard-code Tank values from Firebase inspection
     if (id === '521') {
       c = 12100;  // BPM value for Tank 521
@@ -803,10 +837,8 @@ async function logPBCRCalculation(tankNumber,hours,minutes,finishTime,finishDate
 function showLiveTanksHelp(){alert('🔴 Add to Live Tanks:\n\nAdds your tank to the live monitoring system for all users to see. Requires panel operator or admin access.');}
 function showTableHelp(){alert('📊 Add to Table:\n\nAdds tank to your personal table below. Only you can see this table.');}
 window.addMissingTanks = async function() {
-  if (!currentUser) {
-    alert('⚠️ Login required to add tanks.\n\nPlease login first to use this feature.');
-    return;
-  }
+  // Allow adding tanks without login for public access
+  console.log('🔧 Adding missing tanks - public access allowed');
   
   if (!confirm('🔧 Add Missing PBCR Tanks\n\nThis will add common missing PBCR tanks to Firebase tankData/pbcr.\n\n📋 Tanks to add:\n• 400 series: 401, 402, 460, 461, 462\n• 500 series: 501, 502, 503, 521, 522\n• 600 series: 601, 602, 603, 661, 662, 668\n• 700 series: 701, 702, 703\n• 800 series: 801, 802, 803\n\n• Uses typical PBCR BPM values and level ranges\n• Safe operation - existing tanks not modified\n\nContinue adding tanks?')) {
     return;
