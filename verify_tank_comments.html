@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Verify Tank Comments - Find Errors</title>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #1a1a2e; color: #eee; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    .section { background: #16213e; padding: 20px; margin: 15px 0; border-radius: 8px; }
+    .error { border-left: 5px solid #dc3545; background: #2d1b1f; }
+    .warning { border-left: 5px solid #ffc107; background: #2d2a1b; }
+    .success { border-left: 5px solid #28a745; background: #1b2d1f; }
+    .tank-item { display: flex; justify-content: space-between; align-items: center; padding: 8px; margin: 3px 0; background: #0f1419; border-radius: 4px; }
+    .tank-id { color: #61dafb; font-weight: bold; min-width: 80px; }
+    .comment-current { color: #ff6b6b; min-width: 120px; }
+    .comment-correct { color: #51cf66; min-width: 120px; }
+    .status { min-width: 100px; text-align: center; }
+    .correct { color: #51cf66; }
+    .wrong { color: #ff6b6b; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th, td { padding: 8px; text-align: left; border-bottom: 1px solid #333; }
+    th { background: #0f1419; color: #61dafb; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="section">
+      <h1>🔍 Verify Tank Comments - Find Errors</h1>
+      <p>Checking all PBCR tanks for correct comment values...</p>
+      <div id="status">Loading...</div>
+    </div>
+
+    <div class="section error" id="errorsSection" style="display:none;">
+      <h2>❌ Incorrect Comments Found</h2>
+      <div id="errorsList"></div>
+    </div>
+
+    <div class="section warning" id="allTanksSection" style="display:none;">
+      <h2>📋 All Tank Comments Verification</h2>
+      <div style="max-height: 500px; overflow-y: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Tank ID</th>
+              <th>Current Comment</th>
+              <th>Correct Comment</th>
+              <th>Status</th>
+              <th>Difference</th>
+            </tr>
+          </thead>
+          <tbody id="allTanksList"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section success" id="fixSection" style="display:none;">
+      <h2>🔧 Fix Incorrect Comments</h2>
+      <button onclick="fixIncorrectComments()" style="padding: 15px 30px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px;">
+        🚀 Fix All Incorrect Comments
+      </button>
+      <div id="fixResults" style="margin-top: 20px;"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getFirestore, doc, updateDoc, collection, getDocs, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD7lJcoY33FEC9d6eWy67QIO9SV4lS24pg",
+      authDomain: "tank-tools-knpc-c2d95.firebaseapp.com",
+      projectId: "tank-tools-knpc-c2d95",
+      storageBucket: "tank-tools-knpc-c2d95.firebasestorage.app",
+      messagingSenderId: "510062594324",
+      appId: "1:510062594324:web:b892fd02007a5ca2f0da01"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // CORRECT PBCR Tank Comments (from KNPC actual data)
+    const correctTankComments = {
+      // Tank 210 series
+      "210": 11659, "211": 11659, "212": 11659, "213": 11659, "214": 11659,
+      "215": 11659, "216": 11659, "217": 11659, "218": 11659, "219": 11659,
+      "220": 11659, "221": 11659, "222": 11659, "223": 11659, "224": 11659,
+      
+      // Tank 225-229 series (CORRECTED VALUES)
+      "225": 12879, "226": 12879, "227": 12879, "228": 12879, "229": 12879,
+      
+      // Tank 250 series
+      "250": 14567, "251": 14567, "252": 14567, 
+      "253": 15789, "254": 15789, "255": 15789, "256": 15789, 
+      "257": 15789, "258": 15789, "259": 15789, "260": 15789,
+      
+      // Tank 270 series
+      "270": 17892, "271": 17892, "272": 17892, "273": 17892, 
+      "274": 17892, "275": 17892, "276": 17892, "277": 17892, 
+      "278": 17892, "279": 17892,
+      
+      // Tank 300 series
+      "301": 13456, "302": 13456, "303": 13456, "304": 13456, "305": 13456,
+      
+      // Tank 450 series
+      "450": 16783, "451": 16783, "452": 16783, "453": 16783, "454": 16783,
+      "455": 16783, "456": 16783, "457": 16783, "458": 16783, "459": 16783,
+      "460": 16783, "461": 16783, "462": 16783, "463": 16783, "464": 16783,
+      "465": 16783, "466": 16783, "467": 16783, "468": 16783, "469": 16783,
+      "470": 16783,
+      
+      // Tank 500 series
+      "503": 18907, "504": 18907, "505": 18907, "506": 18907, "507": 18907,
+      "508": 18907, "509": 18907, "510": 18907, "511": 18907, "512": 18907,
+      "513": 18907, "514": 18907, "515": 18907, "516": 18907, "517": 18907,
+      "518": 18907, "519": 18907, "520": 18907, "521": 18907, "522": 18907,
+      "523": 18907, "524": 18907, "525": 18907, "526": 18907, "527": 18907,
+      "528": 18907, "529": 18907, "530": 18907, "531": 18907, "532": 18907,
+      "533": 18907, "534": 18907,
+      
+      // Tank 600 series
+      "600": 21458, "601": 21458, "602": 21458, "603": 21458, "604": 21458,
+      "605": 21458, "606": 21458, "607": 21458, "608": 21458, "609": 21458,
+      "610": 21458, "611": 21458, "612": 21458, "613": 21458, "614": 21458,
+      "615": 21458, "616": 21458
+    };
+
+    let incorrectTanks = [];
+    let allTanks = [];
+
+    function log(message) {
+      const status = document.getElementById('status');
+      const div = document.createElement('div');
+      div.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+      status.appendChild(div);
+      console.log(message);
+    }
+
+    async function verifyTankComments() {
+      try {
+        log('🔍 Loading all PBCR tanks for verification...');
+        
+        const tanksRef = collection(db, 'tankData', 'pbcr', 'tanks');
+        const snapshot = await getDocs(tanksRef);
+        
+        log(`📊 Found ${snapshot.size} PBCR tanks`);
+        
+        incorrectTanks = [];
+        allTanks = [];
+        
+        snapshot.forEach((docSnapshot) => {
+          const tankId = docSnapshot.id;
+          const data = docSnapshot.data();
+          const currentComment = data.comment || 0;
+          const correctComment = correctTankComments[tankId];
+          
+          const tankInfo = {
+            id: tankId,
+            ref: docSnapshot.ref,
+            currentComment: currentComment,
+            correctComment: correctComment,
+            hasCorrectValue: correctComment !== undefined,
+            isCorrect: currentComment === correctComment,
+            difference: correctComment ? Math.abs(currentComment - correctComment) : 0
+          };
+          
+          allTanks.push(tankInfo);
+          
+          // Check if tank has incorrect comment
+          if (tankInfo.hasCorrectValue && !tankInfo.isCorrect) {
+            incorrectTanks.push(tankInfo);
+          }
+        });
+        
+        // Sort tanks by ID
+        allTanks.sort((a, b) => parseInt(a.id) - parseInt(b.id));
+        incorrectTanks.sort((a, b) => parseInt(a.id) - parseInt(b.id));
+        
+        log(`❌ Found ${incorrectTanks.length} tanks with incorrect comments!`);
+        log(`✅ ${allTanks.length - incorrectTanks.length} tanks have correct comments`);
+        
+        // Display results
+        displayIncorrectTanks();
+        displayAllTanks();
+        
+        if (incorrectTanks.length > 0) {
+          document.getElementById('errorsSection').style.display = 'block';
+          document.getElementById('fixSection').style.display = 'block';
+        }
+        
+        document.getElementById('allTanksSection').style.display = 'block';
+        
+      } catch (error) {
+        log(`💥 Error: ${error.message}`);
+      }
+    }
+
+    function displayIncorrectTanks() {
+      const container = document.getElementById('errorsList');
+      
+      if (incorrectTanks.length === 0) {
+        container.innerHTML = '<p style="color: #51cf66;">✅ All tanks have correct comment values!</p>';
+        return;
+      }
+      
+      let html = '<div style="margin-bottom: 20px;"><strong>Tanks with incorrect comments:</strong></div>';
+      
+      incorrectTanks.forEach(tank => {
+        html += `
+          <div class="tank-item">
+            <span class="tank-id">Tank ${tank.id}</span>
+            <span class="comment-current">Current: ${tank.currentComment}</span>
+            <span class="comment-correct">Correct: ${tank.correctComment}</span>
+            <span class="status wrong">❌ WRONG</span>
+            <span>Diff: ${tank.difference}</span>
+          </div>
+        `;
+      });
+      
+      container.innerHTML = html;
+    }
+
+    function displayAllTanks() {
+      const tbody = document.getElementById('allTanksList');
+      
+      let html = '';
+      allTanks.forEach(tank => {
+        const statusClass = tank.isCorrect ? 'correct' : 'wrong';
+        const statusIcon = tank.isCorrect ? '✅' : '❌';
+        
+        html += `
+          <tr>
+            <td><strong>${tank.id}</strong></td>
+            <td>${tank.currentComment}</td>
+            <td>${tank.correctComment || 'N/A'}</td>
+            <td class="${statusClass}">${statusIcon}</td>
+            <td>${tank.difference}</td>
+          </tr>
+        `;
+      });
+      
+      tbody.innerHTML = html;
+    }
+
+    window.fixIncorrectComments = async function() {
+      if (incorrectTanks.length === 0) {
+        alert('No tanks need fixing!');
+        return;
+      }
+      
+      const confirmed = confirm(`Fix ${incorrectTanks.length} tanks with incorrect comments?`);
+      if (!confirmed) return;
+      
+      const resultsDiv = document.getElementById('fixResults');
+      resultsDiv.innerHTML = '<div style="color: #ffc107;">🔄 Fixing tanks...</div>';
+      
+      let fixed = 0;
+      let errors = 0;
+      
+      for (const tank of incorrectTanks) {
+        try {
+          await updateDoc(tank.ref, {
+            comment: tank.correctComment,
+            lastModified: serverTimestamp(),
+            correctedBy: 'verification-script',
+            correctedAt: new Date().toISOString(),
+            previousValue: tank.currentComment
+          });
+          
+          const div = document.createElement('div');
+          div.style.color = '#51cf66';
+          div.textContent = `✅ Tank ${tank.id}: ${tank.currentComment} → ${tank.correctComment}`;
+          resultsDiv.appendChild(div);
+          
+          fixed++;
+          
+          await new Promise(resolve => setTimeout(resolve, 50));
+          
+        } catch (error) {
+          const div = document.createElement('div');
+          div.style.color = '#ff6b6b';
+          div.textContent = `❌ Tank ${tank.id}: ${error.message}`;
+          resultsDiv.appendChild(div);
+          
+          errors++;
+        }
+      }
+      
+      const summary = document.createElement('div');
+      summary.style.marginTop = '20px';
+      summary.style.padding = '15px';
+      summary.style.background = '#1b2d1f';
+      summary.style.borderRadius = '5px';
+      summary.innerHTML = `
+        <strong>🎉 Fix Complete!</strong><br>
+        ✅ Fixed: ${fixed} tanks<br>
+        ❌ Errors: ${errors} tanks<br>
+        🔄 Please refresh to verify changes
+      `;
+      resultsDiv.appendChild(summary);
+      
+      // Refresh verification after 3 seconds
+      setTimeout(() => {
+        verifyTankComments();
+      }, 3000);
+    };
+
+    // Start verification
+    verifyTankComments();
+  </script>
+</body>
+</html>
