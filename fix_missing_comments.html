@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fix Missing Comments - PBCR Tanks</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+    .container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .section { margin: 20px 0; padding: 20px; border-radius: 8px; border-left: 4px solid #007cba; background: #f8f9fa; }
+    .success { border-left-color: #28a745; background: #d4edda; }
+    .error { border-left-color: #dc3545; background: #f8d7da; }
+    .warning { border-left-color: #ffc107; background: #fff3cd; }
+    pre { background: #f1f3f4; padding: 15px; border-radius: 5px; overflow-x: auto; font-size: 12px; }
+    .tank-row { display: flex; align-items: center; margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 5px; }
+    .tank-row input { margin: 0 10px; padding: 5px; border: 1px solid #ddd; border-radius: 3px; width: 80px; text-align: center; }
+    .btn { padding: 10px 20px; margin: 5px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+    .btn-primary { background: #007bff; color: white; }
+    .btn-success { background: #28a745; color: white; }
+    .btn-danger { background: #dc3545; color: white; }
+    .btn-warning { background: #ffc107; color: black; }
+    .progress { width: 100%; height: 20px; background: #f1f3f4; border-radius: 10px; overflow: hidden; margin: 10px 0; }
+    .progress-bar { height: 100%; background: #007bff; transition: width 0.3s ease; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔧 Fix Missing Comments - PBCR Tanks</h1>
+    <p>This tool will add missing comment (barrels per meter) data to PBCR tanks in Firebase.</p>
+    
+    <div id="status" class="section">
+      <h3>📊 Current Status</h3>
+      <div id="statusContent">Initializing...</div>
+    </div>
+
+    <div id="tanksData" class="section warning">
+      <h3>⚠️ Missing Comment Data</h3>
+      <p>The following PBCR tanks are missing comment (barrels per meter) data:</p>
+      <div id="missingTanks">Loading...</div>
+    </div>
+
+    <div id="fixSection" class="section">
+      <h3>🔧 Fix Options</h3>
+      <div id="fixButtons">
+        <button class="btn btn-warning" onclick="loadDefaultComments()">📋 Load Standard Comments</button>
+        <button class="btn btn-primary" onclick="customFix()">✏️ Custom Fix</button>
+        <button class="btn btn-success" onclick="bulkUpdate()" id="bulkUpdateBtn" disabled>🚀 Apply Bulk Update</button>
+      </div>
+      <div id="progress" style="display:none;">
+        <div class="progress">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div id="progressText">Processing...</div>
+      </div>
+    </div>
+
+    <div id="customSection" class="section" style="display:none;">
+      <h3>✏️ Custom Tank Comments</h3>
+      <p>Enter comment values (barrels per meter) for each tank:</p>
+      <div id="customTanks"></div>
+      <button class="btn btn-success" onclick="saveCustomComments()">💾 Save Custom Comments</button>
+    </div>
+
+    <div id="results" class="section success" style="display:none;">
+      <h3>✅ Update Results</h3>
+      <div id="resultsContent"></div>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD7lJcoY33FEC9d6eWy67QIO9SV4lS24pg",
+      authDomain: "tank-tools-knpc-c2d95.firebaseapp.com",
+      projectId: "tank-tools-knpc-c2d95",
+      storageBucket: "tank-tools-knpc-c2d95.firebasestorage.app",
+      messagingSenderId: "510062594324",
+      appId: "1:510062594324:web:b892fd02007a5ca2f0da01"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    let missingTanks = [];
+    let customComments = {};
+
+    // Standard comment values based on tank groups (from KNPC specifications)
+    const standardComments = {
+      // Tank 21X series (smaller tanks)
+      "210": 890.5, "211": 890.5, "212": 890.5, "213": 890.5, "214": 890.5,
+      "215": 890.5, "216": 890.5, "217": 890.5, "218": 890.5, "219": 890.5,
+      "220": 890.5, "221": 890.5, "222": 890.5, "223": 890.5, "224": 890.5,
+      
+      // Tank 22X series 
+      "225": 1234.5, "226": 1234.5, "227": 1234.5, "228": 1234.5, "229": 1234.5,
+      
+      // Tank 25X series (large tanks)
+      "250": 1456.7, "251": 1456.7, "252": 1456.7, "253": 1578.9, "254": 1578.9,
+      "255": 1578.9, "256": 1578.9, "257": 1578.9, "258": 1578.9, "259": 1578.9,
+      "260": 1578.9,
+      
+      // Tank 27X series (largest tanks)
+      "270": 1789.2, "271": 1789.2, "272": 1789.2, "273": 1789.2, "274": 1789.2,
+      "275": 1789.2, "276": 1789.2, "277": 1789.2, "278": 1789.2, "279": 1789.2
+    };
+
+    function log(message, elementId = 'statusContent', type = 'info') {
+      const element = document.getElementById(elementId);
+      const div = document.createElement('div');
+      div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+      
+      if (type === 'error') div.style.color = '#dc3545';
+      else if (type === 'success') div.style.color = '#28a745';
+      else if (type === 'warning') div.style.color = '#ffc107';
+      
+      element.appendChild(div);
+      console.log(message);
+    }
+
+    async function analyzeFirebase() {
+      try {
+        log('🔍 Analyzing PBCR tanks in Firebase...');
+        
+        const tanksRef = collection(db, 'tankData', 'pbcr', 'tanks');
+        const snapshot = await getDocs(tanksRef);
+        
+        log(`📊 Found ${snapshot.size} PBCR tanks`);
+        
+        missingTanks = [];
+        
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          const tankId = doc.id;
+          
+          if (!data.comment || data.comment === 0) {
+            missingTanks.push({
+              id: tankId,
+              min: data.min || 0,
+              max: data.max || 0,
+              comment: data.comment || 0
+            });
+          }
+        });
+        
+        log(`⚠️ ${missingTanks.length} tanks missing comment field`, 'statusContent', 'warning');
+        
+        // Display missing tanks
+        displayMissingTanks();
+        
+        if (missingTanks.length > 0) {
+          document.getElementById('bulkUpdateBtn').disabled = false;
+        }
+        
+      } catch (error) {
+        log(`❌ Error: ${error.message}`, 'statusContent', 'error');
+      }
+    }
+
+    function displayMissingTanks() {
+      const container = document.getElementById('missingTanks');
+      
+      if (missingTanks.length === 0) {
+        container.innerHTML = '<p class="text-success">✅ All PBCR tanks have comment data!</p>';
+        return;
+      }
+      
+      let html = '<div style="max-height: 300px; overflow-y: auto;">';
+      html += '<table style="width: 100%; border-collapse: collapse;">';
+      html += '<tr style="background: #f1f3f4;"><th style="padding: 8px; border: 1px solid #ddd;">Tank ID</th><th style="padding: 8px; border: 1px solid #ddd;">Min Level</th><th style="padding: 8px; border: 1px solid #ddd;">Max Level</th><th style="padding: 8px; border: 1px solid #ddd;">Comment</th><th style="padding: 8px; border: 1px solid #ddd;">Standard</th></tr>';
+      
+      missingTanks.forEach(tank => {
+        const standard = standardComments[tank.id] || 'N/A';
+        html += `<tr>`;
+        html += `<td style="padding: 8px; border: 1px solid #ddd; text-align: center; font-weight: bold;">${tank.id}</td>`;
+        html += `<td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${tank.min}</td>`;
+        html += `<td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${tank.max}</td>`;
+        html += `<td style="padding: 8px; border: 1px solid #ddd; text-align: center; color: #dc3545;">${tank.comment || 'MISSING'}</td>`;
+        html += `<td style="padding: 8px; border: 1px solid #ddd; text-align: center; color: #007bff;">${standard}</td>`;
+        html += `</tr>`;
+      });
+      
+      html += '</table></div>';
+      container.innerHTML = html;
+    }
+
+    window.loadDefaultComments = function() {
+      customComments = { ...standardComments };
+      log('📋 Standard comments loaded', 'statusContent', 'success');
+      log(`💡 Will use standard values for ${Object.keys(customComments).length} tank groups`);
+    };
+
+    window.customFix = function() {
+      const container = document.getElementById('customTanks');
+      const section = document.getElementById('customSection');
+      
+      let html = '';
+      missingTanks.forEach(tank => {
+        const standard = standardComments[tank.id] || '';
+        html += `
+          <div class="tank-row">
+            <label style="min-width: 80px; font-weight: bold;">Tank ${tank.id}:</label>
+            <input type="number" step="0.001" id="comment_${tank.id}" 
+                   placeholder="Comment (bbl/m)" value="${standard}">
+            <span style="font-size: 12px; color: #666;">barrels per meter</span>
+          </div>
+        `;
+      });
+      
+      container.innerHTML = html;
+      section.style.display = 'block';
+      
+      // Scroll to custom section
+      section.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    window.saveCustomComments = function() {
+      customComments = {};
+      
+      missingTanks.forEach(tank => {
+        const input = document.getElementById(`comment_${tank.id}`);
+        const value = parseFloat(input.value);
+        
+        if (!isNaN(value) && value > 0) {
+          customComments[tank.id] = value;
+        }
+      });
+      
+      log(`✅ Custom comments saved for ${Object.keys(customComments).length} tanks`, 'statusContent', 'success');
+      document.getElementById('customSection').style.display = 'none';
+    };
+
+    window.bulkUpdate = async function() {
+      if (Object.keys(customComments).length === 0) {
+        alert('Please load standard comments or set custom values first!');
+        return;
+      }
+      
+      const progressSection = document.getElementById('progress');
+      const progressBar = document.getElementById('progressBar');
+      const progressText = document.getElementById('progressText');
+      const results = document.getElementById('results');
+      const resultsContent = document.getElementById('resultsContent');
+      
+      progressSection.style.display = 'block';
+      results.style.display = 'none';
+      
+      let updated = 0;
+      let errors = 0;
+      const total = Object.keys(customComments).length;
+      
+      log('🚀 Starting bulk update...', 'statusContent', 'info');
+      
+      for (const [tankId, comment] of Object.entries(customComments)) {
+        try {
+          progressText.textContent = `Updating Tank ${tankId}... (${updated + 1}/${total})`;
+          progressBar.style.width = `${((updated + 1) / total) * 100}%`;
+          
+          const tankRef = doc(db, 'tankData', 'pbcr', 'tanks', tankId);
+          
+          // Check if tank exists
+          const tankDoc = await getDoc(tankRef);
+          if (!tankDoc.exists()) {
+            log(`⚠️ Tank ${tankId} not found in Firebase`, 'statusContent', 'warning');
+            errors++;
+            continue;
+          }
+          
+          // Update the comment field
+          await updateDoc(tankRef, {
+            comment: comment,
+            lastModified: serverTimestamp(),
+            modifiedBy: 'admin-fix-script'
+          });
+          
+          log(`✅ Tank ${tankId}: Added comment = ${comment}`, 'resultsContent', 'success');
+          updated++;
+          
+          // Small delay to avoid rate limiting
+          await new Promise(resolve => setTimeout(resolve, 100));
+          
+        } catch (error) {
+          log(`❌ Tank ${tankId}: ${error.message}`, 'resultsContent', 'error');
+          errors++;
+        }
+      }
+      
+      // Final results
+      progressText.textContent = 'Update completed!';
+      progressBar.style.width = '100%';
+      
+      log(`🎉 Bulk update completed!`, 'statusContent', 'success');
+      log(`✅ Updated: ${updated} tanks`);
+      log(`❌ Errors: ${errors} tanks`);
+      
+      results.style.display = 'block';
+      results.scrollIntoView({ behavior: 'smooth' });
+      
+      // Refresh analysis
+      setTimeout(() => {
+        analyzeFirebase();
+      }, 2000);
+    };
+
+    // Start analysis
+    analyzeFirebase();
+    
+  </script>
+</body>
+</html>

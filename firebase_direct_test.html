@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Firebase Direct Test</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0; }
+    .container { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; }
+    .section { background: #f8f8f8; padding: 15px; margin: 15px 0; border-radius: 5px; border-left: 4px solid #007cba; }
+    .error { background: #fee; border-left-color: #d32f2f; }
+    .success { background: #e8f5e8; border-left-color: #4caf50; }
+    pre { background: #f5f5f5; padding: 10px; border-radius: 5px; overflow-x: auto; font-size: 12px; }
+    .tank-item { background: #e8f4fd; margin: 5px 0; padding: 10px; border-radius: 5px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔥 Firebase Database Direct Analysis</h1>
+    <p>Testing Firebase Firestore without authentication...</p>
+    
+    <div id="status" class="section">
+      <h3>🔄 Connection Status</h3>
+      <div id="statusText">Initializing...</div>
+    </div>
+
+    <div id="collectionsSection" class="section">
+      <h3>📁 Collections Analysis</h3>
+      <div id="collectionsResults"></div>
+    </div>
+
+    <div id="tankDataSection" class="section">
+      <h3>🛢️ Tank Data Structure</h3>
+      <div id="tankDataResults"></div>
+    </div>
+
+    <div id="analysisSection" class="section">
+      <h3>🔍 Data Analysis & Issues</h3>
+      <div id="analysisResults"></div>
+    </div>
+
+    <button onclick="testTankOperations()" style="margin: 20px 0; padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">
+      🧪 Test Tank Operations
+    </button>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getFirestore, doc, getDoc, setDoc, collection, getDocs, addDoc, serverTimestamp, enableNetwork, disableNetwork } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD7lJcoY33FEC9d6eWy67QIO9SV4lS24pg",
+      authDomain: "tank-tools-knpc-c2d95.firebaseapp.com",
+      projectId: "tank-tools-knpc-c2d95",
+      storageBucket: "tank-tools-knpc-c2d95.firebasestorage.app",
+      messagingSenderId: "510062594324",
+      appId: "1:510062594324:web:b892fd02007a5ca2f0da01"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    let statusEl = document.getElementById('statusText');
+    let collectionsEl = document.getElementById('collectionsResults');
+    let tankDataEl = document.getElementById('tankDataResults');
+    let analysisEl = document.getElementById('analysisResults');
+
+    function log(message, element = statusEl, color = 'black') {
+      console.log(message);
+      const div = document.createElement('div');
+      div.innerHTML = message;
+      div.style.color = color;
+      element.appendChild(div);
+    }
+
+    async function analyzeFirebase() {
+      try {
+        log('🔥 Firebase Firestore initialized!');
+        log('📡 Testing connection...', statusEl, 'blue');
+
+        // Test basic connectivity
+        try {
+          await enableNetwork(db);
+          log('✅ Network connection established', statusEl, 'green');
+          document.getElementById('status').className = 'section success';
+        } catch (networkError) {
+          log('⚠️ Network issue: ' + networkError.message, statusEl, 'orange');
+        }
+
+        // Analyze collections
+        await analyzeCollections();
+        
+        // Analyze tank data specifically
+        await analyzeTankData();
+        
+        // Analyze issues
+        await analyzeIssues();
+
+      } catch (error) {
+        log('❌ Critical error: ' + error.message, statusEl, 'red');
+        document.getElementById('status').className = 'section error';
+      }
+    }
+
+    async function analyzeCollections() {
+      log('🔍 === COLLECTIONS ANALYSIS ===', collectionsEl, 'blue');
+      
+      const testCollections = [
+        'tankData',
+        'users', 
+        'activities',
+        'tanks',
+        'pbcr',
+        'plcr',
+        'washery'
+      ];
+
+      for (const collectionName of testCollections) {
+        try {
+          log(`📁 Testing collection: ${collectionName}`, collectionsEl);
+          
+          const collectionRef = collection(db, collectionName);
+          const snapshot = await getDocs(collectionRef);
+          
+          log(`  ✅ Success: ${snapshot.size} documents`, collectionsEl, 'green');
+          
+          if (snapshot.size > 0 && snapshot.size <= 3) {
+            snapshot.forEach((doc, index) => {
+              log(`    📄 Document ${index + 1}: ${doc.id}`, collectionsEl);
+              
+              const data = doc.data();
+              const keys = Object.keys(data);
+              log(`      🔑 Fields: ${keys.join(', ')}`, collectionsEl);
+              
+              if (keys.length <= 5) {
+                log(`      📋 Data: ${JSON.stringify(data, null, 2)}`, collectionsEl);
+              }
+            });
+          }
+          
+        } catch (error) {
+          log(`  ❌ Error: ${error.message}`, collectionsEl, 'red');
+        }
+        
+        log('  ---', collectionsEl);
+      }
+    }
+
+    async function analyzeTankData() {
+      log('🛢️ === TANK DATA DETAILED ANALYSIS ===', tankDataEl, 'blue');
+      
+      const departments = ['pbcr', 'plcr', 'washery'];
+      let allTanks = [];
+      let structureInfo = {};
+
+      for (const dept of departments) {
+        try {
+          log(`🔍 Department: ${dept.toUpperCase()}`, tankDataEl);
+          
+          // Method 1: tankData/{dept}/tanks
+          try {
+            const tanksRef = collection(db, 'tankData', dept, 'tanks');
+            const tanksSnapshot = await getDocs(tanksRef);
+            
+            log(`  📊 tankData/${dept}/tanks: ${tanksSnapshot.size} documents`, tankDataEl, 'green');
+            structureInfo[dept] = { method: 'subcollection', count: tanksSnapshot.size };
+            
+            tanksSnapshot.forEach((doc) => {
+              const data = doc.data();
+              allTanks.push({
+                id: doc.id,
+                department: dept,
+                method: 'subcollection',
+                ...data
+              });
+              
+              log(`    🛢️ Tank ${doc.id}:`, tankDataEl);
+              log(`      Min: ${data.min} | Max: ${data.max}`, tankDataEl);
+              log(`      Comment: ${data.comment || 'MISSING'}`, tankDataEl);
+              log(`      Factor: ${data.factor || 'MISSING'}`, tankDataEl);
+              log(`      Gross: ${data.gross || 'MISSING'}`, tankDataEl);
+            });
+            
+          } catch (subError) {
+            log(`    ❌ Subcollection method failed: ${subError.message}`, tankDataEl, 'red');
+            
+            // Method 2: Direct department collection
+            try {
+              const deptRef = collection(db, dept);
+              const deptSnapshot = await getDocs(deptRef);
+              
+              log(`    🔄 Trying direct collection '${dept}': ${deptSnapshot.size} documents`, tankDataEl, 'orange');
+              structureInfo[dept] = { method: 'direct', count: deptSnapshot.size };
+              
+              deptSnapshot.forEach((doc) => {
+                const data = doc.data();
+                allTanks.push({
+                  id: doc.id,
+                  department: dept,
+                  method: 'direct',
+                  ...data
+                });
+                
+                log(`      🛢️ Tank ${doc.id}: ${JSON.stringify(data)}`, tankDataEl);
+              });
+              
+            } catch (directError) {
+              log(`    ❌ Direct method also failed: ${directError.message}`, tankDataEl, 'red');
+              structureInfo[dept] = { method: 'none', count: 0 };
+            }
+          }
+          
+        } catch (deptError) {
+          log(`  ❌ Department ${dept} completely failed: ${deptError.message}`, tankDataEl, 'red');
+        }
+        
+        log('  ===', tankDataEl);
+      }
+
+      // Summary
+      log('📊 === SUMMARY ===', tankDataEl, 'blue');
+      log(`Total tanks found: ${allTanks.length}`, tankDataEl, 'green');
+      
+      departments.forEach(dept => {
+        const deptTanks = allTanks.filter(t => t.department === dept);
+        const info = structureInfo[dept] || { method: 'failed', count: 0 };
+        log(`${dept.toUpperCase()}: ${deptTanks.length} tanks (${info.method})`, tankDataEl);
+      });
+
+      window.allTanksData = allTanks; // Make available globally
+    }
+
+    async function analyzeIssues() {
+      log('🔍 === ISSUES ANALYSIS ===', analysisEl, 'blue');
+      
+      if (!window.allTanksData || window.allTanksData.length === 0) {
+        log('❌ No tank data found for analysis!', analysisEl, 'red');
+        log('🔧 Possible issues:', analysisEl);
+        log('  1. Firebase rules blocking access', analysisEl);
+        log('  2. Wrong database structure', analysisEl);
+        log('  3. No data has been saved yet', analysisEl);
+        return;
+      }
+
+      const tanks = window.allTanksData;
+      
+      log(`✅ Analyzing ${tanks.length} tanks...`, analysisEl, 'green');
+      
+      // Check for missing critical fields
+      const pbcrTanks = tanks.filter(t => t.department === 'pbcr');
+      const plcrTanks = tanks.filter(t => t.department === 'plcr');
+      const washeryTanks = tanks.filter(t => t.department === 'washery');
+      
+      log('🛢️ PBCR Analysis:', analysisEl);
+      if (pbcrTanks.length > 0) {
+        const missingComment = pbcrTanks.filter(t => !t.comment || t.comment === 0).length;
+        if (missingComment > 0) {
+          log(`  ⚠️ ${missingComment}/${pbcrTanks.length} PBCR tanks missing COMMENT field!`, analysisEl, 'red');
+          log('    💡 Comment field = barrels per meter (critical for calculations)', analysisEl);
+        } else {
+          log(`  ✅ All PBCR tanks have comment field`, analysisEl, 'green');
+        }
+      } else {
+        log('  ❌ No PBCR tanks found!', analysisEl, 'red');
+      }
+      
+      log('⚗️ PLCR Analysis:', analysisEl);
+      if (plcrTanks.length > 0) {
+        const missingFactor = plcrTanks.filter(t => !t.factor || t.factor === 0).length;
+        const missingGross = plcrTanks.filter(t => !t.gross || t.gross === 0).length;
+        
+        if (missingFactor > 0) {
+          log(`  ⚠️ ${missingFactor}/${plcrTanks.length} PLCR tanks missing FACTOR field!`, analysisEl, 'red');
+        } else {
+          log(`  ✅ All PLCR tanks have factor field`, analysisEl, 'green');
+        }
+        
+        if (missingGross > 0) {
+          log(`  ⚠️ ${missingGross}/${plcrTanks.length} PLCR tanks missing GROSS field!`, analysisEl, 'red');
+        } else {
+          log(`  ✅ All PLCR tanks have gross field`, analysisEl, 'green');
+        }
+      } else {
+        log('  ❌ No PLCR tanks found!', analysisEl, 'red');
+      }
+      
+      log('🚿 WASHERY Analysis:', analysisEl);
+      if (washeryTanks.length > 0) {
+        const missingComment = washeryTanks.filter(t => !t.comment || t.comment === 0).length;
+        if (missingComment > 0) {
+          log(`  ⚠️ ${missingComment}/${washeryTanks.length} WASHERY tanks missing COMMENT field!`, analysisEl, 'red');
+        } else {
+          log(`  ✅ All WASHERY tanks have comment field`, analysisEl, 'green');
+        }
+      } else {
+        log('  ℹ️ No WASHERY tanks found (might be normal)', analysisEl, 'blue');
+      }
+    }
+
+    // Test tank operations
+    window.testTankOperations = async function() {
+      log('🧪 === TESTING TANK OPERATIONS ===', analysisEl, 'blue');
+      
+      try {
+        // Test creating a sample tank
+        const testTank = {
+          min: 1.5,
+          max: 12.8,
+          comment: 1234.567,
+          lastModified: serverTimestamp(),
+          testCreated: true
+        };
+        
+        log('🔄 Testing tank creation...', analysisEl);
+        
+        const testDocRef = doc(db, 'tankData', 'pbcr', 'tanks', 'TEST-TANK-999');
+        await setDoc(testDocRef, testTank);
+        
+        log('✅ Test tank created successfully!', analysisEl, 'green');
+        
+        // Test reading it back
+        const docSnap = await getDoc(testDocRef);
+        if (docSnap.exists()) {
+          log('✅ Test tank read successfully!', analysisEl, 'green');
+          log(`📋 Data: ${JSON.stringify(docSnap.data(), null, 2)}`, analysisEl);
+        } else {
+          log('❌ Could not read test tank back!', analysisEl, 'red');
+        }
+        
+        log('🧪 Tank operations working correctly!', analysisEl, 'green');
+        
+      } catch (error) {
+        log('❌ Tank operations failed: ' + error.message, analysisEl, 'red');
+        
+        if (error.message.includes('permission')) {
+          log('🔒 This appears to be a Firebase security rules issue', analysisEl, 'orange');
+          log('💡 Suggestion: Check Firestore security rules', analysisEl);
+        }
+      }
+    };
+
+    // Start analysis
+    analyzeFirebase();
+    
+  </script>
+</body>
+</html>

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Firebase Access Test</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0; }
+    .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; }
+    .debug-section { background: #f8f8f8; padding: 15px; margin: 15px 0; border-radius: 5px; border-left: 4px solid #007cba; }
+    .data-item { margin: 10px 0; padding: 10px; background: #e8f4fd; border-radius: 5px; }
+    .error { background: #fee; border-left-color: #d32f2f; }
+    .success { background: #e8f5e8; border-left-color: #4caf50; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔥 Firebase Database Analysis</h1>
+    <p>Testing Firebase connection with user credentials...</p>
+    
+    <div id="status" class="debug-section">
+      <h3>🔄 Initializing...</h3>
+      <div id="statusText">Please wait...</div>
+    </div>
+
+    <div id="loginSection" class="debug-section">
+      <h3>🔐 Login Process</h3>
+      <div id="loginStatus">Starting login process...</div>
+    </div>
+
+    <div id="dataSection" class="debug-section" style="display:none;">
+      <h3>📊 Firebase Data Analysis</h3>
+      <div id="dataResults"></div>
+    </div>
+
+    <div id="tanksSection" class="debug-section" style="display:none;">
+      <h3>🛢️ Tanks Data</h3>
+      <div id="tanksResults"></div>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getAuth, signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+    import { getFirestore, doc, getDoc, collection, getDocs, query, orderBy } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD7lJcoY33FEC9d6eWy67QIO9SV4lS24pg",
+      authDomain: "tank-tools-knpc-c2d95.firebaseapp.com",
+      projectId: "tank-tools-knpc-c2d95",
+      storageBucket: "tank-tools-knpc-c2d95.firebasestorage.app",
+      messagingSenderId: "510062594324",
+      appId: "1:510062594324:web:b892fd02007a5ca2f0da01"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let statusEl = document.getElementById('statusText');
+    let loginEl = document.getElementById('loginStatus');
+    let dataEl = document.getElementById('dataResults');
+    let tanksEl = document.getElementById('tanksResults');
+
+    function log(message, element = statusEl) {
+      console.log(message);
+      element.innerHTML += '<div>' + message + '</div>';
+    }
+
+    async function testFirebaseAccess() {
+      try {
+        log('🔥 Firebase initialized successfully!');
+        
+        // Try to login
+        log('🔐 Attempting login...', loginEl);
+        
+        const userCredential = await signInWithEmailAndPassword(auth, 'f5h5dq8y@gmail.com', 'f9718062');
+        const user = userCredential.user;
+        
+        log('✅ Login successful! User: ' + user.email, loginEl);
+        log('👤 User ID: ' + user.uid, loginEl);
+        
+        // Show data section
+        document.getElementById('dataSection').style.display = 'block';
+        document.getElementById('tanksSection').style.display = 'block';
+        
+        // Now test Firebase data access
+        await analyzeFirebaseStructure();
+        
+      } catch (error) {
+        log('❌ Error: ' + error.message, loginEl);
+        document.getElementById('loginSection').className = 'debug-section error';
+      }
+    }
+
+    async function analyzeFirebaseStructure() {
+      try {
+        log('🔍 === FIREBASE STRUCTURE ANALYSIS ===', dataEl);
+        
+        // Check root collections
+        const collections = ['tankData', 'users', 'activities', 'tanks'];
+        
+        for (const collectionName of collections) {
+          try {
+            const collectionRef = collection(db, collectionName);
+            const snapshot = await getDocs(collectionRef);
+            log(`📁 Collection '${collectionName}': ${snapshot.size} documents`, dataEl);
+            
+            if (snapshot.size > 0 && snapshot.size <= 5) {
+              snapshot.forEach((doc) => {
+                log(`  📄 Document ID: ${doc.id}`, dataEl);
+                log(`  📋 Data: ${JSON.stringify(doc.data(), null, 2)}`, dataEl);
+              });
+            }
+          } catch (error) {
+            log(`❌ Cannot access collection '${collectionName}': ${error.message}`, dataEl);
+          }
+        }
+        
+        // Specific tankData analysis
+        log('🛢️ === TANK DATA DETAILED ANALYSIS ===', tanksEl);
+        
+        const departments = ['pbcr', 'plcr', 'washery'];
+        let allTanks = [];
+        
+        for (const dept of departments) {
+          try {
+            log(`🔍 Checking department: ${dept.toUpperCase()}`, tanksEl);
+            
+            // Check tankData/{dept}/tanks structure
+            const tanksRef = collection(db, 'tankData', dept, 'tanks');
+            const tanksSnapshot = await getDocs(tanksRef);
+            
+            log(`📊 ${dept}/tanks collection: ${tanksSnapshot.size} documents`, tanksEl);
+            
+            if (tanksSnapshot.size > 0) {
+              tanksSnapshot.forEach((doc) => {
+                const data = doc.data();
+                allTanks.push({
+                  id: doc.id,
+                  department: dept,
+                  ...data
+                });
+                
+                log(`  🛢️ Tank ${doc.id}:`, tanksEl);
+                log(`    Min: ${data.min || 'N/A'}`, tanksEl);
+                log(`    Max: ${data.max || 'N/A'}`, tanksEl);
+                log(`    Comment: ${data.comment || 'N/A'}`, tanksEl);
+                log(`    Factor: ${data.factor || 'N/A'}`, tanksEl);
+                log(`    Gross: ${data.gross || 'N/A'}`, tanksEl);
+                log(`    Last Modified: ${data.lastModified || 'N/A'}`, tanksEl);
+                log('    ---', tanksEl);
+              });
+            }
+            
+          } catch (error) {
+            log(`⚠️ Error accessing ${dept}: ${error.message}`, tanksEl);
+          }
+        }
+        
+        log(`🎯 SUMMARY: Found ${allTanks.length} total tanks`, tanksEl);
+        log(`📋 PBCR: ${allTanks.filter(t => t.department === 'pbcr').length}`, tanksEl);
+        log(`📋 PLCR: ${allTanks.filter(t => t.department === 'plcr').length}`, tanksEl);
+        log(`📋 WASHERY: ${allTanks.filter(t => t.department === 'washery').length}`, tanksEl);
+        
+        // Check for missing fields
+        const pbcrTanks = allTanks.filter(t => t.department === 'pbcr');
+        const plcrTanks = allTanks.filter(t => t.department === 'plcr');
+        
+        log('🔍 === MISSING FIELDS ANALYSIS ===', tanksEl);
+        
+        if (pbcrTanks.length > 0) {
+          const missingComment = pbcrTanks.filter(t => !t.comment || t.comment === 0).length;
+          log(`⚠️ PBCR tanks missing comment field: ${missingComment}/${pbcrTanks.length}`, tanksEl);
+        }
+        
+        if (plcrTanks.length > 0) {
+          const missingFactor = plcrTanks.filter(t => !t.factor || t.factor === 0).length;
+          const missingGross = plcrTanks.filter(t => !t.gross || t.gross === 0).length;
+          log(`⚠️ PLCR tanks missing factor field: ${missingFactor}/${plcrTanks.length}`, tanksEl);
+          log(`⚠️ PLCR tanks missing gross field: ${missingGross}/${plcrTanks.length}`, tanksEl);
+        }
+        
+        document.getElementById('dataSection').className = 'debug-section success';
+        document.getElementById('tanksSection').className = 'debug-section success';
+        
+      } catch (error) {
+        log('❌ Critical error in analysis: ' + error.message, dataEl);
+        document.getElementById('dataSection').className = 'debug-section error';
+      }
+    }
+
+    // Start the test
+    testFirebaseAccess();
+    
+  </script>
+</body>
+</html>
