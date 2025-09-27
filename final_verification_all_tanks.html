@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>التحقق النهائي من جميع التعديلات</title>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #1a1a2e; color: #eee; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    .section { background: #16213e; padding: 20px; margin: 15px 0; border-radius: 8px; }
+    .success { border-left: 5px solid #28a745; }
+    .warning { border-left: 5px solid #ffc107; }
+    .error { border-left: 5px solid #dc3545; }
+    .info { border-left: 5px solid #17a2b8; }
+    .log { margin: 3px 0; font-size: 14px; }
+    .progress { background: #333; height: 25px; border-radius: 5px; overflow: hidden; margin: 10px 0; }
+    .progress-bar { background: #28a745; height: 100%; width: 0%; transition: width 0.3s; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; }
+    .stat-box { background: #0f1419; padding: 15px; border-radius: 8px; text-align: center; }
+    .stat-number { font-size: 2em; font-weight: bold; color: #28a745; }
+    .stat-label { color: #ccc; margin-top: 5px; }
+    .tank-row { display: grid; grid-template-columns: 80px 80px 80px 100px 100px 150px; gap: 10px; padding: 8px; margin: 3px 0; background: #0f1419; border-radius: 4px; font-size: 12px; }
+    .header { background: #2c3e50; font-weight: bold; color: #fff; }
+    .updated { color: #28a745; }
+    .missing { color: #dc3545; }
+    .correct { color: #17a2b8; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="section success">
+      <h1>🔍 التحقق النهائي من جميع التعديلات</h1>
+      <p>فحص شامل لكافة خزانات PBCR للتأكد من تطبيق بيانات KNPC</p>
+    </div>
+
+    <div class="section">
+      <h2>📊 إحصائيات التحقق</h2>
+      <div class="stats">
+        <div class="stat-box">
+          <div class="stat-number" id="totalTanks">0</div>
+          <div class="stat-label">إجمالي الخزانات</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number" id="updatedTanks">0</div>
+          <div class="stat-label">محدث بنجاح</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number" id="missingTanks">0</div>
+          <div class="stat-label">يحتاج تحديث</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number" id="correctTanks">0</div>
+          <div class="stat-label">صحيح أصلاً</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>📈 التقدم</h2>
+      <div class="progress">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <div id="progressText">جاري البدء...</div>
+    </div>
+
+    <div class="section">
+      <h2>📋 تفاصيل الفحص</h2>
+      <div class="tank-row header">
+        <span>رقم الخزان</span>
+        <span>Hi Level</span>
+        <span>Lo Level</span>
+        <span>BPM</span>
+        <span>آخر تحديث</span>
+        <span>الحالة</span>
+      </div>
+      <div id="tankDetails" style="max-height: 400px; overflow-y: auto;"></div>
+    </div>
+
+    <div class="section">
+      <h2>📋 سجل التحقق</h2>
+      <div id="log" style="max-height: 300px; overflow-y: auto; background: #0f1419; padding: 15px; border-radius: 5px;"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getFirestore, collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD7lJcoY33FEC9d6eWy67QIO9SV4lS24pg",
+      authDomain: "tank-tools-knpc-c2d95.firebaseapp.com",
+      projectId: "tank-tools-knpc-c2d95",
+      storageBucket: "tank-tools-knpc-c2d95.firebasestorage.app",
+      messagingSenderId: "510062594324",
+      appId: "1:510062594324:web:b892fd02007a5ca2f0da01"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // البيانات المتوقعة من نظام KNPC
+    const expectedKNPCData = {
+      "221": { hiLevel: 13.5, loLevel: 2.5, bpm: 5978 },
+      "225": { hiLevel: 15.240, loLevel: 3.353, bpm: 12879 },
+      "226": { hiLevel: 15.240, loLevel: 3.353, bpm: 12879 },
+      "227": { hiLevel: 17.950, loLevel: 2.000, bpm: 11327 },
+      "253": { hiLevel: 14.5, loLevel: 2.5, bpm: 10781 },
+      "254": { hiLevel: 14.5, loLevel: 2.5, bpm: 12288 },
+      "255": { hiLevel: 14.960, loLevel: 2.000, bpm: 12287 },
+      "256": { hiLevel: 14.960, loLevel: 2.000, bpm: 12287 },
+      "260": { hiLevel: 13.000, loLevel: 2.000, bpm: 2249 },
+      "272": { hiLevel: 13.5, loLevel: 2.5, bpm: 7217 },
+      "273": { hiLevel: 13.5, loLevel: 2.5, bpm: 4198 },
+      "274": { hiLevel: 13.5, loLevel: 2.5, bpm: 4198 },
+      "275": { hiLevel: 13.5, loLevel: 2.5, bpm: 9563 },
+      "276": { hiLevel: 13.5, loLevel: 2.5, bpm: 7236 },
+      "277": { hiLevel: 13.5, loLevel: 2.5, bpm: 4188 },
+      "278": { hiLevel: 13.5, loLevel: 2.5, bpm: 9506 },
+      "279": { hiLevel: 13.5, loLevel: 2.5, bpm: 4118 },
+      "301": { hiLevel: 18.540, loLevel: 3.048, bpm: 7756 },
+      "302": { hiLevel: 18.540, loLevel: 3.048, bmp: 7756 },
+      "303": { hiLevel: 13.5, loLevel: 2.5, bpm: 6070 },
+      "304": { hiLevel: 13.5, loLevel: 2.5, bpm: 6070 },
+      "305": { hiLevel: 18.797, loLevel: 0.533, bpm: 7171 },
+      "450": { hiLevel: 14.200, loLevel: 2.000, bpm: 3155 },
+      "451": { hiLevel: 13.000, loLevel: 2.000, bpm: 930 },
+      "452": { hiLevel: 13.000, loLevel: 2.000, bpm: 4587 },
+      "453": { hiLevel: 17.800, loLevel: 2.000, bpm: 5067 },
+      "454": { hiLevel: 11.360, loLevel: 2.000, bpm: 1653 },
+      "455": { hiLevel: 11.360, loLevel: 2.000, bpm: 1654 },
+      "456": { hiLevel: 13.410, loLevel: 2.680, bpm: 11574 },
+      "457": { hiLevel: 16.450, loLevel: 5.400, bpm: 9697 },
+      "458": { hiLevel: 16.450, loLevel: 5.400, bpm: 9697 },
+      "459": { hiLevel: 14.350, loLevel: 2.000, bpm: 9466 },
+      "460": { hiLevel: 17.650, loLevel: 2.000, bpm: 14213 },
+      "461": { hiLevel: 17.653, loLevel: 2.000, bpm: 14213 },
+      "462": { hiLevel: 16.460, loLevel: 2.000, bpm: 12354 },
+      "463": { hiLevel: 17.890, loLevel: 2.000, bpm: 9578 },
+      "464": { hiLevel: 17.889, loLevel: 2.000, bpm: 9578 },
+      "465": { hiLevel: 17.890, loLevel: 2.000, bpm: 9572 },
+      "467": { hiLevel: 17.771, loLevel: 2.000, bpm: 12375 },
+      "468": { hiLevel: 17.771, loLevel: 2.000, bpm: 12375 },
+      "469": { hiLevel: 17.771, loLevel: 2.000, bpm: 12375 },
+      "470": { hiLevel: 17.770, loLevel: 2.000, bpm: 12375 },
+      "503": { hiLevel: 10.970, loLevel: 2.130, bpm: 2888 },
+      "504": { hiLevel: 10.970, loLevel: 2.130, bpm: 2888 },
+      "506": { hiLevel: 14.330, loLevel: 0.920, bpm: 930 },
+      "507": { hiLevel: 6.500, loLevel: 2.000, bpm: 413 },
+      "508": { hiLevel: 12.650, loLevel: 1.670, bpm: 1130 },
+      "509": { hiLevel: 12.650, loLevel: 1.670, bpm: 1130 },
+      "510": { hiLevel: 10.363, loLevel: 2.000, bpm: 529 },
+      "511": { hiLevel: 9.000, loLevel: 0.198, bpm: 4531 },
+      "512": { hiLevel: 11.600, loLevel: 0.920, bpm: 2939 },
+      "514": { hiLevel: 12.000, loLevel: 0.920, bpm: 2942 },
+      "515": { hiLevel: 12.000, loLevel: 0.920, bpm: 2942 },
+      "520": { hiLevel: 14.290, loLevel: 1.880, bpm: 4142 },
+      "521": { hiLevel: 14.290, loLevel: 1.880, bpm: 4142 },
+      "522": { hiLevel: 15.600, loLevel: 1.610, bpm: 11990 },
+      "531": { hiLevel: 17.770, loLevel: 2.000, bpm: 12377 },
+      "532": { hiLevel: 17.772, loLevel: 2.000, bpm: 12377 },
+      "533": { hiLevel: 17.770, loLevel: 2.000, bpm: 12377 },
+      "534": { hiLevel: 17.772, loLevel: 2.000, bpm: 12377 },
+      "600": { hiLevel: 13.300, loLevel: 2.000, bpm: 9490 },
+      "601": { hiLevel: 13.300, loLevel: 2.000, bpm: 9490 },
+      "602": { hiLevel: 13.730, loLevel: 2.000, bpm: 9512 },
+      "603": { hiLevel: 13.325, loLevel: 2.000, bpm: 11695 },
+      "605": { hiLevel: 14.325, loLevel: 2.000, bpm: 12964 },
+      "608": { hiLevel: 11.887, loLevel: 2.000, bpm: 1060 },
+      "620": { hiLevel: 16.500, loLevel: 1.650, bpm: 11981 },
+      "621": { hiLevel: 16.500, loLevel: 1.650, bpm: 11981 },
+      "622": { hiLevel: 15.760, loLevel: 2.000, bpm: 5019 },
+      "623": { hiLevel: 15.760, loLevel: 1.600, bpm: 5050 },
+      "633": { hiLevel: 6.000, loLevel: 2.000, bpm: 412 },
+      "634": { hiLevel: 6.000, loLevel: 2.000, bpm: 412 },
+      "651": { hiLevel: 13.325, loLevel: 2.000, bpm: 6543 },
+      "652": { hiLevel: 13.320, loLevel: 2.000, bmp: 6543 },
+      "661": { hiLevel: 17.759, loLevel: 2.000, bpm: 12354 },
+      "662": { hiLevel: 14.802, loLevel: 2.000, bpm: 5074 },
+      "663": { hiLevel: 10.230, loLevel: 2.000, bpm: 1507 },
+      "664": { hiLevel: 15.220, loLevel: 2.000, bpm: 7250 },
+      "665": { hiLevel: 15.220, loLevel: 2.000, bpm: 7250 },
+      "667": { hiLevel: 17.922, loLevel: 2.000, bpm: 12278 },
+      "668": { hiLevel: 18.165, loLevel: 2.000, bpm: 16858 },
+      "669": { hiLevel: 18.170, loLevel: 2.000, bpm: 16858 },
+      "670": { hiLevel: 18.165, loLevel: 2.000, bpm: 16856 },
+      "671": { hiLevel: 16.450, loLevel: 2.000, bpm: 12863 },
+      "672": { hiLevel: 16.450, loLevel: 2.000, bpm: 13046 },
+      "673": { hiLevel: 18.000, loLevel: 2.000, bpm: 7250 },
+      "725": { hiLevel: 11.887, loLevel: 0.914, bpm: 1080 },
+      "755": { hiLevel: 15.100, loLevel: 2.000, bpm: 12834 },
+      "756": { hiLevel: 15.100, loLevel: 2.000, bpm: 12962 },
+      "757": { hiLevel: 17.800, loLevel: 2.000, bpm: 10989 },
+      "820": { hiLevel: 18.480, loLevel: 1.600, bpm: 16656 },
+      "821": { hiLevel: 18.480, loLevel: 1.600, bpm: 16656 },
+      "822": { hiLevel: 18.480, loLevel: 1.600, bpm: 16856 },
+      "831": { hiLevel: 18.410, loLevel: 2.000, bpm: 11297 },
+      "832": { hiLevel: 18.409, loLevel: 2.000, bpm: 11297 },
+      "833": { hiLevel: 18.012, loLevel: 3.250, bpm: 7279 },
+      "834": { hiLevel: 18.012, loLevel: 3.250, bpm: 7279 },
+      "835": { hiLevel: 15.226, loLevel: 2.000, bpm: 7305 },
+      "836": { hiLevel: 15.226, loLevel: 2.000, bpm: 7305 },
+      "900": { hiLevel: 11.900, loLevel: 1.600, bpm: 2644 },
+      "901": { hiLevel: 12.020, loLevel: 2.000, bpm: 2692 }
+    };
+
+    let stats = {
+      total: 0,
+      updated: 0,
+      missing: 0,
+      correct: 0
+    };
+
+    function log(message, type = 'info') {
+      const logDiv = document.getElementById('log');
+      const entry = document.createElement('div');
+      entry.className = `log ${type}`;
+      entry.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+      logDiv.appendChild(entry);
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    function updateProgress(percent, text) {
+      document.getElementById('progressBar').style.width = percent + '%';
+      document.getElementById('progressText').textContent = text;
+    }
+
+    function updateStats() {
+      document.getElementById('totalTanks').textContent = stats.total;
+      document.getElementById('updatedTanks').textContent = stats.updated;
+      document.getElementById('missingTanks').textContent = stats.missing;
+      document.getElementById('correctTanks').textContent = stats.correct;
+    }
+
+    function addTankRow(tankId, data, expected, status, statusClass) {
+      const container = document.getElementById('tankDetails');
+      const row = document.createElement('div');
+      row.className = 'tank-row';
+      
+      const lastModified = data.updatedAt ? new Date(data.updatedAt).toLocaleDateString() : 'غير محدد';
+      
+      row.innerHTML = `
+        <span>TK-${tankId}</span>
+        <span class="${statusClass}">${data.max || 'N/A'}m</span>
+        <span class="${statusClass}">${data.min || 'N/A'}m</span>
+        <span class="${statusClass}">${data.comment || 'N/A'}</span>
+        <span>${lastModified}</span>
+        <span class="${statusClass}">${status}</span>
+      `;
+      container.appendChild(row);
+    }
+
+    async function verifyAllTanks() {
+      log('🔍 بدء التحقق الشامل من جميع خزانات PBCR...', 'warning');
+      updateProgress(5, 'تحميل البيانات من Firebase...');
+      
+      try {
+        const tanksRef = collection(db, 'tankData', 'pbcr', 'tanks');
+        const snapshot = await getDocs(tanksRef);
+        
+        stats.total = snapshot.size;
+        log(`📊 تم العثور على ${stats.total} خزان PBCR في قاعدة البيانات`, 'info');
+        
+        let processed = 0;
+        
+        for (const docSnapshot of snapshot.docs) {
+          const tankId = docSnapshot.id;
+          const currentData = docSnapshot.data();
+          const expectedData = expectedKNPCData[tankId];
+          
+          processed++;
+          const progressPercent = 10 + (processed / stats.total) * 80;
+          updateProgress(progressPercent, `فحص خزان TK-${tankId}...`);
+          
+          if (expectedData) {
+            // مقارنة البيانات
+            const commentMatch = currentData.comment === expectedData.bpm;
+            const minMatch = Math.abs((currentData.min || 0) - expectedData.loLevel) < 0.01;
+            const maxMatch = Math.abs((currentData.max || 0) - expectedData.hiLevel) < 0.01;
+            
+            if (commentMatch && minMatch && maxMatch) {
+              if (currentData.source && currentData.source.includes('knpc')) {
+                stats.updated++;
+                addTankRow(tankId, currentData, expectedData, '✅ محدث بنجاح', 'updated');
+                log(`✅ TK-${tankId}: محدث بنجاح بالبيانات الصحيحة`, 'success');
+              } else {
+                stats.correct++;
+                addTankRow(tankId, currentData, expectedData, '✅ صحيح أصلاً', 'correct');
+              }
+            } else {
+              stats.missing++;
+              addTankRow(tankId, currentData, expectedData, '❌ يحتاج تحديث', 'missing');
+              log(`❌ TK-${tankId}: البيانات غير صحيحة - متوقع BPM:${expectedData.bpm}, موجود:${currentData.comment || 'N/A'}`, 'error');
+            }
+          } else {
+            // خزان غير موجود في بيانات KNPC
+            addTankRow(tankId, currentData, null, 'ℹ️ ليس في KNPC', 'correct');
+          }
+          
+          updateStats();
+          await new Promise(resolve => setTimeout(resolve, 20));
+        }
+        
+        updateProgress(100, 'انتهى التحقق الشامل!');
+        
+        // تقرير نهائي
+        log('', 'info');
+        log('🎉 ===== التقرير النهائي للتحقق =====', 'success');
+        log(`📊 إجمالي الخزانات: ${stats.total}`, 'info');
+        log(`✅ محدث بنجاح: ${stats.updated}`, 'success');
+        log(`❌ يحتاج تحديث: ${stats.missing}`, stats.missing > 0 ? 'error' : 'info');
+        log(`ℹ️ صحيح أصلاً: ${stats.correct}`, 'info');
+        
+        const successRate = ((stats.updated / Object.keys(expectedKNPCData).length) * 100).toFixed(1);
+        log(`📈 نسبة نجاح التحديث: ${successRate}%`, 'success');
+        
+        if (stats.missing === 0) {
+          log('🎯 ممتاز! جميع البيانات المطلوبة تم تحديثها بنجاح', 'success');
+        } else {
+          log(`⚠️ هناك ${stats.missing} خزان يحتاج مراجعة`, 'warning');
+        }
+        
+      } catch (error) {
+        log(`💥 خطأ في التحقق: ${error.message}`, 'error');
+      }
+    }
+
+    // بدء التحقق التلقائي
+    setTimeout(() => {
+      verifyAllTanks();
+    }, 2000);
+
+    log('🔧 نظام التحقق الشامل جاهز', 'success');
+    log(`📋 سيتم فحص ${Object.keys(expectedKNPCData).length} خزان متوقع من KNPC`, 'info');
+    
+  </script>
+</body>
+</html>

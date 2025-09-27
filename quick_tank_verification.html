@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>فحص سريع للخزانات</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0; }
+    .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; }
+    .success { color: #28a745; }
+    .error { color: #dc3545; }
+    .info { color: #17a2b8; }
+    .result { margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 5px; }
+    button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 فحص سريع لخزانات PBCR</h1>
+    <button onclick="quickCheck()">بدء الفحص السريع</button>
+    <div id="results"></div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD7lJcoY33FEC9d6eWy67QIO9SV4lS24pg",
+      authDomain: "tank-tools-knpc-c2d95.firebaseapp.com",
+      projectId: "tank-tools-knpc-c2d95",
+      storageBucket: "tank-tools-knpc-c2d95.firebasestorage.app",
+      messagingSenderId: "510062594324",
+      appId: "1:510062594324:web:b892fd02007a5ca2f0da01"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // عينة من الخزانات المهمة للفحص
+    const testTanks = [
+      { id: '221', expected: { hi: 13.5, lo: 2.5, bpm: 5978 } },
+      { id: '225', expected: { hi: 15.240, lo: 3.353, bpm: 12879 } },
+      { id: '255', expected: { hi: 14.960, lo: 2.000, bpm: 12287 } },
+      { id: '510', expected: { hi: 10.363, lo: 2.000, bpm: 529 } },
+      { id: '633', expected: { hi: 6.000, lo: 2.000, bpm: 412 } },
+      { id: '756', expected: { hi: 15.100, lo: 2.000, bmp: 12962 } }
+    ];
+
+    window.quickCheck = async function() {
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = '<div class="info">🔍 جاري الفحص...</div>';
+
+      let html = '';
+      let successCount = 0;
+
+      try {
+        for (const tank of testTanks) {
+          const tankRef = doc(db, 'tankData', 'pbcr', 'tanks', tank.id);
+          const tankDoc = await getDoc(tankRef);
+          
+          if (tankDoc.exists()) {
+            const data = tankDoc.data();
+            const isCorrect = 
+              Math.abs((data.max || 0) - tank.expected.hi) < 0.01 &&
+              Math.abs((data.min || 0) - tank.expected.lo) < 0.01 &&
+              (data.comment || 0) === tank.expected.bpm;
+            
+            if (isCorrect) {
+              successCount++;
+              html += `<div class="result success">✅ TK-${tank.id}: صحيح - Hi:${data.max}m Lo:${data.min}m BPM:${data.comment}</div>`;
+            } else {
+              html += `<div class="result error">❌ TK-${tank.id}: خطأ - Hi:${data.max || 'N/A'}m Lo:${data.min || 'N/A'}m BPM:${data.comment || 'N/A'}</div>`;
+              html += `<div style="margin-left: 20px; font-size: 12px; color: #666;">متوقع: Hi:${tank.expected.hi}m Lo:${tank.expected.lo}m BPM:${tank.expected.bpm}</div>`;
+            }
+          } else {
+            html += `<div class="result error">❌ TK-${tank.id}: غير موجود</div>`;
+          }
+        }
+
+        const successRate = (successCount / testTanks.length * 100).toFixed(1);
+        html = `
+          <div class="result info">
+            📊 <strong>نتائج الفحص السريع:</strong><br>
+            • تم فحص: ${testTanks.length} خزان<br>
+            • صحيح: ${successCount} خزان<br>
+            • نسبة النجاح: ${successRate}%<br>
+            • الحالة: ${successRate >= 80 ? '✅ ممتاز' : successRate >= 50 ? '⚠️ مقبول' : '❌ يحتاج عمل'}
+          </div>
+        ` + html;
+
+        resultsDiv.innerHTML = html;
+
+      } catch (error) {
+        resultsDiv.innerHTML = `<div class="result error">❌ خطأ: ${error.message}</div>`;
+      }
+    };
+
+    console.log('✅ فحص الخزانات جاهز');
+  </script>
+</body>
+</html>
