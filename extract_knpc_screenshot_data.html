@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Extract KNPC Screenshot Data</title>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #1a1a2e; color: #eee; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    .section { background: #16213e; padding: 20px; margin: 15px 0; border-radius: 8px; }
+    .success { border-left: 5px solid #28a745; }
+    .info { border-left: 5px solid #17a2b8; }
+    .warning { border-left: 5px solid #ffc107; }
+    .data-entry { background: #0f1419; padding: 15px; margin: 10px 0; border-radius: 5px; }
+    .tank-row { display: grid; grid-template-columns: 100px 80px 80px 120px; gap: 15px; padding: 8px; margin: 5px 0; background: #2c3e50; border-radius: 4px; }
+    .tank-row input { background: #34495e; color: #fff; border: none; padding: 5px; border-radius: 3px; }
+    .header { background: #1abc9c; color: #fff; font-weight: bold; }
+    textarea { width: 100%; height: 300px; background: #34495e; color: #fff; border: none; padding: 15px; border-radius: 5px; font-family: monospace; }
+    button { background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+    button:hover { background: #218838; }
+    .copy-button { background: #17a2b8; }
+    .copy-button:hover { background: #138496; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="section info">
+      <h1>📊 Extract KNPC Screenshot Data</h1>
+      <p>Use this tool to systematically extract tank data from the 11 KNPC system screenshots</p>
+      <p>Enter tank data manually from each screenshot, then generate the complete dataset</p>
+    </div>
+
+    <div class="section warning">
+      <h2>📋 Instructions for Data Entry</h2>
+      <ul>
+        <li>Open each KNPC screenshot one by one</li>
+        <li>Look for columns: Tank ID, Level Hi Li, Level Lo, Comment (BPM)</li>
+        <li>Enter data in the form below for each tank visible</li>
+        <li>Tank IDs should be just the number (e.g., 221, 254, 633)</li>
+        <li>Hi/Lo levels should be in meters (e.g., 13.5, 2.5)</li>
+        <li>BPM should be the exact number from Comment field</li>
+        <li>Click "Add Tank" after entering each tank</li>
+        <li>When done with all screenshots, click "Generate Complete Dataset"</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>🔢 Tank Data Entry</h2>
+      
+      <div class="tank-row header">
+        <span>Tank ID</span>
+        <span>Hi Level (m)</span>
+        <span>Lo Level (m)</span>
+        <span>BPM Comment</span>
+      </div>
+      
+      <div class="tank-row">
+        <input type="text" id="tankId" placeholder="e.g., 221" />
+        <input type="number" id="hiLevel" step="0.1" placeholder="e.g., 13.5" />
+        <input type="number" id="loLevel" step="0.1" placeholder="e.g., 2.5" />
+        <input type="number" id="bpmValue" placeholder="e.g., 5978" />
+      </div>
+      
+      <div style="margin-top: 10px;">
+        <button onclick="addTank()">➕ Add Tank</button>
+        <button onclick="clearForm()">🗑️ Clear Form</button>
+        <button onclick="loadExistingData()">📥 Load Current Data</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>📝 Entered Tanks</h2>
+      <div id="enteredTanks" style="max-height: 400px; overflow-y: auto; background: #0f1419; padding: 15px; border-radius: 5px;">
+        <p style="color: #777;">No tanks entered yet...</p>
+      </div>
+      <div style="margin-top: 10px;">
+        <span id="tankCount">0</span> tanks entered
+        <button onclick="clearAllTanks()" style="background: #dc3545; margin-left: 20px;">🗑️ Clear All</button>
+      </div>
+    </div>
+
+    <div class="section success">
+      <h2>🎯 Generate Complete Dataset</h2>
+      <button onclick="generateDataset()" style="font-size: 16px; padding: 15px 30px;">
+        🚀 Generate Complete KNPC Dataset
+      </button>
+      <button onclick="copyToClipboard()" class="copy-button" style="font-size: 16px; padding: 15px 30px; margin-left: 10px;">
+        📋 Copy Dataset Code
+      </button>
+    </div>
+
+    <div class="section">
+      <h2>📄 Generated Dataset Code</h2>
+      <p>Copy this code and paste it into the completeKNPCData object in update_all_pbcr_tanks_with_knpc_data.html</p>
+      <textarea id="generatedCode" readonly placeholder="Generated dataset will appear here..."></textarea>
+    </div>
+
+    <div class="section info">
+      <h2>📊 Current Statistics</h2>
+      <div id="statistics">
+        <p>Total tanks: <span id="totalTanks">0</span></p>
+        <p>TK-22-xxx series: <span id="series22">0</span></p>
+        <p>TK-61-xxx series: <span id="series61">0</span></p>
+        <p>Other series: <span id="seriesOther">0</span></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let tanks = [];
+
+    // Load existing data from our previous corrections
+    const existingData = {
+      "221": { hiLevel: 13.5, loLevel: 2.5, bpm: 5978 },
+      "253": { hiLevel: 14.5, loLevel: 2.5, bpm: 10781 },
+      "254": { hiLevel: 14.5, loLevel: 2.5, bpm: 12288 },
+      "255": { hiLevel: 14.5, loLevel: 2.5, bpm: 12287 },
+      "256": { hiLevel: 14.5, loLevel: 2.5, bpm: 12287 },
+      "272": { hiLevel: 13.5, loLevel: 2.5, bmp: 7217 },
+      "273": { hiLevel: 13.5, loLevel: 2.5, bpm: 4198 },
+      "274": { hiLevel: 13.5, loLevel: 2.5, bpm: 4198 },
+      "275": { hiLevel: 13.5, loLevel: 2.5, bpm: 9563 },
+      "276": { hiLevel: 13.5, loLevel: 2.5, bpm: 7236 },
+      "277": { hiLevel: 13.5, loLevel: 2.5, bpm: 4188 },
+      "278": { hiLevel: 13.5, loLevel: 2.5, bpm: 9506 },
+      "279": { hiLevel: 13.5, loLevel: 2.5, bpm: 4118 },
+      "303": { hiLevel: 13.5, loLevel: 2.5, bpm: 6070 },
+      "304": { hiLevel: 13.5, loLevel: 2.5, bpm: 6070 }
+    };
+
+    function addTank() {
+      const tankId = document.getElementById('tankId').value.trim();
+      const hiLevel = parseFloat(document.getElementById('hiLevel').value);
+      const loLevel = parseFloat(document.getElementById('loLevel').value);
+      const bpmValue = parseInt(document.getElementById('bpmValue').value);
+
+      if (!tankId || isNaN(hiLevel) || isNaN(loLevel) || isNaN(bpmValue)) {
+        alert('Please fill in all fields with valid values');
+        return;
+      }
+
+      // Check if tank already exists
+      const existingIndex = tanks.findIndex(t => t.id === tankId);
+      if (existingIndex >= 0) {
+        if (confirm(`Tank ${tankId} already exists. Update it?`)) {
+          tanks[existingIndex] = { id: tankId, hiLevel, loLevel, bpm: bpmValue };
+        }
+      } else {
+        tanks.push({ id: tankId, hiLevel, loLevel, bpm: bmpValue });
+      }
+
+      updateDisplay();
+      clearForm();
+    }
+
+    function clearForm() {
+      document.getElementById('tankId').value = '';
+      document.getElementById('hiLevel').value = '';
+      document.getElementById('loLevel').value = '';
+      document.getElementById('bmpValue').value = '';
+      document.getElementById('tankId').focus();
+    }
+
+    function loadExistingData() {
+      tanks = [];
+      Object.keys(existingData).forEach(tankId => {
+        const data = existingData[tankId];
+        tanks.push({
+          id: tankId,
+          hiLevel: data.hiLevel,
+          loLevel: data.loLevel,
+          bpm: data.bpm
+        });
+      });
+      updateDisplay();
+      alert(`Loaded ${tanks.length} existing tanks from previous corrections`);
+    }
+
+    function clearAllTanks() {
+      if (confirm('Clear all entered tanks? This cannot be undone.')) {
+        tanks = [];
+        updateDisplay();
+      }
+    }
+
+    function updateDisplay() {
+      const container = document.getElementById('enteredTanks');
+      const countElement = document.getElementById('tankCount');
+      
+      if (tanks.length === 0) {
+        container.innerHTML = '<p style="color: #777;">No tanks entered yet...</p>';
+        countElement.textContent = '0';
+        updateStatistics();
+        return;
+      }
+
+      // Sort tanks by ID
+      tanks.sort((a, b) => parseInt(a.id) - parseInt(b.id));
+
+      let html = '<div class="tank-row header"><span>Tank ID</span><span>Hi Level</span><span>Lo Level</span><span>BPM</span></div>';
+      
+      tanks.forEach((tank, index) => {
+        html += `
+          <div class="tank-row" style="background: #2c3e50;">
+            <span>TK-${tank.id}</span>
+            <span>${tank.hiLevel}m</span>
+            <span>${tank.loLevel}m</span>
+            <span>${tank.bpm} BPM</span>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+      countElement.textContent = tanks.length;
+      updateStatistics();
+    }
+
+    function updateStatistics() {
+      const series22 = tanks.filter(t => t.id.startsWith('2')).length;
+      const series61 = tanks.filter(t => t.id.startsWith('6') || t.id.startsWith('3')).length;
+      const seriesOther = tanks.length - series22 - series61;
+
+      document.getElementById('totalTanks').textContent = tanks.length;
+      document.getElementById('series22').textContent = series22;
+      document.getElementById('series61').textContent = series61;
+      document.getElementById('seriesOther').textContent = seriesOther;
+    }
+
+    function generateDataset() {
+      if (tanks.length === 0) {
+        alert('Please add some tanks first');
+        return;
+      }
+
+      let code = `// COMPLETE KNPC DATASET from all 11 screenshots\n`;
+      code += `// Format: tankId: { hiLevel: number, loLevel: number, bpm: number }\n`;
+      code += `const completeKNPCData = {\n`;
+
+      // Group by series for better organization
+      const series22 = tanks.filter(t => t.id.startsWith('2')).sort((a, b) => parseInt(a.id) - parseInt(b.id));
+      const series6x = tanks.filter(t => t.id.startsWith('6') || t.id.startsWith('3')).sort((a, b) => parseInt(a.id) - parseInt(b.id));
+      const otherSeries = tanks.filter(t => !t.id.startsWith('2') && !t.id.startsWith('6') && !t.id.startsWith('3')).sort((a, b) => parseInt(a.id) - parseInt(b.id));
+
+      if (series22.length > 0) {
+        code += `\n  // TK-22-xxx series (200s)\n`;
+        series22.forEach(tank => {
+          code += `  "${tank.id}": { hiLevel: ${tank.hiLevel}, loLevel: ${tank.loLevel}, bpm: ${tank.bpm} },\n`;
+        });
+      }
+
+      if (series6x.length > 0) {
+        code += `\n  // TK-61-xxx series (600s and 300s)\n`;
+        series6x.forEach(tank => {
+          code += `  "${tank.id}": { hiLevel: ${tank.hiLevel}, loLevel: ${tank.loLevel}, bpm: ${tank.bpm} },\n`;
+        });
+      }
+
+      if (otherSeries.length > 0) {
+        code += `\n  // Other series\n`;
+        otherSeries.forEach(tank => {
+          code += `  "${tank.id}": { hiLevel: ${tank.hiLevel}, loLevel: ${tank.loLevel}, bpm: ${tank.bmp} },\n`;
+        });
+      }
+
+      code += `};\n\n`;
+      code += `// Total tanks: ${tanks.length}\n`;
+      code += `// Generated on: ${new Date().toLocaleString()}\n`;
+
+      document.getElementById('generatedCode').value = code;
+      alert(`Generated dataset for ${tanks.length} tanks!`);
+    }
+
+    function copyToClipboard() {
+      const code = document.getElementById('generatedCode').value;
+      if (!code) {
+        alert('Please generate the dataset first');
+        return;
+      }
+      
+      navigator.clipboard.writeText(code).then(() => {
+        alert('Dataset code copied to clipboard!');
+      }).catch(() => {
+        alert('Failed to copy. Please select and copy manually.');
+      });
+    }
+
+    // Initialize
+    document.getElementById('tankId').focus();
+    updateDisplay();
+  </script>
+</body>
+</html>

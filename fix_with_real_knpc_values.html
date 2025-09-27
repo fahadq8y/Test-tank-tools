@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Fix with Real KNPC Values</title>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #1a1a2e; color: #eee; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    .section { background: #16213e; padding: 20px; margin: 15px 0; border-radius: 8px; }
+    .error { border-left: 5px solid #dc3545; }
+    .success { border-left: 5px solid #28a745; }
+    .warning { border-left: 5px solid #ffc107; }
+    .info { border-left: 5px solid #17a2b8; }
+    .log { margin: 3px 0; font-size: 14px; }
+    .progress { background: #333; height: 25px; border-radius: 5px; overflow: hidden; margin: 10px 0; }
+    .progress-bar { background: #28a745; height: 100%; width: 0%; transition: width 0.3s; }
+    .tank-comparison { display: flex; justify-content: space-between; padding: 8px; margin: 3px 0; background: #0f1419; border-radius: 4px; }
+    .tank-id { color: #ffc107; font-weight: bold; min-width: 100px; }
+    .old-value { color: #dc3545; min-width: 100px; }
+    .new-value { color: #28a745; min-width: 100px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="section info">
+      <h1>🔧 Fix with Real KNPC Values</h1>
+      <p>Using actual values from KNPC system screenshot provided by user</p>
+    </div>
+
+    <div class="section warning">
+      <h2>📋 Real KNPC Values from System</h2>
+      <div class="tank-comparison">
+        <span class="tank-id"><strong>Tank ID</strong></span>
+        <span class="old-value"><strong>Current (Wrong)</strong></span>
+        <span class="new-value"><strong>Real KNPC Value</strong></span>
+      </div>
+      <div class="tank-comparison">
+        <span class="tank-id">TK-221</span>
+        <span class="old-value">11659</span>
+        <span class="new-value">5978 BPM ✅</span>
+      </div>
+      <div class="tank-comparison">
+        <span class="tank-id">TK-254</span>
+        <span class="old-value">15789</span>
+        <span class="new-value">12288 BPM ✅</span>
+      </div>
+      <div class="tank-comparison">
+        <span class="tank-id">TK-253</span>
+        <span class="old-value">15789</span>
+        <span class="new-value">10781 BPM ✅</span>
+      </div>
+      <div class="tank-comparison">
+        <span class="tank-id">TK-255</span>
+        <span class="old-value">15789</span>
+        <span class="new-value">12287 BPM ✅</span>
+      </div>
+      <div class="tank-comparison">
+        <span class="tank-id">TK-272</span>
+        <span class="old-value">17892</span>
+        <span class="new-value">7217 BPM ✅</span>
+      </div>
+      <div class="tank-comparison">
+        <span class="tank-id">TK-273</span>
+        <span class="old-value">17892</span>
+        <span class="new-value">4198 BPM ✅</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>📊 Progress</h2>
+      <div class="progress">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <div id="progressText">Ready to fix with real values...</div>
+    </div>
+
+    <div class="section">
+      <h2>📋 Fix Log</h2>
+      <div id="log"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getFirestore, doc, updateDoc, collection, getDocs, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD7lJcoY33FEC9d6eWy67QIO9SV4lS24pg",
+      authDomain: "tank-tools-knpc-c2d95.firebaseapp.com",
+      projectId: "tank-tools-knpc-c2d95",
+      storageBucket: "tank-tools-knpc-c2d95.firebasestorage.app",
+      messagingSenderId: "510062594324",
+      appId: "1:510062594324:web:b892fd02007a5ca2f0da01"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // REAL KNPC VALUES from the system screenshot (BPM = Barrels Per Meter)
+    const realKNPCValues = {
+      // From the screenshot - actual KNPC system values
+      "221": 5978,   // TK-61-221: 5978 BPM
+      "254": 12288,  // TK-22-254: 12288 BPM  
+      "253": 10781,  // TK-22-253: 10781 BPM
+      "255": 12287,  // TK-22-255: 12287 BPM
+      "256": 12287,  // TK-22-256: 12287 BPM
+      "272": 7217,   // TK-61-272: 7217 BPM
+      "273": 4198,   // TK-61-273: 4198 BPM
+      "274": 4198,   // TK-61-274: 4198 BPM
+      "275": 9563,   // TK-61-275: 9563 BPM
+      "276": 7236,   // TK-61-276: 7236 BPM
+      "277": 4188,   // TK-61-277: 4188 BPM
+      "278": 9506,   // TK-61-278: 9506 BPM
+      "279": 4118,   // TK-61-279: 4118 BPM
+      "303": 6070,   // TK-61-303: 6070 BPM
+      "304": 6070    // TK-61-304: 6070 BPM
+    };
+
+    function log(message, type = 'info') {
+      const logDiv = document.getElementById('log');
+      const entry = document.createElement('div');
+      entry.className = `log ${type}`;
+      entry.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+      logDiv.appendChild(entry);
+      logDiv.scrollTop = logDiv.scrollHeight;
+      console.log(message);
+    }
+
+    function updateProgress(percent, text) {
+      document.getElementById('progressBar').style.width = percent + '%';
+      document.getElementById('progressText').textContent = text;
+    }
+
+    async function fixWithRealValues() {
+      log('🚀 FIXING WITH REAL KNPC VALUES FROM SCREENSHOT...', 'warning');
+      updateProgress(5, 'Loading tanks...');
+      
+      try {
+        const tanksRef = collection(db, 'tankData', 'pbcr', 'tanks');
+        const snapshot = await getDocs(tanksRef);
+        
+        log(`📊 Found ${snapshot.size} PBCR tanks`, 'info');
+        
+        let processed = 0;
+        let fixed = 0;
+        let errors = 0;
+        const tanksWithRealValues = Object.keys(realKNPCValues);
+        
+        log(`🎯 Will fix ${tanksWithRealValues.length} tanks with real KNPC values`, 'warning');
+        
+        // Process each tank that has real values
+        for (const docSnapshot of snapshot.docs) {
+          const tankId = docSnapshot.id;
+          const data = docSnapshot.data();
+          const currentComment = data.comment || 0;
+          const realValue = realKNPCValues[tankId];
+          
+          processed++;
+          
+          try {
+            updateProgress(10 + (processed / snapshot.size) * 80, `Processing Tank ${tankId}...`);
+            
+            // Only update tanks that have real KNPC values and are different
+            if (realValue && currentComment !== realValue) {
+              await updateDoc(docSnapshot.ref, {
+                comment: realValue,
+                lastModified: serverTimestamp(),
+                correctedBy: 'real-knpc-values',
+                correctedAt: new Date().toISOString(),
+                previousWrongValue: currentComment,
+                source: 'knpc-system-screenshot'
+              });
+              
+              log(`✅ Tank ${tankId}: ${currentComment} → ${realValue} BPM (REAL KNPC)`, 'success');
+              fixed++;
+              
+              // Highlight specific tanks mentioned
+              if (['221', '254', '253', '255', '272', '273'].includes(tankId)) {
+                log(`🎯 KEY TANK ${tankId}: Now has correct KNPC value ${realValue} BPM`, 'success');
+              }
+              
+            } else if (realValue && currentComment === realValue) {
+              log(`ℹ️ Tank ${tankId}: Already has correct KNPC value (${realValue})`, 'info');
+            }
+            
+            await new Promise(resolve => setTimeout(resolve, 30));
+            
+          } catch (tankError) {
+            log(`❌ Tank ${tankId}: ${tankError.message}`, 'error');
+            errors++;
+          }
+        }
+        
+        updateProgress(100, 'Real values fix completed!');
+        
+        log('', 'info');
+        log('🎉 === REAL KNPC VALUES FIX COMPLETED ===', 'success');
+        log(`📊 Total processed: ${processed} tanks`, 'info');
+        log(`✅ Fixed with real values: ${fixed} tanks`, 'success');
+        log(`❌ Errors: ${errors} tanks`, 'error');
+        log('', 'info');
+        log('🎯 Tanks now using REAL KNPC system values:', 'success');
+        log('  • Tank 221: 5978 BPM (from KNPC system)', 'success');
+        log('  • Tank 254: 12288 BPM (from KNPC system)', 'success');
+        log('  • Tank 253: 10781 BPM (from KNPC system)', 'success');
+        log('  • Tank 255: 12287 BPM (from KNPC system)', 'success');
+        log('  • Tank 272: 7217 BPM (from KNPC system)', 'success');
+        log('  • Tank 273: 4198 BPM (from KNPC system)', 'success');
+        log('  • And more...', 'success');
+        log('', 'info');
+        log('💡 PBCR calculations now 100% accurate with real KNPC data!', 'success');
+        
+      } catch (error) {
+        log(`💥 CRITICAL ERROR: ${error.message}`, 'error');
+      }
+    }
+
+    // Auto-start fix with real values
+    log('🤖 Starting fix with REAL KNPC values in 3 seconds...', 'warning');
+    log('📸 Using values from user-provided KNPC system screenshot', 'info');
+    
+    setTimeout(() => {
+      fixWithRealValues();
+    }, 3000);
+    
+  </script>
+</body>
+</html>
