@@ -1118,7 +1118,32 @@ window.increaseFontSize=increaseFontSize;window.decreaseFontSize=decreaseFontSiz
 function showCalendarHelp(){const userAgent=navigator.userAgent.toLowerCase();let platform='';let storeUrl='';if(/android/.test(userAgent)){platform='Android';storeUrl='https://play.google.com/store/apps/details?id=com.google.android.calendar';}else if(/iphone|ipad|ipod/.test(userAgent)){platform='iOS';storeUrl='https://apps.apple.com/app/google-calendar/id909319292';}else{platform='Web Browser';storeUrl='https://calendar.google.com/';}
 const message=`📅 How to use Calendar Reminder:\n\n1. Calculate your tank finish time\n2. Click "📅 Add Reminder" button\n\nFor ${platform} users, if you don't have Google Calendar, you can download it.`;if(confirm(message+'\n\nClick OK to go to the store.')){window.open(storeUrl,'_blank');}}
 window.showCalendarHelp=showCalendarHelp;
-async function logPBCRCalculation(tankNumber,hours,minutes,finishTime,finishDate){if(!currentUser)return;try{const userIP=await fetch('https://api.ipify.org?format=json').then(r=>r.json()).then(data=>data.ip).catch(()=>'Unknown');const timestamp=new Date();const detailedAction=`Calculated Tank ${tankNumber} in PBCR - Result: ${hours}h ${minutes}m (Finish: ${finishTime} - ${finishDate}) by ${currentUser.username}`;await addDoc(collection(db,'activities'),{action:detailedAction,originalAction:'pbcr_calculation',username:currentUser.username,tankNumber:tankNumber,calculationResult:`${hours}h ${minutes}m`,finishTime:finishTime,finishDate:finishDate,timestamp:serverTimestamp(),ip:userIP,userAgent:navigator.userAgent.substring(0,100),page:'pbcr-calculator'});}catch(error){console.error('Error logging PBCR calculation:',error);}}
+async function logPBCRCalculation(tankNumber, hours, minutes, finishTime, finishDate) {
+  if (!currentUser) return;
+  try {
+    const userIP = await fetch('https://api.ipify.org?format=json')
+      .then(r => r.json())
+      .then(data => data.ip)
+      .catch(() => 'Unknown');
+    const timestamp = new Date();
+    const detailedAction = `Calculated Tank ${tankNumber} in PBCR - Result: ${hours}h ${minutes}m (Finish: ${finishTime} - ${finishDate}) by ${currentUser.username}`;
+    await addDoc(collection(db, 'activities'), {
+      action: detailedAction,
+      originalAction: 'pbcr_calculation',
+      username: currentUser.username,
+      tankNumber: tankNumber,
+      calculationResult: `${hours}h ${minutes}m`,
+      finishTime: finishTime,
+      finishDate: finishDate,
+      timestamp: serverTimestamp(),
+      ip: userIP,
+      userAgent: navigator.userAgent.substring(0, 100),
+      page: 'pbcr-calculator'
+    });
+  } catch(error) {
+    console.error('Error logging PBCR calculation:', error);
+  }
+}
 function showLiveTanksHelp(){alert('🔴 Add to Live Tanks:\n\nAdds your tank to the live monitoring system for all users to see. Requires panel operator or admin access.');}
 function showTableHelp(){alert('📊 Add to Table:\n\nAdds tank to your personal table below. Only you can see this table.');}
 window.addMissingTanks = async function() {
@@ -1224,4 +1249,4 @@ footer{margin-top:40px;color:#ccc;text-align:center}
 </style>
 </body>
 </html>
-<!-- Force deploy Sat Sep 27 11:19:20 UTC 2025 -->
+<!-- Fixed integrity & permissions - Fri Sep 27 11:23:45 UTC 2025 -->
