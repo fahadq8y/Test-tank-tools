@@ -345,7 +345,8 @@ const products={
 // PURE FIREBASE MODE: No fallback data, everything from Firebase only
 
 async function fetchTankSpecifications() {
-    const departments = ['pbcr', 'plcr', 'washery'];
+    // FIXED: Index is PBCR Calculator - only load PBCR tanks to avoid conflicts
+    const departments = ['pbcr'];
     let allTanks = {};
     
     console.log('🔄 Loading tank specifications from Firebase...');
