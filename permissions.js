@@ -45,7 +45,7 @@ const SPECIALIZATIONS = {
   field_operator: {
     name: 'Field Operator',
     nameAr: 'مشغل ميداني',
-    defaultPages: ['dashboard.html'],
+    defaultPages: ['index.html', 'dashboard.html'],
     defaultPermissions: {
       canViewLiveTanks: false,
       canEditLiveTanks: false,
@@ -160,11 +160,11 @@ async function checkPageAccess() {
     const user = await getCurrentUser();
     const currentPageName = getCurrentPageName();
     
-    // ✅ PBCR Calculator (index.html) is public - no login required
-    if (currentPageName === 'index.html') {
-      console.log('checkPageAccess: PBCR Calculator is public, allowing access without login.');
-      return true;
-    }
+    // 🔒 PBCR Calculator (index.html) requires login - security requirement
+    // if (currentPageName === 'index.html') {
+    //   console.log('checkPageAccess: PBCR Calculator is public, allowing access without login.');
+    //   return true;
+    // }
     
     if (!user) {
       console.log('checkPageAccess: No current user, redirecting to login.');
