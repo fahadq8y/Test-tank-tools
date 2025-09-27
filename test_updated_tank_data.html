@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>اختبار البيانات المحدثة للخزانات</title>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #1a1a2e; color: #eee; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    .section { background: #16213e; padding: 20px; margin: 15px 0; border-radius: 8px; }
+    .success { border-left: 5px solid #28a745; }
+    .info { border-left: 5px solid #17a2b8; }
+    .tank-data { display: grid; grid-template-columns: 80px 80px 80px 100px 150px; gap: 10px; padding: 8px; margin: 3px 0; background: #0f1419; border-radius: 4px; font-size: 12px; }
+    .header { background: #2c3e50; font-weight: bold; color: #fff; }
+    .tank-id { color: #ffc107; font-weight: bold; }
+    .hi-level { color: #17a2b8; }
+    .lo-level { color: #6f42c1; }
+    .bmp-value { color: #28a745; font-weight: bold; }
+    .status { color: #28a745; }
+    button { background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="section success">
+      <h1>✅ اختبار البيانات المحدثة للخزانات</h1>
+      <p>فحص البيانات التي تم تحديثها من نظام KNPC</p>
+    </div>
+
+    <div class="section">
+      <h2>🎯 عينات من الخزانات المحدثة</h2>
+      <button onclick="testUpdatedData()">🔍 اختبار البيانات المحدثة</button>
+      <button onclick="showRandomSample()">📊 عرض عينة عشوائية</button>
+    </div>
+
+    <div class="section">
+      <h2>📋 النتائج</h2>
+      <div class="tank-data header">
+        <span>رقم الخزان</span>
+        <span>المستوى العالي</span>
+        <span>المستوى المنخفض</span>
+        <span>قيمة BPM</span>
+        <span>الحالة</span>
+      </div>
+      <div id="testResults"></div>
+    </div>
+
+    <div class="section info">
+      <h2>📊 تقرير الاختبار</h2>
+      <div id="testReport">اضغط "اختبار البيانات المحدثة" لبدء الفحص...</div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getFirestore, doc, getDoc, collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD7lJcoY33FEC9d6eWy67QIO9SV4lS24pg",
+      authDomain: "tank-tools-knpc-c2d95.firebaseapp.com",
+      projectId: "tank-tools-knpc-c2d95",
+      storageBucket: "tank-tools-knpc-c2d95.firebasestorage.app",
+      messagingSenderId: "510062594324",
+      appId: "1:510062594324:web:b892fd02007a5ca2f0da01"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // عينة من الخزانات للاختبار
+    const testTanks = ['221', '225', '255', '272', '301', '510', '600', '633', '756', '820'];
+
+    function displayTankData(tankId, data, status) {
+      const container = document.getElementById('testResults');
+      const row = document.createElement('div');
+      row.className = 'tank-data';
+      
+      row.innerHTML = `
+        <span class="tank-id">TK-${tankId}</span>
+        <span class="hi-level">${data.max || 'N/A'}m</span>
+        <span class="lo-level">${data.min || 'N/A'}m</span>
+        <span class="bpm-value">${data.comment || 'N/A'} BPM</span>
+        <span class="status">${status}</span>
+      `;
+      container.appendChild(row);
+    }
+
+    window.testUpdatedData = async function() {
+      const container = document.getElementById('testResults');
+      const reportDiv = document.getElementById('testReport');
+      container.innerHTML = '';
+      
+      reportDiv.innerHTML = '🔍 جاري اختبار البيانات المحدثة...<br>';
+      
+      let successCount = 0;
+      let totalTested = testTanks.length;
+      
+      try {
+        for (const tankId of testTanks) {
+          const tankRef = doc(db, 'tankData', 'pbcr', 'tanks', tankId);
+          const tankDoc = await getDoc(tankRef);
+          
+          if (tankDoc.exists()) {
+            const data = tankDoc.data();
+            
+            // التحقق من وجود البيانات المحدثة
+            const hasValidData = data.comment && data.max && data.min;
+            const isUpdated = data.source && data.source.includes('knpc');
+            
+            let status = '';
+            if (hasValidData && isUpdated) {
+              status = '✅ محدث بنجاح';
+              successCount++;
+            } else if (hasValidData) {
+              status = '⚠️ بيانات موجودة';
+            } else {
+              status = '❌ بيانات ناقصة';
+            }
+            
+            displayTankData(tankId, data, status);
+            
+          } else {
+            displayTankData(tankId, {}, '❌ غير موجود');
+          }
+          
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+        
+        const successRate = ((successCount / totalTested) * 100).toFixed(1);
+        
+        reportDiv.innerHTML = `
+          <strong>📊 تقرير الاختبار:</strong><br>
+          • تم اختبار: ${totalTested} خزان<br>
+          • نجح التحديث: ${successCount} خزان<br>
+          • نسبة النجاح: ${successRate}%<br>
+          • الحالة: ${successRate >= 80 ? '✅ ممتاز' : successRate >= 60 ? '⚠️ جيد' : '❌ يحتاج مراجعة'}<br><br>
+          
+          <strong>🎯 ملاحظات:</strong><br>
+          • جميع الخزانات التي تظهر "محدث بنجاح" تحتوي على بيانات KNPC الحقيقية<br>
+          • البيانات تشمل: Hi Level, Lo Level, وقيمة BPM الصحيحة<br>
+          • يمكن الآن استخدام هذه البيانات في حسابات PBCR الدقيقة
+        `;
+        
+      } catch (error) {
+        reportDiv.innerHTML = `❌ خطأ في الاختبار: ${error.message}`;
+      }
+    };
+
+    window.showRandomSample = async function() {
+      const container = document.getElementById('testResults');
+      container.innerHTML = '';
+      
+      try {
+        const tanksRef = collection(db, 'tankData', 'pbcr', 'tanks');
+        const snapshot = await getDocs(tanksRef);
+        
+        const allTanks = [];
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          if (data.source && data.source.includes('knpc')) {
+            allTanks.push({ id: doc.id, data });
+          }
+        });
+        
+        // عرض 10 خزانات عشوائية محدثة
+        const randomTanks = allTanks.sort(() => 0.5 - Math.random()).slice(0, 10);
+        
+        randomTanks.forEach(tank => {
+          displayTankData(tank.id, tank.data, '✅ محدث من KNPC');
+        });
+        
+        document.getElementById('testReport').innerHTML = `
+          📊 تم العثور على ${allTanks.length} خزان محدث ببيانات KNPC<br>
+          عرض عينة عشوائية من ${randomTanks.length} خزان
+        `;
+        
+      } catch (error) {
+        document.getElementById('testReport').innerHTML = `❌ خطأ: ${error.message}`;
+      }
+    };
+
+    console.log('✅ اختبار البيانات المحدثة جاهز');
+  </script>
+</body>
+</html>

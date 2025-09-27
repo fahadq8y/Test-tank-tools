@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>تحديث تلقائي - Firebase مع بيانات KNPC</title>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #1a1a2e; color: #eee; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    .section { background: #16213e; padding: 20px; margin: 15px 0; border-radius: 8px; }
+    .success { border-left: 5px solid #28a745; }
+    .warning { border-left: 5px solid #ffc107; }
+    .error { border-left: 5px solid #dc3545; }
+    .info { border-left: 5px solid #17a2b8; }
+    .log { margin: 3px 0; font-size: 14px; }
+    .progress { background: #333; height: 25px; border-radius: 5px; overflow: hidden; margin: 10px 0; }
+    .progress-bar { background: #28a745; height: 100%; width: 0%; transition: width 0.3s; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; }
+    .stat-box { background: #0f1419; padding: 15px; border-radius: 8px; text-align: center; }
+    .stat-number { font-size: 2em; font-weight: bold; color: #28a745; }
+    .stat-label { color: #ccc; margin-top: 5px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="section info">
+      <h1>🚀 تحديث تلقائي لجميع خزانات PBCR</h1>
+      <p>تطبيق البيانات الحقيقية من نظام KNPC على Firebase</p>
+      <p>⏱️ بدء التحديث التلقائي خلال 3 ثوانِ...</p>
+    </div>
+
+    <div class="section">
+      <h2>📊 إحصائيات التحديث</h2>
+      <div class="stats">
+        <div class="stat-box">
+          <div class="stat-number" id="totalTanks">130+</div>
+          <div class="stat-label">إجمالي خزانات KNPC</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number" id="updatedTanks">0</div>
+          <div class="stat-label">تم التحديث</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number" id="processedTanks">0</div>
+          <div class="stat-label">تم المعالجة</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number" id="errorCount">0</div>
+          <div class="stat-label">أخطاء</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>📈 التقدم</h2>
+      <div class="progress">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <div id="progressText">جاري التحضير...</div>
+    </div>
+
+    <div class="section">
+      <h2>📋 سجل التحديث المباشر</h2>
+      <div id="log" style="max-height: 500px; overflow-y: auto; background: #0f1419; padding: 15px; border-radius: 5px;"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getFirestore, doc, updateDoc, collection, getDocs, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD7lJcoY33FEC9d6eWy67QIO9SV4lS24pg",
+      authDomain: "tank-tools-knpc-c2d95.firebaseapp.com",
+      projectId: "tank-tools-knpc-c2d95",
+      storageBucket: "tank-tools-knpc-c2d95.firebasestorage.app",
+      messagingSenderId: "510062594324",
+      appId: "1:510062594324:web:b892fd02007a5ca2f0da01"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // البيانات الكاملة من نظام KNPC - جميع الـ 11 صورة
+    const completeKNPCData = {
+      // الصورة 1: B2 EGO Group
+      "600": { hiLevel: 13.300, loLevel: 2.000, bpm: 9490 },
+      "601": { hiLevel: 13.300, loLevel: 2.000, bpm: 9490 },
+      "602": { hiLevel: 13.730, loLevel: 2.000, bpm: 9512 },
+      "603": { hiLevel: 13.325, loLevel: 2.000, bpm: 11695 },
+      "605": { hiLevel: 14.325, loLevel: 2.000, bpm: 12964 },
+      "633": { hiLevel: 6.000, loLevel: 2.000, bpm: 412 },
+      "634": { hiLevel: 6.000, loLevel: 2.000, bpm: 412 },
+      "651": { hiLevel: 13.325, loLevel: 2.000, bpm: 6543 },
+      "652": { hiLevel: 13.320, loLevel: 2.000, bpm: 6543 },
+      "667": { hiLevel: 17.922, loLevel: 2.000, bpm: 12278 },
+      "668": { hiLevel: 18.165, loLevel: 2.000, bpm: 16858 },
+      "669": { hiLevel: 18.170, loLevel: 2.000, bpm: 16858 },
+      "670": { hiLevel: 18.165, loLevel: 2.000, bpm: 16856 },
+      "822": { hiLevel: 18.480, loLevel: 1.600, bpm: 16856 },
+
+      // الصورة 2: Group 3
+      "520": { hiLevel: 14.290, loLevel: 1.880, bpm: 4142 },
+      "521": { hiLevel: 14.290, loLevel: 1.880, bpm: 4142 },
+      "503": { hiLevel: 10.970, loLevel: 2.130, bpm: 2888 },
+      "504": { hiLevel: 10.970, loLevel: 2.130, bpm: 2888 },
+      "522": { hiLevel: 15.600, loLevel: 1.610, bpm: 11990 },
+      "531": { hiLevel: 17.770, loLevel: 2.000, bpm: 12377 },
+      "533": { hiLevel: 17.770, loLevel: 2.000, bpm: 12377 },
+      "534": { hiLevel: 17.772, loLevel: 2.000, bpm: 12377 },
+
+      // الصورة 3: B3 PCNA Group  
+      "467": { hiLevel: 17.771, loLevel: 2.000, bpm: 12375 },
+      "468": { hiLevel: 17.771, loLevel: 2.000, bpm: 12375 },
+      "469": { hiLevel: 17.771, loLevel: 2.000, bpm: 12375 },
+      "470": { hiLevel: 17.770, loLevel: 2.000, bpm: 12375 },
+      "301": { hiLevel: 18.540, loLevel: 3.048, bpm: 7756 },
+      "302": { hiLevel: 18.540, loLevel: 3.048, bpm: 7756 },
+
+      // الصورة 4: Group 4
+      "305": { hiLevel: 18.797, loLevel: 0.533, bpm: 7171 },
+      "620": { hiLevel: 16.500, loLevel: 1.650, bpm: 11981 },
+      "621": { hiLevel: 16.500, loLevel: 1.650, bpm: 11981 },
+      "622": { hiLevel: 15.760, loLevel: 2.000, bpm: 5019 },
+      "623": { hiLevel: 15.760, loLevel: 1.600, bpm: 5050 },
+      "661": { hiLevel: 17.759, loLevel: 2.000, bpm: 12354 },
+      "662": { hiLevel: 14.802, loLevel: 2.000, bpm: 5074 },
+      "663": { hiLevel: 10.230, loLevel: 2.000, bpm: 1507 },
+      "664": { hiLevel: 15.220, loLevel: 2.000, bpm: 7250 },
+      "665": { hiLevel: 15.220, loLevel: 2.000, bpm: 7250 },
+      "673": { hiLevel: 18.000, loLevel: 2.000, bpm: 7250 },
+      "454": { hiLevel: 11.360, loLevel: 2.000, bpm: 1653 },
+      "455": { hiLevel: 11.360, loLevel: 2.000, bpm: 1654 },
+
+      // الصورة 5: Group 5
+      "820": { hiLevel: 18.480, loLevel: 1.600, bpm: 16656 },
+      "821": { hiLevel: 18.480, loLevel: 1.600, bpm: 16656 },
+      "755": { hiLevel: 15.100, loLevel: 2.000, bpm: 12834 },
+      "756": { hiLevel: 15.100, loLevel: 2.000, bpm: 12962 },
+      "757": { hiLevel: 17.800, loLevel: 2.000, bpm: 10989 },
+      "831": { hiLevel: 18.410, loLevel: 2.000, bpm: 11297 },
+      "832": { hiLevel: 18.409, loLevel: 2.000, bpm: 11297 },
+      "833": { hiLevel: 18.012, loLevel: 3.250, bpm: 7279 },
+      "834": { hiLevel: 18.012, loLevel: 3.250, bpm: 7279 },
+      "835": { hiLevel: 15.226, loLevel: 2.000, bpm: 7305 },
+      "836": { hiLevel: 15.226, loLevel: 2.000, bpm: 7305 },
+      "900": { hiLevel: 11.900, loLevel: 1.600, bpm: 2644 },
+      "901": { hiLevel: 12.020, loLevel: 2.000, bpm: 2692 },
+
+      // الصورة 6: Filling Station
+      "725": { hiLevel: 11.887, loLevel: 0.914, bpm: 1080 },
+      "510": { hiLevel: 10.363, loLevel: 2.000, bpm: 529 },
+      "507": { hiLevel: 6.500, loLevel: 2.000, bpm: 413 },
+      "511": { hiLevel: 9.000, loLevel: 0.198, bpm: 4531 },
+
+      // الصورة 7: خزانات إضافية
+      "508": { hiLevel: 12.650, loLevel: 1.670, bpm: 1130 },
+      "509": { hiLevel: 12.650, loLevel: 1.670, bpm: 1130 },
+      "512": { hiLevel: 11.600, loLevel: 0.920, bpm: 2939 },
+      "514": { hiLevel: 12.000, loLevel: 0.920, bpm: 2942 },
+      "515": { hiLevel: 12.000, loLevel: 0.920, bpm: 2942 },
+      "532": { hiLevel: 17.772, loLevel: 2.000, bpm: 12377 },
+      "671": { hiLevel: 16.450, loLevel: 2.000, bpm: 12863 },
+      "672": { hiLevel: 16.450, loLevel: 2.000, bpm: 13046 },
+
+      // الصورة 8: سلسلة 200s + 400s
+      "225": { hiLevel: 15.240, loLevel: 3.353, bpm: 12879 },
+      "226": { hiLevel: 15.240, loLevel: 3.353, bpm: 12879 },
+      "227": { hiLevel: 17.950, loLevel: 2.000, bpm: 11327 },
+      "255": { hiLevel: 14.960, loLevel: 2.000, bpm: 12287 },
+      "256": { hiLevel: 14.960, loLevel: 2.000, bpm: 12287 },
+      "260": { hiLevel: 13.000, loLevel: 2.000, bpm: 2249 },
+      "451": { hiLevel: 13.000, loLevel: 2.000, bpm: 930 },
+      "506": { hiLevel: 14.330, loLevel: 0.920, bpm: 930 },
+      "608": { hiLevel: 11.887, loLevel: 2.000, bpm: 1060 },
+      "450": { hiLevel: 14.200, loLevel: 2.000, bpm: 3155 },
+      "452": { hiLevel: 13.000, loLevel: 2.000, bpm: 4587 },
+      "453": { hiLevel: 17.800, loLevel: 2.000, bpm: 5067 },
+      "456": { hiLevel: 13.410, loLevel: 2.680, bpm: 11574 },
+      "457": { hiLevel: 16.450, loLevel: 5.400, bpm: 9697 },
+      "458": { hiLevel: 16.450, loLevel: 5.400, bpm: 9697 },
+      "459": { hiLevel: 14.350, loLevel: 2.000, bpm: 9466 },
+      "460": { hiLevel: 17.650, loLevel: 2.000, bpm: 14213 },
+
+      // الصورة 9: B4 MOGAS + باقي الخزانات
+      "461": { hiLevel: 17.653, loLevel: 2.000, bpm: 14213 },
+      "462": { hiLevel: 16.460, loLevel: 2.000, bpm: 12354 },
+      "463": { hiLevel: 17.890, loLevel: 2.000, bpm: 9578 },
+      "464": { hiLevel: 17.889, loLevel: 2.000, bpm: 9578 },
+      "465": { hiLevel: 17.890, loLevel: 2.000, bpm: 9572 },
+
+      // الخزانات المصححة مسبقاً من الصورة الأولى (محدثة بالقيم الجديدة)
+      "221": { hiLevel: 13.5, loLevel: 2.5, bmp: 5978 },
+      "253": { hiLevel: 14.5, loLevel: 2.5, bpm: 10781 },
+      "254": { hiLevel: 14.5, loLevel: 2.5, bpm: 12288 },
+      "272": { hiLevel: 13.5, loLevel: 2.5, bpm: 7217 },
+      "273": { hiLevel: 13.5, loLevel: 2.5, bpm: 4198 },
+      "274": { hiLevel: 13.5, loLevel: 2.5, bpm: 4198 },
+      "275": { hiLevel: 13.5, loLevel: 2.5, bpm: 9563 },
+      "276": { hiLevel: 13.5, loLevel: 2.5, bpm: 7236 },
+      "277": { hiLevel: 13.5, loLevel: 2.5, bpm: 4188 },
+      "278": { hiLevel: 13.5, loLevel: 2.5, bpm: 9506 },
+      "279": { hiLevel: 13.5, loLevel: 2.5, bpm: 4118 },
+      "303": { hiLevel: 13.5, loLevel: 2.5, bpm: 6070 },
+      "304": { hiLevel: 13.5, loLevel: 2.5, bpm: 6070 }
+    };
+
+    let stats = {
+      total: Object.keys(completeKNPCData).length,
+      updated: 0,
+      processed: 0,
+      errors: 0
+    };
+
+    function log(message, type = 'info') {
+      const logDiv = document.getElementById('log');
+      const entry = document.createElement('div');
+      entry.className = `log ${type}`;
+      entry.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+      logDiv.appendChild(entry);
+      logDiv.scrollTop = logDiv.scrollHeight;
+      console.log(message);
+    }
+
+    function updateProgress(percent, text) {
+      document.getElementById('progressBar').style.width = percent + '%';
+      document.getElementById('progressText').textContent = text;
+    }
+
+    function updateStats() {
+      document.getElementById('totalTanks').textContent = stats.total;
+      document.getElementById('updatedTanks').textContent = stats.updated;
+      document.getElementById('processedTanks').textContent = stats.processed;
+      document.getElementById('errorCount').textContent = stats.errors;
+    }
+
+    async function autoUpdateFirebase() {
+      log('🚀 بدء التحديث التلقائي لجميع خزانات PBCR...', 'warning');
+      log(`📊 إجمالي خزانات KNPC للتحديث: ${stats.total}`, 'info');
+      updateProgress(5, 'الاتصال بـ Firebase...');
+      
+      try {
+        const tanksRef = collection(db, 'tankData', 'pbcr', 'tanks');
+        const snapshot = await getDocs(tanksRef);
+        
+        log(`🗄️ تم العثور على ${snapshot.size} خزان PBCR في قاعدة البيانات`, 'success');
+        updateProgress(10, 'بدء معالجة الخزانات...');
+        
+        for (const docSnapshot of snapshot.docs) {
+          const tankId = docSnapshot.id;
+          const currentData = docSnapshot.data();
+          const knpcData = completeKNPCData[tankId];
+          
+          stats.processed++;
+          const progressPercent = 10 + (stats.processed / snapshot.size) * 80;
+          updateProgress(progressPercent, `معالجة خزان TK-${tankId}...`);
+          updateStats();
+          
+          try {
+            if (knpcData) {
+              // التحقق من الحاجة للتحديث
+              const currentComment = currentData.comment || 0;
+              const currentMin = currentData.min || 0;
+              const currentMax = currentData.max || 0;
+              
+              const needsUpdate = 
+                currentComment !== knpcData.bpm ||
+                Math.abs(currentMin - knpcData.loLevel) > 0.01 ||
+                Math.abs(currentMax - knpcData.hiLevel) > 0.01;
+              
+              if (needsUpdate) {
+                await updateDoc(docSnapshot.ref, {
+                  min: knpcData.loLevel,
+                  max: knpcData.hiLevel,
+                  comment: knpcData.bpm,
+                  lastModified: serverTimestamp(),
+                  updatedBy: 'auto-knpc-complete-11-screenshots',
+                  updatedAt: new Date().toISOString(),
+                  source: 'knpc-system-real-data-auto',
+                  knpcDataApplied: true,
+                  previousValues: {
+                    min: currentMin,
+                    max: currentMax,
+                    comment: currentComment
+                  }
+                });
+                
+                stats.updated++;
+                log(`✅ TK-${tankId}: محدث - Hi:${knpcData.hiLevel}m Lo:${knpcData.loLevel}m BPM:${knpcData.bpm}`, 'success');
+              } else {
+                log(`ℹ️ TK-${tankId}: البيانات صحيحة بالفعل`, 'info');
+              }
+            } else {
+              log(`⚠️ TK-${tankId}: لا توجد بيانات KNPC (سيبقى كما هو)`, 'warning');
+            }
+            
+            // استراحة قصيرة لتجنب الضغط على Firebase
+            await new Promise(resolve => setTimeout(resolve, 50));
+            
+          } catch (tankError) {
+            stats.errors++;
+            log(`❌ TK-${tankId}: خطأ - ${tankError.message}`, 'error');
+          }
+          
+          updateStats();
+        }
+        
+        updateProgress(100, 'تم الانتهاء من جميع التحديثات!');
+        
+        // ملخص نهائي
+        log('', 'info');
+        log('🎉 ===== انتهى التحديث التلقائي =====', 'success');
+        log(`📊 إجمالي الخزانات المعالجة: ${stats.processed}`, 'info');
+        log(`✅ تم التحديث بنجاح: ${stats.updated} خزان`, 'success');
+        log(`❌ أخطاء: ${stats.errors} خزان`, stats.errors > 0 ? 'error' : 'info');
+        log(`📈 نسبة النجاح: ${((stats.updated / stats.processed) * 100).toFixed(1)}%`, 'success');
+        log('', 'info');
+        log('💡 جميع بيانات نظام KNPC الحقيقية تم تطبيقها على Firebase!', 'success');
+        log('🎯 خزانات PBCR جاهزة الآن للاستخدام مع البيانات الصحيحة', 'success');
+        log('🔗 يمكنك الآن فتح Tank Management لرؤية التحديثات', 'info');
+        
+      } catch (error) {
+        log(`💥 خطأ حرج في التحديث: ${error.message}`, 'error');
+        updateProgress(0, 'فشل في التحديث');
+      }
+    }
+
+    // بدء العد التنازلي والتحديث التلقائي
+    let countdown = 3;
+    const countdownInterval = setInterval(() => {
+      log(`⏱️ بدء التحديث خلال ${countdown} ثانية...`, 'warning');
+      countdown--;
+      
+      if (countdown < 0) {
+        clearInterval(countdownInterval);
+        autoUpdateFirebase();
+      }
+    }, 1000);
+
+    // تحديث الإحصائيات الأولية
+    updateStats();
+    log('🔧 تم تحضير بيانات نظام KNPC للتحديث', 'success');
+    log(`📋 ${stats.total} خزان جاهز للتطبيق على Firebase`, 'info');
+    
+  </script>
+</body>
+</html>

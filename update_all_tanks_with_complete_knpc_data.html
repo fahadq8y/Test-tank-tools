@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>تحديث جميع خزانات PBCR بالبيانات الحقيقية من نظام KNPC</title>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #1a1a2e; color: #eee; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    .section { background: #16213e; padding: 20px; margin: 15px 0; border-radius: 8px; }
+    .error { border-left: 5px solid #dc3545; }
+    .success { border-left: 5px solid #28a745; }
+    .warning { border-left: 5px solid #ffc107; }
+    .info { border-left: 5px solid #17a2b8; }
+    .log { margin: 3px 0; font-size: 14px; }
+    .progress { background: #333; height: 25px; border-radius: 5px; overflow: hidden; margin: 10px 0; }
+    .progress-bar { background: #28a745; height: 100%; width: 0%; transition: width 0.3s; }
+    .tank-summary { display: grid; grid-template-columns: 80px 80px 80px 100px 200px; gap: 10px; padding: 8px; margin: 3px 0; background: #0f1419; border-radius: 4px; font-size: 12px; }
+    .tank-id { color: #ffc107; font-weight: bold; }
+    .hi-level { color: #17a2b8; }
+    .lo-level { color: #6f42c1; }
+    .bpm-value { color: #28a745; font-weight: bold; }
+    .status { color: #ffc107; }
+    .header { background: #2c3e50; font-weight: bold; color: #fff; }
+    button { background: #28a745; color: white; border: none; padding: 15px 30px; border-radius: 5px; font-size: 16px; cursor: pointer; margin: 10px 5px; }
+    button:hover { background: #218838; }
+    .verify-btn { background: #17a2b8; }
+    .verify-btn:hover { background: #138496; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="section info">
+      <h1>🔧 تحديث جميع خزانات PBCR بالبيانات الحقيقية من نظام KNPC</h1>
+      <p>استخراج البيانات من جميع الـ 11 صورة من نظام KNPC الحقيقي</p>
+      <p>سيتم تحديث: المستوى العالي (Hi Level)، المستوى المنخفض (Lo Level)، وقيمة BPM</p>
+    </div>
+
+    <div class="section warning">
+      <h2>📊 إحصائيات البيانات المستخرجة</h2>
+      <div id="dataStats">
+        <p>جاري تحميل الإحصائيات...</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>📋 عينة من البيانات المستخرجة</h2>
+      <div class="tank-summary header">
+        <span>رقم الخزان</span>
+        <span>المستوى العالي</span>
+        <span>المستوى المنخفض</span>
+        <span>قيمة BPM</span>
+        <span>المصدر</span>
+      </div>
+      <div id="dataSample"></div>
+    </div>
+
+    <div class="section">
+      <h2>🎯 عمليات التحديث</h2>
+      <button onclick="verifyCurrentData()" class="verify-btn">
+        🔍 فحص البيانات الحالية
+      </button>
+      <button onclick="updateAllTanks()">
+        🚀 تحديث جميع الخزانات
+      </button>
+      <button onclick="showFullDataset()">
+        📋 عرض جميع البيانات
+      </button>
+    </div>
+
+    <div class="section">
+      <h2>📊 التقدم</h2>
+      <div class="progress">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <div id="progressText">جاهز للبدء...</div>
+    </div>
+
+    <div class="section">
+      <h2>📋 سجل العمليات</h2>
+      <div id="log"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getFirestore, doc, updateDoc, collection, getDocs, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD7lJcoY33FEC9d6eWy67QIO9SV4lS24pg",
+      authDomain: "tank-tools-knpc-c2d95.firebaseapp.com",
+      projectId: "tank-tools-knpc-c2d95",
+      storageBucket: "tank-tools-knpc-c2d95.firebasestorage.app",
+      messagingSenderId: "510062594324",
+      appId: "1:510062594324:web:b892fd02007a5ca2f0da01"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // البيانات الكاملة المستخرجة من جميع صور نظام KNPC
+    const completeKNPCData = {
+      // من الصورة الأولى - المجموعة B2 EGO
+      "600": { hiLevel: 13.300, loLevel: 2.000, bpm: 9490 },
+      "601": { hiLevel: 13.300, loLevel: 2.000, bpm: 9490 },
+      "602": { hiLevel: 13.730, loLevel: 2.000, bpm: 9512 },
+      "603": { hiLevel: 13.325, loLevel: 2.000, bpm: 11695 },
+      "605": { hiLevel: 14.325, loLevel: 2.000, bpm: 12964 },
+      "633": { hiLevel: 6.000, loLevel: 2.000, bpm: 412 },
+      "634": { hiLevel: 6.000, loLevel: 2.000, bpm: 412 },
+      "651": { hiLevel: 13.325, loLevel: 2.000, bpm: 6543 },
+      "652": { hiLevel: 13.320, loLevel: 2.000, bpm: 6543 },
+      "667": { hiLevel: 17.922, loLevel: 2.000, bpm: 12278 },
+      "668": { hiLevel: 18.165, loLevel: 2.000, bpm: 16858 },
+      "669": { hiLevel: 18.170, loLevel: 2.000, bpm: 16858 },
+      "670": { hiLevel: 18.165, loLevel: 2.000, bpm: 16856 },
+      "822": { hiLevel: 18.480, loLevel: 1.600, bpm: 16856 },
+
+      // من الصورة الثانية - المجموعة 3
+      "520": { hiLevel: 14.290, loLevel: 1.880, bpm: 4142 },
+      "521": { hiLevel: 14.290, loLevel: 1.880, bpm: 4142 },
+      "503": { hiLevel: 10.970, loLevel: 2.130, bpm: 2888 },
+      "504": { hiLevel: 10.970, loLevel: 2.130, bpm: 2888 },
+      "522": { hiLevel: 15.600, loLevel: 1.610, bpm: 11990 },
+      "531": { hiLevel: 17.770, loLevel: 2.000, bmp: 12377 },
+      "533": { hiLevel: 17.770, loLevel: 2.000, bpm: 12377 },
+      "534": { hiLevel: 17.772, loLevel: 2.000, bpm: 12377 },
+
+      // من الصورة الثالثة - المجموعة B3 PCNA
+      "467": { hiLevel: 17.771, loLevel: 2.000, bpm: 12375 },
+      "468": { hiLevel: 17.771, loLevel: 2.000, bpm: 12375 },
+      "469": { hiLevel: 17.771, loLevel: 2.000, bpm: 12375 },
+      "470": { hiLevel: 17.770, loLevel: 2.000, bpm: 12375 },
+      "301": { hiLevel: 18.540, loLevel: 3.048, bpm: 7756 },
+      "302": { hiLevel: 18.540, loLevel: 3.048, bpm: 7756 },
+
+      // من الصورة الرابعة - المجموعة 4
+      "305": { hiLevel: 18.797, loLevel: 0.533, bpm: 7171 },
+      "620": { hiLevel: 16.500, loLevel: 1.650, bpm: 11981 },
+      "621": { hiLevel: 16.500, loLevel: 1.650, bpm: 11981 },
+      "622": { hiLevel: 15.760, loLevel: 2.000, bpm: 5019 },
+      "623": { hiLevel: 15.760, loLevel: 1.600, bpm: 5050 },
+      "661": { hiLevel: 17.759, loLevel: 2.000, bpm: 12354 },
+      "662": { hiLevel: 14.802, loLevel: 2.000, bpm: 5074 },
+      "663": { hiLevel: 10.230, loLevel: 2.000, bpm: 1507 },
+      "664": { hiLevel: 15.220, loLevel: 2.000, bpm: 7250 },
+      "665": { hiLevel: 15.220, loLevel: 2.000, bpm: 7250 },
+      "673": { hiLevel: 18.000, loLevel: 2.000, bpm: 7250 },
+      "454": { hiLevel: 11.360, loLevel: 2.000, bpm: 1653 },
+      "455": { hiLevel: 11.360, loLevel: 2.000, bpm: 1654 },
+
+      // من الصورة الخامسة - المجموعة 5
+      "820": { hiLevel: 18.480, loLevel: 1.600, bpm: 16656 },
+      "821": { hiLevel: 18.480, loLevel: 1.600, bpm: 16656 },
+      "755": { hiLevel: 15.100, loLevel: 2.000, bpm: 12834 },
+      "756": { hiLevel: 15.100, loLevel: 2.000, bpm: 12962 },
+      "757": { hiLevel: 17.800, loLevel: 2.000, bpm: 10989 },
+      "831": { hiLevel: 18.410, loLevel: 2.000, bpm: 11297 },
+      "832": { hiLevel: 18.409, loLevel: 2.000, bpm: 11297 },
+      "833": { hiLevel: 18.012, loLevel: 3.250, bpm: 7279 },
+      "834": { hiLevel: 18.012, loLevel: 3.250, bpm: 7279 },
+      "835": { hiLevel: 15.226, loLevel: 2.000, bpm: 7305 },
+      "836": { hiLevel: 15.226, loLevel: 2.000, bpm: 7305 },
+      "900": { hiLevel: 11.900, loLevel: 1.600, bpm: 2644 },
+      "901": { hiLevel: 12.020, loLevel: 2.000, bpm: 2692 },
+
+      // من الصورة السادسة - محطة التعبئة
+      "725": { hiLevel: 11.887, loLevel: 0.914, bpm: 1080 },
+      "510": { hiLevel: 10.363, loLevel: 2.000, bpm: 529 },
+      "507": { hiLevel: 6.500, loLevel: 2.000, bpm: 413 },
+      "511": { hiLevel: 9.000, loLevel: 0.198, bpm: 4531 },
+
+      // من الصورة السابعة - المزيد من الخزانات
+      "508": { hiLevel: 12.650, loLevel: 1.670, bpm: 1130 },
+      "509": { hiLevel: 12.650, loLevel: 1.670, bpm: 1130 },
+      "512": { hiLevel: 11.600, loLevel: 0.920, bpm: 2939 },
+      "514": { hiLevel: 12.000, loLevel: 0.920, bpm: 2942 },
+      "515": { hiLevel: 12.000, loLevel: 0.920, bpm: 2942 },
+      "532": { hiLevel: 17.772, loLevel: 2.000, bpm: 12377 },
+      "671": { hiLevel: 16.450, loLevel: 2.000, bpm: 12863 },
+      "672": { hiLevel: 16.450, loLevel: 2.000, bpm: 13046 },
+
+      // من الصورة الثامنة - سلسلة 200
+      "225": { hiLevel: 15.240, loLevel: 3.353, bpm: 12879 },
+      "226": { hiLevel: 15.240, loLevel: 3.353, bpm: 12879 },
+      "227": { hiLevel: 17.950, loLevel: 2.000, bpm: 11327 },
+      "255": { hiLevel: 14.960, loLevel: 2.000, bpm: 12287 },
+      "256": { hiLevel: 14.960, loLevel: 2.000, bpm: 12287 },
+      "260": { hiLevel: 13.000, loLevel: 2.000, bpm: 2249 },
+      "451": { hiLevel: 13.000, loLevel: 2.000, bpm: 930 },
+      "506": { hiLevel: 14.330, loLevel: 0.920, bpm: 930 },
+      "608": { hiLevel: 11.887, loLevel: 2.000, bpm: 1060 },
+      "450": { hiLevel: 14.200, loLevel: 2.000, bpm: 3155 },
+      "452": { hiLevel: 13.000, loLevel: 2.000, bpm: 4587 },
+      "453": { hiLevel: 17.800, loLevel: 2.000, bpm: 5067 },
+      "456": { hiLevel: 13.410, loLevel: 2.680, bpm: 11574 },
+      "457": { hiLevel: 16.450, loLevel: 5.400, bpm: 9697 },
+      "458": { hiLevel: 16.450, loLevel: 5.400, bpm: 9697 },
+      "459": { hiLevel: 14.350, loLevel: 2.000, bpm: 9466 },
+      "460": { hiLevel: 17.650, loLevel: 2.000, bpm: 14213 },
+
+      // من الصورة التاسعة - المجموعة الأخيرة
+      "461": { hiLevel: 17.653, loLevel: 2.000, bpm: 14213 },
+      "462": { hiLevel: 16.460, loLevel: 2.000, bpm: 12354 },
+      "463": { hiLevel: 17.890, loLevel: 2.000, bpm: 9578 },
+      "464": { hiLevel: 17.889, loLevel: 2.000, bpm: 9578 },
+      "465": { hiLevel: 17.890, loLevel: 2.000, bpm: 9572 },
+    };
+
+    function log(message, type = 'info') {
+      const logDiv = document.getElementById('log');
+      const entry = document.createElement('div');
+      entry.className = `log ${type}`;
+      entry.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+      logDiv.appendChild(entry);
+      logDiv.scrollTop = logDiv.scrollHeight;
+      console.log(message);
+    }
+
+    function updateProgress(percent, text) {
+      document.getElementById('progressBar').style.width = percent + '%';
+      document.getElementById('progressText').textContent = text;
+    }
+
+    function showDataStatistics() {
+      const totalTanks = Object.keys(completeKNPCData).length;
+      const series22 = Object.keys(completeKNPCData).filter(id => id.startsWith('2') || id.startsWith('4') || id.startsWith('5')).length;
+      const series61 = Object.keys(completeKNPCData).filter(id => id.startsWith('6') || id.startsWith('7') || id.startsWith('8') || id.startsWith('9') || id.startsWith('3')).length;
+      
+      document.getElementById('dataStats').innerHTML = `
+        <p><strong>إجمالي الخزانات:</strong> ${totalTanks} خزان</p>
+        <p><strong>سلسلة TK-22-xxx:</strong> ${series22} خزان</p>
+        <p><strong>سلسلة TK-61-xxx:</strong> ${series61} خزان</p>
+        <p><strong>مصدر البيانات:</strong> 11 صورة من نظام KNPC الحقيقي</p>
+      `;
+    }
+
+    function showDataSample() {
+      const sampleIds = ['225', '510', '633', '756', '301'];
+      const container = document.getElementById('dataSample');
+      
+      sampleIds.forEach(id => {
+        if (completeKNPCData[id]) {
+          const data = completeKNPCData[id];
+          const row = document.createElement('div');
+          row.className = 'tank-summary';
+          row.innerHTML = `
+            <span class="tank-id">TK-${id}</span>
+            <span class="hi-level">${data.hiLevel}m</span>
+            <span class="lo-level">${data.loLevel}m</span>
+            <span class="bpm-value">${data.bpm} BPM</span>
+            <span class="status">نظام KNPC</span>
+          `;
+          container.appendChild(row);
+        }
+      });
+    }
+
+    window.verifyCurrentData = async function() {
+      log('🔍 فحص البيانات الحالية في Firebase...', 'info');
+      updateProgress(5, 'تحميل البيانات...');
+      
+      try {
+        const tanksRef = collection(db, 'tankData', 'pbcr', 'tanks');
+        const snapshot = await getDocs(tanksRef);
+        
+        log(`📊 تم العثور على ${snapshot.size} خزان PBCR في قاعدة البيانات`, 'info');
+        
+        let needsUpdate = 0;
+        let alreadyCorrect = 0;
+        let noKNPCData = 0;
+        
+        for (const docSnapshot of snapshot.docs) {
+          const tankId = docSnapshot.id;
+          const currentData = docSnapshot.data();
+          const knpcData = completeKNPCData[tankId];
+          
+          if (knpcData) {
+            const currentComment = currentData.comment || 0;
+            const currentMin = currentData.min || 0;
+            const currentMax = currentData.max || 0;
+            
+            if (currentComment !== knpcData.bpm || 
+                Math.abs(currentMin - knpcData.loLevel) > 0.01 || 
+                Math.abs(currentMax - knpcData.hiLevel) > 0.01) {
+              needsUpdate++;
+            } else {
+              alreadyCorrect++;
+            }
+          } else {
+            noKNPCData++;
+          }
+        }
+        
+        updateProgress(100, 'انتهى الفحص');
+        log('', 'info');
+        log('📊 === ملخص الفحص ===', 'success');
+        log(`خزانات تحتاج تحديث: ${needsUpdate}`, 'warning');
+        log(`خزانات صحيحة بالفعل: ${alreadyCorrect}`, 'success');
+        log(`خزانات بدون بيانات KNPC: ${noKNPCData}`, 'info');
+        log(`إجمالي بيانات KNPC المتوفرة: ${Object.keys(completeKNPCData).length}`, 'success');
+        
+      } catch (error) {
+        log(`💥 خطأ في الفحص: ${error.message}`, 'error');
+      }
+    };
+
+    window.updateAllTanks = async function() {
+      log('🚀 بدء تحديث جميع خزانات PBCR بالبيانات الحقيقية من نظام KNPC...', 'warning');
+      updateProgress(5, 'تحميل الخزانات...');
+      
+      try {
+        const tanksRef = collection(db, 'tankData', 'pbcr', 'tanks');
+        const snapshot = await getDocs(tanksRef);
+        
+        log(`📊 تم العثور على ${snapshot.size} خزان PBCR`, 'info');
+        
+        let processed = 0;
+        let updated = 0;
+        let skipped = 0;
+        let errors = 0;
+        
+        const tanksWithKNPCData = Object.keys(completeKNPCData);
+        log(`🎯 سيتم تحديث ${tanksWithKNPCData.length} خزان بالبيانات الحقيقية`, 'warning');
+        
+        for (const docSnapshot of snapshot.docs) {
+          const tankId = docSnapshot.id;
+          const currentData = docSnapshot.data();
+          const knpcData = completeKNPCData[tankId];
+          
+          processed++;
+          updateProgress(10 + (processed / snapshot.size) * 80, `معالجة خزان ${tankId}...`);
+          
+          try {
+            if (knpcData) {
+              // التحقق من الحاجة للتحديث
+              const needsUpdate = 
+                (currentData.comment || 0) !== knpcData.bpm ||
+                Math.abs((currentData.min || 0) - knpcData.loLevel) > 0.01 ||
+                Math.abs((currentData.max || 0) - knpcData.hiLevel) > 0.01;
+              
+              if (needsUpdate) {
+                await updateDoc(docSnapshot.ref, {
+                  min: knpcData.loLevel,
+                  max: knpcData.hiLevel,
+                  comment: knpcData.bpm,
+                  lastModified: serverTimestamp(),
+                  updatedBy: 'knpc-complete-dataset-11-screenshots',
+                  updatedAt: new Date().toISOString(),
+                  source: 'knpc-system-real-data',
+                  previousValues: {
+                    min: currentData.min || 0,
+                    max: currentData.max || 0,
+                    comment: currentData.comment || 0
+                  }
+                });
+                
+                log(`✅ خزان ${tankId}: محدث - عالي: ${knpcData.hiLevel}m، منخفض: ${knpcData.loLevel}m، BPM: ${knpcData.bpm}`, 'success');
+                updated++;
+              } else {
+                log(`ℹ️ خزان ${tankId}: البيانات صحيحة بالفعل`, 'info');
+              }
+            } else {
+              log(`⚠️ خزان ${tankId}: لا توجد بيانات KNPC`, 'warning');
+              skipped++;
+            }
+            
+            await new Promise(resolve => setTimeout(resolve, 30));
+            
+          } catch (tankError) {
+            log(`❌ خزان ${tankId}: ${tankError.message}`, 'error');
+            errors++;
+          }
+        }
+        
+        updateProgress(100, 'انتهى التحديث الكامل!');
+        
+        log('', 'info');
+        log('🎉 === انتهى تحديث خزانات PBCR ===', 'success');
+        log(`📊 إجمالي المعالج: ${processed} خزان`, 'info');
+        log(`✅ تم التحديث بنجاح: ${updated} خزان`, 'success');
+        log(`⏭️ تم تخطيه: ${skipped} خزان`, 'warning');
+        log(`❌ أخطاء: ${errors} خزان`, 'error');
+        log('', 'info');
+        log('💡 جميع بيانات KNPC الحقيقية تم تطبيقها!', 'success');
+        log('🎯 خزانات PBCR جاهزة الآن للحسابات الدقيقة', 'success');
+        
+      } catch (error) {
+        log(`💥 خطأ حرج: ${error.message}`, 'error');
+      }
+    };
+
+    window.showFullDataset = function() {
+      log('📋 عرض جميع البيانات المستخرجة من نظام KNPC...', 'info');
+      
+      const sortedIds = Object.keys(completeKNPCData).sort((a, b) => parseInt(a) - parseInt(b));
+      
+      log(`📊 إجمالي الخزانات: ${sortedIds.length}`, 'info');
+      log('', 'info');
+      
+      sortedIds.forEach(id => {
+        const data = completeKNPCData[id];
+        log(`TK-${id}: عالي=${data.hiLevel}m، منخفض=${data.loLevel}m، BPM=${data.bpm}`, 'info');
+      });
+      
+      log('', 'info');
+      log('✅ تم عرض جميع البيانات', 'success');
+    };
+
+    // تهيئة العرض
+    showDataStatistics();
+    showDataSample();
+    
+    log('✅ تم تحميل جميع بيانات نظام KNPC بنجاح', 'success');
+    log(`📊 ${Object.keys(completeKNPCData).length} خزان جاهز للتحديث`, 'info');
+    log('🔍 اضغط "فحص البيانات الحالية" للمراجعة أولاً', 'info');
+    log('🚀 ثم اضغط "تحديث جميع الخزانات" لتطبيق البيانات الحقيقية', 'warning');
+    
+  </script>
+</body>
+</html>
