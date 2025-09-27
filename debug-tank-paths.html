@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Tank Paths - Firebase Structure</title>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial; margin: 20px; background: #1a1a1a; color: white; }
+        .result { margin: 10px 0; padding: 15px; border-radius: 8px; }
+        .success { background: #2d5a2d; }
+        .error { background: #5a2d2d; }
+        .info { background: #2d4a5a; }
+        .warning { background: #5a4a2d; }
+        button { background: #4CAF50; color: white; border: none; padding: 15px 25px; margin: 10px; cursor: pointer; border-radius: 8px; }
+        .code { background: #333; padding: 10px; border-radius: 5px; font-family: monospace; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug Tank Paths - Firebase Structure Analysis</h1>
+    
+    <div class="info">
+        <h3>🎯 الهدف:</h3>
+        <p>معرفة وين الخزانات موجودة بالضبط في Firebase وليش مو قادرين نسحبها</p>
+    </div>
+    
+    <button onclick="checkAllPaths()">🔍 فحص جميع المسارات المحتملة</button>
+    <button onclick="checkSpecificTanks()">⛽ فحص خزانات محددة</button>
+    <button onclick="listAllCollections()">📋 عرض جميع Collections</button>
+    
+    <div id="results"></div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { 
+            getFirestore, doc, getDoc, collection, 
+            getDocs, query, limit 
+        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyD7lJcoY33FEC9d6eWy67QIO9SV4lS24pg",
+            authDomain: "tank-tools-knpc-c2d95.firebaseapp.com",
+            projectId: "tank-tools-knpc-c2d95",
+            storageBucket: "tank-tools-knpc-c2d95.firebasestorage.app",
+            messagingSenderId: "510062594324",
+            appId: "1:510062594324:web:b892fd02007a5ca2f0da01"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong> - ${message}`;
+            document.getElementById('results').appendChild(div);
+            console.log(message);
+        }
+        
+        window.checkAllPaths = async function() {
+            document.getElementById('results').innerHTML = '';
+            addResult('🔍 فحص جميع المسارات المحتملة للخزانات...', 'info');
+            
+            const pathsToCheck = [
+                // Current paths that Index.html tries
+                { path: ['tankData', 'pbcr', 'tanks'], name: 'tankData/pbcr/tanks', source: 'Index Method 1' },
+                { path: ['pbcr', 'tanks'], name: 'pbcr/tanks', source: 'Index Method 2' },
+                { path: ['tankData', 'pbcr'], name: 'tankData/pbcr', source: 'Index Method 3' },
+                
+                // Alternative paths
+                { path: ['tanks'], name: 'tanks (root)', source: 'Alternative 1' },
+                { path: ['tankData'], name: 'tankData (root)', source: 'Alternative 2' },
+                { path: ['pbcr'], name: 'pbcr (root)', source: 'Alternative 3' },
+                
+                // Possible department-based paths
+                { path: ['tanks', 'pbcr'], name: 'tanks/pbcr', source: 'Alternative 4' },
+                { path: ['knpc', 'tanks'], name: 'knpc/tanks', source: 'Alternative 5' },
+                { path: ['knpc', 'pbcr', 'tanks'], name: 'knpc/pbcr/tanks', source: 'Alternative 6' },
+                
+                // User-specific paths
+                { path: ['users'], name: 'users', source: 'Check users collection' },
+                { path: ['test'], name: 'test', source: 'Test collection' }
+            ];
+            
+            for (const pathInfo of pathsToCheck) {
+                try {
+                    addResult(`📁 فحص: ${pathInfo.name} (${pathInfo.source})...`, 'info');
+                    
+                    const colRef = collection(db, ...pathInfo.path);
+                    const snapshot = await getDocs(query(colRef, limit(10))); // Limit to avoid huge results
+                    
+                    if (snapshot.empty) {
+                        addResult(`   ⚠️ ${pathInfo.name}: فارغ`, 'warning');
+                    } else {
+                        addResult(`   ✅ ${pathInfo.name}: يحتوي على ${snapshot.size} documents`, 'success');
+                        
+                        const docIds = [];
+                        const sampleData = {};
+                        snapshot.forEach(doc => {
+                            docIds.push(doc.id);
+                            if (docIds.length <= 3) { // Show first 3 documents data
+                                sampleData[doc.id] = doc.data();
+                            }
+                        });
+                        
+                        addResult(`      📄 Documents: ${docIds.join(', ')}`, 'success');
+                        if (Object.keys(sampleData).length > 0) {
+                            addResult(`      📊 Sample data: <div class="code">${JSON.stringify(sampleData, null, 2)}</div>`, 'success');
+                        }
+                    }
+                    
+                } catch (error) {
+                    if (error.message.includes('odd number of segments')) {
+                        addResult(`   ❌ ${pathInfo.name}: Invalid path (${error.message})`, 'error');
+                    } else {
+                        addResult(`   ❌ ${pathInfo.name}: ${error.message}`, 'error');
+                    }
+                }
+            }
+            
+            addResult('🎉 فحص المسارات اكتمل!', 'success');
+        };
+        
+        window.checkSpecificTanks = async function() {
+            addResult('⛽ فحص خزانات محددة...', 'info');
+            
+            const tanksToCheck = ['460', '461', '462', '521', '522'];
+            const pathsToTry = [
+                ['tankData', 'pbcr', 'tanks'],
+                ['pbcr', 'tanks'],
+                ['tanks'],
+                ['knpc', 'pbcr', 'tanks']
+            ];
+            
+            for (const tankId of tanksToCheck) {
+                addResult(`🔍 البحث عن خزان ${tankId}...`, 'info');
+                let found = false;
+                
+                for (const path of pathsToTry) {
+                    try {
+                        const tankRef = doc(db, ...path, tankId);
+                        const tankDoc = await getDoc(tankRef);
+                        
+                        if (tankDoc.exists()) {
+                            const data = tankDoc.data();
+                            addResult(`   ✅ خزان ${tankId} موجود في: ${path.join('/')}`, 'success');
+                            addResult(`      📊 البيانات: ${JSON.stringify(data, null, 2)}`, 'success');
+                            found = true;
+                            break;
+                        }
+                    } catch (error) {
+                        // Continue to next path
+                    }
+                }
+                
+                if (!found) {
+                    addResult(`   ❌ خزان ${tankId}: غير موجود في أي مسار`, 'error');
+                }
+            }
+        };
+        
+        window.listAllCollections = async function() {
+            addResult('📋 محاولة عرض جميع Collections الرئيسية...', 'info');
+            
+            // Note: Firestore doesn't allow listing all collections from client-side
+            // But we can try to access common collection names
+            const commonCollections = [
+                'users', 'tanks', 'tankData', 'pbcr', 'plcr', 'washery', 
+                'knpc', 'test', 'config', 'notifications', 'logs'
+            ];
+            
+            for (const collectionName of commonCollections) {
+                try {
+                    const colRef = collection(db, collectionName);
+                    const snapshot = await getDocs(query(colRef, limit(5)));
+                    
+                    if (!snapshot.empty) {
+                        addResult(`📁 Collection "${collectionName}": ${snapshot.size} documents found`, 'success');
+                        const docIds = [];
+                        snapshot.forEach(doc => docIds.push(doc.id));
+                        addResult(`   📄 Sample IDs: ${docIds.join(', ')}`, 'info');
+                    } else {
+                        addResult(`📁 Collection "${collectionName}": exists but empty`, 'warning');
+                    }
+                } catch (error) {
+                    // Collection doesn't exist or no permission
+                    addResult(`📁 Collection "${collectionName}": not accessible`, 'error');
+                }
+            }
+        };
+        
+        // Auto-run basic check
+        setTimeout(() => {
+            checkAllPaths();
+        }, 1000);
+    </script>
+</body>
+</html>

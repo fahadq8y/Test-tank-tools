@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Missing Tanks 460-464</title>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial; margin: 20px; background: #1a1a1a; color: white; }
+        .result { margin: 10px 0; padding: 15px; border-radius: 8px; }
+        .success { background: #2d5a2d; }
+        .error { background: #5a2d2d; }
+        .info { background: #2d4a5a; }
+        button { background: #4CAF50; color: white; border: none; padding: 15px 25px; margin: 10px; cursor: pointer; border-radius: 8px; font-size: 16px; }
+        .danger-btn { background: #f44336; }
+    </style>
+</head>
+<body>
+    <h1>⛽ إضافة الخزانات المفقودة 460-464 إلى Firebase</h1>
+    
+    <div class="info">
+        <h3>📋 الخزانات اللي حنضيفها:</h3>
+        <ul>
+            <li><strong>460:</strong> LSFO - 34,000m³</li>
+            <li><strong>461:</strong> EGO 10PPM - 34,000m³</li>
+            <li><strong>462:</strong> EGO 500PPM - 34,000m³</li>
+            <li><strong>463:</strong> RHN - 34,000m³</li>
+            <li><strong>464:</strong> PCNA - 34,000m³</li>
+        </ul>
+    </div>
+    
+    <button onclick="addMissingTanks()" class="success">⚡ إضافة الخزانات إلى Firebase</button>
+    <button onclick="checkExistingTanks()" class="info">🔍 فحص الخزانات الحالية أولاً</button>
+    
+    <div id="results"></div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { 
+            getFirestore, doc, setDoc, getDoc, 
+            writeBatch, serverTimestamp 
+        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyD7lJcoY33FEC9d6eWy67QIO9SV4lS24pg",
+            authDomain: "tank-tools-knpc-c2d95.firebaseapp.com",
+            projectId: "tank-tools-knpc-c2d95",
+            storageBucket: "tank-tools-knpc-c2d95.firebasestorage.app",
+            messagingSenderId: "510062594324",
+            appId: "1:510062594324:web:b892fd02007a5ca2f0da01"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong> - ${message}`;
+            document.getElementById('results').appendChild(div);
+            console.log(message);
+        }
+        
+        const tanksToAdd = {
+            "460": { 
+                "volume": "34000", 
+                "product": "LSFO", 
+                "minLevel": "500", 
+                "maxLevel": "33500",
+                "department": "pbcr",
+                "type": "storage",
+                "min": 0.5,
+                "max": 33.5,
+                "capacity": 34000,
+                "comment": "Large Storage Fuel Oil Tank"
+            },
+            "461": { 
+                "volume": "34000", 
+                "product": "EGO 10PPM", 
+                "minLevel": "500", 
+                "maxLevel": "33500",
+                "department": "pbcr",
+                "type": "storage",
+                "min": 0.5,
+                "max": 33.5,
+                "capacity": 34000,
+                "comment": "Export Gas Oil 10PPM Tank"
+            },
+            "462": { 
+                "volume": "34000", 
+                "product": "EGO 500PPM", 
+                "minLevel": "500", 
+                "maxLevel": "33500",
+                "department": "pbcr",
+                "type": "storage",
+                "min": 0.5,
+                "max": 33.5,
+                "capacity": 34000,
+                "comment": "Export Gas Oil 500PPM Tank"
+            },
+            "463": { 
+                "volume": "34000", 
+                "product": "RHN", 
+                "minLevel": "500", 
+                "maxLevel": "33500",
+                "department": "pbcr",
+                "type": "storage",
+                "min": 0.5,
+                "max": 33.5,
+                "capacity": 34000,
+                "comment": "Regular Heavy Naphtha Tank"
+            },
+            "464": { 
+                "volume": "34000", 
+                "product": "PCNA", 
+                "minLevel": "500", 
+                "maxLevel": "33500",
+                "department": "pbcr",
+                "type": "storage",
+                "min": 0.5,
+                "max": 33.5,
+                "capacity": 34000,
+                "comment": "Pyrolysis Cracker Naphtha Tank"
+            }
+        };
+        
+        window.checkExistingTanks = async function() {
+            document.getElementById('results').innerHTML = '';
+            addResult('🔍 فحص الخزانات الحالية في Firebase...', 'info');
+            
+            for (const tankId of Object.keys(tanksToAdd)) {
+                try {
+                    const tankRef = doc(db, 'tankData', 'pbcr', 'tanks', tankId);
+                    const tankDoc = await getDoc(tankRef);
+                    
+                    if (tankDoc.exists()) {
+                        const data = tankDoc.data();
+                        addResult(`✅ خزان ${tankId}: موجود مسبقاً - ${data.product || 'N/A'}`, 'success');
+                    } else {
+                        addResult(`❌ خزان ${tankId}: غير موجود - يحتاج إضافة`, 'error');
+                    }
+                } catch (error) {
+                    addResult(`❌ خطأ في فحص خزان ${tankId}: ${error.message}`, 'error');
+                }
+            }
+        };
+        
+        window.addMissingTanks = async function() {
+            addResult('⚡ بدء إضافة الخزانات المفقودة...', 'info');
+            
+            try {
+                const batch = writeBatch(db);
+                let addedCount = 0;
+                let existingCount = 0;
+                
+                for (const [tankId, tankData] of Object.entries(tanksToAdd)) {
+                    // Check if tank exists first
+                    const tankRef = doc(db, 'tankData', 'pbcr', 'tanks', tankId);
+                    const exists = await getDoc(tankRef);
+                    
+                    if (!exists.exists()) {
+                        // Add tank to batch
+                        batch.set(tankRef, {
+                            ...tankData,
+                            createdAt: serverTimestamp(),
+                            lastUpdated: serverTimestamp(),
+                            createdBy: 'index-fix-tool',
+                            source: 'required-for-index-page'
+                        });
+                        addedCount++;
+                        addResult(`➕ سيتم إضافة خزان ${tankId}: ${tankData.product}`, 'info');
+                    } else {
+                        existingCount++;
+                        addResult(`ℹ️ خزان ${tankId}: موجود مسبقاً`, 'info');
+                    }
+                }
+                
+                if (addedCount > 0) {
+                    addResult(`🚀 إضافة ${addedCount} خزانات جديدة...`, 'info');
+                    await batch.commit();
+                    addResult(`🎉 تم إضافة ${addedCount} خزان بنجاح إلى Firebase!`, 'success');
+                    addResult(`📊 الإحصائيات: ${addedCount} مضاف، ${existingCount} موجود مسبقاً`, 'success');
+                    addResult(`✅ الآن صفحة Index يجب أن تعمل بشكل كامل!`, 'success');
+                } else {
+                    addResult(`ℹ️ جميع الخزانات (${existingCount}) موجودة مسبقاً في Firebase`, 'info');
+                }
+                
+            } catch (error) {
+                addResult(`❌ خطأ في إضافة الخزانات: ${error.message}`, 'error');
+            }
+        };
+        
+        // Auto-run check on load
+        setTimeout(() => {
+            checkExistingTanks();
+        }, 1000);
+    </script>
+</body>
+</html>

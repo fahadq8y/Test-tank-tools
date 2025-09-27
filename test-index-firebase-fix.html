@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار إصلاح Firebase في Index</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+        h1 {
+            text-align: center;
+            color: #ffeb3b;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            border: 2px solid #4caf50;
+        }
+        .working { color: #4caf50; }
+        .broken { color: #f44336; }
+        .loading { color: #ff9800; }
+        pre {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        .tank-result {
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+        }
+        select, button {
+            padding: 10px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 اختبار إصلاح Firebase في صفحة الـ Index</h1>
+        
+        <div class="test-section">
+            <h2>🎯 اختبار قراءة خزان واحد</h2>
+            <select id="tankSelect">
+                <option value="">اختر خزان للاختبار</option>
+                <option value="225">خزان 225 (كان يعمل)</option>
+                <option value="221">خزان 221 (كان مكسور)</option>
+                <option value="460">خزان 460 (كان مكسور)</option>
+                <option value="462">خزان 462 (كان مكسور)</option>
+            </select>
+            <button onclick="testTank()">🔍 اختبر الخزان</button>
+            
+            <div id="tankResult" class="tank-result loading">
+                اختر خزان واضغط "اختبر الخزان"
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>📊 اختبار جميع الخزانات المكسورة</h2>
+            <button onclick="testAllBrokenTanks()">🔍 اختبر جميع الخزانات المكسورة</button>
+            
+            <div id="allResults" class="tank-result loading">
+                اضغط لبدء الاختبار
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, doc, getDoc, collection } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // ✅ USING THE FIXED FIREBASE CONFIG (same as the working analysis tools)
+        const app = initializeApp({
+            apiKey: "AIzaSyBCdv37V6vOFMe42rGlPyl9lVq-9JldEPg",
+            authDomain: "tank-tools-knpc-c2d95.firebaseapp.com",
+            projectId: "tank-tools-knpc-c2d95",
+            storageBucket: "tank-tools-knpc-c2d95.appspot.com",
+            messagingSenderId: "678793823159",
+            appId: "1:678793823159:web:7a7b1398aefdb7f24462b9"
+        });
+
+        window.db = getFirestore(app);
+        window.doc = doc;
+        window.getDoc = getDoc;
+        window.collection = collection;
+
+        console.log('✅ Firebase initialized with FIXED config');
+    </script>
+
+    <script>
+        // Test function using EXACT same logic as Index page
+        async function testTankData(tankId) {
+            console.log(`🔍 اختبار خزان ${tankId}...`);
+            
+            try {
+                // Same path as Index page
+                const tankDoc = await getDoc(doc(db, 'tankData', 'pbcr', 'tanks', tankId));
+                
+                if (!tankDoc.exists()) {
+                    return {
+                        success: false,
+                        error: 'خزان غير موجود في Firebase',
+                        tankId
+                    };
+                }
+                
+                const tankData = tankDoc.data();
+                console.log(`Firebase data for tank ${tankId}:`, tankData);
+                
+                // EXACT same reading logic as Index page
+                let bmpValue = tankData.BPM || tankData.bmp || tankData.comment || tankData.Comment || tankData.capacity;
+                let minValue = tankData.min || tankData.Min || tankData.minimum;
+                let maxValue = tankData.max || tankData.Max || tankData.maximum;
+                
+                console.log(`Tank ${tankId} - BMP: ${bmpValue}, Min: ${minValue}, Max: ${maxValue}`);
+                
+                // Check if all values exist (Index validation)
+                if (bmpValue && minValue && maxValue) {
+                    return {
+                        success: true,
+                        tankId,
+                        bmpValue,
+                        minValue,
+                        maxValue,
+                        rawData: tankData
+                    };
+                } else {
+                    const missing = [];
+                    if (!bmpValue) missing.push('BMP');
+                    if (!minValue) missing.push('Min');
+                    if (!maxValue) missing.push('Max');
+                    
+                    return {
+                        success: false,
+                        error: `قيم مفقودة: ${missing.join(', ')}`,
+                        tankId,
+                        bmpValue,
+                        minValue,
+                        maxValue,
+                        rawData: tankData
+                    };
+                }
+                
+            } catch (error) {
+                console.error(`❌ خطأ في قراءة خزان ${tankId}:`, error);
+                return {
+                    success: false,
+                    error: error.message,
+                    tankId
+                };
+            }
+        }
+
+        async function testTank() {
+            const tankId = document.getElementById('tankSelect').value;
+            if (!tankId) {
+                alert('يرجى اختيار خزان');
+                return;
+            }
+            
+            document.getElementById('tankResult').innerHTML = '⏳ جاري اختبار الخزان...';
+            
+            const result = await testTankData(tankId);
+            
+            let html = '';
+            if (result.success) {
+                html = `
+                    <div class="working">✅ نجح الاختبار!</div>
+                    <strong>خزان ${result.tankId}:</strong><br>
+                    • BMP: ${result.bmpValue}<br>
+                    • Min: ${result.minValue}<br>
+                    • Max: ${result.maxValue}<br>
+                    <details>
+                        <summary>البيانات الخام</summary>
+                        <pre>${JSON.stringify(result.rawData, null, 2)}</pre>
+                    </details>
+                `;
+            } else {
+                html = `
+                    <div class="broken">❌ فشل الاختبار</div>
+                    <strong>خزان ${result.tankId}:</strong><br>
+                    <strong>الخطأ:</strong> ${result.error}<br>
+                    ${result.bmpValue !== undefined ? `• BMP: ${result.bmpValue || 'مفقود'}<br>` : ''}
+                    ${result.minValue !== undefined ? `• Min: ${result.minValue || 'مفقود'}<br>` : ''}
+                    ${result.maxValue !== undefined ? `• Max: ${result.maxValue || 'مفقود'}<br>` : ''}
+                    ${result.rawData ? `
+                    <details>
+                        <summary>البيانات الخام</summary>
+                        <pre>${JSON.stringify(result.rawData, null, 2)}</pre>
+                    </details>
+                    ` : ''}
+                `;
+            }
+            
+            document.getElementById('tankResult').innerHTML = html;
+        }
+
+        async function testAllBrokenTanks() {
+            document.getElementById('allResults').innerHTML = '⏳ جاري اختبار جميع الخزانات المكسورة...';
+            
+            const brokenTanks = ['221', '460', '462', '834', '833', '520', '521'];
+            let html = '<h3>📊 نتائج اختبار الخزانات المكسورة:</h3>';
+            
+            for (const tankId of brokenTanks) {
+                console.log(`Testing previously broken tank ${tankId}...`);
+                const result = await testTankData(tankId);
+                
+                if (result.success) {
+                    html += `
+                        <div class="working">
+                            ✅ خزان ${tankId}: <strong>يعمل الآن!</strong> 
+                            (BMP: ${result.bmpValue}, Min: ${result.minValue}, Max: ${result.maxValue})
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="broken">
+                            ❌ خزان ${tankId}: <strong>ما زال مكسور</strong> - ${result.error}
+                        </div>
+                    `;
+                }
+            }
+            
+            document.getElementById('allResults').innerHTML = html;
+        }
+
+        // Make functions globally accessible
+        window.testTank = testTank;
+        window.testAllBrokenTanks = testAllBrokenTanks;
+    </script>
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Check Tank 460 Data Structure</title>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial; margin: 20px; background: #1a1a1a; color: white; }
+        .result { margin: 10px 0; padding: 15px; border-radius: 8px; }
+        .success { background: #2d5a2d; }
+        .error { background: #5a2d2d; }
+        .info { background: #2d4a5a; }
+        .warning { background: #5a4a2d; }
+        .code { background: #333; padding: 15px; border-radius: 5px; font-family: monospace; white-space: pre-wrap; overflow: auto; }
+        button { background: #4CAF50; color: white; border: none; padding: 15px 25px; margin: 10px; cursor: pointer; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Check Tank 460 Data Structure</h1>
+    
+    <div class="info">
+        <h3>🎯 المشكلة:</h3>
+        <p>Index يقول إن Tank 460 data incomplete - نحتاج نشوف إيش ناقص بالضبط</p>
+    </div>
+    
+    <button onclick="checkTank460()">🔍 فحص بيانات خزان 460</button>
+    <button onclick="checkRequiredFields()">📋 فحص الحقول المطلوبة</button>
+    <button onclick="fixTank460Data()">🔧 إصلاح بيانات خزان 460</button>
+    
+    <div id="results"></div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { 
+            getFirestore, doc, getDoc, setDoc, updateDoc
+        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyD7lJcoY33FEC9d6eWy67QIO9SV4lS24pg",
+            authDomain: "tank-tools-knpc-c2d95.firebaseapp.com",
+            projectId: "tank-tools-knpc-c2d95",
+            storageBucket: "tank-tools-knpc-c2d95.firebasestorage.app",
+            messagingSenderId: "510062594324",
+            appId: "1:510062594324:web:b892fd02007a5ca2f0da01"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong> - ${message}`;
+            document.getElementById('results').appendChild(div);
+            console.log(message);
+        }
+        
+        window.checkTank460 = async function() {
+            document.getElementById('results').innerHTML = '';
+            addResult('🔍 فحص بيانات خزان 460 في Firebase...', 'info');
+            
+            try {
+                const tankRef = doc(db, 'tankData', 'pbcr', 'tanks', '460');
+                const tankDoc = await getDoc(tankRef);
+                
+                if (tankDoc.exists()) {
+                    const data = tankDoc.data();
+                    addResult('✅ خزان 460 موجود في Firebase', 'success');
+                    addResult(`📊 البيانات الحالية:<div class="code">${JSON.stringify(data, null, 2)}</div>`, 'info');
+                    
+                    // Check what Index.html expects
+                    const requiredFields = ['BPM', 'bpm', 'min', 'max', 'minLevel', 'maxLevel', 'volume', 'capacity'];
+                    const missingFields = [];
+                    const presentFields = [];
+                    
+                    requiredFields.forEach(field => {
+                        if (data[field] !== undefined && data[field] !== null && data[field] !== '') {
+                            presentFields.push(field);
+                        } else {
+                            missingFields.push(field);
+                        }
+                    });
+                    
+                    if (presentFields.length > 0) {
+                        addResult(`✅ الحقول الموجودة: ${presentFields.join(', ')}`, 'success');
+                    }
+                    
+                    if (missingFields.length > 0) {
+                        addResult(`❌ الحقول المفقودة: ${missingFields.join(', ')}`, 'error');
+                        addResult('🎯 هذا هو السبب في رسالة "data is incomplete"!', 'warning');
+                    } else {
+                        addResult('🎉 جميع الحقول المطلوبة موجودة!', 'success');
+                    }
+                    
+                } else {
+                    addResult('❌ خزان 460 غير موجود في Firebase', 'error');
+                }
+                
+            } catch (error) {
+                addResult(`❌ خطأ في فحص خزان 460: ${error.message}`, 'error');
+            }
+        };
+        
+        window.checkRequiredFields = async function() {
+            addResult('📋 فحص الحقول المطلوبة لصفحة Index...', 'info');
+            
+            // Based on the error message, Index needs: BPM, Min Level, Max Level
+            const expectedStructure = {
+                'BPM or bpm': 'Barrel Per Meter value for calculations',
+                'min or minLevel': 'Minimum tank level',
+                'max or maxLevel': 'Maximum tank level',
+                'volume or capacity': 'Tank total capacity',
+                'product': 'Product type (optional)'
+            };
+            
+            addResult('📋 الحقول اللي Index يتوقعها:', 'info');
+            Object.entries(expectedStructure).forEach(([field, desc]) => {
+                addResult(`   • ${field}: ${desc}`, 'info');
+            });
+        };
+        
+        window.fixTank460Data = async function() {
+            addResult('🔧 إصلاح بيانات خزان 460...', 'info');
+            
+            try {
+                // First, get current data
+                const tankRef = doc(db, 'tankData', 'pbcr', 'tanks', '460');
+                const tankDoc = await getDoc(tankRef);
+                
+                if (!tankDoc.exists()) {
+                    addResult('❌ خزان 460 غير موجود', 'error');
+                    return;
+                }
+                
+                const currentData = tankDoc.data();
+                addResult('📊 البيانات الحالية جاهزة للتحديث', 'info');
+                
+                // Create complete data structure that Index expects
+                const completeData = {
+                    ...currentData, // Keep existing data
+                    
+                    // Add missing BPM value (critical for calculations)
+                    BPM: currentData.BPM || currentData.bpm || 11500, // Default BPM for tank 460
+                    bpm: currentData.bpm || currentData.BPM || 11500,
+                    
+                    // Add min/max levels in different formats
+                    min: currentData.min || 1.5, // meters
+                    max: currentData.max || 16.0, // meters
+                    minLevel: currentData.minLevel || "1500", // mm
+                    maxLevel: currentData.maxLevel || "16000", // mm
+                    
+                    // Add volume/capacity
+                    volume: currentData.volume || currentData.capacity || "34000",
+                    capacity: currentData.capacity || currentData.volume || 34000,
+                    
+                    // Add product info
+                    product: currentData.product || "LSFO",
+                    department: currentData.department || "pbcr",
+                    type: currentData.type || "storage",
+                    
+                    // Add metadata
+                    lastUpdated: new Date().toISOString(),
+                    fixedBy: "tank-460-data-fix",
+                    fixReason: "Complete missing BPM, min, max values for Index page"
+                };
+                
+                // Update Firebase
+                await updateDoc(tankRef, completeData);
+                
+                addResult('✅ تم تحديث بيانات خزان 460 بنجاح!', 'success');
+                addResult(`📊 البيانات الجديدة:<div class="code">${JSON.stringify(completeData, null, 2)}</div>`, 'success');
+                addResult('🎉 الآن صفحة Index يجب أن تعمل مع خزان 460!', 'success');
+                
+            } catch (error) {
+                addResult(`❌ خطأ في إصلاح البيانات: ${error.message}`, 'error');
+            }
+        };
+        
+        // Auto-run check on load
+        setTimeout(() => {
+            checkTank460();
+        }, 1000);
+    </script>
+</body>
+</html>

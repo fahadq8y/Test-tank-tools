@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تحليل الفروق بين الخزانات</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+        h1 {
+            text-align: center;
+            color: #ffeb3b;
+            margin-bottom: 30px;
+        }
+        .tank-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            border: 2px solid #4caf50;
+        }
+        .broken-tank {
+            border-color: #f44336;
+        }
+        .field-analysis {
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+        }
+        .working { color: #4caf50; }
+        .broken { color: #f44336; }
+        .warning { color: #ff9800; }
+        pre {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .status {
+            font-weight: bold;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 تحليل الفروق في قراءة بيانات الخزانات</h1>
+        
+        <div id="loading" style="text-align: center; font-size: 18px;">
+            ⏳ جاري تحليل الفروق بين الخزانات الشغالة والمكسورة...
+        </div>
+        
+        <div id="results" style="display: none;">
+            <div id="summary"></div>
+            <div id="comparison"></div>
+            <div id="detailed-analysis"></div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
+    <script>
+        // Firebase configuration (updated to match working config)
+        const firebaseConfig = {
+            apiKey: "AIzaSyBCdv37V6vOFMe42rGlPyl9lVq-9JldEPg",
+            authDomain: "tank-tools-knpc-c2d95.firebaseapp.com",
+            projectId: "tank-tools-knpc-c2d95",
+            storageBucket: "tank-tools-knpc-c2d95.appspot.com",
+            messagingSenderId: "678793823159",
+            appId: "1:678793823159:web:7a7b1398aefdb7f24462b9"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Working tanks (that load successfully in Index page)
+        const workingTanks = ['225', '226', '227', '463', '464', '831', '832'];
+        
+        // Broken tanks (that fail to load in Index page)
+        const brokenTanks = ['221', '460', '462', '834', '833', '520', '521'];
+
+        async function analyzeTankDifferences() {
+            console.log('🔍 بدء تحليل الفروق...');
+            
+            try {
+                const results = {
+                    working: {},
+                    broken: {},
+                    fieldDifferences: {},
+                    readingLogic: {}
+                };
+
+                // Analyze working tanks
+                console.log('✅ تحليل الخزانات الشغالة...');
+                for (const tankId of workingTanks) {
+                    try {
+                        const tankDoc = await db.collection('tankData').doc('pbcr').collection('tanks').doc(tankId).get();
+                        if (tankDoc.exists) {
+                            const tankData = tankDoc.data();
+                            results.working[tankId] = tankData;
+                            
+                            // Test Index page reading logic
+                            const readingResult = testIndexReadingLogic(tankData, tankId);
+                            results.readingLogic[tankId] = readingResult;
+                            
+                            console.log(`✅ Tank ${tankId}: ${readingResult.status}`, readingResult);
+                        }
+                    } catch (error) {
+                        console.error(`❌ Error reading working tank ${tankId}:`, error);
+                    }
+                }
+
+                // Analyze broken tanks  
+                console.log('❌ تحليل الخزانات المكسورة...');
+                for (const tankId of brokenTanks) {
+                    try {
+                        const tankDoc = await db.collection('tankData').doc('pbcr').collection('tanks').doc(tankId).get();
+                        if (tankDoc.exists) {
+                            const tankData = tankDoc.data();
+                            results.broken[tankId] = tankData;
+                            
+                            // Test Index page reading logic
+                            const readingResult = testIndexReadingLogic(tankData, tankId);
+                            results.readingLogic[tankId] = readingResult;
+                            
+                            console.log(`❌ Tank ${tankId}: ${readingResult.status}`, readingResult);
+                        }
+                    } catch (error) {
+                        console.error(`❌ Error reading broken tank ${tankId}:`, error);
+                    }
+                }
+
+                console.log('🎉 تحليل اكتمل!');
+                displayResults(results);
+
+            } catch (error) {
+                console.error('❌ خطأ في التحليل:', error);
+                document.getElementById('loading').innerHTML = '❌ خطأ في التحليل: ' + error.message;
+            }
+        }
+
+        // Test the exact same reading logic used in Index page
+        function testIndexReadingLogic(tankData, tankId) {
+            console.log(`🔍 اختبار قراءة Tank ${tankId}:`, tankData);
+            
+            // EXACT same logic as used in index.html
+            let bmpValue = tankData.BPM || tankData.bmp || tankData.comment || tankData.Comment || tankData.capacity;
+            let minValue = tankData.min || tankData.Min || tankData.minimum;  
+            let maxValue = tankData.max || tankData.Max || tankData.maximum;
+
+            console.log(`Tank ${tankId} - BMP: ${bmpValue}, Min: ${minValue}, Max: ${maxValue}`);
+
+            const result = {
+                bmpValue,
+                minValue,
+                maxValue,
+                bmpField: findField(tankData, ['BPM', 'bmp', 'comment', 'Comment', 'capacity']),
+                minField: findField(tankData, ['min', 'Min', 'minimum']),
+                maxField: findField(tankData, ['max', 'Max', 'maximum']),
+                hasAllValues: false,
+                status: 'unknown',
+                availableFields: Object.keys(tankData)
+            };
+
+            // Check if all required values exist (same validation as Index)
+            if (bmpValue && minValue && maxValue) {
+                result.hasAllValues = true;
+                result.status = 'يعمل - جميع القيم موجودة';
+            } else {
+                result.hasAllValues = false;
+                result.status = 'مكسور - قيم مفقودة';
+                
+                const missing = [];
+                if (!bmpValue) missing.push('BMP');
+                if (!minValue) missing.push('Min');
+                if (!maxValue) missing.push('Max');
+                result.missingValues = missing;
+            }
+
+            return result;
+        }
+
+        function findField(obj, fields) {
+            for (const field of fields) {
+                if (obj.hasOwnProperty(field) && obj[field] !== undefined && obj[field] !== null && obj[field] !== '') {
+                    return field;
+                }
+            }
+            return null;
+        }
+
+        function displayResults(results) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('results').style.display = 'block';
+
+            // Summary
+            const summary = document.getElementById('summary');
+            let workingCount = 0;
+            let brokenCount = 0;
+            
+            Object.values(results.readingLogic).forEach(result => {
+                if (result.hasAllValues) workingCount++;
+                else brokenCount++;
+            });
+
+            summary.innerHTML = `
+                <div class="tank-section">
+                    <h2>📊 ملخص النتائج</h2>
+                    <div class="status working">✅ خزانات تعمل: ${workingCount}</div>
+                    <div class="status broken">❌ خزانات مكسورة: ${brokenCount}</div>
+                </div>
+            `;
+
+            // Detailed Analysis
+            const detailed = document.getElementById('detailed-analysis');
+            let html = '<h2>🔍 التحليل التفصيلي</h2>';
+
+            [...workingTanks, ...brokenTanks].forEach(tankId => {
+                const logic = results.readingLogic[tankId];
+                if (!logic) return;
+
+                const isWorking = logic.hasAllValues;
+                const sectionClass = isWorking ? '' : 'broken-tank';
+
+                html += `
+                    <div class="tank-section ${sectionClass}">
+                        <h3>${isWorking ? '✅' : '❌'} خزان ${tankId}</h3>
+                        <div class="field-analysis">
+                            <strong>الحالة:</strong> <span class="${isWorking ? 'working' : 'broken'}">${logic.status}</span>
+                        </div>
+                        
+                        <div class="field-analysis">
+                            <strong>قراءة القيم:</strong><br>
+                            • BMP: ${logic.bmpValue || 'مفقود'} (من حقل: ${logic.bmpField || 'لا يوجد'})<br>
+                            • Min: ${logic.minValue || 'مفقود'} (من حقل: ${logic.minField || 'لا يوجد'})<br>
+                            • Max: ${logic.maxValue || 'مفقود'} (من حقل: ${logic.maxField || 'لا يوجد'})
+                        </div>
+                        
+                        ${!isWorking ? `
+                            <div class="field-analysis broken">
+                                <strong>القيم المفقودة:</strong> ${logic.missingValues ? logic.missingValues.join(', ') : 'غير محدد'}
+                            </div>
+                        ` : ''}
+                        
+                        <div class="field-analysis">
+                            <strong>الحقول المتاحة في Firebase:</strong><br>
+                            ${logic.availableFields.join(', ')}
+                        </div>
+                        
+                        <details>
+                            <summary>عرض البيانات الكاملة</summary>
+                            <pre>${JSON.stringify(results.working[tankId] || results.broken[tankId], null, 2)}</pre>
+                        </details>
+                    </div>
+                `;
+            });
+
+            detailed.innerHTML = html;
+        }
+
+        // Start analysis when page loads
+        window.addEventListener('load', analyzeTankDifferences);
+    </script>
+</body>
+</html>

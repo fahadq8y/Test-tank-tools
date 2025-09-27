@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Index Tank Loading</title>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial; margin: 20px; background: #1a1a1a; color: white; }
+        .result { margin: 10px 0; padding: 15px; border-radius: 8px; }
+        .success { background: #2d5a2d; }
+        .error { background: #5a2d2d; }
+        .info { background: #2d4a5a; }
+        .warning { background: #5a4a2d; }
+        button { background: #4CAF50; color: white; border: none; padding: 15px 25px; margin: 10px; cursor: pointer; border-radius: 8px; }
+        .code { background: #333; padding: 10px; border-radius: 5px; font-family: monospace; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug Index Tank Loading - تشخيص تحميل الخزانات</h1>
+    
+    <div class="info">
+        <h3>🎯 الهدف:</h3>
+        <p>محاكاة نفس الكود اللي في صفحة Index ومعرفة ليش مو قادر يسحب الخزانات</p>
+    </div>
+    
+    <button onclick="simulateIndexLoading()">🚀 محاكاة تحميل Index</button>
+    <button onclick="testSpecificTanks()">⛽ اختبار خزانات محددة (460-464)</button>
+    <button onclick="testDataStructure()">📊 فحص هيكل البيانات</button>
+    
+    <div id="results"></div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { 
+            getFirestore, doc, getDoc, setDoc, collection, 
+            addDoc, serverTimestamp, getDocs 
+        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        
+        // Same Firebase config as Index
+        const firebaseConfig = {
+            apiKey: "AIzaSyD7lJcoY33FEC9d6eWy67QIO9SV4lS24pg",
+            authDomain: "tank-tools-knpc-c2d95.firebaseapp.com",
+            projectId: "tank-tools-knpc-c2d95",
+            storageBucket: "tank-tools-knpc-c2d95.firebasestorage.app",
+            messagingSenderId: "510062594324",
+            appId: "1:510062594324:web:b892fd02007a5ca2f0da01"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        // Make same globals as Index
+        window.db = db;
+        window.doc = doc;
+        window.getDoc = getDoc;
+        window.setDoc = setDoc;
+        window.addDoc = addDoc;
+        window.serverTimestamp = serverTimestamp;
+        window.collection = collection;
+        window.getDocs = getDocs;
+        
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong> - ${message}`;
+            document.getElementById('results').appendChild(div);
+            console.log(message);
+        }
+        
+        // Copy exact function from Index.html
+        async function fetchTankSpecifications() {
+            const departments = ['pbcr', 'plcr', 'washery'];
+            let allTanks = {};
+            
+            addResult('🔄 Loading tank specifications from Firebase...', 'info');
+            
+            // Check if Firebase is ready
+            if (!window.db || !window.collection || !window.getDocs) {
+                addResult('❌ Firebase not initialized yet', 'error');
+                throw new Error('Firebase not ready - please refresh the page');
+            }
+            
+            try {
+                for (const dept of departments) {
+                    addResult(`📊 Loading ${dept.toUpperCase()} tanks...`, 'info');
+                    // Try multiple possible paths for tank data
+                    let querySnapshot = null;
+                    let tanksCollectionRef = null;
+                    
+                    // Method 1: Try tankData/dept/tanks (current method)
+                    try {
+                        tanksCollectionRef = collection(window.db, "tankData", dept, "tanks");
+                        querySnapshot = await getDocs(tanksCollectionRef);
+                        if (querySnapshot && !querySnapshot.empty) {
+                            addResult(`✅ Found tanks in tankData/${dept}/tanks - ${querySnapshot.size} documents`, 'success');
+                        }
+                    } catch (error) {
+                        addResult(`❌ tankData/${dept}/tanks failed: ${error.message}`, 'error');
+                    }
+                    
+                    // Method 2: Try dept/tanks if first method failed or returned empty
+                    if (!querySnapshot || querySnapshot.empty) {
+                        try {
+                            tanksCollectionRef = collection(window.db, dept, "tanks");
+                            querySnapshot = await getDocs(tanksCollectionRef);
+                            if (querySnapshot && !querySnapshot.empty) {
+                                addResult(`✅ Found tanks in ${dept}/tanks`, 'success');
+                            }
+                        } catch (error) {
+                            addResult(`❌ ${dept}/tanks failed: ${error.message}`, 'error');
+                        }
+                    }
+                    
+                    // Method 3: Try tankData/dept directly if still empty
+                    if (!querySnapshot || querySnapshot.empty) {
+                        try {
+                            tanksCollectionRef = collection(window.db, "tankData", dept);
+                            querySnapshot = await getDocs(tanksCollectionRef);
+                            if (querySnapshot && !querySnapshot.empty) {
+                                addResult(`✅ Found tanks in tankData/${dept}`, 'success');
+                            }
+                        } catch (error) {
+                            addResult(`❌ tankData/${dept} failed: ${error.message}`, 'error');
+                        }
+                    }
+                    
+                    if (querySnapshot && !querySnapshot.empty) {
+                        querySnapshot.forEach(doc => {
+                            const data = doc.data();
+                            allTanks[doc.id] = data;
+                            addResult(`   📄 Tank ${doc.id}: ${data.product || 'N/A'} (${data.volume || data.capacity || 'N/A'}m³)`, 'info');
+                        });
+                    } else {
+                        addResult(`⚠️ No tanks found for department: ${dept}`, 'warning');
+                    }
+                }
+                
+                addResult(`🎉 Total tanks loaded: ${Object.keys(allTanks).length}`, 'success');
+                addResult(`📋 Tank IDs: ${Object.keys(allTanks).join(', ')}`, 'info');
+                
+                return allTanks;
+                
+            } catch (error) {
+                addResult(`❌ Critical error: ${error.message}`, 'error');
+                throw error;
+            }
+        }
+        
+        window.simulateIndexLoading = async function() {
+            document.getElementById('results').innerHTML = '';
+            addResult('🚀 محاكاة تحميل خزانات Index بالضبط...', 'info');
+            
+            try {
+                const tanks = await fetchTankSpecifications();
+                
+                // Check specific tanks that Index needs
+                const requiredTanks = ['460', '461', '462', '463', '464'];
+                let foundTanks = [];
+                let missingTanks = [];
+                
+                requiredTanks.forEach(tankId => {
+                    if (tanks[tankId]) {
+                        foundTanks.push(tankId);
+                    } else {
+                        missingTanks.push(tankId);
+                    }
+                });
+                
+                addResult(`✅ Found required tanks: ${foundTanks.join(', ') || 'None'}`, foundTanks.length > 0 ? 'success' : 'warning');
+                addResult(`❌ Missing required tanks: ${missingTanks.join(', ') || 'None'}`, missingTanks.length > 0 ? 'error' : 'success');
+                
+                if (foundTanks.length === requiredTanks.length) {
+                    addResult('🎉 ALL REQUIRED TANKS FOUND! Index should work!', 'success');
+                } else {
+                    addResult(`⚠️ ${missingTanks.length} tanks missing. Index might have issues.`, 'warning');
+                }
+                
+            } catch (error) {
+                addResult(`💥 Same error as Index: ${error.message}`, 'error');
+            }
+        };
+        
+        window.testSpecificTanks = async function() {
+            addResult('⛽ اختبار الخزانات المطلوبة مباشرة...', 'info');
+            
+            const requiredTanks = ['460', '461', '462', '463', '464'];
+            
+            for (const tankId of requiredTanks) {
+                try {
+                    const tankRef = doc(db, 'tankData', 'pbcr', 'tanks', tankId);
+                    const tankDoc = await getDoc(tankRef);
+                    
+                    if (tankDoc.exists()) {
+                        const data = tankDoc.data();
+                        addResult(`✅ Tank ${tankId}: EXISTS - ${JSON.stringify(data, null, 2)}`, 'success');
+                    } else {
+                        addResult(`❌ Tank ${tankId}: NOT FOUND`, 'error');
+                    }
+                } catch (error) {
+                    addResult(`❌ Error checking Tank ${tankId}: ${error.message}`, 'error');
+                }
+            }
+        };
+        
+        window.testDataStructure = async function() {
+            addResult('📊 فحص هيكل بيانات Firebase...', 'info');
+            
+            try {
+                const pbcrRef = collection(db, 'tankData', 'pbcr', 'tanks');
+                const snapshot = await getDocs(pbcrRef);
+                
+                addResult(`📁 tankData/pbcr/tanks contains ${snapshot.size} documents`, 'info');
+                
+                const tankIds = [];
+                const sampleData = {};
+                
+                snapshot.forEach(doc => {
+                    tankIds.push(doc.id);
+                    if (tankIds.length <= 5) {
+                        sampleData[doc.id] = doc.data();
+                    }
+                });
+                
+                addResult(`📄 All tank IDs: ${tankIds.join(', ')}`, 'info');
+                addResult(`📊 Sample data structure:<div class="code">${JSON.stringify(sampleData, null, 2)}</div>`, 'info');
+                
+                // Check if required tanks are in the list
+                const required = ['460', '461', '462', '463', '464'];
+                const found = required.filter(id => tankIds.includes(id));
+                const missing = required.filter(id => !tankIds.includes(id));
+                
+                addResult(`✅ Required tanks found in Firebase: ${found.join(', ') || 'None'}`, found.length > 0 ? 'success' : 'warning');
+                addResult(`❌ Required tanks missing: ${missing.join(', ') || 'None'}`, missing.length > 0 ? 'error' : 'success');
+                
+            } catch (error) {
+                addResult(`❌ Error checking data structure: ${error.message}`, 'error');
+            }
+        };
+        
+        // Auto-run simulation
+        setTimeout(() => {
+            simulateIndexLoading();
+        }, 1000);
+    </script>
+</body>
+</html>
