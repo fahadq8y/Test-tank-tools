@@ -164,6 +164,9 @@ input,select{background:rgba(255,255,255,0.9);border-radius:12px;border:none;col
 <div class="button-row">
 <button onclick="directAddTank460()" class="action-btn" style="background: linear-gradient(45deg, #4CAF50, #45a049); color: white; box-shadow: 0 2px 8px rgba(76,175,80,0.3)">⚡ Direct Add Tank 460</button>
 </div>
+<div class="button-row">
+<button onclick="reloadAllTanksFromFirebase()" class="action-btn" style="background: linear-gradient(45deg, #9C27B0, #7B1FA2); color: white; box-shadow: 0 2px 8px rgba(156,39,176,0.3)">🔄 Reload All Tanks</button>
+</div>
 </div>
 <h3 style="margin-top:40px">Your tanks finishing in current shift:</h3>
 <table id="tankTable">
@@ -293,11 +296,29 @@ async function fetchTankSpecifications() {
             const tanksCollectionRef = collection(window.db, "tankData", dept, "tanks");
             const querySnapshot = await getDocs(tanksCollectionRef);
             let deptCount = 0;
+            const deptTanks = [];
+            
             querySnapshot.forEach((doc) => { 
                 allTanks[doc.id] = doc.data(); 
+                deptTanks.push(doc.id);
                 deptCount++;
             });
+            
             console.log(`✅ Loaded ${deptCount} tanks from ${dept.toUpperCase()}`);
+            
+            // Show first 10 tank numbers for debugging
+            if (deptTanks.length > 0) {
+                const sortedTanks = deptTanks.sort((a, b) => parseInt(a) - parseInt(b));
+                console.log(`📋 ${dept.toUpperCase()} first 10 tanks:`, sortedTanks.slice(0, 10));
+                console.log(`📋 ${dept.toUpperCase()} last 5 tanks:`, sortedTanks.slice(-5));
+                
+                // Check specifically for requested tanks
+                const userRequestedTanks = ['460', '301', '834', '533', '532'];
+                const foundInDept = userRequestedTanks.filter(tank => deptTanks.includes(tank));
+                if (foundInDept.length > 0) {
+                    console.log(`🎯 ${dept.toUpperCase()} contains user requested tanks:`, foundInDept);
+                }
+            }
         }
         if (Object.keys(allTanks).length === 0) { throw new Error("No tank specifications found."); }
         tankSpecsData = allTanks;
@@ -362,6 +383,57 @@ async function fetchTankSpecifications() {
             }
         };
         
+        // Function to manually reload tanks from Firebase
+        window.reloadAllTanksFromFirebase = async function() {
+            console.log('🔄 MANUAL RELOAD: Fetching all tanks from Firebase...');
+            
+            try {
+                const departments = ['pbcr', 'plcr', 'washery'];
+                let newAllTanks = {};
+                let totalCount = 0;
+                
+                for (const dept of departments) {
+                    console.log(`🔍 Scanning ${dept.toUpperCase()} department...`);
+                    const tanksCollectionRef = collection(window.db, "tankData", dept, "tanks");
+                    const querySnapshot = await getDocs(tanksCollectionRef);
+                    
+                    const deptTankNumbers = [];
+                    querySnapshot.forEach((doc) => { 
+                        newAllTanks[doc.id] = doc.data();
+                        deptTankNumbers.push(doc.id);
+                        totalCount++;
+                    });
+                    
+                    console.log(`✅ ${dept.toUpperCase()}: ${deptTankNumbers.length} tanks`);
+                    if (deptTankNumbers.length > 0) {
+                        const sortedNums = deptTankNumbers.sort((a, b) => parseInt(a) - parseInt(b));
+                        console.log(`📋 ${dept.toUpperCase()} tanks:`, sortedNums.join(', '));
+                    }
+                }
+                
+                // Update global tankSpecsData
+                tankSpecsData = newAllTanks;
+                console.log(`🎉 RELOAD COMPLETE: ${totalCount} total tanks loaded`);
+                
+                // Check user requested tanks
+                const userTanks = ['460', '301', '834', '533', '532'];
+                console.log('🔍 Checking user requested tanks after reload:');
+                userTanks.forEach(tank => {
+                    if (tankSpecsData[tank]) {
+                        console.log(`✅ Tank ${tank}: FOUND`, tankSpecsData[tank]);
+                    } else {
+                        console.log(`❌ Tank ${tank}: NOT FOUND`);
+                    }
+                });
+                
+                alert(`🔄 Reload Complete!\n\nTotal tanks loaded: ${totalCount}\n\nCheck console for detailed tank numbers.\n\nTry searching for your tanks now!`);
+                
+            } catch (error) {
+                console.error('❌ Reload error:', error);
+                alert('❌ Reload failed: ' + error.message);
+            }
+        };
+
         // Direct function to add Tank 460 specifically
         window.directAddTank460 = async function() {
             console.log('⚡ DIRECT: Adding Tank 460 to Firebase...');
@@ -967,7 +1039,7 @@ window.showAddTanksHelp = function() {
   alert('🔧 Add Missing PBCR Tanks\n\n• Adds common PBCR tank numbers to Firebase\n• Uses standard BPM values for each tank\n• Solves "tank not found" errors\n• Only adds missing tanks - existing data is safe\n• Direct addition to Firebase tankData/pbcr collection\n\n💡 Use this if you see "Tank XXX not found" messages.');
 };
 
-window.showLiveTanksHelp=showLiveTanksHelp;window.showTableHelp=showTableHelp;window.addMissingTanks=addMissingTanks;window.showAddTanksHelp=showAddTanksHelp;window.directAddTank460=directAddTank460;
+window.showLiveTanksHelp=showLiveTanksHelp;window.showTableHelp=showTableHelp;window.addMissingTanks=addMissingTanks;window.showAddTanksHelp=showAddTanksHelp;window.directAddTank460=directAddTank460;window.reloadAllTanksFromFirebase=reloadAllTanksFromFirebase;
 </script>
 <footer>
   By <a href="#" class="whatsapp-link" onclick="window.open('https://wa.me/96555222550','_blank'); return false;">Fahad - 17877</a> – Version v5 - FIXED
