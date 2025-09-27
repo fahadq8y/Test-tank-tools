@@ -3,8 +3,8 @@
 // Version: 3.1.1 - Fixed integrity issues
 // Last Updated: 2025-09-27
 
-const CACHE_NAME = 'tanktools-v3.1.1';
-const CACHE_VERSION = '3.1.1';
+const CACHE_NAME = 'tanktools-v3.1.2';
+const CACHE_VERSION = '3.1.2';
 
 // Files to cache for offline functionality
 const CORE_ASSETS = [
@@ -127,19 +127,19 @@ async function handleRequest(request) {
   }
 }
 
-// Network-first strategy
+// Network-first strategy - Fixed response clone issue
 async function networkFirst(request) {
   try {
     const networkResponse = await fetch(request);
-    const responseForCache = networkResponse.clone();
-    const responseForClient = networkResponse.clone();
     
-    if (responseForCache.ok) {
+    if (networkResponse.ok) {
+      // Clone once for cache, return original for client
+      const responseForCache = networkResponse.clone();
       const cache = await caches.open(CACHE_NAME);
       cache.put(request, responseForCache);
     }
     
-    return responseForClient;
+    return networkResponse;
   } catch (error) {
     const cachedResponse = await caches.match(request);
     if (cachedResponse) {
@@ -154,11 +154,15 @@ async function cacheFirst(request) {
   const cachedResponse = await caches.match(request);
   
   if (cachedResponse) {
-    // Update cache in background
+    // Update cache in background - Safe clone handling
     fetch(request).then(networkResponse => {
-      if (networkResponse.ok) {
+      if (networkResponse && networkResponse.ok && networkResponse.body) {
         caches.open(CACHE_NAME).then(cache => {
-          cache.put(request, networkResponse.clone());
+          try {
+            cache.put(request, networkResponse.clone());
+          } catch (cloneError) {
+            console.warn('SW: Clone error in background update, skipping cache update');
+          }
         });
       }
     }).catch(() => {

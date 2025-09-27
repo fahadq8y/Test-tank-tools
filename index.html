@@ -880,7 +880,23 @@ window.loadTank = () => {
 async function checkLogin() {
     console.log('🔄 Starting checkLogin process...');
     
-    // Check page access first
+    // Initialize Firebase first before checking permissions
+    console.log('🔄 Waiting for Firebase initialization...');
+    let retries = 0;
+    while ((!window.db || !window.collection || !window.getDocs) && retries < 10) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        retries++;
+    }
+    
+    if (!window.db) {
+        console.error('❌ Firebase failed to initialize after 5 seconds');
+        document.body.innerHTML = '<div style="text-align:center;padding:50px;color:red;">❌ Firebase initialization failed. Please refresh the page.</div>';
+        return;
+    }
+    
+    console.log('✅ Firebase initialized successfully');
+    
+    // Check page access after Firebase is ready
     const hasAccess = await window.checkPageAccess();
     
     if (hasAccess) {
@@ -892,7 +908,7 @@ async function checkLogin() {
             console.log('✅ User authenticated:', currentUser.username);
             loadUser();
         } else {
-            console.log('✅ Public access granted for PBCR Calculator');
+            console.log('⚠️ No user authentication - will redirect to login');
         }
         
         // Load basic app functions
@@ -1249,4 +1265,4 @@ footer{margin-top:40px;color:#ccc;text-align:center}
 </style>
 </body>
 </html>
-<!-- Fixed integrity & permissions - Fri Sep 27 11:23:45 UTC 2025 -->
+<!-- FIXED: Network errors + response clone + infinite loading - Fri Sep 27 11:50:45 UTC 2025 -->

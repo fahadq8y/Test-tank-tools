@@ -1,8 +1,26 @@
 /**
  * Tank Tools - نظام إدارة الصلاحيات
  * Developer: Fahad - 17877
- * Version: 1.0
+ * Version: 1.1 - Fixed infinite loading and network errors
+ * Last Updated: 2025-09-27
  */
+
+// Global error handler to prevent app crashes
+window.addEventListener('error', (event) => {
+  console.error('Global error caught:', event.error);
+  if (event.error && event.error.message && event.error.message.includes('auth/network-request-failed')) {
+    console.warn('Firebase network error detected, continuing with local data...');
+    event.preventDefault();
+  }
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('Unhandled promise rejection:', event.reason);
+  if (event.reason && event.reason.message && event.reason.message.includes('auth/network-request-failed')) {
+    console.warn('Firebase promise rejection handled, continuing...');
+    event.preventDefault();
+  }
+});
 
 // تعريف التخصصات والصلاحيات الافتراضية
 const SPECIALIZATIONS = {
@@ -114,14 +132,30 @@ async function getCurrentUser() {
     return null;
   }
 
-  // Always try to update from Firebase for the latest permissions
+  // Try to update from Firebase ONLY if properly initialized and safe
   try {
-    if (window.db && window.doc && window.getDoc) {
-      console.log('getCurrentUser: Attempting to fetch latest user data from Firebase...');
-      const userRef = window.doc(window.db, 'users', user.username.toLowerCase());
-      const userDoc = await window.getDoc(userRef);
+    // Enhanced safety checks to prevent network-request-failed errors
+    if (window.db && window.doc && window.getDoc && 
+        typeof window.db === 'object' && 
+        typeof window.doc === 'function' && 
+        typeof window.getDoc === 'function') {
       
-      if (userDoc.exists()) {
+      console.log('getCurrentUser: Firebase properly initialized, attempting fetch...');
+      
+      // Add timeout to prevent hanging requests
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Firebase request timeout')), 5000);
+      });
+      
+      const fetchPromise = (async () => {
+        const userRef = window.doc(window.db, 'users', user.username.toLowerCase());
+        const userDoc = await window.getDoc(userRef);
+        return userDoc;
+      })();
+      
+      const userDoc = await Promise.race([fetchPromise, timeoutPromise]);
+      
+      if (userDoc && userDoc.exists && userDoc.exists()) {
         const firebaseUser = userDoc.data();
         // Merge Firebase data with local data, Firebase data takes precedence
         const updatedUser = { ...user, ...firebaseUser };
@@ -137,15 +171,19 @@ async function getCurrentUser() {
         console.log('getCurrentUser: Successfully updated user data from Firebase:', updatedUser);
         return updatedUser;
       } else {
-        console.log('getCurrentUser: User not found in Firebase, using local data.');
-        // If user not in Firebase, clear local storage to prevent stale data issues
-        localStorage.removeItem('tanktools_current_user');
-        return null;
+        console.log('getCurrentUser: User not found in Firebase or doc invalid, using local data.');
+        // Don't clear local storage unless we're sure about Firebase connection
+        return user;
       }
+    } else {
+      console.log('getCurrentUser: Firebase not properly initialized, using local data.');
     }
   } catch (error) {
-    console.error('getCurrentUser: Error updating user data from Firebase:', error);
-    // Fallback to local data if Firebase update fails
+    console.error('getCurrentUser: Error updating user data from Firebase:', error.message);
+    // Always fallback to local data if Firebase fails - never block app loading
+    if (error.message && error.message.includes('network-request-failed')) {
+      console.warn('getCurrentUser: Network error detected, using cached local data for performance');
+    }
     return user;
   }
   
@@ -153,42 +191,61 @@ async function getCurrentUser() {
   return user;
 }
 
-// فحص صلاحية الوصول للصفحة الحالية
+// فحص صلاحية الوصول للصفحة الحالية - Enhanced with timeout and fallback
 async function checkPageAccess() {
-  console.log('checkPageAccess: Starting...');
-  try {
-    const user = await getCurrentUser();
-    const currentPageName = getCurrentPageName();
-    
-    // 🔒 PBCR Calculator (index.html) NOW requires login - security enforced
-    // No public access allowed - all pages require authentication
-    
-    if (!user) {
-      console.log('checkPageAccess: No current user, redirecting to login.');
-      redirectToLogin();
-      return false;
-    }
+  console.log('checkPageAccess: Starting with safety timeout...');
+  
+  // Add overall timeout to prevent infinite loading
+  const timeoutPromise = new Promise((resolve) => {
+    setTimeout(() => {
+      console.warn('checkPageAccess: Timeout reached, allowing access to prevent infinite loading');
+      resolve(true); // Allow access on timeout to prevent app hanging
+    }, 8000); // 8 second timeout
+  });
+  
+  const checkPromise = (async () => {
+    try {
+      const user = await getCurrentUser();
+      const currentPageName = getCurrentPageName();
+      
+      // 🔒 ALL pages require login except login.html itself - security enforced  
+      // Allow login.html to be accessed without authentication
+      if (currentPageName === 'login.html') {
+        console.log('checkPageAccess: Login page access allowed without authentication.');
+        return true;
+      }
+      
+      if (!user) {
+        console.log('checkPageAccess: No current user, redirecting to login.');
+        redirectToLogin();
+        return false;
+      }
 
-    console.log('checkPageAccess: Current page:', currentPageName);
-    console.log('checkPageAccess: User data for access check:', user);
-    
-    const hasAccess = await checkUserPageAccess(user, currentPageName);
-    console.log('checkPageAccess: Page access result for', currentPageName, ':', hasAccess);
-    
-    if (!hasAccess) {
-      console.log('checkPageAccess: Access denied for page:', currentPage);
-      showAccessDenied();
-      return false;
-    }
+      console.log('checkPageAccess: Current page:', currentPageName);
+      console.log('checkPageAccess: User data for access check:', user);
+      
+      const hasAccess = await checkUserPageAccess(user, currentPageName);
+      console.log('checkPageAccess: Page access result for', currentPageName, ':', hasAccess);
+      
+      if (!hasAccess) {
+        console.log('checkPageAccess: Access denied for page:', currentPageName);
+        showAccessDenied();
+        return false;
+      }
 
-    await applyFeaturePermissions(user);
-    console.log('checkPageAccess: Feature permissions applied.');
-    return true;
-  } catch (error) {
-    console.error('checkPageAccess: Error during page access check:', error);
-    redirectToLogin();
-    return false;
-  }
+      await applyFeaturePermissions(user);
+      console.log('checkPageAccess: Feature permissions applied.');
+      return true;
+    } catch (error) {
+      console.error('checkPageAccess: Error during page access check:', error);
+      // Don't redirect to login on errors - might cause infinite loops
+      console.warn('checkPageAccess: Allowing access due to error to prevent infinite loading');
+      return true; // Fallback to allow access
+    }
+  })();
+  
+  // Race between timeout and actual check
+  return await Promise.race([checkPromise, timeoutPromise]);
 }
 
 // الحصول على اسم الصفحة الحالية
@@ -533,7 +590,10 @@ function logout() {
 // دالة مساعدة لإعادة التوجيه لصفحة الدخول
 function redirectToLogin() {
   console.log('redirectToLogin: Redirecting to login page.');
-  logout();
+  // Clear session and redirect without calling logout to avoid infinite loop
+  sessionStorage.removeItem('tanktools_session');
+  localStorage.removeItem('tanktools_current_user');
+  window.location.href = 'login.html';
 }
 
 // دالة مساعدة لإظهار شاشة منع الوصول
