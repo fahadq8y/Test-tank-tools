@@ -643,8 +643,24 @@ async function fetchTankSpecifications() {
                 alert('❌ Error: ' + error.message);
             }
         };
+        // SUCCESS: Show main content
         document.getElementById('loadingOverlay').style.display = 'none';
         document.getElementById('mainContent').style.display = 'block';
+        
+        // Debug: Show loaded tanks count to user
+        setTimeout(() => {
+            const loadedCount = Object.keys(tankSpecsData).length;
+            console.log(`🎉 SUCCESS MESSAGE: ${loadedCount} tanks loaded from Firebase!`);
+            if (loadedCount > 100) {
+                console.log(`✅ PBCR Ready! Tanks 460-464 status:`, {
+                    '460': !!tankSpecsData['460'],
+                    '461': !!tankSpecsData['461'], 
+                    '462': !!tankSpecsData['462'],
+                    '463': !!tankSpecsData['463'],
+                    '464': !!tankSpecsData['464']
+                });
+            }
+        }, 500);
     } catch (error) {
         console.error("❌ Critical error fetching tank specifications:", error);
         console.log("🚨 Firebase connection failed, using emergency fallback data");
