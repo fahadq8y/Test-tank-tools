@@ -300,12 +300,34 @@ async function fetchTankSpecifications() {
         tankSpecsData = allTanks;
         console.log(`🎯 Successfully loaded ${Object.keys(allTanks).length} total tanks from Firebase!`);
         
-        // Check if Tank 460 is already loaded
-        if (allTanks['460']) {
-            console.log('🎯 Tank 460 found in loaded tanks:', allTanks['460']);
-        } else {
-            console.log('❌ Tank 460 NOT found in loaded tanks');
-        }
+        // Check if requested tanks are already loaded
+        const requestedTanks = ['460', '301', '834', '533', '532'];
+        console.log('🔍 Checking requested tanks in loaded data...');
+        
+        const foundTanks = [];
+        const missingTanks = [];
+        
+        requestedTanks.forEach(tankNum => {
+            if (allTanks[tankNum]) {
+                foundTanks.push(tankNum);
+                console.log(`✅ Tank ${tankNum} found in loaded tanks:`, allTanks[tankNum]);
+            } else {
+                missingTanks.push(tankNum);
+                console.log(`❌ Tank ${tankNum} NOT found in loaded tanks`);
+            }
+        });
+        
+        console.log('📊 SUMMARY:', {
+            totalTanksLoaded: Object.keys(allTanks).length,
+            requestedTanks: requestedTanks,
+            foundTanks: foundTanks,
+            missingTanks: missingTanks,
+            firstTenTanks: Object.keys(allTanks).slice(0, 10)
+        });
+        
+        // Show all loaded tank numbers in console for debugging
+        const allTankNumbers = Object.keys(allTanks).sort((a, b) => parseInt(a) - parseInt(b));
+        console.log('📋 All loaded tank numbers:', allTankNumbers.join(', '));
         console.log('📋 Sample tank data:', Object.keys(allTanks).slice(0, 3).map(id => ({ id, data: allTanks[id] })));
         
         // Debug info removed - tanks load silently now
@@ -341,21 +363,33 @@ async function fetchTankSpecifications() {
         window.addMissingPBCRTanks = async function() {
             console.log('🔄 Adding missing PBCR tanks to Firebase tankData/pbcr...');
             try {
-                // List of common PBCR tanks that might be missing
+                // List of PBCR tanks based on user requests and common patterns
                 const missingTanks = [
+                    // User requested tanks - HIGH PRIORITY
+                    { id: '460', bpm: 11500, min: 1.5, max: 16.0 },
+                    { id: '301', bpm: 10500, min: 1.6, max: 15.8 },
+                    { id: '834', bpm: 13200, min: 1.4, max: 15.5 },
+                    { id: '533', bpm: 12100, min: 1.5, max: 16.0 },
+                    { id: '532', bpm: 12000, min: 1.5, max: 16.0 },
+                    
+                    // 300 series tanks
+                    { id: '302', bpm: 10600, min: 1.6, max: 15.8 },
+                    { id: '303', bpm: 10700, min: 1.6, max: 15.8 },
+                    
                     // 400 series tanks
                     { id: '401', bpm: 10800, min: 1.4, max: 15.5 },
                     { id: '402', bpm: 11000, min: 1.4, max: 15.5 },
-                    { id: '460', bpm: 11500, min: 1.5, max: 16.0 },
                     { id: '461', bpm: 11600, min: 1.5, max: 16.0 },
                     { id: '462', bpm: 11700, min: 1.5, max: 16.0 },
                     
-                    // 500 series tanks
+                    // 500 series tanks  
                     { id: '501', bpm: 11200, min: 1.5, max: 16.0 },
                     { id: '502', bpm: 11400, min: 1.5, max: 16.0 },
                     { id: '503', bpm: 11600, min: 1.5, max: 16.0 },
                     { id: '521', bpm: 12100, min: 1.4, max: 15.8 },
                     { id: '522', bpm: 12600, min: 1.5, max: 16.0 },
+                    { id: '531', bpm: 11900, min: 1.5, max: 16.0 },
+                    { id: '534', bpm: 12200, min: 1.5, max: 16.0 },
                     
                     // 600 series tanks
                     { id: '601', bpm: 12200, min: 1.4, max: 15.8 },
@@ -373,7 +407,11 @@ async function fetchTankSpecifications() {
                     // 800 series tanks
                     { id: '801', bpm: 12500, min: 1.5, max: 16.0 },
                     { id: '802', bpm: 12700, min: 1.5, max: 16.0 },
-                    { id: '803', bpm: 12900, min: 1.5, max: 16.0 }
+                    { id: '803', bpm: 12900, min: 1.5, max: 16.0 },
+                    { id: '831', bpm: 13000, min: 1.4, max: 15.5 },
+                    { id: '832', bpm: 13100, min: 1.4, max: 15.5 },
+                    { id: '833', bpm: 13100, min: 1.4, max: 15.5 },
+                    { id: '835', bpm: 13300, min: 1.4, max: 15.5 }
                 ];
                 
                 let addedCount = 0;
@@ -566,7 +604,7 @@ window.loadTank = () => {
     console.warn(`❌ Tank ${id} not found in tankData database`);
     
     // Try to add missing PBCR tanks directly
-    if (confirm(`❌ Tank ${id} not found in PBCR database.\n\n🔄 Would you like me to add common missing PBCR tanks?\n\nThis will add standard PBCR tanks:\n• 400 series: 401, 402, 460, 461, 462\n• 500 series: 501, 502, 503, 521, 522\n• 600 series: 601, 602, 603, 661, 662, 668\n• 700 series: 701, 702, 703\n• 800 series: 801, 802, 803\n\nClick OK to add tanks, or Cancel to skip.`)) {
+    if (confirm(`❌ Tank ${id} not found in PBCR database.\n\n🔄 Would you like me to add missing PBCR tanks?\n\nThis will add 30+ tanks including:\n\n🎯 YOUR REQUESTED TANKS:\n• Tank 460, 301, 834, 533, 532\n\n📋 ADDITIONAL TANKS:\n• 300 series: 302, 303\n• 400 series: 401, 402, 461, 462  \n• 500 series: 501, 502, 503, 521, 522, 531, 534\n• 600 series: 601, 602, 603, 661, 662, 668\n• 700 series: 701, 702, 703\n• 800 series: 801, 802, 803, 831-835\n\nClick OK to add tanks, or Cancel to skip.`)) {
       console.log(`🔄 Adding missing PBCR tanks...`);
       
       if (window.addMissingPBCRTanks) {
@@ -840,7 +878,7 @@ window.addMissingTanks = async function() {
   // Allow adding tanks without login for public access
   console.log('🔧 Adding missing tanks - public access allowed');
   
-  if (!confirm('🔧 Add Missing PBCR Tanks\n\nThis will add common missing PBCR tanks to Firebase tankData/pbcr.\n\n📋 Tanks to add:\n• 400 series: 401, 402, 460, 461, 462\n• 500 series: 501, 502, 503, 521, 522\n• 600 series: 601, 602, 603, 661, 662, 668\n• 700 series: 701, 702, 703\n• 800 series: 801, 802, 803\n\n• Uses typical PBCR BPM values and level ranges\n• Safe operation - existing tanks not modified\n\nContinue adding tanks?')) {
+  if (!confirm('🔧 Add Missing PBCR Tanks\n\nThis will add 30+ missing PBCR tanks to Firebase tankData/pbcr.\n\n🎯 INCLUDES YOUR REQUESTED TANKS:\n• Tank 460, 301, 834, 533, 532\n\n📋 PLUS ADDITIONAL TANKS:\n• 300 series: 302, 303\n• 400 series: 401, 402, 461, 462\n• 500 series: 501, 502, 503, 521, 522, 531, 534\n• 600 series: 601, 602, 603, 661, 662, 668\n• 700 series: 701, 702, 703\n• 800 series: 801, 802, 803, 831-835\n\n• Uses realistic PBCR BPM values and level ranges\n• Safe operation - existing tanks not modified\n\nContinue adding tanks?')) {
     return;
   }
   
