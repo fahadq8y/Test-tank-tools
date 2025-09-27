@@ -123,7 +123,7 @@
   <div class="container">
     <div class="page-header">
       <h1 class="page-title">🛢️ Tank Management Center</h1>
-      <p class="page-subtitle">إدارة شاملة لجميع خزانات الشركة الكويتية للنفط</p>
+      <p class="page-subtitle">Comprehensive Management for Kuwait National Petroleum Company Tanks</p>
     </div>
 
     <div id="messageContainer"></div>
@@ -132,41 +132,41 @@
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-number" id="totalTanks">-</div>
-        <div class="stat-label">🛢️ إجمالي الخزانات</div>
+        <div class="stat-label">🛢️ Total Tanks</div>
       </div>
       <div class="stat-card">
         <div class="stat-number" id="pbcrTanks">-</div>
-        <div class="stat-label">🏭 خزانات PBCR</div>
+        <div class="stat-label">🏭 PBCR Tanks</div>
       </div>
       <div class="stat-card">
         <div class="stat-number" id="plcrTanks">-</div>
-        <div class="stat-label">⚗️ خزانات PLCR</div>
+        <div class="stat-label">⚗️ PLCR Tanks</div>
       </div>
       <div class="stat-card">
         <div class="stat-number" id="washeryTanks">-</div>
-        <div class="stat-label">🚿 خزانات WASHERY</div>
+        <div class="stat-label">🚿 WASHERY Tanks</div>
       </div>
     </div>
 
     <!-- Tank Management Section -->
     <div class="section">
       <div class="section-title">
-        🛢️ إدارة الخزانات
+        🛢️ Tank Management
       </div>
       
       <div class="controls">
         <div class="search-filter">
-          <input type="text" id="tankSearch" class="search-box" placeholder="🔍 البحث عن خزان برقمه أو اسمه...">
+          <input type="text" id="tankSearch" class="search-box" placeholder="🔍 Search for tank by number or name...">
           <select id="deptFilter" class="filter-select">
-            <option value="">كل الأقسام</option>
+            <option value="">All Departments</option>
             <option value="pbcr">PBCR</option>
             <option value="plcr">PLCR</option>
             <option value="washery">WASHERY</option>
           </select>
         </div>
         <div>
-          <button class="btn btn-primary" onclick="addNewTank()">➕ إضافة خزان جديد</button>
-          <button class="btn btn-secondary" onclick="refreshTanks()">🔄 تحديث</button>
+          <button class="btn btn-primary" onclick="addNewTank()">➕ Add New Tank</button>
+          <button class="btn btn-secondary" onclick="refreshTanks()">🔄 Refresh</button>
           <button class="btn btn-warning" onclick="debugFirebaseStructure()">🔍 Debug Firebase</button>
         </div>
       </div>
@@ -175,14 +175,14 @@
         <table class="tanks-table">
           <thead>
             <tr>
-              <th>🆔 رقم الخزان</th>
-              <th>🏢 القسم</th>
-              <th>📊 الحد الأدنى (م)</th>
-              <th>📈 الحد الأقصى (م)</th>
-              <th>🧮 معامل التحويل</th>
-              <th>📦 السعة الإجمالية</th>
-              <th>📅 آخر تحديث</th>
-              <th>⚙️ الإجراءات</th>
+              <th>🆔 Tank ID</th>
+              <th>🏢 Department</th>
+              <th>📊 Min Level (m)</th>
+              <th>📈 Max Level (m)</th>
+              <th>🧮 Capacity Factor</th>
+              <th>📦 Total Capacity</th>
+              <th>📅 Last Modified</th>
+              <th>⚙️ Actions</th>
             </tr>
           </thead>
           <tbody id="tanksTableBody">
@@ -190,7 +190,7 @@
               <td colspan="8" style="padding: 50px; text-align: center;">
                 <div class="loading">
                   <div class="loading-spinner"></div>
-                  <div>جاري تحميل بيانات الخزانات...</div>
+                  <div>Loading Tank Data...</div>
                 </div>
               </td>
             </tr>
@@ -204,46 +204,46 @@
   <div id="tankModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
-        <h3 class="modal-title" id="modalTitle">تعديل بيانات الخزان</h3>
+        <h3 class="modal-title" id="modalTitle">Edit Tank Data</h3>
         <button class="close-btn" onclick="closeTankModal()">&times;</button>
       </div>
       <form id="tankForm">
         <div class="form-group">
-          <label class="form-label">🆔 رقم الخزان:</label>
+          <label class="form-label">🆔 Tank Number:</label>
           <input type="text" class="form-input" id="editTankId" required>
         </div>
         <div class="form-group">
-          <label class="form-label">🏢 القسم:</label>
+          <label class="form-label">🏢 Department:</label>
           <select class="form-select" id="editDepartment" required>
-            <option value="">اختر القسم</option>
+            <option value="">Select Department</option>
             <option value="pbcr">PBCR</option>
             <option value="plcr">PLCR</option>
             <option value="washery">WASHERY</option>
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label">📊 الحد الأدنى للمستوى (متر):</label>
+          <label class="form-label">📊 Minimum Level (meters):</label>
           <input type="number" step="0.01" class="form-input" id="editMinLevel" required>
         </div>
         <div class="form-group">
-          <label class="form-label">📈 الحد الأقصى للمستوى (متر):</label>
+          <label class="form-label">📈 Maximum Level (meters):</label>
           <input type="number" step="0.01" class="form-input" id="editMaxLevel" required>
         </div>
         <div class="form-group">
-          <label class="form-label">🧮 معامل التحويل (برميل/متر):</label>
+          <label class="form-label">🧮 Capacity Factor (bbl/meter):</label>
           <input type="number" step="0.001" class="form-input" id="editCapacity" required>
         </div>
         <div class="form-group" id="plcrFields" style="display:none">
-          <label class="form-label">⚗️ معامل PLCR:</label>
+          <label class="form-label">⚗️ PLCR Factor:</label>
           <input type="number" step="0.001" class="form-input" id="editPlcrFactor">
         </div>
         <div class="form-group" id="grossFields" style="display:none">
-          <label class="form-label">📦 السعة الإجمالية:</label>
+          <label class="form-label">📦 Gross Capacity:</label>
           <input type="number" step="0.01" class="form-input" id="editGross">
         </div>
         <div style="display:flex;gap:15px;justify-content:flex-end;margin-top:30px">
-          <button type="button" class="btn btn-secondary" onclick="closeTankModal()">❌ إلغاء</button>
-          <button type="submit" class="btn btn-primary">💾 حفظ التعديلات</button>
+          <button type="button" class="btn btn-secondary" onclick="closeTankModal()">❌ Cancel</button>
+          <button type="submit" class="btn btn-primary">💾 Save Changes</button>
         </div>
       </form>
     </div>
@@ -369,7 +369,7 @@
       const userData = localStorage.getItem('tanktools_current_user');
       
       if (session !== 'active' || !userData) {
-        showMessage('❌ يجب تسجيل الدخول للوصول لهذه الصفحة', 'error');
+        showMessage('❌ Login required to access this page', 'error');
         setTimeout(() => window.location.href = 'login.html', 3000);
         return false;
       }
@@ -379,7 +379,7 @@
         
         // Only admin and supervisors can access
         if (currentUser.username !== 'fam030' && !['admin', 'supervisor'].includes(currentUser.role)) {
-          showMessage('❌ ليس لديك صلاحية للوصول لإدارة الخزانات!', 'error');
+          showMessage('❌ You do not have permission to access Tank Management!', 'error');
           setTimeout(() => window.location.href = 'index.html', 3000);
           return false;
         }
@@ -398,7 +398,7 @@
         
       } catch (error) {
         console.error('Error parsing user data:', error);
-        showMessage('❌ خطأ في بيانات المستخدم', 'error');
+        showMessage('❌ Error in user data', 'error');
         setTimeout(() => window.location.href = 'login.html', 3000);
         return false;
       }
@@ -407,7 +407,7 @@
     // Load all tanks from Firebase
     async function loadAllTanks() {
       try {
-        showMessage('🔄 جاري تحميل بيانات الخزانات...', 'info');
+        showMessage('🔄 Loading tank data...', 'info');
         
         allTanks = [];
         const departments = ['pbcr', 'plcr', 'washery'];
@@ -436,7 +436,7 @@
                 comment: parseFloat(data.comment || 0),
                 factor: parseFloat(data.factor || 0),
                 gross: parseFloat(data.gross || 0),
-                lastModified: data.lastModified || 'غير محدد'
+                lastModified: data.lastModified || 'Not Set'
               };
               console.log(`✅ Loaded tank ${doc.id} from ${dept}:`, tankData);
               allTanks.push(tankData);
@@ -458,7 +458,7 @@
                     id: doc.id,
                     department: dept,
                     ...data,
-                    lastModified: data.lastModified || 'غير محدد'
+                    lastModified: data.lastModified || 'Not Set'
                   };
                   console.log(`✅ Loaded tank ${doc.id} from alternative structure:`, tankData);
                   allTanks.push(tankData);
@@ -499,23 +499,23 @@
         displayTanks(allTanks);
         
         if (allTanks.length === 0) {
-          showMessage('⚠️ لم يتم العثور على خزانات في Firebase. تحقق من هيكل قاعدة البيانات.', 'warning');
+          showMessage('⚠️ No tanks found in Firebase. Check database structure.', 'warning');
         } else {
-          showMessage(`✅ تم تحميل ${allTanks.length} خزان بنجاح!`, 'success');
+          showMessage(`✅ Successfully loaded ${allTanks.length} tanks!`, 'success');
         }
         
       } catch (error) {
         console.error('❌ Critical error loading tanks:', error);
-        showMessage('❌ خطأ في تحميل بيانات الخزانات: ' + error.message, 'error');
+        showMessage('❌ Error loading tank data: ' + error.message, 'error');
         
         // Show error in table with debug info
         const tbody = document.getElementById('tanksTableBody');
         tbody.innerHTML = `
           <tr>
             <td colspan="8" style="padding: 50px; text-align: center; color: #f44336;">
-              ❌ فشل في تحميل بيانات الخزانات
-              <br><small>الخطأ: ${error.message}</small>
-              <br><small>تحقق من Console للمزيد من التفاصيل</small>
+              ❌ Failed to load tank data
+              <br><small>Error: ${error.message}</small>
+              <br><small>Check Console for more details</small>
             </td>
           </tr>
         `;
@@ -543,7 +543,7 @@
         tbody.innerHTML = `
           <tr>
             <td colspan="8" style="padding: 50px; text-align: center; color: #666;">
-              📭 لم يتم العثور على خزانات
+              📭 No tanks found
             </td>
           </tr>
         `;
@@ -575,7 +575,7 @@
             <td>${minLevel.toFixed(2)}</td>
             <td>${maxLevel.toFixed(2)}</td>
             <td>${capacity.toFixed(3)}</td>
-            <td>${totalCapacity.toLocaleString()} برميل</td>
+            <td>${totalCapacity.toLocaleString()} bbl</td>
             <td><small>${formatDate(tank.lastModified)}</small></td>
             <td>
               <div class="action-buttons">
@@ -594,16 +594,16 @@
 
     // Format date
     function formatDate(timestamp) {
-      if (!timestamp || timestamp === 'غير محدد') return 'غير محدد';
+      if (!timestamp || timestamp === 'Not Set') return 'Not Set';
       
       try {
         const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-        return date.toLocaleDateString('ar-EG') + ' ' + date.toLocaleTimeString('ar-EG', { 
+        return date.toLocaleDateString('en-US') + ' ' + date.toLocaleTimeString('en-US', { 
           hour: '2-digit', 
           minute: '2-digit' 
         });
       } catch {
-        return 'غير محدد';
+        return 'Not Set';
       }
     }
 
@@ -659,7 +659,7 @@
       editingTankId = null;
       editingDepartment = null;
       
-      document.getElementById('modalTitle').textContent = 'إضافة خزان جديد';
+      document.getElementById('modalTitle').textContent = 'Add New Tank';
       document.getElementById('tankForm').reset();
       
       // Enable tank ID field for new tank
@@ -672,14 +672,14 @@
     function editTank(tankId, department) {
       const tank = allTanks.find(t => t.id === tankId && t.department === department);
       if (!tank) {
-        showMessage('❌ لم يتم العثور على الخزان', 'error');
+        showMessage('❌ Tank not found', 'error');
         return;
       }
       
       editingTankId = tankId;
       editingDepartment = department;
       
-      document.getElementById('modalTitle').textContent = `تعديل الخزان ${tankId}`;
+      document.getElementById('modalTitle').textContent = `Edit Tank ${tankId}`;
       
       // Fill form with tank data
       document.getElementById('editTankId').value = tank.id;
@@ -718,12 +718,12 @@
         
         // Validation
         if (!formData.tankId || !formData.department) {
-          showMessage('❌ يرجى ملء جميع الحقول المطلوبة', 'error');
+          showMessage('❌ Please fill all required fields', 'error');
           return;
         }
         
         if (formData.min >= formData.max) {
-          showMessage('❌ الحد الأدنى يجب أن يكون أقل من الحد الأقصى', 'error');
+          showMessage('❌ Minimum level must be less than maximum level', 'error');
           return;
         }
         
@@ -748,11 +748,11 @@
         if (editingTankId && editingDepartment) {
           // Update existing tank
           await updateDoc(docRef, tankData);
-          showMessage(`✅ تم تحديث الخزان ${formData.tankId} بنجاح!`, 'success');
+          showMessage(`✅ Tank ${formData.tankId} updated successfully!`, 'success');
         } else {
           // Create new tank
           await setDoc(docRef, tankData);
-          showMessage(`✅ تم إضافة الخزان ${formData.tankId} بنجاح!`, 'success');
+          showMessage(`✅ Tank ${formData.tankId} added successfully!`, 'success');
         }
         
         // Close modal and refresh
@@ -768,13 +768,13 @@
         
       } catch (error) {
         console.error('Error saving tank:', error);
-        showMessage('❌ خطأ في حفظ بيانات الخزان: ' + error.message, 'error');
+        showMessage('❌ Error saving tank data: ' + error.message, 'error');
       }
     }
 
     // Delete tank
     async function deleteTank(tankId, department) {
-      if (!confirm(`هل أنت متأكد من حذف الخزان ${tankId} من قسم ${department.toUpperCase()}؟\n\nتحذير: هذا الإجراء لا يمكن التراجع عنه!`)) {
+      if (!confirm(`Are you sure you want to delete Tank ${tankId} from ${department.toUpperCase()} department?\n\nWarning: This action cannot be undone!`)) {
         return;
       }
       
@@ -782,7 +782,7 @@
         const docRef = doc(db, 'tankData', department, 'tanks', tankId);
         await deleteDoc(docRef);
         
-        showMessage(`✅ تم حذف الخزان ${tankId} بنجاح!`, 'success');
+        showMessage(`✅ Tank ${tankId} deleted successfully!`, 'success');
         
         // Refresh tanks list
         await loadAllTanks();
@@ -795,7 +795,7 @@
         
       } catch (error) {
         console.error('Error deleting tank:', error);
-        showMessage('❌ خطأ في حذف الخزان: ' + error.message, 'error');
+        showMessage('❌ Error deleting tank: ' + error.message, 'error');
       }
     }
 
@@ -849,7 +849,7 @@
 
     // Logout function
     function logout() {
-      if (confirm('هل تريد تسجيل الخروج؟')) {
+      if (confirm('Do you want to logout?')) {
         sessionStorage.clear();
         localStorage.clear();
         window.location.href = 'login.html';
