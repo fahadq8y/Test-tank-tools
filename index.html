@@ -314,8 +314,52 @@ async function fetchTankSpecifications() {
     try {
         for (const dept of departments) {
             console.log(`📊 Loading ${dept.toUpperCase()} tanks...`);
-            const tanksCollectionRef = collection(window.db, "tankData", dept, "tanks");
-            const querySnapshot = await getDocs(tanksCollectionRef);
+            // Try multiple possible paths for tank data
+            let querySnapshot = null;
+            let tanksCollectionRef = null;
+            
+            // Method 1: Try tankData/dept/tanks (current method)
+            try {
+                tanksCollectionRef = collection(window.db, "tankData", dept, "tanks");
+                querySnapshot = await getDocs(tanksCollectionRef);
+                if (querySnapshot && !querySnapshot.empty) {
+                    console.log(`✅ Found tanks in tankData/${dept}/tanks`);
+                }
+            } catch (error) {
+                console.log(`❌ tankData/${dept}/tanks failed:`, error.message);
+            }
+            
+            // Method 2: Try dept/tanks if first method failed or returned empty
+            if (!querySnapshot || querySnapshot.empty) {
+                try {
+                    tanksCollectionRef = collection(window.db, dept, "tanks");
+                    querySnapshot = await getDocs(tanksCollectionRef);
+                    if (querySnapshot && !querySnapshot.empty) {
+                        console.log(`✅ Found tanks in ${dept}/tanks`);
+                    }
+                } catch (error) {
+                    console.log(`❌ ${dept}/tanks failed:`, error.message);
+                }
+            }
+            
+            // Method 3: Try tankData/dept directly if still empty
+            if (!querySnapshot || querySnapshot.empty) {
+                try {
+                    tanksCollectionRef = collection(window.db, "tankData", dept);
+                    querySnapshot = await getDocs(tanksCollectionRef);
+                    if (querySnapshot && !querySnapshot.empty) {
+                        console.log(`✅ Found tanks in tankData/${dept} (direct)`);
+                    }
+                } catch (error) {
+                    console.log(`❌ tankData/${dept} direct failed:`, error.message);
+                }
+            }
+            
+            // If still no data, continue to next department
+            if (!querySnapshot || querySnapshot.empty) {
+                console.log(`⚠️ No tanks found for ${dept.toUpperCase()} in any path`);
+                continue;
+            }
             let deptCount = 0;
             const deptTanks = [];
             
@@ -615,9 +659,33 @@ window.directAddTank460 = async function() {
     console.log('⚡ DIRECT: Adding Tank 460 to Firebase...');
     
     try {
-        // Check if Tank 460 exists first
-        const tank460Ref = doc(window.db, 'tankData', 'pbcr', 'tanks', '460');
-        const existing460 = await getDoc(tank460Ref);
+        // Check if Tank 460 exists first - try multiple paths
+        let tank460Ref = null;
+        let existing460 = null;
+        
+        const possiblePaths = [
+            () => doc(window.db, 'tankData', 'pbcr', 'tanks', '460'),
+            () => doc(window.db, 'pbcr', 'tanks', '460'),
+            () => doc(window.db, 'tankData', 'pbcr', '460')
+        ];
+        
+        for (const pathFunc of possiblePaths) {
+            try {
+                tank460Ref = pathFunc();
+                existing460 = await getDoc(tank460Ref);
+                if (existing460.exists()) {
+                    console.log('✅ Found existing Tank 460 using one of the paths');
+                    break;
+                }
+            } catch (error) {
+                // Continue to next path
+            }
+        }
+        
+        // If not found, use the first path for adding
+        if (!tank460Ref) {
+            tank460Ref = doc(window.db, 'pbcr', 'tanks', '460'); // Try pbcr/tanks path first
+        }
         
         if (existing460.exists()) {
             console.log('✅ Tank 460 already exists:', existing460.data());
@@ -675,8 +743,32 @@ window.reloadAllTanksFromFirebase = async function() {
         
         for (const dept of departments) {
             console.log(`🔍 Scanning ${dept.toUpperCase()} department...`);
-            const tanksCollectionRef = collection(window.db, "tankData", dept, "tanks");
-            const querySnapshot = await getDocs(tanksCollectionRef);
+            let querySnapshot = null;
+            
+            // Try multiple paths to find tanks
+            const possiblePaths = [
+                () => collection(window.db, "tankData", dept, "tanks"),
+                () => collection(window.db, dept, "tanks"), 
+                () => collection(window.db, "tankData", dept)
+            ];
+            
+            for (const pathFunc of possiblePaths) {
+                try {
+                    const tanksCollectionRef = pathFunc();
+                    querySnapshot = await getDocs(tanksCollectionRef);
+                    if (querySnapshot && !querySnapshot.empty) {
+                        console.log(`✅ Found ${dept} tanks using alternative path`);
+                        break;
+                    }
+                } catch (error) {
+                    // Continue to next path
+                }
+            }
+            
+            if (!querySnapshot || querySnapshot.empty) {
+                console.log(`⚠️ No tanks found for ${dept} in any path`);
+                continue;
+            }
             
             const deptTankNumbers = [];
             querySnapshot.forEach((doc) => { 
@@ -727,8 +819,32 @@ window.forceReloadAllTanks = async function() {
         for (const dept of departments) {
             console.log(`🔄 Force loading ${dept.toUpperCase()}...`);
             
-            const tanksRef = collection(window.db, 'tankData', dept, 'tanks');
-            const snapshot = await getDocs(tanksRef);
+            let snapshot = null;
+            
+            // Try multiple paths to find tanks
+            const possiblePaths = [
+                () => collection(window.db, 'tankData', dept, 'tanks'),
+                () => collection(window.db, dept, 'tanks'), 
+                () => collection(window.db, 'tankData', dept)
+            ];
+            
+            for (const pathFunc of possiblePaths) {
+                try {
+                    const tanksRef = pathFunc();
+                    snapshot = await getDocs(tanksRef);
+                    if (snapshot && !snapshot.empty) {
+                        console.log(`✅ Force loaded ${dept} tanks using alternative path`);
+                        break;
+                    }
+                } catch (error) {
+                    // Continue to next path
+                }
+            }
+            
+            if (!snapshot || snapshot.empty) {
+                console.log(`⚠️ Force reload: No tanks found for ${dept} in any path`);
+                continue;
+            }
             
             let deptCount = 0;
             snapshot.forEach((doc) => {

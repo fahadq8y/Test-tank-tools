@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Tank Locations in Firebase</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f0f8ff; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .status { padding: 15px; border-radius: 8px; margin: 15px 0; font-weight: bold; }
+        .loading { background: #e3f2fd; color: #1976d2; }
+        .success { background: #e8f5e8; color: #2e7d32; }
+        .error { background: #ffebee; color: #d32f2f; }
+        .warning { background: #fff3e0; color: #f57c00; }
+        .path-result { background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #2196f3; }
+        .tank-item { background: #e8f5e8; padding: 10px; margin: 5px 0; border-radius: 5px; }
+        button { padding: 12px 25px; background: linear-gradient(45deg, #2196F3, #1976D2); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; margin: 5px; }
+        button:hover { background: linear-gradient(45deg, #1976D2, #2196F3); }
+        pre { background: #f5f5f5; padding: 10px; border-radius: 5px; overflow-x: auto; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Firebase Tank Location Scanner</h1>
+        <div id="status" class="status loading">🔄 Scanning all possible tank locations...</div>
+        
+        <button onclick="scanAllLocations()">🚀 Start Full Scan</button>
+        <button onclick="scanSpecificTank('460')">🎯 Find Tank 460</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js';
+        import { getFirestore, collection, getDocs, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js';
+
+        const app = initializeApp({
+            apiKey: "AIzaSyDGpAHia_wEmrhnmYjrPf1n1TrAzwEMiAI",
+            authDomain: "tank-tools.firebaseapp.com",
+            projectId: "tank-tools",
+            storageBucket: "tank-tools.appspot.com",
+            messagingSenderId: "278680662267",
+            appId: "1:278680662267:web:d4185d8b6fb96c4df8c2dc"
+        });
+
+        const db = getFirestore(app);
+
+        // All possible tank collection paths to check
+        const possiblePaths = [
+            // New structure paths
+            'tankData/pbcr/tanks',
+            'tankData/plcr/tanks', 
+            'tankData/washery/tanks',
+            
+            // Root collections
+            'tankData',
+            'pbcrTanks',
+            'plcrTanks',
+            'tanks',
+            
+            // Other possible structures
+            'pbcr/tanks',
+            'plcr/tanks',
+            'washery/tanks',
+            'pbcr',
+            'plcr',
+            'washery'
+        ];
+
+        window.scanAllLocations = async function() {
+            const statusDiv = document.getElementById('status');
+            const resultsDiv = document.getElementById('results');
+            
+            statusDiv.innerHTML = '🔄 Scanning all possible Firebase locations for tanks...';
+            statusDiv.className = 'status loading';
+            
+            let html = '<h2>📊 Scan Results</h2>';
+            let totalTanksFound = 0;
+            let foundLocations = [];
+
+            for (const path of possiblePaths) {
+                try {
+                    console.log(`🔍 Checking path: ${path}`);
+                    
+                    let tanks = [];
+                    let pathType = '';
+                    
+                    if (path.includes('/')) {
+                        // Sub-collection path
+                        const parts = path.split('/');
+                        if (parts.length === 3) {
+                            // tankData/pbcr/tanks format
+                            const collRef = collection(db, parts[0], parts[1], parts[2]);
+                            const snapshot = await getDocs(collRef);
+                            pathType = 'Sub-collection';
+                            
+                            snapshot.forEach(doc => {
+                                tanks.push({
+                                    id: doc.id,
+                                    data: doc.data()
+                                });
+                            });
+                        }
+                    } else {
+                        // Root collection path
+                        const collRef = collection(db, path);
+                        const snapshot = await getDocs(collRef);
+                        pathType = 'Root collection';
+                        
+                        snapshot.forEach(doc => {
+                            tanks.push({
+                                id: doc.id,
+                                data: doc.data()
+                            });
+                        });
+                    }
+                    
+                    if (tanks.length > 0) {
+                        foundLocations.push({
+                            path: path,
+                            count: tanks.length,
+                            tanks: tanks,
+                            type: pathType
+                        });
+                        totalTanksFound += tanks.length;
+                        
+                        html += `
+                            <div class="path-result success">
+                                <h3>✅ ${path} (${pathType})</h3>
+                                <p><strong>Found ${tanks.length} tanks</strong></p>
+                                <div class="tank-details">
+                                    ${tanks.slice(0, 5).map(tank => 
+                                        `<div class="tank-item">
+                                            <strong>Tank ${tank.id}</strong>: 
+                                            BPM=${tank.data.comment || tank.data.BPM || 'N/A'}, 
+                                            Min=${tank.data.min || 'N/A'}, 
+                                            Max=${tank.data.max || 'N/A'}
+                                        </div>`
+                                    ).join('')}
+                                    ${tanks.length > 5 ? `<p><em>... and ${tanks.length - 5} more tanks</em></p>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        html += `
+                            <div class="path-result warning">
+                                <h3>⚠️ ${path} (${pathType})</h3>
+                                <p>No tanks found</p>
+                            </div>
+                        `;
+                    }
+                    
+                } catch (error) {
+                    html += `
+                        <div class="path-result error">
+                            <h3>❌ ${path}</h3>
+                            <p>Error: ${error.message}</p>
+                        </div>
+                    `;
+                }
+            }
+            
+            // Summary
+            if (totalTanksFound > 0) {
+                statusDiv.innerHTML = `🎉 Scan complete! Found ${totalTanksFound} tanks in ${foundLocations.length} locations.`;
+                statusDiv.className = 'status success';
+                
+                html = `
+                    <div class="status success">
+                        <h2>📊 Summary</h2>
+                        <p><strong>Total tanks found:</strong> ${totalTanksFound}</p>
+                        <p><strong>Active locations:</strong> ${foundLocations.length}</p>
+                        <p><strong>Best location:</strong> ${foundLocations[0]?.path} (${foundLocations[0]?.count} tanks)</p>
+                    </div>
+                ` + html;
+                
+            } else {
+                statusDiv.innerHTML = '😢 No tanks found in any location! Database might be empty or using different structure.';
+                statusDiv.className = 'status error';
+            }
+            
+            resultsDiv.innerHTML = html;
+        };
+
+        window.scanSpecificTank = async function(tankId) {
+            const statusDiv = document.getElementById('status');
+            const resultsDiv = document.getElementById('results');
+            
+            statusDiv.innerHTML = `🎯 Searching for Tank ${tankId} in all locations...`;
+            statusDiv.className = 'status loading';
+            
+            let html = `<h2>🎯 Tank ${tankId} Search Results</h2>`;
+            let foundInLocations = [];
+
+            for (const path of possiblePaths) {
+                try {
+                    let found = false;
+                    let tankData = null;
+                    
+                    if (path.includes('/')) {
+                        // Sub-collection path
+                        const parts = path.split('/');
+                        if (parts.length === 3) {
+                            const docRef = doc(db, parts[0], parts[1], parts[2], tankId);
+                            const docSnap = await getDoc(docRef);
+                            if (docSnap.exists()) {
+                                found = true;
+                                tankData = docSnap.data();
+                            }
+                        }
+                    } else {
+                        // Root collection path
+                        const docRef = doc(db, path, tankId);
+                        const docSnap = await getDoc(docRef);
+                        if (docSnap.exists()) {
+                            found = true;
+                            tankData = docSnap.data();
+                        }
+                    }
+                    
+                    if (found) {
+                        foundInLocations.push({
+                            path: path,
+                            data: tankData
+                        });
+                        
+                        html += `
+                            <div class="path-result success">
+                                <h3>✅ Found in: ${path}</h3>
+                                <pre>${JSON.stringify(tankData, null, 2)}</pre>
+                            </div>
+                        `;
+                    }
+                    
+                } catch (error) {
+                    // Ignore errors for this search
+                }
+            }
+            
+            if (foundInLocations.length > 0) {
+                statusDiv.innerHTML = `🎉 Tank ${tankId} found in ${foundInLocations.length} location(s)!`;
+                statusDiv.className = 'status success';
+            } else {
+                statusDiv.innerHTML = `😢 Tank ${tankId} not found in any location.`;
+                statusDiv.className = 'status error';
+            }
+            
+            resultsDiv.innerHTML = html;
+        };
+
+        // Auto-start scan
+        setTimeout(() => {
+            scanAllLocations();
+        }, 1000);
+    </script>
+</body>
+</html>
