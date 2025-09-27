@@ -1,13 +1,13 @@
 {
   "version": 2,
-  "name": "tank-tools-knpc-updated",
+  "name": "tank-tools-knpc-updated", 
   "builds": [
     {
       "src": "*.html",
       "use": "@vercel/static"
     },
     {
-      "src": "*.js",
+      "src": "*.js", 
       "use": "@vercel/static"
     },
     {
@@ -22,6 +22,6 @@
     }
   ],
   "env": {
-    "BUILD_TIMESTAMP": "2025-09-27T13:00:00Z"
+    "BUILD_TIMESTAMP": "2025-09-27T13:11:53Z"
   }
 }
