@@ -161,6 +161,9 @@ input,select{background:rgba(255,255,255,0.9);border-radius:12px;border:none;col
 <div class="button-row">
 <button onclick="checkTank460()" class="action-btn" style="background: linear-gradient(45deg, #2196F3, #1976D2); color: white; box-shadow: 0 2px 8px rgba(33,150,243,0.3)">🔍 Check Tank 460</button>
 </div>
+<div class="button-row">
+<button onclick="directAddTank460()" class="action-btn" style="background: linear-gradient(45deg, #4CAF50, #45a049); color: white; box-shadow: 0 2px 8px rgba(76,175,80,0.3)">⚡ Direct Add Tank 460</button>
+</div>
 </div>
 <h3 style="margin-top:40px">Your tanks finishing in current shift:</h3>
 <table id="tankTable">
@@ -356,6 +359,60 @@ async function fetchTankSpecifications() {
             } catch (error) {
                 console.error('Error checking Tank 460:', error);
                 alert('Error: ' + error.message);
+            }
+        };
+        
+        // Direct function to add Tank 460 specifically
+        window.directAddTank460 = async function() {
+            console.log('⚡ DIRECT: Adding Tank 460 to Firebase...');
+            
+            try {
+                // Check if Tank 460 exists first
+                const tank460Ref = doc(window.db, 'tankData', 'pbcr', 'tanks', '460');
+                const existing460 = await getDoc(tank460Ref);
+                
+                if (existing460.exists()) {
+                    console.log('✅ Tank 460 already exists:', existing460.data());
+                    alert('✅ Tank 460 already exists in Firebase!\n\nBPM: ' + existing460.data().comment + '\nMin: ' + existing460.data().min + '\nMax: ' + existing460.data().max);
+                    return;
+                }
+                
+                // Add Tank 460 directly
+                const tank460Spec = {
+                    comment: 11500,  // BPM
+                    min: 1.5,
+                    max: 16.0,
+                    capacity: 184000,
+                    description: 'PBCR Tank 460',
+                    location: 'PBCR Area',
+                    status: 'active',
+                    lastModified: serverTimestamp(),
+                    addedBy: 'direct_addition_system'
+                };
+                
+                await setDoc(tank460Ref, tank460Spec);
+                console.log('✅ Tank 460 SUCCESSFULLY ADDED to Firebase!');
+                alert('✅ SUCCESS!\n\nTank 460 added to Firebase:\nBPM: 11500\nMin: 1.5m\nMax: 16.0m\n\nTry searching for Tank 460 now!');
+                
+                // Also add to local cache immediately
+                tankSpecsData['460'] = tank460Spec;
+                console.log('✅ Tank 460 added to local cache');
+                
+                // Verify addition
+                setTimeout(async () => {
+                    const verifyRef = doc(window.db, 'tankData', 'pbcr', 'tanks', '460');
+                    const verifyDoc = await getDoc(verifyRef);
+                    
+                    if (verifyDoc.exists()) {
+                        console.log('✅ VERIFICATION: Tank 460 confirmed in Firebase:', verifyDoc.data());
+                    } else {
+                        console.error('❌ VERIFICATION FAILED: Tank 460 not found after addition!');
+                    }
+                }, 2000);
+                
+            } catch (error) {
+                console.error('❌ DIRECT ADD ERROR:', error);
+                alert('❌ Error adding Tank 460:\n' + error.message + '\n\nCheck console for details.');
             }
         };
         
@@ -910,7 +967,7 @@ window.showAddTanksHelp = function() {
   alert('🔧 Add Missing PBCR Tanks\n\n• Adds common PBCR tank numbers to Firebase\n• Uses standard BPM values for each tank\n• Solves "tank not found" errors\n• Only adds missing tanks - existing data is safe\n• Direct addition to Firebase tankData/pbcr collection\n\n💡 Use this if you see "Tank XXX not found" messages.');
 };
 
-window.showLiveTanksHelp=showLiveTanksHelp;window.showTableHelp=showTableHelp;window.addMissingTanks=addMissingTanks;window.showAddTanksHelp=showAddTanksHelp;
+window.showLiveTanksHelp=showLiveTanksHelp;window.showTableHelp=showTableHelp;window.addMissingTanks=addMissingTanks;window.showAddTanksHelp=showAddTanksHelp;window.directAddTank460=directAddTank460;
 </script>
 <footer>
   By <a href="#" class="whatsapp-link" onclick="window.open('https://wa.me/96555222550','_blank'); return false;">Fahad - 17877</a> – Version v5 - FIXED
