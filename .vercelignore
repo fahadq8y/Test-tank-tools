@@ -1,0 +1,32 @@
+# Ignore test and debug files
+*test*.html
+*debug*.html
+*temp*.html
+add-missing-tanks-*.html
+check-*.html
+fix-*.html
+auto_*.html
+complete_*.html
+extract_*.html
+final_*.html
+inspect_*.html
+manual_*.html
+quick_*.html
+simple_*.html
+update_*.html
+verify_*.html
+execute_*.html
+direct_*.html
+create-*.html
+firebase-*.html
+add_*.html
+
+# Keep only essential files for production
+!index.html
+!plcr.html  
+!NMOGASBL.html
+!dashboard.html
+!tank-management.html
+!live-tanks.html
+!login.html
+!notifications.html
