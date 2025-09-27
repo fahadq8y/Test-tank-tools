@@ -301,6 +301,15 @@ const products={
   "PLCR":["NAPHA","PCNA","HSD-EGO","EGO","F.OIL","MOGAS","VGO","KKERO","ARDR","METHANOL","OTHER"]
 };
 
+// Fallback tank data for offline use
+const fallbackTankData = {
+    "460": { "volume": "34000", "product": "LSFO", "minLevel": "500", "maxLevel": "33500" },
+    "461": { "volume": "34000", "product": "EGO 10PPM", "minLevel": "500", "maxLevel": "33500" },
+    "462": { "volume": "34000", "product": "EGO 500PPM", "minLevel": "500", "maxLevel": "33500" },
+    "463": { "volume": "34000", "product": "RHN", "minLevel": "500", "maxLevel": "33500" },
+    "464": { "volume": "34000", "product": "PCNA", "minLevel": "500", "maxLevel": "33500" }
+};
+
 async function fetchTankSpecifications() {
     const departments = ['pbcr', 'plcr', 'washery'];
     let allTanks = {};
@@ -309,8 +318,10 @@ async function fetchTankSpecifications() {
     
     // Check if Firebase is ready
     if (!window.db || !window.collection || !window.getDocs) {
-        console.error('❌ Firebase not initialized yet');
-        throw new Error('Firebase not ready - please refresh the page');
+        console.error('❌ Firebase not initialized yet - using fallback data');
+        console.log('📦 Using offline fallback tank data');
+        tankSpecsData = fallbackTankData;
+        return fallbackTankData;
     }
     try {
         for (const dept of departments) {

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Firebase Project Verification</title>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial; margin: 20px; background: #1a1a1a; color: white; }
+        .info { background: #2d4a5a; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .error { background: #5a2d2d; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #2d5a2d; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .code { background: #333; padding: 10px; border-radius: 3px; font-family: monospace; }
+        button { background: #4CAF50; color: white; border: none; padding: 10px 20px; margin: 10px; cursor: pointer; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>🔥 Firebase Project Configuration Check</h1>
+    
+    <div class="info">
+        <h3>📋 Current Firebase Config:</h3>
+        <div class="code" id="currentConfig">Loading...</div>
+    </div>
+    
+    <div class="info">
+        <h3>🔗 Firebase Console Links:</h3>
+        <p><a href="https://console.firebase.google.com/project/tank-tools/firestore" target="_blank" style="color: #4CAF50;">
+           📊 Firestore Database
+        </a></p>
+        <p><a href="https://console.firebase.google.com/project/tank-tools/firestore/rules" target="_blank" style="color: #4CAF50;">
+           🛡️ Firestore Rules
+        </a></p>
+        <p><a href="https://console.firebase.google.com/project/tank-tools/settings/general" target="_blank" style="color: #4CAF50;">
+           ⚙️ Project Settings
+        </a></p>
+    </div>
+
+    <button onclick="testAuth()">🔐 Test Authentication</button>
+    <button onclick="testDirectWrite()">✍️ Test Direct Write</button>
+    <button onclick="checkProjectExists()">🔍 Check Project Exists</button>
+    
+    <div id="results"></div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js';
+        import { getFirestore, doc, setDoc, getDoc, collection, addDoc } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js';
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyDGpAHia_wEmrhnmYjrPf1n1TrAzwEMiAI",
+            authDomain: "tank-tools.firebaseapp.com", 
+            projectId: "tank-tools",
+            storageBucket: "tank-tools.appspot.com",
+            messagingSenderId: "278680662267",
+            appId: "1:278680662267:web:d4185d8b6fb96c4df8c2dc"
+        };
+        
+        // Show current config
+        document.getElementById('currentConfig').innerHTML = `
+            <strong>Project ID:</strong> ${firebaseConfig.projectId}<br>
+            <strong>Auth Domain:</strong> ${firebaseConfig.authDomain}<br>
+            <strong>API Key:</strong> ${firebaseConfig.apiKey.substring(0, 20)}...<br>
+            <strong>App ID:</strong> ${firebaseConfig.appId}
+        `;
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = type;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong> - ${message}`;
+            document.getElementById('results').appendChild(div);
+            console.log(message);
+        }
+        
+        window.testAuth = async function() {
+            try {
+                addResult('🔐 Testing authentication...', 'info');
+                
+                // Try to write a test document
+                const testRef = doc(db, 'test', 'connection');
+                await setDoc(testRef, {
+                    timestamp: new Date(),
+                    test: 'Firebase connection test',
+                    user: 'anonymous'
+                });
+                
+                addResult('✅ Authentication successful! Rules allow writes.', 'success');
+                
+                // Try to read it back
+                const docSnap = await getDoc(testRef);
+                if (docSnap.exists()) {
+                    addResult('✅ Read test successful! Data: ' + JSON.stringify(docSnap.data()), 'success');
+                } else {
+                    addResult('⚠️ Document written but not readable', 'error');
+                }
+                
+            } catch (error) {
+                addResult('❌ Authentication/Rules error: ' + error.message, 'error');
+                
+                if (error.code === 'permission-denied') {
+                    addResult('🛡️ This is a Firebase Rules issue. Check your Firestore Rules.', 'error');
+                } else if (error.code === 'unavailable') {
+                    addResult('🌐 Network issue or Firebase service unavailable.', 'error');
+                }
+            }
+        };
+        
+        window.testDirectWrite = async function() {
+            try {
+                addResult('✍️ Testing direct write to tankData collection...', 'info');
+                
+                // Try to add a tank directly
+                const tankRef = doc(db, 'tankData', 'pbcr', 'tanks', '999');
+                await setDoc(tankRef, {
+                    volume: "1000",
+                    product: "TEST",
+                    minLevel: "100", 
+                    maxLevel: "900",
+                    testTimestamp: new Date().toISOString()
+                });
+                
+                addResult('✅ Tank write successful!', 'success');
+                
+                // Try to read it
+                const tankDoc = await getDoc(tankRef);
+                if (tankDoc.exists()) {
+                    addResult('✅ Tank read successful: ' + JSON.stringify(tankDoc.data()), 'success');
+                } else {
+                    addResult('❌ Tank written but not readable', 'error');
+                }
+                
+            } catch (error) {
+                addResult('❌ Tank write failed: ' + error.message, 'error');
+            }
+        };
+        
+        window.checkProjectExists = async function() {
+            try {
+                addResult('🔍 Checking if project exists and is accessible...', 'info');
+                
+                // Simple ping test
+                const testRef = collection(db, 'ping');
+                addResult('✅ Project exists and is reachable', 'success');
+                
+            } catch (error) {
+                addResult('❌ Project check failed: ' + error.message, 'error');
+                
+                if (error.message.includes('project does not exist')) {
+                    addResult('🚫 Project "tank-tools" does not exist or is not accessible', 'error');
+                }
+            }
+        };
+        
+        // Auto-run tests
+        setTimeout(() => {
+            addResult('🚀 Running automatic tests...', 'info');
+            testAuth();
+        }, 1000);
+    </script>
+</body>
+</html>

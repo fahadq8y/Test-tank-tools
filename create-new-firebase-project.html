@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>إنشاء مشروع Firebase جديد</title>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial; margin: 20px; background: #1a1a1a; color: white; direction: rtl; }
+        .step { background: #2d4a5a; padding: 20px; margin: 15px 0; border-radius: 10px; border-right: 5px solid #4CAF50; }
+        .code { background: #333; padding: 10px; border-radius: 5px; font-family: monospace; direction: ltr; }
+        .warning { background: #5a4a2d; border-right-color: #ff9800; }
+        .success { background: #2d5a2d; border-right-color: #4CAF50; }
+        a { color: #4CAF50; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <h1>🔥 إنشاء مشروع Firebase جديد لحل مشاكل الاتصال</h1>
+    
+    <div class="step warning">
+        <h3>⚠️ المشكلة الحالية:</h3>
+        <p>مشروع <code>tank-tools</code> لا يمكن الوصول إليه بسبب:</p>
+        <ul>
+            <li>Firebase Rules غير مطبقة صحيح</li>
+            <li>صلاحيات API Key منتهية</li>
+            <li>مشاكل في إعدادات المشروع</li>
+        </ul>
+    </div>
+
+    <div class="step">
+        <h3>🏗️ الخطوة 1: إنشاء مشروع جديد</h3>
+        <p>1. اذهب إلى <a href="https://console.firebase.google.com" target="_blank">Firebase Console</a></p>
+        <p>2. اضغط على "Add project" (إضافة مشروع)</p>
+        <p>3. اكتب اسم المشروع: <code>knpc-tank-tools-2025</code></p>
+        <p>4. فعّل Google Analytics (اختياري)</p>
+        <p>5. اضغط "Create project"</p>
+    </div>
+
+    <div class="step">
+        <h3>🗃️ الخطوة 2: إعداد Firestore</h3>
+        <p>1. من القائمة الجانبية، اختر "Firestore Database"</p>
+        <p>2. اضغط "Create database"</p>
+        <p>3. اختر "Start in production mode"</p>
+        <p>4. اختر الموقع الأقرب: <code>us-central1</code></p>
+    </div>
+
+    <div class="step">
+        <h3>🛡️ الخطوة 3: إعداد Firebase Rules</h3>
+        <p>1. اذهب إلى "Firestore Database" > "Rules"</p>
+        <p>2. الصق هذا الكود:</p>
+        <div class="code">
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
+        </div>
+        <p>3. اضغط "Publish"</p>
+    </div>
+
+    <div class="step">
+        <h3>⚙️ الخطوة 4: الحصول على إعدادات المشروع</h3>
+        <p>1. اذهب إلى "Project settings" (إعدادات المشروع)</p>
+        <p>2. في تبويب "General"، انزل إلى "Your apps"</p>
+        <p>3. اضغط على أيقونة "</>" (Web app)</p>
+        <p>4. اكتب اسم التطبيق: <code>KNPC Tank Tools</code></p>
+        <p>5. انسخ الـ config object</p>
+    </div>
+
+    <div class="step success">
+        <h3>🔄 الخطوة 5: تحديث الكود</h3>
+        <p>بعد الحصول على الـ config الجديد، سأحدث الكود في <code>index.html</code></p>
+        <p>أرسل لي الـ Firebase config الجديد وسأحدث الموقع فوراً! 🚀</p>
+    </div>
+
+    <div class="step">
+        <h3>📊 الخطوة 6: إضافة بيانات الخزانات</h3>
+        <p>بعد تحديث الكود، سأضيف جميع بيانات الخزانات تلقائياً إلى المشروع الجديد</p>
+    </div>
+
+    <div class="step warning">
+        <h3>🔀 البديل السريع: إصلاح المشروع الحالي</h3>
+        <p>إذا كنت تريد إصلاح المشروع الحالي بدلاً من إنشاء جديد:</p>
+        <ol>
+            <li>اذهب إلى <a href="https://console.firebase.google.com/project/tank-tools/firestore/rules" target="_blank">Firebase Rules للمشروع الحالي</a></li>
+            <li>تأكد من نشر الـ Rules الجديدة</li>
+            <li>تحقق من وجود بيانات في Firestore Database</li>
+        </ol>
+    </div>
+
+</body>
+</html>
