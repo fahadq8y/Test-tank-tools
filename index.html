@@ -322,6 +322,14 @@ async function fetchTankSpecifications() {
 
 window.loadTank = () => {
   const id = document.getElementById("tankInput").value.trim();
+  
+  // Only check for tank data if user has entered at least 3 digits
+  if (id.length < 3) {
+    // Reset values but don't show any alerts for incomplete input
+    c = m = x = 0;
+    calculate();
+    return;
+  }
   if (tankSpecsData[id]) {
     const tankData = tankSpecsData[id];
     c = tankData.comment;
