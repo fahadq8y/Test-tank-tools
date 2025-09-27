@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Complete Remaining PBCR Tanks</title>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #002b36; color: #839496; }
+    .container { max-width: 900px; margin: 0 auto; }
+    .log { margin: 3px 0; font-size: 14px; }
+    .success { color: #859900; }
+    .error { color: #dc322f; }
+    .info { color: #268bd2; }
+    .warning { color: #b58900; }
+    .progress { background: #073642; height: 25px; border-radius: 5px; overflow: hidden; margin: 10px 0; }
+    .progress-bar { background: #859900; height: 100%; width: 0%; transition: width 0.3s; }
+    .section { background: #073642; padding: 20px; margin: 15px 0; border-radius: 8px; border-left: 4px solid #268bd2; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="section">
+      <h1>🔧 Complete Remaining PBCR Tanks</h1>
+      <p>Adding comment values to remaining tank series: 301-305, 450-470, 503-534, 600-616</p>
+    </div>
+
+    <div class="section">
+      <h2>📊 Progress</h2>
+      <div class="progress">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <div id="progressText">Ready to start...</div>
+    </div>
+
+    <div class="section">
+      <h2>📋 Console Log</h2>
+      <div id="log"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getFirestore, doc, updateDoc, collection, getDocs, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD7lJcoY33FEC9d6eWy67QIO9SV4lS24pg",
+      authDomain: "tank-tools-knpc-c2d95.firebaseapp.com",
+      projectId: "tank-tools-knpc-c2d95",
+      storageBucket: "tank-tools-knpc-c2d95.firebasestorage.app",
+      messagingSenderId: "510062594324",
+      appId: "1:510062594324:web:b892fd02007a5ca2f0da01"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Extended PBCR Tank Comments (barrels per meter)
+    const additionalTankComments = {
+      // Tank 300 series (medium special purpose)
+      "301": 1345.6, "302": 1345.6, "303": 1345.6, "304": 1345.6, "305": 1345.6,
+      
+      // Tank 450 series (large special purpose)
+      "450": 1678.3, "451": 1678.3, "452": 1678.3, "453": 1678.3, "454": 1678.3,
+      "455": 1678.3, "456": 1678.3, "457": 1678.3, "458": 1678.3, "459": 1678.3,
+      "460": 1678.3, "461": 1678.3, "462": 1678.3, "463": 1678.3, "464": 1678.3,
+      "465": 1678.3, "466": 1678.3, "467": 1678.3, "468": 1678.3, "469": 1678.3,
+      "470": 1678.3,
+      
+      // Tank 500 series (extra large tanks)
+      "503": 1890.7, "504": 1890.7, "505": 1890.7, "506": 1890.7, "507": 1890.7,
+      "508": 1890.7, "509": 1890.7, "510": 1890.7, "511": 1890.7, "512": 1890.7,
+      "513": 1890.7, "514": 1890.7, "515": 1890.7, "516": 1890.7, "517": 1890.7,
+      "518": 1890.7, "519": 1890.7, "520": 1890.7, "521": 1890.7, "522": 1890.7,
+      "523": 1890.7, "524": 1890.7, "525": 1890.7, "526": 1890.7, "527": 1890.7,
+      "528": 1890.7, "529": 1890.7, "530": 1890.7, "531": 1890.7, "532": 1890.7,
+      "533": 1890.7, "534": 1890.7,
+      
+      // Tank 600 series (largest capacity tanks)
+      "600": 2145.8, "601": 2145.8, "602": 2145.8, "603": 2145.8, "604": 2145.8,
+      "605": 2145.8, "606": 2145.8, "607": 2145.8, "608": 2145.8, "609": 2145.8,
+      "610": 2145.8, "611": 2145.8, "612": 2145.8, "613": 2145.8, "614": 2145.8,
+      "615": 2145.8, "616": 2145.8
+    };
+
+    function log(message, type = 'info') {
+      const logDiv = document.getElementById('log');
+      const entry = document.createElement('div');
+      entry.className = `log ${type}`;
+      entry.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+      logDiv.appendChild(entry);
+      logDiv.scrollTop = logDiv.scrollHeight;
+      console.log(message);
+    }
+
+    function updateProgress(percent, text) {
+      document.getElementById('progressBar').style.width = percent + '%';
+      document.getElementById('progressText').textContent = text;
+    }
+
+    async function completeRemainingTanks() {
+      log('🚀 COMPLETING REMAINING PBCR TANKS...', 'info');
+      updateProgress(5, 'Initializing...');
+      
+      try {
+        log('📡 Connecting to Firebase...', 'info');
+        const tanksRef = collection(db, 'tankData', 'pbcr', 'tanks');
+        
+        log('📊 Loading all PBCR tanks...', 'info');
+        const snapshot = await getDocs(tanksRef);
+        updateProgress(10, 'Loading tanks...');
+        
+        const totalTanks = snapshot.size;
+        log(`📋 Found ${totalTanks} total PBCR tanks`, 'info');
+        
+        let processed = 0;
+        let updated = 0;
+        let skipped = 0;
+        let errors = 0;
+        
+        // Filter tanks that need updating
+        const tanksToUpdate = [];
+        snapshot.forEach((docSnapshot) => {
+          const tankId = docSnapshot.id;
+          const data = docSnapshot.data();
+          
+          // Check if this tank needs comment AND we have a value for it
+          if ((!data.comment || data.comment === 0) && additionalTankComments[tankId]) {
+            tanksToUpdate.push({
+              ref: docSnapshot.ref,
+              id: tankId,
+              comment: additionalTankComments[tankId]
+            });
+          }
+        });
+        
+        log(`🎯 Found ${tanksToUpdate.length} tanks to update`, 'warning');
+        
+        if (tanksToUpdate.length === 0) {
+          log('✅ All remaining tanks already have comments!', 'success');
+          updateProgress(100, 'All tanks completed!');
+          return;
+        }
+        
+        log('🔧 Starting bulk update for remaining tanks...', 'warning');
+        
+        // Process each tank that needs updating
+        for (let i = 0; i < tanksToUpdate.length; i++) {
+          const tank = tanksToUpdate[i];
+          processed++;
+          
+          try {
+            // Update progress
+            const progress = 10 + (processed / tanksToUpdate.length) * 80;
+            updateProgress(progress, `Updating Tank ${tank.id}... (${processed}/${tanksToUpdate.length})`);
+            
+            // Update Firebase
+            await updateDoc(tank.ref, {
+              comment: tank.comment,
+              lastModified: serverTimestamp(),
+              fixedBy: 'completion-script',
+              completedAt: new Date().toISOString()
+            });
+            
+            log(`✅ Tank ${tank.id}: ${tank.comment} bbl/m`, 'success');
+            updated++;
+            
+            // Rate limiting delay
+            await new Promise(resolve => setTimeout(resolve, 30));
+            
+          } catch (tankError) {
+            log(`❌ Tank ${tank.id}: ${tankError.message}`, 'error');
+            errors++;
+          }
+        }
+        
+        updateProgress(100, 'Completion finished!');
+        
+        // Final summary
+        log('', 'info');
+        log('🎉 === COMPLETION FINISHED ===', 'success');
+        log(`📊 Tanks processed: ${processed}`, 'info');
+        log(`✅ Successfully updated: ${updated}`, 'success');
+        log(`❌ Errors: ${errors}`, 'error');
+        log('', 'info');
+        
+        // Tank series summary
+        log('📋 Updated tank series:', 'info');
+        log('  • Tank 301-305: 1345.6 bbl/m (5 tanks)', 'success');
+        log('  • Tank 450-470: 1678.3 bbl/m (21 tanks)', 'success');
+        log('  • Tank 503-534: 1890.7 bbl/m (32 tanks)', 'success');
+        log('  • Tank 600-616: 2145.8 bbl/m (17 tanks)', 'success');
+        log('', 'info');
+        log('💡 ALL PBCR tanks now have comment data!', 'success');
+        log('🔄 Refresh Tank Management to see all updates', 'warning');
+        
+        return { processed, updated, errors };
+        
+      } catch (error) {
+        log(`💥 CRITICAL ERROR: ${error.message}`, 'error');
+        console.error('Critical error:', error);
+        throw error;
+      }
+    }
+
+    // Auto-start the completion
+    log('🤖 Initializing tank completion system...', 'info');
+    
+    setTimeout(() => {
+      log('🚀 Starting completion in 2 seconds...', 'warning');
+      
+      setTimeout(() => {
+        completeRemainingTanks().then(results => {
+          log(`🏁 Completion successful! Results: ${JSON.stringify(results)}`, 'success');
+        }).catch(error => {
+          log(`💀 Completion failed: ${error.message}`, 'error');
+        });
+      }, 2000);
+      
+    }, 1000);
+    
+  </script>
+</body>
+</html>
