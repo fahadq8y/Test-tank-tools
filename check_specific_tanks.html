@@ -1,115 +1,243 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Check Specific Tanks</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check Specific Tanks - 460, 301, 834, 533, 532</title>
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0; }
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; }
-        .status { padding: 10px; margin: 5px 0; border-radius: 5px; }
-        .found { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .not-found { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        .testing { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
-        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        h1 {
+            text-align: center;
+            color: #FFD700;
+            margin-bottom: 30px;
+        }
+        .result {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border-left: 4px solid #4CAF50;
+        }
+        .error {
+            border-left-color: #f44336;
+        }
+        .tank-info {
+            margin-left: 20px;
+            font-size: 14px;
+        }
+        button {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76,175,80,0.4);
+        }
+        #status {
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🔍 Check Specific Tanks Status</h1>
-        <p>Testing availability of tanks: 460, 301, 834, 533, 532</p>
+        <p>Checking tanks: 460, 301, 834, 533, 532 in Firebase</p>
+        
+        <button onclick="checkSpecificTanks()">🔄 Check All Required Tanks</button>
+        <button onclick="addMissingTanks()">➕ Add Missing Tanks</button>
+        <button onclick="forceSync()">🔄 Force Sync All Tanks</button>
         
         <div id="status">
-            <div class="testing">🔄 Initializing Firebase connection...</div>
+            <p>Click "Check All Required Tanks" to start...</p>
         </div>
-        
-        <button onclick="testTanks()">🔄 Test Again</button>
-        <button onclick="window.location.href='index.html'">← Back to PBCR</button>
     </div>
 
+    <!-- Firebase v10 SDK -->
     <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js';
-        import { getFirestore, doc, getDoc, collection, getDocs } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js';
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js';
+        import { getFirestore, doc, getDoc, setDoc, collection, getDocs, updateDoc } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js';
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyDGpAHia_wEmrhnmYjrPf1n1TrAzwEMiAI",
+            authDomain: "tank-tools.firebaseapp.com",
+            projectId: "tank-tools",
+            storageBucket: "tank-tools.appspot.com",
+            messagingSenderId: "278680662267",
+            appId: "1:278680662267:web:d4185d8b6fb96c4df8c2dc"
+        };
 
-        const app = initializeApp({
-            apiKey: "AIzaSyD7lJcoY33FEC9d6eWy67QIO9SV4lS24pg",
-            authDomain: "tank-tools-knpc-c2d95.firebaseapp.com",
-            projectId: "tank-tools-knpc-c2d95",
-            storageBucket: "tank-tools-knpc-c2d95.firebasestorage.app",
-            messagingSenderId: "510062594324",
-            appId: "1:510062594324:web:b892fd02007a5ca2f0da01"
-        });
-
+        const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        
+        // Global access
         window.db = db;
         window.doc = doc;
         window.getDoc = getDoc;
+        window.setDoc = setDoc;
+        window.collection = collection;
+        window.getDocs = getDocs;
+        window.updateDoc = updateDoc;
+
+        console.log('✅ Firebase initialized successfully');
         
-        const REQUESTED_TANKS = ['460', '301', '834', '533', '532'];
+        // Required tanks to check
+        const REQUIRED_TANKS = ['460', '301', '834', '533', '532'];
+        const DEPARTMENTS = ['pbcr', 'plcr', 'washery'];
         
-        async function testSpecificTanks() {
+        window.checkSpecificTanks = async function() {
             const statusDiv = document.getElementById('status');
-            statusDiv.innerHTML = '<div class="testing">🔄 Checking Firebase tankData collections...</div>';
+            statusDiv.innerHTML = '<p>🔄 Checking Firebase for required tanks...</p>';
             
             try {
-                const departments = ['pbcr', 'plcr', 'washery'];
                 let results = [];
                 
-                for (const dept of departments) {
-                    statusDiv.innerHTML += `<div class="testing">📊 Checking ${dept} department...</div>`;
+                for (const dept of DEPARTMENTS) {
+                    results.push(`<div class="result"><strong>📂 Department: ${dept.toUpperCase()}</strong></div>`);
                     
-                    const collectionRef = collection(db, 'tankData', dept, 'tanks');
-                    const snapshot = await getDocs(collectionRef);
-                    
-                    snapshot.forEach((docSnap) => {
-                        const tankId = docSnap.id;
-                        const data = docSnap.data();
-                        
-                        if (REQUESTED_TANKS.includes(tankId)) {
-                            results.push({
-                                tank: tankId,
-                                department: dept,
-                                found: true,
-                                data: data
-                            });
+                    for (const tankNum of REQUIRED_TANKS) {
+                        try {
+                            const tankRef = doc(db, 'tankData', dept, 'tanks', tankNum);
+                            const tankDoc = await getDoc(tankRef);
+                            
+                            if (tankDoc.exists()) {
+                                const data = tankDoc.data();
+                                results.push(`
+                                    <div class="result">
+                                        ✅ Tank ${tankNum} - FOUND in ${dept}
+                                        <div class="tank-info">
+                                            BPM: ${data.BPM || 'N/A'}<br>
+                                            Min Level: ${data.minLevel || 'N/A'}<br>
+                                            Max Level: ${data.maxLevel || 'N/A'}<br>
+                                            Last Updated: ${data.lastUpdated || 'N/A'}
+                                        </div>
+                                    </div>
+                                `);
+                            } else {
+                                results.push(`<div class="result error">❌ Tank ${tankNum} - MISSING from ${dept}</div>`);
+                            }
+                        } catch (error) {
+                            results.push(`<div class="result error">🚨 Tank ${tankNum} - Error: ${error.message}</div>`);
                         }
-                    });
+                    }
                 }
                 
-                // Check which tanks are missing
-                const foundTanks = results.map(r => r.tank);
-                const missingTanks = REQUESTED_TANKS.filter(tank => !foundTanks.includes(tank));
-                
-                // Display results
-                let html = '<h3>📊 Tank Status Results:</h3>';
-                
-                results.forEach(result => {
-                    html += `<div class="found">
-                        ✅ Tank ${result.tank} - Found in ${result.department} department<br>
-                        BPM: ${result.data.BPM || 'N/A'}, Min: ${result.data.min || 'N/A'}m, Max: ${result.data.max || 'N/A'}m
-                    </div>`;
-                });
-                
-                missingTanks.forEach(tank => {
-                    html += `<div class="not-found">
-                        ❌ Tank ${tank} - Not found in any department
-                    </div>`;
-                });
-                
-                html += `<div class="status" style="background: #e3f2fd; color: #0d47a1; border: 1px solid #bbdefb;">
-                    📈 Summary: ${results.length}/${REQUESTED_TANKS.length} tanks found
-                </div>`;
-                
-                statusDiv.innerHTML = html;
+                statusDiv.innerHTML = results.join('');
                 
             } catch (error) {
-                console.error('Error checking tanks:', error);
-                statusDiv.innerHTML = `<div class="not-found">❌ Error: ${error.message}</div>`;
+                statusDiv.innerHTML = `<div class="result error">🚨 Firebase Error: ${error.message}</div>`;
+                console.error('Firebase check error:', error);
             }
-        }
+        };
+
+        window.addMissingTanks = async function() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = '<p>🔄 Adding missing tanks to Firebase...</p>';
+            
+            try {
+                let results = [];
+                let addedCount = 0;
+                
+                const tankTemplates = {
+                    '460': { BPM: 'Tank 460', minLevel: 500, maxLevel: 4500 },
+                    '301': { BPM: 'Tank 301', minLevel: 300, maxLevel: 3500 },
+                    '834': { BPM: 'Tank 834', minLevel: 400, maxLevel: 4000 },
+                    '533': { BPM: 'Tank 533', minLevel: 350, maxLevel: 3800 },
+                    '532': { BPM: 'Tank 532', minLevel: 350, maxLevel: 3800 }
+                };
+                
+                for (const dept of DEPARTMENTS) {
+                    for (const tankNum of REQUIRED_TANKS) {
+                        try {
+                            const tankRef = doc(db, 'tankData', dept, 'tanks', tankNum);
+                            const tankDoc = await getDoc(tankRef);
+                            
+                            if (!tankDoc.exists()) {
+                                const tankData = {
+                                    ...tankTemplates[tankNum],
+                                    lastUpdated: new Date().toISOString(),
+                                    department: dept,
+                                    tankNumber: tankNum,
+                                    createdBy: 'System Auto-Add',
+                                    createdAt: new Date().toISOString()
+                                };
+                                
+                                await setDoc(tankRef, tankData);
+                                results.push(`<div class="result">✅ Added Tank ${tankNum} to ${dept}</div>`);
+                                addedCount++;
+                            } else {
+                                results.push(`<div class="result">ℹ️ Tank ${tankNum} already exists in ${dept}</div>`);
+                            }
+                        } catch (error) {
+                            results.push(`<div class="result error">❌ Failed to add Tank ${tankNum} to ${dept}: ${error.message}</div>`);
+                        }
+                    }
+                }
+                
+                results.unshift(`<div class="result"><strong>📊 Summary: Added ${addedCount} tanks total</strong></div>`);
+                statusDiv.innerHTML = results.join('');
+                
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="result error">🚨 Error adding tanks: ${error.message}</div>`;
+                console.error('Add tanks error:', error);
+            }
+        };
+
+        window.forceSync = async function() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = '<p>🔄 Force syncing all tank collections...</p>';
+            
+            try {
+                let results = [];
+                
+                for (const dept of DEPARTMENTS) {
+                    try {
+                        const tanksRef = collection(db, 'tankData', dept, 'tanks');
+                        const snapshot = await getDocs(tanksRef);
+                        
+                        results.push(`<div class="result">📂 ${dept.toUpperCase()} Department: ${snapshot.size} tanks found</div>`);
+                        
+                        snapshot.forEach(doc => {
+                            const tankNum = doc.id;
+                            if (REQUIRED_TANKS.includes(tankNum)) {
+                                results.push(`<div class="result">✅ Required tank ${tankNum} confirmed in ${dept}</div>`);
+                            }
+                        });
+                        
+                    } catch (error) {
+                        results.push(`<div class="result error">❌ Error syncing ${dept}: ${error.message}</div>`);
+                    }
+                }
+                
+                statusDiv.innerHTML = results.join('');
+                
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="result error">🚨 Force sync error: ${error.message}</div>`;
+                console.error('Force sync error:', error);
+            }
+        };
         
-        window.testTanks = testSpecificTanks;
-        
-        // Auto-run on page load
-        setTimeout(testSpecificTanks, 1000);
     </script>
 </body>
 </html>

@@ -160,11 +160,8 @@ async function checkPageAccess() {
     const user = await getCurrentUser();
     const currentPageName = getCurrentPageName();
     
-    // 🔒 PBCR Calculator (index.html) requires login - security requirement
-    // if (currentPageName === 'index.html') {
-    //   console.log('checkPageAccess: PBCR Calculator is public, allowing access without login.');
-    //   return true;
-    // }
+    // 🔒 PBCR Calculator (index.html) NOW requires login - security enforced
+    // No public access allowed - all pages require authentication
     
     if (!user) {
       console.log('checkPageAccess: No current user, redirecting to login.');

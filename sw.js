@@ -1,9 +1,10 @@
 // 🔒 Tank Tools Service Worker - Enhanced PWA
-// Developer: Fahad - 17877
-// Version: 3.0.0
+// Developer: Fahad - 17877 
+// Version: 3.1.1 - Fixed integrity issues
+// Last Updated: 2025-09-27
 
-const CACHE_NAME = 'tanktools-v3.1.0';
-const CACHE_VERSION = '3.1.0';
+const CACHE_NAME = 'tanktools-v3.1.1';
+const CACHE_VERSION = '3.1.1';
 
 // Files to cache for offline functionality
 const CORE_ASSETS = [
