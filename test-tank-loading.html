@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Tank Loading</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0; }
+        .loading { text-align: center; color: blue; font-size: 18px; }
+        .result { text-align: center; color: green; font-size: 16px; margin-top: 20px; }
+        .error { text-align: center; color: red; font-size: 16px; margin-top: 20px; }
+        .tank-info { background: white; padding: 15px; border-radius: 8px; margin: 10px 0; }
+        input { padding: 10px; font-size: 16px; width: 200px; margin: 5px; }
+        button { padding: 10px 15px; font-size: 16px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Tank Loading Test</h1>
+    <div id="status" class="loading">🔄 Loading Firebase and tank data...</div>
+    
+    <div id="testArea" style="display: none;">
+        <h2>Test Tank Search</h2>
+        <input type="number" id="tankInput" placeholder="Enter tank number (e.g., 460)" />
+        <button onclick="testTank()">Test Tank</button>
+        <div id="tankResult"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js';
+        import { getFirestore, doc, getDoc, collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js';
+
+        const app = initializeApp({
+            apiKey: "AIzaSyDGpAHia_wEmrhnmYjrPf1n1TrAzwEMiAI",
+            authDomain: "tank-tools.firebaseapp.com",
+            projectId: "tank-tools",
+            storageBucket: "tank-tools.appspot.com",
+            messagingSenderId: "278680662267",
+            appId: "1:278680662267:web:d4185d8b6fb96c4df8c2dc"
+        });
+
+        const db = getFirestore(app);
+        let tankSpecsData = {};
+
+        async function loadTankData() {
+            try {
+                document.getElementById('status').innerHTML = '🔄 Loading tank specifications from Firebase...';
+                
+                const departments = ['pbcr', 'plcr', 'washery'];
+                let allTanks = {};
+                let totalCount = 0;
+                
+                for (const dept of departments) {
+                    console.log(`📊 Loading ${dept.toUpperCase()} tanks...`);
+                    const tanksCollectionRef = collection(db, "tankData", dept, "tanks");
+                    const querySnapshot = await getDocs(tanksCollectionRef);
+                    let deptCount = 0;
+                    
+                    querySnapshot.forEach((doc) => { 
+                        const tankData = doc.data();
+                        allTanks[doc.id] = tankData; 
+                        deptCount++;
+                        totalCount++;
+                        
+                        // Log some test tanks
+                        if (['460', '301', '834', '533', '532'].includes(doc.id)) {
+                            console.log(`🎯 Found test tank ${doc.id}:`, tankData);
+                        }
+                    });
+                    
+                    console.log(`✅ Loaded ${deptCount} tanks from ${dept.toUpperCase()}`);
+                }
+                
+                tankSpecsData = allTanks;
+                console.log(`🎉 Successfully loaded ${totalCount} total tanks!`);
+                
+                document.getElementById('status').innerHTML = `✅ Successfully loaded ${totalCount} tanks from Firebase!`;
+                document.getElementById('status').className = 'result';
+                document.getElementById('testArea').style.display = 'block';
+                
+            } catch (error) {
+                console.error('❌ Error loading tank data:', error);
+                document.getElementById('status').innerHTML = `❌ Error: ${error.message}`;
+                document.getElementById('status').className = 'error';
+            }
+        }
+
+        window.testTank = function() {
+            const tankId = document.getElementById('tankInput').value.trim();
+            const resultDiv = document.getElementById('tankResult');
+            
+            if (!tankId) {
+                resultDiv.innerHTML = '<div class="error">Please enter a tank number</div>';
+                return;
+            }
+            
+            if (tankSpecsData[tankId]) {
+                const tank = tankSpecsData[tankId];
+                resultDiv.innerHTML = `
+                    <div class="tank-info">
+                        <h3>✅ Tank ${tankId} Found!</h3>
+                        <p><strong>BPM:</strong> ${tank.comment || 'N/A'}</p>
+                        <p><strong>Min Level:</strong> ${tank.min || 'N/A'} m</p>
+                        <p><strong>Max Level:</strong> ${tank.max || 'N/A'} m</p>
+                        <p><strong>Description:</strong> ${tank.description || 'N/A'}</p>
+                    </div>
+                `;
+            } else {
+                resultDiv.innerHTML = `<div class="error">❌ Tank ${tankId} not found in database</div>`;
+            }
+        }
+
+        // Start loading when page loads
+        loadTankData();
+    </script>
+</body>
+</html>

@@ -415,173 +415,11 @@ async function fetchTankSpecifications() {
             }
         };
         
-        // Function to manually reload tanks from Firebase
-        window.reloadAllTanksFromFirebase = async function() {
-            console.log('🔄 MANUAL RELOAD: Fetching all tanks from Firebase...');
-            
-            try {
-                const departments = ['pbcr', 'plcr', 'washery'];
-                let newAllTanks = {};
-                let totalCount = 0;
-                
-                for (const dept of departments) {
-                    console.log(`🔍 Scanning ${dept.toUpperCase()} department...`);
-                    const tanksCollectionRef = collection(window.db, "tankData", dept, "tanks");
-                    const querySnapshot = await getDocs(tanksCollectionRef);
-                    
-                    const deptTankNumbers = [];
-                    querySnapshot.forEach((doc) => { 
-                        newAllTanks[doc.id] = doc.data();
-                        deptTankNumbers.push(doc.id);
-                        totalCount++;
-                    });
-                    
-                    console.log(`✅ ${dept.toUpperCase()}: ${deptTankNumbers.length} tanks`);
-                    if (deptTankNumbers.length > 0) {
-                        const sortedNums = deptTankNumbers.sort((a, b) => parseInt(a) - parseInt(b));
-                        console.log(`📋 ${dept.toUpperCase()} tanks:`, sortedNums.join(', '));
-                    }
-                }
-                
-                // Update global tankSpecsData
-                tankSpecsData = newAllTanks;
-                console.log(`🎉 RELOAD COMPLETE: ${totalCount} total tanks loaded`);
-                
-                // Check user requested tanks
-                const userTanks = ['460', '301', '834', '533', '532'];
-                console.log('🔍 Checking user requested tanks after reload:');
-                userTanks.forEach(tank => {
-                    if (tankSpecsData[tank]) {
-                        console.log(`✅ Tank ${tank}: FOUND`, tankSpecsData[tank]);
-                    } else {
-                        console.log(`❌ Tank ${tank}: NOT FOUND`);
-                    }
-                });
-                
-                alert(`🔄 Reload Complete!\n\nTotal tanks loaded: ${totalCount}\n\nCheck console for detailed tank numbers.\n\nTry searching for your tanks now!`);
-                
-            } catch (error) {
-                console.error('❌ Reload error:', error);
-                alert('❌ Reload failed: ' + error.message);
-            }
-        };
 
-        // Function to force reload all tanks from Firebase
-        window.forceReloadAllTanks = async function() {
-            console.log('🔄 FORCE RELOAD: Loading ALL tanks from Firebase...');
-            
-            try {
-                const departments = ['pbcr', 'plcr', 'washery'];
-                let newAllTanks = {};
-                let totalLoaded = 0;
-                
-                for (const dept of departments) {
-                    console.log(`🔄 Force loading ${dept.toUpperCase()}...`);
-                    
-                    const tanksRef = collection(window.db, 'tankData', dept, 'tanks');
-                    const snapshot = await getDocs(tanksRef);
-                    
-                    let deptCount = 0;
-                    snapshot.forEach((doc) => {
-                        const tankData = doc.data();
-                        newAllTanks[doc.id] = tankData;
-                        deptCount++;
-                        totalLoaded++;
-                        
-                        // Log user requested tanks
-                        const userTanks = ['460', '301', '834', '533', '532'];
-                        if (userTanks.includes(doc.id)) {
-                            console.log(`🎯 USER TANK FOUND: ${doc.id} in ${dept}:`, {
-                                BPM: tankData.comment || 'N/A',
-                                Min: tankData.min || 'N/A',
-                                Max: tankData.max || 'N/A'
-                            });
-                        }
-                    });
-                    
-                    console.log(`✅ Force loaded ${deptCount} tanks from ${dept.toUpperCase()}`);
-                }
-                
-                // Update global tankSpecsData
-                tankSpecsData = newAllTanks;
-                
-                console.log(`🎉 FORCE RELOAD COMPLETE: ${totalLoaded} total tanks loaded!`);
-                
-                // Check user tanks specifically
-                const userRequestedTanks = ['460', '301', '834', '533', '532'];
-                let foundCount = 0;
-                let missingTanks = [];
-                
-                userRequestedTanks.forEach(tankNum => {
-                    if (tankSpecsData[tankNum]) {
-                        foundCount++;
-                        console.log(`✅ Tank ${tankNum} is now available in PBCR`);
-                    } else {
-                        missingTanks.push(tankNum);
-                    }
-                });
-                
-                alert(`🔄 Force Reload Complete!\n\n📊 Total tanks: ${totalLoaded}\n🎯 Your tanks found: ${foundCount}/${userRequestedTanks.length}\n\n${foundCount > 0 ? '✅ Found: ' + userRequestedTanks.filter(t => tankSpecsData[t]).join(', ') : ''}\n${missingTanks.length > 0 ? '❌ Missing: ' + missingTanks.join(', ') : ''}\n\nTry your tanks again!`);
-                
-            } catch (error) {
-                console.error('❌ Force reload error:', error);
-                alert('❌ Force reload failed: ' + error.message);
-            }
-        };
 
-        // Direct function to add Tank 460 specifically
-        window.directAddTank460 = async function() {
-            console.log('⚡ DIRECT: Adding Tank 460 to Firebase...');
-            
-            try {
-                // Check if Tank 460 exists first
-                const tank460Ref = doc(window.db, 'tankData', 'pbcr', 'tanks', '460');
-                const existing460 = await getDoc(tank460Ref);
-                
-                if (existing460.exists()) {
-                    console.log('✅ Tank 460 already exists:', existing460.data());
-                    alert('✅ Tank 460 already exists in Firebase!\n\nBPM: ' + existing460.data().comment + '\nMin: ' + existing460.data().min + '\nMax: ' + existing460.data().max);
-                    return;
-                }
-                
-                // Add Tank 460 directly
-                const tank460Spec = {
-                    comment: 11500,  // BPM
-                    min: 1.5,
-                    max: 16.0,
-                    capacity: 184000,
-                    description: 'PBCR Tank 460',
-                    location: 'PBCR Area',
-                    status: 'active',
-                    lastModified: serverTimestamp(),
-                    addedBy: 'direct_addition_system'
-                };
-                
-                await setDoc(tank460Ref, tank460Spec);
-                console.log('✅ Tank 460 SUCCESSFULLY ADDED to Firebase!');
-                alert('✅ SUCCESS!\n\nTank 460 added to Firebase:\nBPM: 11500\nMin: 1.5m\nMax: 16.0m\n\nTry searching for Tank 460 now!');
-                
-                // Also add to local cache immediately
-                tankSpecsData['460'] = tank460Spec;
-                console.log('✅ Tank 460 added to local cache');
-                
-                // Verify addition
-                setTimeout(async () => {
-                    const verifyRef = doc(window.db, 'tankData', 'pbcr', 'tanks', '460');
-                    const verifyDoc = await getDoc(verifyRef);
-                    
-                    if (verifyDoc.exists()) {
-                        console.log('✅ VERIFICATION: Tank 460 confirmed in Firebase:', verifyDoc.data());
-                    } else {
-                        console.error('❌ VERIFICATION FAILED: Tank 460 not found after addition!');
-                    }
-                }, 2000);
-                
-            } catch (error) {
-                console.error('❌ DIRECT ADD ERROR:', error);
-                alert('❌ Error adding Tank 460:\n' + error.message + '\n\nCheck console for details.');
-            }
-        };
+
+
+
         
         // Add function to add missing tanks directly to Firebase tankData/pbcr
         window.addMissingPBCRTanks = async function() {
@@ -669,6 +507,7 @@ async function fetchTankSpecifications() {
                         // Special logging for Tank 460
                         if (tank.id === '460') {
                             console.log('🎯 Tank 460 successfully added to Firebase tankData/pbcr!');
+                        }
                     }
                 }
                 
@@ -771,6 +610,173 @@ async function fetchTankSpecifications() {
     }
 }
 
+// Direct function to add Tank 460 specifically
+window.directAddTank460 = async function() {
+    console.log('⚡ DIRECT: Adding Tank 460 to Firebase...');
+    
+    try {
+        // Check if Tank 460 exists first
+        const tank460Ref = doc(window.db, 'tankData', 'pbcr', 'tanks', '460');
+        const existing460 = await getDoc(tank460Ref);
+        
+        if (existing460.exists()) {
+            console.log('✅ Tank 460 already exists:', existing460.data());
+            alert('✅ Tank 460 already exists in Firebase!\n\nBPM: ' + existing460.data().comment + '\nMin: ' + existing460.data().min + '\nMax: ' + existing460.data().max);
+            return;
+        }
+        
+        // Add Tank 460 directly
+        const tank460Spec = {
+            comment: 11500,  // BPM
+            min: 1.5,
+            max: 16.0,
+            capacity: 184000,
+            description: 'PBCR Tank 460',
+            location: 'PBCR Area',
+            status: 'active',
+            lastModified: serverTimestamp(),
+            addedBy: 'direct_addition_system'
+        };
+        
+        await setDoc(tank460Ref, tank460Spec);
+        console.log('✅ Tank 460 SUCCESSFULLY ADDED to Firebase!');
+        alert('✅ SUCCESS!\n\nTank 460 added to Firebase:\nBPM: 11500\nMin: 1.5m\nMax: 16.0m\n\nTry searching for Tank 460 now!');
+        
+        // Also add to local cache immediately
+        tankSpecsData['460'] = tank460Spec;
+        console.log('✅ Tank 460 added to local cache');
+        
+        // Verify addition
+        setTimeout(async () => {
+            const verifyRef = doc(window.db, 'tankData', 'pbcr', 'tanks', '460');
+            const verifyDoc = await getDoc(verifyRef);
+            
+            if (verifyDoc.exists()) {
+                console.log('✅ VERIFICATION: Tank 460 confirmed in Firebase:', verifyDoc.data());
+            } else {
+                console.error('❌ VERIFICATION FAILED: Tank 460 not found after addition!');
+            }
+        }, 2000);
+        
+    } catch (error) {
+        console.error('❌ DIRECT ADD ERROR:', error);
+        alert('❌ Error adding Tank 460:\n' + error.message + '\n\nCheck console for details.');
+    }
+};
+
+// Function to manually reload tanks from Firebase
+window.reloadAllTanksFromFirebase = async function() {
+    console.log('🔄 MANUAL RELOAD: Fetching all tanks from Firebase...');
+    
+    try {
+        const departments = ['pbcr', 'plcr', 'washery'];
+        let newAllTanks = {};
+        let totalCount = 0;
+        
+        for (const dept of departments) {
+            console.log(`🔍 Scanning ${dept.toUpperCase()} department...`);
+            const tanksCollectionRef = collection(window.db, "tankData", dept, "tanks");
+            const querySnapshot = await getDocs(tanksCollectionRef);
+            
+            const deptTankNumbers = [];
+            querySnapshot.forEach((doc) => { 
+                newAllTanks[doc.id] = doc.data();
+                deptTankNumbers.push(doc.id);
+                totalCount++;
+            });
+            
+            console.log(`✅ ${dept.toUpperCase()}: ${deptTankNumbers.length} tanks`);
+            if (deptTankNumbers.length > 0) {
+                const sortedNums = deptTankNumbers.sort((a, b) => parseInt(a) - parseInt(b));
+                console.log(`📋 ${dept.toUpperCase()} tanks:`, sortedNums.join(', '));
+            }
+        }
+        
+        // Update global tankSpecsData
+        tankSpecsData = newAllTanks;
+        console.log(`🎉 RELOAD COMPLETE: ${totalCount} total tanks loaded`);
+        
+        // Check user requested tanks
+        const userTanks = ['460', '301', '834', '533', '532'];
+        console.log('🔍 Checking user requested tanks after reload:');
+        userTanks.forEach(tank => {
+            if (tankSpecsData[tank]) {
+                console.log(`✅ Tank ${tank}: FOUND`, tankSpecsData[tank]);
+            } else {
+                console.log(`❌ Tank ${tank}: NOT FOUND`);
+            }
+        });
+        
+        alert(`🔄 Reload Complete!\n\nTotal tanks loaded: ${totalCount}\n\nCheck console for detailed tank numbers.\n\nTry searching for your tanks now!`);
+        
+    } catch (error) {
+        console.error('❌ Reload error:', error);
+        alert('❌ Reload failed: ' + error.message);
+    }
+};
+
+// Function to force reload all tanks from Firebase
+window.forceReloadAllTanks = async function() {
+    console.log('🔄 FORCE RELOAD: Loading ALL tanks from Firebase...');
+    
+    try {
+        const departments = ['pbcr', 'plcr', 'washery'];
+        let newAllTanks = {};
+        let totalLoaded = 0;
+        
+        for (const dept of departments) {
+            console.log(`🔄 Force loading ${dept.toUpperCase()}...`);
+            
+            const tanksRef = collection(window.db, 'tankData', dept, 'tanks');
+            const snapshot = await getDocs(tanksRef);
+            
+            let deptCount = 0;
+            snapshot.forEach((doc) => {
+                const tankData = doc.data();
+                newAllTanks[doc.id] = tankData;
+                deptCount++;
+                totalLoaded++;
+                
+                // Log user requested tanks
+                const userTanks = ['460', '301', '834', '533', '532'];
+                if (userTanks.includes(doc.id)) {
+                    console.log(`🎯 USER TANK FOUND: ${doc.id} in ${dept}:`, {
+                        BPM: tankData.comment || 'N/A',
+                        Min: tankData.min || 'N/A',
+                        Max: tankData.max || 'N/A'
+                    });
+                }
+            });
+            
+            console.log(`✅ Force loaded ${deptCount} tanks from ${dept.toUpperCase()}`);
+        }
+        
+        // Update global tankSpecsData
+        tankSpecsData = newAllTanks;
+        
+        console.log(`🎉 FORCE RELOAD COMPLETE: ${totalLoaded} total tanks loaded!`);
+        
+        // Check user tanks specifically
+        const userRequestedTanks = ['460', '301', '834', '533', '532'];
+        let foundCount = 0;
+        let missingTanks = [];
+        
+        userRequestedTanks.forEach(tankNum => {
+            if (tankSpecsData[tankNum]) {
+                foundCount++;
+                console.log(`✅ Tank ${tankNum} is now available in PBCR`);
+            } else {
+                missingTanks.push(tankNum);
+            }
+        });
+        
+        alert(`🔄 Force Reload Complete!\n\n📊 Total tanks: ${totalLoaded}\n🎯 Your tanks found: ${foundCount}/${userRequestedTanks.length}\n\n${foundCount > 0 ? '✅ Found: ' + userRequestedTanks.filter(t => tankSpecsData[t]).join(', ') : ''}\n${missingTanks.length > 0 ? '❌ Missing: ' + missingTanks.join(', ') : ''}\n\nTry your tanks again!`);
+        
+    } catch (error) {
+        console.error('❌ Force reload error:', error);
+        alert('❌ Force reload failed: ' + error.message);
+    }
+};
 
 window.loadTank = () => {
   const id = document.getElementById("tankInput").value.trim();
