@@ -140,6 +140,7 @@
         <a href="plcr.html" class="nav-btn">⚗️ PLCR</a>
         <a href="NMOGASBL.html" class="nav-btn">🔧 NMOGAS</a>
         <a href="live-tanks.html" class="nav-btn">🔴 Live Tanks</a>
+        <a href="tank-management.html" class="nav-btn" id="tank-management-link" style="display:none">🛢️ Tank Management</a>
         <a href="user-management.html" class="nav-btn" id="user-management-link" style="display:none">👥 User Management</a>
       </div>
       <div class="user-section">
@@ -526,6 +527,10 @@
           document.getElementById('userEmail').textContent = currentUser.email || `${currentUser.username}@knpc.com`;
           const firstLetter = (currentUser.fullName || currentUser.username).charAt(0).toUpperCase();
           document.getElementById('userAvatar').textContent = firstLetter;
+          
+          // Show admin links
+          document.getElementById('tank-management-link').style.display = 'inline-block';
+          document.getElementById('user-management-link').style.display = 'inline-block';
           
           return true;
         } else {
