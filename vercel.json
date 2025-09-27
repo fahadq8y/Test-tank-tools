@@ -1,27 +1,10 @@
 {
-  "version": 2,
-  "name": "tank-tools-knpc-updated", 
-  "builds": [
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "rewrites": [
     {
-      "src": "*.html",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "*.js", 
-      "use": "@vercel/static"
-    },
-    {
-      "src": "*.css",
-      "use": "@vercel/static"
+      "source": "/",
+      "destination": "/index.html"
     }
-  ],
-  "routes": [
-    {
-      "src": "/",
-      "dest": "/index.html"
-    }
-  ],
-  "env": {
-    "BUILD_TIMESTAMP": "2025-09-27T13:11:53Z"
-  }
+  ]
 }
