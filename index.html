@@ -293,19 +293,7 @@ async function fetchTankSpecifications() {
         console.log(`🎯 Successfully loaded ${Object.keys(allTanks).length} total tanks from Firebase!`);
         console.log('📋 Sample tank data:', Object.keys(allTanks).slice(0, 3).map(id => ({ id, data: allTanks[id] })));
         
-        // Log specific tank numbers for debugging
-        console.log('🔍 Checking specific tanks:');
-        const testTanks = ['522', '668', '226'];
-        testTanks.forEach(tankNum => {
-            if (allTanks[tankNum]) {
-                console.log(`✅ Tank ${tankNum}: Found - BPM=${allTanks[tankNum].comment}, Min=${allTanks[tankNum].min}, Max=${allTanks[tankNum].max}`);
-            } else {
-                console.log(`❌ Tank ${tankNum}: NOT FOUND in Firebase`);
-            }
-        });
-        
-        // Show first 10 tank numbers for reference
-        console.log('📊 First 10 tank numbers in database:', Object.keys(allTanks).slice(0, 10));
+        // Debug info removed - tanks load silently now
         document.getElementById('loadingOverlay').style.display = 'none';
         document.getElementById('mainContent').style.display = 'block';
     } catch (error) {
@@ -340,15 +328,17 @@ window.loadTank = () => {
     m = tankData.min;
     x = tankData.max;
     
-    // Debug logging for tank data
-    console.log(`🔍 Loading Tank ${id}:`, {
-      BPM: c,
-      Min: m,
-      Max: x,
-      hasValidData: !!(c && m !== undefined && x !== undefined)
-    });
+    // Debug logging for tank data (only for problematic tanks)
+    if (!c || m === undefined || x === undefined) {
+      console.log(`🔍 Loading Tank ${id}:`, {
+        BPM: c,
+        Min: m,
+        Max: x,
+        hasValidData: false
+      });
+    }
     
-    // Check if tank has valid data
+    // Check if tank has valid data (silent check, only alert if data is missing)
     if (!c || m === undefined || x === undefined) {
       console.warn(`⚠️ Tank ${id} has incomplete data - BPM: ${c}, Min: ${m}, Max: ${x}`);
       alert(`❌ Tank ${id} data is incomplete in the database.\n\nMissing: ${!c ? 'BPM value' : ''} ${m === undefined ? 'Min Level' : ''} ${x === undefined ? 'Max Level' : ''}\n\nPlease contact admin to update tank specifications.`);
