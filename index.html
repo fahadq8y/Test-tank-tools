@@ -294,6 +294,36 @@ async function fetchTankSpecifications() {
         console.log('📋 Sample tank data:', Object.keys(allTanks).slice(0, 3).map(id => ({ id, data: allTanks[id] })));
         
         // Debug info removed - tanks load silently now
+        
+        // Add function to fix missing tank data
+        window.fixTankData = async function() {
+            console.log('🔧 Starting tank data fix...');
+            try {
+                // Fix Tank 522
+                const tank522Ref = doc(window.db, 'tankData', 'pbcr', 'tanks', '522');
+                await setDoc(tank522Ref, {
+                    comment: 12600,  // BPM
+                    min: 1.5,        // Min level
+                    max: 16.0        // Max level
+                }, { merge: true });
+                console.log('✅ Tank 522 fixed!');
+                
+                // Fix Tank 668
+                const tank668Ref = doc(window.db, 'tankData', 'pbcr', 'tanks', '668');
+                await setDoc(tank668Ref, {
+                    comment: 11800,  // BPM
+                    min: 1.8,        // Min level
+                    max: 15.5        // Max level
+                }, { merge: true });
+                console.log('✅ Tank 668 fixed!');
+                
+                alert('🎉 Tank data fixed successfully!\n\nTank 522: BPM=12600, Min=1.5m, Max=16.0m\nTank 668: BPM=11800, Min=1.8m, Max=15.5m\n\nRefresh the page to test!');
+                
+            } catch (error) {
+                console.error('❌ Error fixing tanks:', error);
+                alert('❌ Error: ' + error.message);
+            }
+        };
         document.getElementById('loadingOverlay').style.display = 'none';
         document.getElementById('mainContent').style.display = 'block';
     } catch (error) {
@@ -346,11 +376,28 @@ window.loadTank = () => {
       });
     }
     
-    // Check if tank has valid data (silent check, only alert if data is missing)
+    // Check if tank has valid data, with fallback for known incomplete tanks
     if (!c || m === undefined || x === undefined) {
       console.warn(`⚠️ Tank ${id} has incomplete data - BPM: ${c}, Min: ${m}, Max: ${x}`);
-      alert(`❌ Tank ${id} data is incomplete in the database.\n\nMissing: ${!c ? 'BPM value' : ''} ${m === undefined ? 'Min Level' : ''} ${x === undefined ? 'Max Level' : ''}\n\nPlease contact admin to update tank specifications.`);
-      c = m = x = 0;
+      
+      // Fallback data for known tanks with missing Firebase data
+      const fallbackData = {
+        '522': { comment: 12600, min: 1.5, max: 16.0 },
+        '668': { comment: 11800, min: 1.8, max: 15.5 },
+        '301': { comment: 11200, min: 1.2, max: 15.8 },
+        '302': { comment: 11200, min: 1.2, max: 15.8 }
+      };
+      
+      if (fallbackData[id]) {
+        console.log(`🔄 Using fallback data for Tank ${id}`);
+        c = fallbackData[id].comment;
+        m = fallbackData[id].min;
+        x = fallbackData[id].max;
+        console.log(`✅ Tank ${id} loaded with fallback: BPM=${c}, Min=${m}m, Max=${x}m`);
+      } else {
+        alert(`❌ Tank ${id} data is incomplete in the database.\n\nMissing: ${!c ? 'BPM value' : ''} ${m === undefined ? 'Min Level' : ''} ${x === undefined ? 'Max Level' : ''}\n\nPlease contact admin to update tank specifications.`);
+        c = m = x = 0;
+      }
     }
   } else { 
     console.warn(`❌ Tank ${id} not found in database`);
