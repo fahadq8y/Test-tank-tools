@@ -303,14 +303,7 @@ const products={
   "PLCR":["NAPHA","PCNA","HSD-EGO","EGO","F.OIL","MOGAS","VGO","KKERO","ARDR","METHANOL","OTHER"]
 };
 
-// Fallback tank data for offline use
-const fallbackTankData = {
-    "460": { "volume": "34000", "product": "LSFO", "minLevel": "500", "maxLevel": "33500" },
-    "461": { "volume": "34000", "product": "EGO 10PPM", "minLevel": "500", "maxLevel": "33500" },
-    "462": { "volume": "34000", "product": "EGO 500PPM", "minLevel": "500", "maxLevel": "33500" },
-    "463": { "volume": "34000", "product": "RHN", "minLevel": "500", "maxLevel": "33500" },
-    "464": { "volume": "34000", "product": "PCNA", "minLevel": "500", "maxLevel": "33500" }
-};
+// PURE FIREBASE MODE: No fallback data, everything from Firebase only
 
 async function fetchTankSpecifications() {
     const departments = ['pbcr', 'plcr', 'washery'];
@@ -320,10 +313,8 @@ async function fetchTankSpecifications() {
     
     // Check if Firebase is ready
     if (!window.db || !window.collection || !window.getDocs) {
-        console.error('❌ Firebase not initialized yet - using fallback data');
-        console.log('📦 Using offline fallback tank data');
-        tankSpecsData = fallbackTankData;
-        return fallbackTankData;
+        console.error('❌ Firebase not initialized yet');
+        throw new Error('Firebase connection required - no offline mode available');
     }
     try {
         for (const dept of departments) {
@@ -663,56 +654,32 @@ async function fetchTankSpecifications() {
         }, 500);
     } catch (error) {
         console.error("❌ Critical error fetching tank specifications:", error);
-        console.log("🚨 Firebase connection failed, using emergency fallback data");
+        console.log("🚨 Firebase connection failed - no fallback mode");
         
-        // Emergency fallback - use basic tank data to keep system working
-        tankSpecsData = fallbackTankData;
-        console.log("✅ Emergency fallback data loaded:", Object.keys(tankSpecsData));
+        // PURE FIREBASE MODE: No fallback, Firebase is required
         
         const loadingOverlay = document.getElementById('loadingOverlay');
         if (loadingOverlay) {
             loadingOverlay.innerHTML = `
                 <div style="color: orange; text-align: center; padding: 20px;">
-                    <h3>⚠️ Firebase Connection Issue</h3>
-                    <p>Using basic tank data for now. Some features may be limited.</p>
+                    <h3>❌ Firebase Connection Required</h3>
+                    <p>All tank data must come from Firebase database.</p>
                     <p style="font-size: 14px; margin-top: 10px;">Error: ${error.message}</p>
                     <button onclick="location.reload()" style="
-                        background: linear-gradient(45deg, #ff7043, #f4511e);
-                        color: white; border: none; padding: 12px 24px;
-                        border-radius: 8px; cursor: pointer; margin-top: 15px;
-                        font-size: 16px; font-weight: bold;
-                    ">🔄 Try Firebase Again</button>
-                    <button onclick="continueWithBasicData()" style="
                         background: linear-gradient(45deg, #4CAF50, #45a049);
                         color: white; border: none; padding: 12px 24px;
                         border-radius: 8px; cursor: pointer; margin-top: 15px;
-                        font-size: 16px; font-weight: bold; margin-left: 10px;
-                    ">✅ Continue with Basic Data</button>
+                        font-size: 16px; font-weight: bold;
+                    ">🔄 Retry Firebase Connection</button>
                     <br><br>
-                    <small style="opacity: 0.8;">Basic tanks: ${Object.keys(fallbackTankData).join(', ')}</small>
+                    <small style="opacity: 0.8;">Pure Firebase Mode: No offline fallback available</small>
                 </div>
             `;
         }
     }
 }
 
-// Function to continue with basic data when Firebase fails
-window.continueWithBasicData = function() {
-    console.log("🚀 User chose to continue with basic tank data");
-    
-    // Hide loading overlay and show main content
-    const loadingOverlay = document.getElementById('loadingOverlay');
-    const mainContent = document.getElementById('mainContent');
-    
-    if (loadingOverlay) loadingOverlay.style.display = 'none';
-    if (mainContent) mainContent.style.display = 'block';
-    
-    // Show notification about limited functionality
-    setTimeout(() => {
-        alert("⚠️ نظام عمل في وضع محدود\n\nالخزانات المتاحة: " + Object.keys(fallbackTankData).join(', ') + 
-              "\n\n🔧 لاستخدام جميع الخزانات، يرجى إصلاح اتصال Firebase");
-    }, 1000);
-};
+// PURE FIREBASE MODE: No offline mode functions needed
 
 // Direct function to add Tank 460 specifically
 window.directAddTank460 = async function() {
@@ -967,66 +934,30 @@ window.loadTank = () => {
   if (tankSpecsData[id]) {
     const tankData = tankSpecsData[id];
     console.log(`🔍 Found Tank ${id} in tankSpecsData:`, tankData);
-    // EMERGENCY FIX: Hard-code Tank values from Firebase inspection
-    if (id === '460') {
-      // Based on Firebase data: capacity=9572, min=2, max=17.65, comment=14213
-      c = 9572;   // Use capacity as BPM (more realistic than comment=14213)
-      m = 2;      // Min value from Firebase
-      x = 17.65;  // Max value from Firebase
-      console.log('🚨 Tank 460 EMERGENCY FIX applied - BPM: 9572, Min: 2, Max: 17.65');
-    } else if (id === '521') {
-      c = 12100;  // BPM value for Tank 521
-      m = 1.4;    // Min value for Tank 521
-      x = 15.8;   // Max value for Tank 521
-      console.log('🚨 Tank 521 EMERGENCY FIX applied - BPM: 12100, Min: 1.4, Max: 15.8');
-    } else if (id === '522') {
-      c = 11990;  // BPM value confirmed from Firebase
-      m = 1.61;   // Min value confirmed from Firebase  
-      x = 15.6;   // Max value confirmed from Firebase
-      console.log('🚨 Tank 522 EMERGENCY FIX applied - BPM: 11990, Min: 1.61, Max: 15.6');
-    } else if (id === '833') {
-      // Based on Firebase data: capacity=9572, min=2, max=17.89
-      c = 9572;   // Use capacity as BPM
-      m = 2;      // Min value from Firebase
-      x = 17.89;  // Max value from Firebase  
-      console.log('🚨 Tank 833 EMERGENCY FIX applied - BPM: 9572, Min: 2, Max: 17.89');
-    } else if (id === '834') {
-      // Based on Firebase structure (similar to other 830s series)
-      c = 9572;   // Standard capacity for 830s series
-      m = 2;      // Standard min level
-      x = 17.5;   // Standard max level
-      console.log('🚨 Tank 834 EMERGENCY FIX applied - BPM: 9572, Min: 2, Max: 17.5');
-    } else {
-      // Handle different possible field names in Firebase - IMPROVED FIX
-      // Try multiple sources for BPM value with validation
-      let bpmValue = tankData.BPM || tankData.bpm || tankData.comment || tankData.Comment;
+    // PURE FIREBASE MODE: Read all data from Firebase only
+    {
+      // PURE FIREBASE MODE: Extract data from Firebase fields only
+      console.log(`🔍 Tank ${id} Firebase data:`, tankData);
       
-      // Validate BPM - should be reasonable value (1000-50000)
-      if (bpmValue && (bpmValue < 1000 || bpmValue > 50000)) {
-        console.warn(`⚠️ Suspicious BPM value ${bpmValue} for tank ${id}, trying capacity-based calculation`);
-        // Try to derive BPM from capacity (rough approximation)
-        const capacity = tankData.capacity || tankData.volume || 10000;
-        bpmValue = Math.round(capacity * 0.8); // Approximate BPM based on capacity
+      // Try multiple field names for BPM (Barrel Per Meter) 
+      let bpmValue = tankData.BPM || tankData.bpm || tankData.comment || tankData.Comment || tankData.capacity;
+      
+      // Get min and max levels
+      let minValue = tankData.min || tankData.Min || tankData.minimum;
+      let maxValue = tankData.max || tankData.Max || tankData.maximum;
+      
+      // If BPM not found in expected fields, try capacity as BPM (common in your Firebase)
+      if (!bpmValue && tankData.capacity) {
+        bpmValue = tankData.capacity;
+        console.log(`🔧 Using capacity (${bpmValue}) as BPM for tank ${id}`);
       }
       
-      // Default BPM values for common tanks if still not found
-      if (!bpmValue || bpmValue < 1000) {
-        const defaultBPMs = {
-          '460': 11500, '461': 11500, '462': 11500, '463': 11500, '464': 11500,
-          '521': 12100, '522': 11990, 
-          '301': 8000, '302': 8000, '303': 8000,
-          '401': 15000, '402': 15000,
-          '501': 16000, '502': 16000,
-          '833': 9572, '834': 9572, '835': 9572, // Based on Firebase capacity values
-          '830': 9572, '831': 9572, '832': 9572
-        };
-        bpmValue = defaultBPMs[id] || 10000; // Default fallback
-        console.log(`🔧 Using default BPM ${bpmValue} for tank ${id}`);
-      }
+      // Log what we found
+      console.log(`📊 Tank ${id} extracted - BPM: ${bpmValue}, Min: ${minValue}, Max: ${maxValue}`);
       
       c = bpmValue;
-      m = tankData.min || tankData.Min || tankData.minimum || 1.5;
-      x = tankData.max || tankData.Max || tankData.maximum || 16.0;
+      m = minValue;
+      x = maxValue;
     }
     
     // Debug logging to see actual Firebase data structure
@@ -1038,37 +969,26 @@ window.loadTank = () => {
       allFields: Object.keys(tankData)
     });
     
-    // Check if tank has valid data with improved validation
-    const hasBPM = c && c >= 1000 && c <= 50000;  // More realistic BPM range
-    const hasMin = m !== undefined && m !== null && m >= 0;  
-    const hasMax = x !== undefined && x !== null && x > m;   // Max must be > Min
+    // PURE FIREBASE MODE: Validate only what's in Firebase
+    console.log(`🔍 Tank ${id} final values - BPM: ${c}, Min: ${m}, Max: ${x}`);
     
-    if (!hasBPM || !hasMin || !hasMax) {
-      console.warn(`⚠️ Tank ${id} validation failed - BPM: ${c} (valid: ${hasBPM}), Min: ${m} (valid: ${hasMin}), Max: ${x} (valid: ${hasMax})`);
-      
-      // Try to fix common issues automatically
-      if (!hasBPM && hasMin && hasMax) {
-        c = 10000; // Use reasonable default BPM
-        console.log(`🔧 Auto-fixed BPM for tank ${id}: using default ${c}`);
-      }
-      
-      if (!hasMin || !hasMax) {
-        m = m || 1.5;
-        x = x || (m + 15); // Default range if missing
-        console.log(`🔧 Auto-fixed levels for tank ${id}: Min=${m}, Max=${x}`);
-      }
-      
-      // Final validation
-      const finalValid = c >= 1000 && m >= 0 && x > m;
-      if (!finalValid) {
-        alert(`❌ Tank ${id} data cannot be auto-fixed.\n\nCurrent values: BPM=${c}, Min=${m}, Max=${x}\n\nUse Tank Management page to correct this tank's specifications.`);
-        c = m = x = 0;
-      } else {
-        console.log(`✅ Tank ${id} auto-corrected and ready - BPM: ${c}, Min: ${m}m, Max: ${x}m`);
-      }
-    } else {
-      console.log(`✅ Tank ${id} loaded successfully - BPM: ${c}, Min: ${m}m, Max: ${x}m`);
+    // Basic validation - must have all three values
+    if (!c || !m || !x) {
+      console.warn(`❌ Tank ${id} missing required data in Firebase - BPM: ${c}, Min: ${m}, Max: ${x}`);
+      alert(`❌ Tank ${id} incomplete data in Firebase.\n\nMissing: ${!c ? 'BPM/Capacity ' : ''}${!m ? 'Min Level ' : ''}${!x ? 'Max Level' : ''}\n\nPlease add complete data to Firebase using Tank Management page.`);
+      c = m = x = 0;
+      return;
     }
+    
+    // Logical validation - values must make sense
+    if (m >= x) {
+      console.warn(`❌ Tank ${id} invalid data - Min (${m}) >= Max (${x})`);
+      alert(`❌ Tank ${id} invalid data in Firebase.\n\nMin Level (${m}) must be less than Max Level (${x})\n\nPlease correct data in Firebase using Tank Management page.`);
+      c = m = x = 0;
+      return;
+    }
+    
+    console.log(`✅ Tank ${id} ready from Firebase - BPM: ${c}, Min: ${m}m, Max: ${x}m`);
   } else { 
     console.warn(`❌ Tank ${id} not found in tankData database`);
     
