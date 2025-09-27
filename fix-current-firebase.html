@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>إصلاح Firebase الحالي - تشخيص مباشر</title>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial; margin: 20px; background: #1a1a1a; color: white; }
+        .result { margin: 10px 0; padding: 15px; border-radius: 8px; }
+        .success { background: #2d5a2d; border: 1px solid #4CAF50; }
+        .error { background: #5a2d2d; border: 1px solid #f44336; }
+        .info { background: #2d4a5a; border: 1px solid #2196F3; }
+        .warning { background: #5a4a2d; border: 1px solid #ff9800; }
+        button { 
+            background: #4CAF50; color: white; border: none; 
+            padding: 12px 20px; margin: 10px 5px; 
+            cursor: pointer; border-radius: 5px; font-size: 14px;
+        }
+        .retry-btn { background: #ff7043; }
+        .fix-btn { background: #2196F3; }
+        .test-btn { background: #9C27B0; }
+        .code { background: #333; padding: 10px; border-radius: 3px; font-family: monospace; overflow: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔧 إصلاح Firebase Project الحالي - KNPC Tank Tools</h1>
+    
+    <div class="info">
+        <h3>📋 Project Info:</h3>
+        <div class="code">
+            Project ID: tank-tools<br>
+            Auth Domain: tank-tools.firebaseapp.com<br>
+            Database: Firestore
+        </div>
+    </div>
+
+    <div class="result info">
+        <h3>🔍 التشخيص المطلوب:</h3>
+        <p>سنقوم بفحص وإصلاح النقاط التالية:</p>
+        <ul>
+            <li>✅ فحص الاتصال بـ Firebase</li>
+            <li>✅ فحص Firebase Rules</li>
+            <li>✅ فحص وجود Collections</li>
+            <li>✅ إضافة بيانات الخزانات إذا كانت مفقودة</li>
+            <li>✅ اختبار القراءة والكتابة</li>
+        </ul>
+    </div>
+    
+    <button onclick="startFullDiagnostic()" class="test-btn">🚀 بدء التشخيص الكامل</button>
+    <button onclick="fixFirebaseRules()" class="fix-btn">🛡️ إصلاح Firebase Rules</button>
+    <button onclick="addMissingTanks()" class="fix-btn">⛽ إضافة الخزانات المفقودة</button>
+    <button onclick="testConnection()" class="retry-btn">🔄 اختبار الاتصال</button>
+    
+    <div id="results"></div>
+    
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js';
+        import { 
+            getFirestore, doc, setDoc, getDoc, collection, 
+            addDoc, getDocs, writeBatch, serverTimestamp 
+        } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js';
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyDGpAHia_wEmrhnmYjrPf1n1TrAzwEMiAI",
+            authDomain: "tank-tools.firebaseapp.com", 
+            projectId: "tank-tools",
+            storageBucket: "tank-tools.appspot.com",
+            messagingSenderId: "278680662267",
+            appId: "1:278680662267:web:d4185d8b6fb96c4df8c2dc"
+        };
+        
+        let app, db;
+        const resultsDiv = document.getElementById('results');
+        
+        // Initialize Firebase
+        try {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            console.log('✅ Firebase initialized successfully');
+        } catch (error) {
+            console.error('❌ Firebase initialization failed:', error);
+        }
+        
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong> - ${message}`;
+            resultsDiv.appendChild(div);
+            console.log(`[${type.toUpperCase()}] ${message}`);
+            
+            // Auto-scroll to bottom
+            resultsDiv.scrollTop = resultsDiv.scrollHeight;
+        }
+        
+        // Essential tank data to add if missing
+        const essentialTanks = {
+            "460": { "volume": "34000", "product": "LSFO", "minLevel": "500", "maxLevel": "33500", "department": "pbcr" },
+            "461": { "volume": "34000", "product": "EGO 10PPM", "minLevel": "500", "maxLevel": "33500", "department": "pbcr" },
+            "462": { "volume": "34000", "product": "EGO 500PPM", "minLevel": "500", "maxLevel": "33500", "department": "pbcr" },
+            "463": { "volume": "34000", "product": "RHN", "minLevel": "500", "maxLevel": "33500", "department": "pbcr" },
+            "464": { "volume": "34000", "product": "PCNA", "minLevel": "500", "maxLevel": "33500", "department": "pbcr" },
+            "465": { "volume": "34000", "product": "NMOGAS", "minLevel": "500", "maxLevel": "33500", "department": "pbcr" },
+            "521": { "volume": "12100", "product": "LSFO", "minLevel": "1400", "maxLevel": "15800", "department": "pbcr" },
+            "522": { "volume": "12600", "product": "EGO 10PPM", "minLevel": "1500", "maxLevel": "16000", "department": "pbcr" }
+        };
+        
+        window.startFullDiagnostic = async function() {
+            resultsDiv.innerHTML = '';
+            addResult('🚀 بدء التشخيص الكامل لـ Firebase...', 'info');
+            
+            // Step 1: Test basic connection
+            await testConnection();
+            
+            // Step 2: Check collections structure
+            await checkCollections();
+            
+            // Step 3: Check specific tanks
+            await checkExistingTanks();
+            
+            // Step 4: Add missing tanks if needed
+            await addMissingTanks();
+            
+            addResult('🎉 التشخيص اكتمل! تحقق من النتائج أعلاه', 'success');
+        };
+        
+        window.testConnection = async function() {
+            try {
+                addResult('🔌 اختبار الاتصال الأساسي...', 'info');
+                
+                // Test 1: Basic write/read
+                const testRef = doc(db, 'connection-test', 'status');
+                await setDoc(testRef, {
+                    timestamp: new Date().toISOString(),
+                    status: 'connected',
+                    test: true
+                });
+                
+                addResult('✅ الكتابة نجحت - Firebase Rules تعمل صحيح!', 'success');
+                
+                // Test 2: Read it back
+                const testDoc = await getDoc(testRef);
+                if (testDoc.exists()) {
+                    addResult('✅ القراءة نجحت - الاتصال يعمل بشكل مثالي!', 'success');
+                    return true;
+                } else {
+                    addResult('⚠️ الكتابة نجحت لكن القراءة فشلت', 'warning');
+                    return false;
+                }
+                
+            } catch (error) {
+                addResult(`❌ خطأ في الاتصال: ${error.message}`, 'error');
+                
+                if (error.code === 'permission-denied') {
+                    addResult('🛡️ مشكلة في Firebase Rules - تحتاج إصلاح!', 'error');
+                } else if (error.code === 'unavailable') {
+                    addResult('🌐 مشكلة في الشبكة أو Firebase غير متاح', 'error');
+                } else {
+                    addResult(`🔍 رمز الخطأ: ${error.code}`, 'info');
+                }
+                return false;
+            }
+        };
+        
+        window.checkCollections = async function() {
+            addResult('📁 فحص هيكل Collections...', 'info');
+            
+            const pathsToCheck = [
+                { path: ['tankData'], name: 'tankData (root)' },
+                { path: ['tankData', 'pbcr'], name: 'tankData/pbcr' },
+                { path: ['tankData', 'pbcr', 'tanks'], name: 'tankData/pbcr/tanks' },
+                { path: ['pbcr'], name: 'pbcr (direct)' }
+            ];
+            
+            for (const pathInfo of pathsToCheck) {
+                try {
+                    const colRef = collection(db, ...pathInfo.path);
+                    const snapshot = await getDocs(colRef);
+                    
+                    if (snapshot.empty) {
+                        addResult(`📂 ${pathInfo.name}: موجود لكن فارغ`, 'warning');
+                    } else {
+                        addResult(`📂 ${pathInfo.name}: يحتوي على ${snapshot.size} documents`, 'success');
+                        
+                        // Show first few document IDs
+                        const docIds = [];
+                        snapshot.forEach(doc => docIds.push(doc.id));
+                        if (docIds.length > 0) {
+                            addResult(`   📄 المستندات: ${docIds.slice(0, 5).join(', ')}${docIds.length > 5 ? '...' : ''}`, 'info');
+                        }
+                    }
+                } catch (error) {
+                    addResult(`❌ ${pathInfo.name}: ${error.message}`, 'error');
+                }
+            }
+        };
+        
+        window.checkExistingTanks = async function() {
+            addResult('⛽ فحص الخزانات الموجودة...', 'info');
+            
+            for (const tankId of Object.keys(essentialTanks)) {
+                try {
+                    // Check main path
+                    const tankRef = doc(db, 'tankData', 'pbcr', 'tanks', tankId);
+                    const tankDoc = await getDoc(tankRef);
+                    
+                    if (tankDoc.exists()) {
+                        const data = tankDoc.data();
+                        addResult(`✅ خزان ${tankId}: موجود - ${data.product || 'N/A'} (${data.volume || 'N/A'}m³)`, 'success');
+                    } else {
+                        addResult(`❌ خزان ${tankId}: غير موجود`, 'warning');
+                    }
+                } catch (error) {
+                    addResult(`❌ خطأ في فحص خزان ${tankId}: ${error.message}`, 'error');
+                }
+            }
+        };
+        
+        window.addMissingTanks = async function() {
+            addResult('⛽ إضافة الخزانات المفقودة...', 'info');
+            
+            try {
+                const batch = writeBatch(db);
+                let addedCount = 0;
+                
+                for (const [tankId, tankData] of Object.entries(essentialTanks)) {
+                    // Check if tank exists first
+                    const tankRef = doc(db, 'tankData', 'pbcr', 'tanks', tankId);
+                    const exists = await getDoc(tankRef);
+                    
+                    if (!exists.exists()) {
+                        // Add tank to batch
+                        batch.set(tankRef, {
+                            ...tankData,
+                            createdAt: serverTimestamp(),
+                            lastUpdated: serverTimestamp(),
+                            createdBy: 'firebase-fix-tool'
+                        });
+                        addedCount++;
+                        addResult(`➕ سيتم إضافة خزان ${tankId}: ${tankData.product}`, 'info');
+                    }
+                }
+                
+                if (addedCount > 0) {
+                    await batch.commit();
+                    addResult(`✅ تم إضافة ${addedCount} خزان بنجاح!`, 'success');
+                } else {
+                    addResult(`ℹ️ جميع الخزانات موجودة مسبقاً`, 'info');
+                }
+                
+            } catch (error) {
+                addResult(`❌ خطأ في إضافة الخزانات: ${error.message}`, 'error');
+            }
+        };
+        
+        window.fixFirebaseRules = async function() {
+            addResult('🛡️ فحص Firebase Rules...', 'info');
+            addResult('ℹ️ للتأكد من Firebase Rules، اذهب إلى:', 'info');
+            addResult('<a href="https://console.firebase.google.com/project/tank-tools/firestore/rules" target="_blank" style="color: #4CAF50;">Firebase Console - Rules</a>', 'info');
+            addResult('تأكد من أن Rules تحتوي على: allow read, write: if true;', 'warning');
+        };
+        
+        // Auto-run connection test on load
+        setTimeout(() => {
+            testConnection();
+        }, 1000);
+    </script>
+</body>
+</html>

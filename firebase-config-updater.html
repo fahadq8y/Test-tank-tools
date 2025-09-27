@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Firebase Config Updater</title>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: Arial; margin: 20px; background: #1a1a1a; color: white; }
+        .section { background: #2d4a5a; padding: 20px; margin: 15px 0; border-radius: 10px; }
+        .current { background: #5a2d2d; }
+        .new { background: #2d5a2d; }
+        textarea { width: 100%; height: 200px; background: #333; color: white; border: none; border-radius: 5px; padding: 10px; font-family: monospace; }
+        button { background: #4CAF50; color: white; border: none; padding: 15px 30px; margin: 10px; cursor: pointer; border-radius: 8px; font-size: 16px; }
+        .copy-btn { background: #2196F3; }
+        .danger-btn { background: #f44336; }
+        .code { background: #333; padding: 15px; border-radius: 5px; font-family: monospace; white-space: pre-line; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Firebase Config Updater - KNPC Tank Tools</h1>
+    
+    <div class="section current">
+        <h3>❌ الإعدادات الحالية (لا تعمل):</h3>
+        <div class="code">const firebaseConfig = {
+    apiKey: "AIzaSyDGpAHia_wEmrhnmYjrPf1n1TrAzwEMiAI",
+    authDomain: "tank-tools.firebaseapp.com", 
+    projectId: "tank-tools",
+    storageBucket: "tank-tools.appspot.com",
+    messagingSenderId: "278680662267",
+    appId: "1:278680662267:web:d4185d8b6fb96c4df8c2dc"
+};</div>
+    </div>
+
+    <div class="section">
+        <h3>🔄 خطوات الإصلاح:</h3>
+        <ol>
+            <li><strong>الخيار 1 - مشروع جديد (الأسرع):</strong>
+                <ul>
+                    <li>اذهب إلى <a href="https://console.firebase.google.com" target="_blank" style="color: #4CAF50;">Firebase Console</a></li>
+                    <li>أنشئ مشروع جديد باسم: <code>knpc-tank-tools-2025</code></li>
+                    <li>فعّل Firestore Database</li>
+                    <li>ضع Firebase Rules التالية:</li>
+                </ul>
+                <div class="code">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}</div>
+            </li>
+            <li><strong>الخيار 2 - إصلاح الحالي:</strong>
+                <ul>
+                    <li>تسجيل دخول إلى <a href="https://console.firebase.google.com/project/tank-tools" target="_blank" style="color: #4CAF50;">المشروع الحالي</a></li>
+                    <li>إنشاء Web App جديد</li>
+                    <li>نسخ Config جديد</li>
+                </ul>
+            </li>
+        </ol>
+    </div>
+
+    <div class="section new">
+        <h3>✅ الصق Firebase Config الجديد هنا:</h3>
+        <textarea id="newConfig" placeholder='الصق الـ Firebase config الجديد هنا مثل:
+{
+  apiKey: "AIzaSy...",
+  authDomain: "your-project.firebaseapp.com",
+  projectId: "your-project-id",
+  storageBucket: "your-project.appspot.com",
+  messagingSenderId: "123456789",
+  appId: "1:123456789:web:abcd1234"
+}'></textarea>
+        <br>
+        <button onclick="updateFirebaseConfig()" class="copy-btn">🔄 تحديث الإعدادات في الموقع</button>
+        <button onclick="testNewConfig()" class="copy-btn">🧪 اختبار الإعدادات الجديدة</button>
+    </div>
+
+    <div class="section">
+        <h3>⚡ حلول فورية:</h3>
+        <button onclick="useTemporaryConfig()" class="danger-btn">🚀 استخدام إعدادات مؤقتة (لاختبار سريع)</button>
+        <p style="font-size: 12px; opacity: 0.7;">ملاحظة: الإعدادات المؤقتة للاختبار فقط وقد لا تعمل للجميع</p>
+    </div>
+
+    <div id="results"></div>
+
+    <script type="module">
+        let testApp, testDb;
+        
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `section ${type === 'error' ? 'current' : type === 'success' ? 'new' : 'section'}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong> - ${message}`;
+            document.getElementById('results').appendChild(div);
+            console.log(message);
+        }
+        
+        window.testNewConfig = async function() {
+            const configText = document.getElementById('newConfig').value.trim();
+            if (!configText) {
+                addResult('❌ يرجى إدخال Firebase config أولاً', 'error');
+                return;
+            }
+            
+            try {
+                addResult('🧪 اختبار الإعدادات الجديدة...', 'info');
+                
+                // Parse the config
+                let config;
+                try {
+                    // Try to extract just the config object part
+                    const configMatch = configText.match(/\{[\s\S]*\}/);
+                    if (configMatch) {
+                        const configStr = configMatch[0]
+                            .replace(/(\w+):/g, '"$1":')  // Add quotes to keys
+                            .replace(/'/g, '"');          // Convert single quotes to double
+                        config = JSON.parse(configStr);
+                    } else {
+                        throw new Error('Could not extract config object');
+                    }
+                } catch (e) {
+                    addResult('❌ خطأ في تنسيق Config. تأكد من النسخ الصحيح', 'error');
+                    return;
+                }
+                
+                // Test Firebase connection with new config
+                const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js');
+                const { getFirestore, doc, setDoc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js');
+                
+                testApp = initializeApp(config, 'test-app');
+                testDb = getFirestore(testApp);
+                
+                addResult('✅ Firebase initialized successfully', 'success');
+                
+                // Test write/read
+                const testRef = doc(testDb, 'test', 'connection');
+                await setDoc(testRef, {
+                    timestamp: new Date().toISOString(),
+                    status: 'testing new config'
+                });
+                
+                const docSnap = await getDoc(testRef);
+                if (docSnap.exists()) {
+                    addResult('🎉 اختبار نجح! الإعدادات الجديدة تعمل بشكل مثالي', 'success');
+                    addResult('✅ يمكنك الآن تحديث الموقع بهذه الإعدادات', 'success');
+                } else {
+                    addResult('⚠️ الكتابة نجحت لكن القراءة فشلت - تحقق من Firebase Rules', 'error');
+                }
+                
+            } catch (error) {
+                addResult(`❌ فشل الاختبار: ${error.message}`, 'error');
+                
+                if (error.code === 'permission-denied') {
+                    addResult('🛡️ مشكلة في Firebase Rules - تأكد من إعدادها صحيح', 'error');
+                } else if (error.message.includes('project does not exist')) {
+                    addResult('🚫 المشروع غير موجود - تأكد من Project ID', 'error');
+                }
+            }
+        };
+        
+        window.updateFirebaseConfig = async function() {
+            const configText = document.getElementById('newConfig').value.trim();
+            if (!configText) {
+                addResult('❌ يرجى إدخال وتجربة Firebase config أولاً', 'error');
+                return;
+            }
+            
+            addResult('🔄 سيتم تحديث الموقع بالإعدادات الجديدة...', 'info');
+            addResult('ℹ️ هذه العملية تتطلب تحديث الكود وإعادة النشر', 'info');
+            addResult('📞 تواصل مع Fahad لتحديث الموقع بالإعدادات الجديدة', 'success');
+        };
+        
+        window.useTemporaryConfig = async function() {
+            addResult('⚡ جاري اختبار إعدادات مؤقتة...', 'info');
+            
+            // Test with a different project structure
+            const tempConfig = {
+                apiKey: "AIzaSyDGpAHia_wEmrhnmYjrPf1n1TrAzwEMiAI",
+                authDomain: "tank-tools.firebaseapp.com", 
+                projectId: "tank-tools",
+                storageBucket: "tank-tools.appspot.com",
+                messagingSenderId: "278680662267",
+                appId: "1:278680662267:web:d4185d8b6fb96c4df8c2dc"
+            };
+            
+            document.getElementById('newConfig').value = JSON.stringify(tempConfig, null, 2);
+            addResult('ℹ️ تم إدخال الإعدادات المؤقتة. اضغط "اختبار الإعدادات الجديدة"', 'info');
+        };
+        
+    </script>
+</body>
+</html>

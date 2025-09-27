@@ -645,26 +645,56 @@ async function fetchTankSpecifications() {
         document.getElementById('mainContent').style.display = 'block';
     } catch (error) {
         console.error("❌ Critical error fetching tank specifications:", error);
+        console.log("🚨 Firebase connection failed, using emergency fallback data");
+        
+        // Emergency fallback - use basic tank data to keep system working
+        tankSpecsData = fallbackTankData;
+        console.log("✅ Emergency fallback data loaded:", Object.keys(tankSpecsData));
+        
         const loadingOverlay = document.getElementById('loadingOverlay');
         if (loadingOverlay) {
             loadingOverlay.innerHTML = `
-                <div style="color:red; text-align: center; padding: 20px;">
-                    <h3>❌ Failed to Load Tank Data</h3>
-                    <p>Unable to connect to Firebase database.</p>
-                    <p style="font-size: 14px; margin-top: 15px;">Error: ${error.message}</p>
+                <div style="color: orange; text-align: center; padding: 20px;">
+                    <h3>⚠️ Firebase Connection Issue</h3>
+                    <p>Using basic tank data for now. Some features may be limited.</p>
+                    <p style="font-size: 14px; margin-top: 10px;">Error: ${error.message}</p>
                     <button onclick="location.reload()" style="
-                        background: linear-gradient(45deg, #4CAF50, #45a049);
+                        background: linear-gradient(45deg, #ff7043, #f4511e);
                         color: white; border: none; padding: 12px 24px;
                         border-radius: 8px; cursor: pointer; margin-top: 15px;
                         font-size: 16px; font-weight: bold;
-                    ">🔄 Retry</button>
+                    ">🔄 Try Firebase Again</button>
+                    <button onclick="continueWithBasicData()" style="
+                        background: linear-gradient(45deg, #4CAF50, #45a049);
+                        color: white; border: none; padding: 12px 24px;
+                        border-radius: 8px; cursor: pointer; margin-top: 15px;
+                        font-size: 16px; font-weight: bold; margin-left: 10px;
+                    ">✅ Continue with Basic Data</button>
                     <br><br>
-                    <small style="opacity: 0.8;">If this problem persists, contact Fahad - 17877</small>
+                    <small style="opacity: 0.8;">Basic tanks: ${Object.keys(fallbackTankData).join(', ')}</small>
                 </div>
             `;
         }
     }
 }
+
+// Function to continue with basic data when Firebase fails
+window.continueWithBasicData = function() {
+    console.log("🚀 User chose to continue with basic tank data");
+    
+    // Hide loading overlay and show main content
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const mainContent = document.getElementById('mainContent');
+    
+    if (loadingOverlay) loadingOverlay.style.display = 'none';
+    if (mainContent) mainContent.style.display = 'block';
+    
+    // Show notification about limited functionality
+    setTimeout(() => {
+        alert("⚠️ نظام عمل في وضع محدود\n\nالخزانات المتاحة: " + Object.keys(fallbackTankData).join(', ') + 
+              "\n\n🔧 لاستخدام جميع الخزانات، يرجى إصلاح اتصال Firebase");
+    }, 1000);
+};
 
 // Direct function to add Tank 460 specifically
 window.directAddTank460 = async function() {
