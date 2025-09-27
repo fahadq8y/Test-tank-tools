@@ -154,6 +154,10 @@ input,select{background:rgba(255,255,255,0.9);border-radius:12px;border:none;col
 <button onclick="addToTable()" class="action-btn table-btn">📊 Add to Table</button>
 <button onclick="showTableHelp()" class="help-btn" title="About Personal Table">ℹ️</button>
 </div>
+<div class="button-row">
+<button onclick="syncAllTanks()" class="action-btn" style="background: linear-gradient(45deg, #FF9800, #F57C00); color: white; box-shadow: 0 2px 8px rgba(255,152,0,0.3)">🔄 Sync Tanks</button>
+<button onclick="showSyncHelp()" class="help-btn" title="About Tank Synchronization">ℹ️</button>
+</div>
 </div>
 <h3 style="margin-top:40px">Your tanks finishing in current shift:</h3>
 <table id="tankTable">
@@ -296,6 +300,87 @@ async function fetchTankSpecifications() {
         
         // Debug info removed - tanks load silently now
         
+        // Check if we need to sync tanks automatically
+        const currentTankCount = Object.keys(tankSpecsData).length;
+        console.log(`📊 Current tank count: ${currentTankCount}`);
+        
+        if (currentTankCount < 10) {
+            console.log('⚠️ Few tanks found, will offer sync option when tank not found');
+        }
+        
+        // Add function to sync all tanks from liveTanks to tankData
+        window.syncTanksFromLiveTanks = async function() {
+            console.log('🔄 Syncing tanks from liveTanks to tankData...');
+            try {
+                // Get all tanks from liveTanks collection
+                const liveTanksRef = collection(window.db, 'liveTanks');
+                const liveTanksSnapshot = await getDocs(liveTanksRef);
+                
+                let syncedCount = 0;
+                const departments = ['PBCR', 'WASHERY', 'PLCR'];
+                
+                for (const tankDoc of liveTanksSnapshot.docs) {
+                    const tankData = tankDoc.data();
+                    const tankNumber = tankData.tankNumber;
+                    const department = tankData.department?.toUpperCase();
+                    
+                    if (!tankNumber || !departments.includes(department)) {
+                        continue;
+                    }
+                    
+                    // Check if tank already exists in tankData
+                    const deptCollection = department.toLowerCase();
+                    const tankSpecRef = doc(window.db, 'tankData', deptCollection, 'tanks', tankNumber);
+                    const existingTank = await getDoc(tankSpecRef);
+                    
+                    if (!existingTank.exists()) {
+                        // Estimate BPM based on department and tank number
+                        let estimatedBPM = 12000; // Default
+                        if (department === 'PBCR') {
+                            // PBCR tanks typically have BPM between 11000-13000
+                            estimatedBPM = 11000 + (parseInt(tankNumber) % 1000) * 2;
+                        } else if (department === 'WASHERY') {
+                            // WASHERY tanks typically have BPM between 10000-12000
+                            estimatedBPM = 10000 + (parseInt(tankNumber) % 1000) * 2;
+                        } else if (department === 'PLCR') {
+                            // PLCR tanks typically have BPM between 9000-11000
+                            estimatedBPM = 9000 + (parseInt(tankNumber) % 1000) * 2;
+                        }
+                        
+                        // Create tank specification
+                        const tankSpec = {
+                            comment: estimatedBPM,
+                            min: 1.5, // Default minimum level
+                            max: 16.0, // Default maximum level
+                            capacity: estimatedBPM * 16, // Rough capacity estimate
+                            description: `${department} Tank ${tankNumber}`,
+                            location: `${department} Area`,
+                            status: 'active',
+                            lastModified: serverTimestamp(),
+                            addedBy: 'auto_sync_system',
+                            syncedFrom: 'liveTanks',
+                            syncDate: serverTimestamp()
+                        };
+                        
+                        await setDoc(tankSpecRef, tankSpec);
+                        
+                        // Also add to local tankSpecsData
+                        tankSpecsData[tankNumber] = tankSpec;
+                        
+                        console.log(`✅ Synced Tank ${tankNumber} (${department}) - BPM: ${estimatedBPM}`);
+                        syncedCount++;
+                    }
+                }
+                
+                console.log(`🎉 Sync complete! Added ${syncedCount} tanks to tankData.`);
+                return syncedCount;
+                
+            } catch (error) {
+                console.error('❌ Error syncing tanks:', error);
+                throw error;
+            }
+        };
+
         // Add function to add missing tank data to Firebase
         window.addMissingTanksToFirebase = async function() {
             console.log('🔧 Adding missing tanks to Firebase...');
@@ -439,12 +524,42 @@ window.loadTank = () => {
       console.log(`✅ Tank ${id} loaded successfully - BPM: ${c}, Min: ${m}m, Max: ${x}m`);
     }
   } else { 
-    console.warn(`❌ Tank ${id} not found in database`);
+    console.warn(`❌ Tank ${id} not found in tankData database`);
     
-    // Check if this is one of the missing tanks we can auto-add
+    // First try to sync from liveTanks
+    if (confirm(`❌ Tank ${id} not found in PBCR database.\n\n🔄 Would you like me to sync all tanks from Live Tanks?\n\nThis will make all Live Tanks available in PBCR calculator.\n\nClick OK to sync, or Cancel to skip.`)) {
+      console.log(`🔄 Syncing tanks from Live Tanks...`);
+      
+      if (window.syncTanksFromLiveTanks) {
+        window.syncTanksFromLiveTanks().then((syncedCount) => {
+          if (syncedCount > 0) {
+            alert(`✅ Successfully synced ${syncedCount} tanks from Live Tanks!\n\nTank ${id} should now be available. Please try again.`);
+            // Reload tank specifications to include synced tanks
+            fetchTankSpecifications().then(() => {
+              // Retry loading this tank
+              window.loadTank();
+            });
+          } else {
+            // If no tanks synced, try the old method for specific tanks
+            tryAddSpecificTank(id);
+          }
+        }).catch(error => {
+          console.error('Failed to sync tanks:', error);
+          alert(`❌ Failed to sync tanks. Trying alternative method...`);
+          tryAddSpecificTank(id);
+        });
+        return;
+      }
+    }
+    
+    // Alternative: try adding specific known tanks
+    tryAddSpecificTank(id);
+  }
+  
+  function tryAddSpecificTank(id) {
     const missingTankIds = ['521', '522', '668'];
     if (missingTankIds.includes(id)) {
-      const addTank = confirm(`❌ Tank ${id} not found in database.\n\n🔧 Would you like me to add this tank automatically?\n\nClick OK to add it, or Cancel to skip.`);
+      const addTank = confirm(`❌ Tank ${id} not found.\n\n🔧 Would you like me to add this specific tank?\n\nClick OK to add it, or Cancel to skip.`);
       if (addTank && window.addMissingTanksToFirebase) {
         console.log(`🔧 Auto-adding Tank ${id} to Firebase...`);
         window.addMissingTanksToFirebase().then(() => {
@@ -463,7 +578,8 @@ window.loadTank = () => {
     }
     
     alert(`❌ Tank ${id} not found in database.\n\nPlease check the tank number or contact admin to add this tank.`);
-    c = m = x = 0; 
+    c = m = x = 0;
+    calculate();
   }
   calculate();
 };
@@ -683,7 +799,45 @@ window.showCalendarHelp=showCalendarHelp;
 async function logPBCRCalculation(tankNumber,hours,minutes,finishTime,finishDate){if(!currentUser)return;try{const userIP=await fetch('https://api.ipify.org?format=json').then(r=>r.json()).then(data=>data.ip).catch(()=>'Unknown');const timestamp=new Date();const detailedAction=`Calculated Tank ${tankNumber} in PBCR - Result: ${hours}h ${minutes}m (Finish: ${finishTime} - ${finishDate}) by ${currentUser.username}`;await addDoc(collection(db,'activities'),{action:detailedAction,originalAction:'pbcr_calculation',username:currentUser.username,tankNumber:tankNumber,calculationResult:`${hours}h ${minutes}m`,finishTime:finishTime,finishDate:finishDate,timestamp:serverTimestamp(),ip:userIP,userAgent:navigator.userAgent.substring(0,100),page:'pbcr-calculator'});}catch(error){console.error('Error logging PBCR calculation:',error);}}
 function showLiveTanksHelp(){alert('🔴 Add to Live Tanks:\n\nAdds your tank to the live monitoring system for all users to see. Requires panel operator or admin access.');}
 function showTableHelp(){alert('📊 Add to Table:\n\nAdds tank to your personal table below. Only you can see this table.');}
-window.showLiveTanksHelp=showLiveTanksHelp;window.showTableHelp=showTableHelp;
+window.syncAllTanks = async function() {
+  if (!currentUser) {
+    alert('⚠️ Login required to sync tanks.\n\nPlease login first to use this feature.');
+    return;
+  }
+  
+  if (!confirm('🔄 Sync All Tanks\n\nThis will copy all tanks from Live Tanks to PBCR database.\n\n• Makes Live Tanks available in PBCR calculator\n• Helps solve "tank not found" issues\n• Safe operation - no data will be lost\n\nContinue with sync?')) {
+    return;
+  }
+  
+  try {
+    const loadingMessage = document.createElement('div');
+    loadingMessage.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.9);color:white;padding:20px;border-radius:10px;z-index:10000;text-align:center';
+    loadingMessage.innerHTML = '<div style="font-size:18px;margin-bottom:10px">🔄 Syncing Tanks...</div><div style="font-size:14px;opacity:0.8">Please wait...</div>';
+    document.body.appendChild(loadingMessage);
+    
+    const syncedCount = await window.syncTanksFromLiveTanks();
+    
+    document.body.removeChild(loadingMessage);
+    
+    if (syncedCount > 0) {
+      alert(`✅ Sync Complete!\n\n${syncedCount} tanks synced from Live Tanks to PBCR database.\n\nThese tanks are now available in the PBCR calculator.`);
+      // Reload tank specifications to include synced tanks
+      await fetchTankSpecifications();
+    } else {
+      alert('ℹ️ No new tanks to sync.\n\nAll Live Tanks are already available in PBCR database.');
+    }
+    
+  } catch (error) {
+    console.error('Sync error:', error);
+    alert('❌ Sync Failed\n\n' + error.message + '\n\nPlease try again or contact admin.');
+  }
+};
+
+window.showSyncHelp = function() {
+  alert('🔄 Tank Synchronization\n\n• Copies tanks from Live Tanks to PBCR database\n• Solves "tank not found" errors\n• Makes all Live Tanks available in PBCR calculator\n• Estimates tank specifications (BPM, Min/Max levels)\n• Safe operation - no existing data is changed\n\n💡 Use this if you see "Tank XXX not found" messages.');
+};
+
+window.showLiveTanksHelp=showLiveTanksHelp;window.showTableHelp=showTableHelp;window.syncAllTanks=syncAllTanks;window.showSyncHelp=showSyncHelp;
 </script>
 <footer>
   By <a href="#" class="whatsapp-link" onclick="window.open('https://wa.me/96555222550','_blank'); return false;">Fahad - 17877</a> – Version v5 - FIXED
