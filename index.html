@@ -268,30 +268,55 @@ const products={
 async function fetchTankSpecifications() {
     const departments = ['pbcr', 'plcr', 'washery'];
     let allTanks = {};
+    
+    console.log('🔄 Loading tank specifications from Firebase...');
+    
+    // Check if Firebase is ready
+    if (!window.db || !window.collection || !window.getDocs) {
+        console.error('❌ Firebase not initialized yet');
+        throw new Error('Firebase not ready - please refresh the page');
+    }
     try {
         for (const dept of departments) {
-            const tanksCollectionRef = collection(db, "tankData", dept, "tanks");
+            console.log(`📊 Loading ${dept.toUpperCase()} tanks...`);
+            const tanksCollectionRef = collection(window.db, "tankData", dept, "tanks");
             const querySnapshot = await getDocs(tanksCollectionRef);
-            querySnapshot.forEach((doc) => { allTanks[doc.id] = doc.data(); });
+            let deptCount = 0;
+            querySnapshot.forEach((doc) => { 
+                allTanks[doc.id] = doc.data(); 
+                deptCount++;
+            });
+            console.log(`✅ Loaded ${deptCount} tanks from ${dept.toUpperCase()}`);
         }
         if (Object.keys(allTanks).length === 0) { throw new Error("No tank specifications found."); }
         tankSpecsData = allTanks;
-        console.log("✅ All tank specifications loaded successfully from Firebase!");
+        console.log(`🎯 Successfully loaded ${Object.keys(allTanks).length} total tanks from Firebase!`);
+        console.log('📋 Sample tank data:', Object.keys(allTanks).slice(0, 3).map(id => ({ id, data: allTanks[id] })));
         document.getElementById('loadingOverlay').style.display = 'none';
         document.getElementById('mainContent').style.display = 'block';
     } catch (error) {
         console.error("❌ Critical error fetching tank specifications:", error);
         const loadingOverlay = document.getElementById('loadingOverlay');
-        loadingOverlay.innerHTML = `<p style="color:red;">Error: Failed to load tank specifications.</p>`;
+        if (loadingOverlay) {
+            loadingOverlay.innerHTML = `
+                <div style="color:red; text-align: center; padding: 20px;">
+                    <h3>❌ Failed to Load Tank Data</h3>
+                    <p>Unable to connect to Firebase database.</p>
+                    <p style="font-size: 14px; margin-top: 15px;">Error: ${error.message}</p>
+                    <button onclick="location.reload()" style="
+                        background: linear-gradient(45deg, #4CAF50, #45a049);
+                        color: white; border: none; padding: 12px 24px;
+                        border-radius: 8px; cursor: pointer; margin-top: 15px;
+                        font-size: 16px; font-weight: bold;
+                    ">🔄 Retry</button>
+                    <br><br>
+                    <small style="opacity: 0.8;">If this problem persists, contact Fahad - 17877</small>
+                </div>
+            `;
+        }
     }
 }
 
-function initApp() {
-  loadUser();
-  loadData();
-  setupDark();
-  fetchTankSpecifications();
-}
 
 window.loadTank = () => {
   const id = document.getElementById("tankInput").value.trim();
@@ -305,24 +330,65 @@ window.loadTank = () => {
 
 // --- بداية التعديل المهم ---
 async function checkLogin() {
-    // الآن، checkPageAccess هي نقطة البداية بعد تحميل الصفحة
+    console.log('🔄 Starting checkLogin process...');
+    
+    // Check page access first
     const hasAccess = await window.checkPageAccess();
     
     if (hasAccess) {
-        // إذا تم منح الوصول، نحصل على بيانات المستخدم ونبدأ التطبيق
+        console.log('✅ Access granted to PBCR Calculator');
+        
+        // Get user data if authenticated
         currentUser = await window.getCurrentUser();
         if (currentUser) {
-            initApp();
+            console.log('✅ User authenticated:', currentUser.username);
+            loadUser();
         } else {
-            // هذا لا يفترض أن يحدث إذا كان hasAccess صحيحًا، ولكنه إجراء احترازي
-            window.showAccessDenied();
+            console.log('✅ Public access granted for PBCR Calculator');
         }
+        
+        // Load basic app functions
+        loadData();
+        setupDark();
+        
+        // Load tank specifications with proper error handling
+        console.log('🔄 Starting tank data loading from Firebase...');
+        const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Loading timeout - Firebase took too long')), 15000)
+        );
+        
+        try {
+            // Wait for tank data to load completely
+            await Promise.race([fetchTankSpecifications(), timeoutPromise]);
+            console.log('✅ Tank data loaded successfully, PBCR ready to use!');
+        } catch (error) {
+            console.error('❌ Failed to load tank specifications:', error);
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            if (loadingOverlay) {
+                loadingOverlay.innerHTML = `
+                    <div style="color:red; text-align: center; padding: 20px;">
+                        <h3>❌ Failed to Load Tank Data</h3>
+                        <p>${error.message}</p>
+                        <p style="font-size: 14px;">This usually means a slow internet connection or Firebase issue.</p>
+                        <button onclick="location.reload()" style="
+                            background: linear-gradient(45deg, #4CAF50, #45a049);
+                            color: white; border: none; padding: 12px 24px;
+                            border-radius: 8px; cursor: pointer; margin-top: 15px;
+                            font-size: 16px; font-weight: bold;
+                        ">🔄 Try Again</button>
+                        <br><br>
+                        <small style="opacity: 0.8;">Contact Fahad - 17877 if this persists</small>
+                    </div>
+                `;
+            }
+        }
+    } else {
+        console.log('❌ Access denied to PBCR Calculator');
+        // Access denied - checkPageAccess handles showing denial UI
+        // Hide loading overlay since we're not loading anything
+        document.getElementById('loadingOverlay').style.display = 'none';
     }
-    // إذا لم يتم منح الوصول، فإن checkPageAccess ستقوم باللازم (إظهار شاشة الرفض)
-    // ونحن نخفي شاشة التحميل في كل الأحوال
-    document.getElementById('loadingOverlay').style.display = 'none';
 }
-
 // نستدعي checkLogin عند تحميل الصفحة
 window.addEventListener('load', () => setTimeout(checkLogin, 100));
 // --- نهاية التعديل المهم ---
