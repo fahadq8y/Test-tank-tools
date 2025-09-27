@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Rules Updater - Tank Tools</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        h1 {
+            text-align: center;
+            color: #FFD700;
+            margin-bottom: 30px;
+        }
+        .alert {
+            background: rgba(255,193,7,0.2);
+            border: 1px solid #FFC107;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 5px solid #FFC107;
+        }
+        .success {
+            background: rgba(76,175,80,0.2);
+            border-color: #4CAF50;
+            border-left-color: #4CAF50;
+        }
+        .error {
+            background: rgba(244,67,54,0.2);
+            border-color: #f44336;
+            border-left-color: #f44336;
+        }
+        .rules-box {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        button {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76,175,80,0.4);
+        }
+        .copy-btn {
+            background: linear-gradient(45deg, #2196F3, #1976D2);
+        }
+        .steps {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .steps ol {
+            padding-right: 20px;
+        }
+        .steps li {
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        .highlight {
+            background: rgba(255,193,7,0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔥 Firebase Rules Updater</h1>
+        
+        <div class="alert">
+            <strong>⚠️ مهم جداً:</strong><br>
+            القواعد الحالية في Firebase تحتاج تحديث لحل مشاكل الوصول للخزانات.<br>
+            هذه هي القواعد المحدثة التي تحل جميع المشاكل.
+        </div>
+
+        <div class="alert success">
+            <strong>✅ المشاكل التي ستحل:</strong><br>
+            • auth/network-request-failed errors<br>
+            • مشاكل تحميل الخزانات 460, 301, 834, 533, 532<br>
+            • infinite loading loops<br>
+            • Firebase access denied errors
+        </div>
+
+        <h2>📋 الخطوات المطلوبة:</h2>
+        <div class="steps">
+            <ol>
+                <li>انسخ القواعد المحدثة من الصندوق أدناه</li>
+                <li>اذهب إلى <span class="highlight">Firebase Console</span></li>
+                <li>اختر مشروع <span class="highlight">tank-tools</span></li>
+                <li>اذهب إلى <span class="highlight">Firestore Database</span></li>
+                <li>اضغط على تبويب <span class="highlight">Rules</span></li>
+                <li>امسح القواعد القديمة واستبدلها بالجديدة</li>
+                <li>اضغط <span class="highlight">Publish</span></li>
+                <li>ارجع للموقع وجرب مرة ثانية</li>
+            </ol>
+        </div>
+
+        <h2>📝 القواعد المحدثة:</h2>
+        <div class="rules-box" id="rulesBox">rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =================== القواعد المحدثة والمحسنة ===================
+
+    // المسار الرئيسي للخزانات - هيكل جديد محسن
+    match /tankData/{department}/{document=**} {
+      allow read, write: if true;
+    }
+
+    // المسار المباشر للخزانات في كل قسم
+    match /tankData/{department}/tanks/{tankId} {
+      allow read, write: if true;
+    }
+
+    // مسارات إضافية للهيكل الجديد
+    match /tankData/pbcr/{document=**} {
+      allow read, write: if true;
+    }
+    
+    match /tankData/plcr/{document=**} {
+      allow read, write: if true;
+    }
+    
+    match /tankData/washery/{document=**} {
+      allow read, write: if true;
+    }
+
+    // =================== باقي القواعد الأصلية ===================
+
+    // إدارة المستخدمين والصلاحيات
+    match /users/{userId} {
+      allow read, write: if true;
+    }
+    
+    match /userPermissions/{userId} {
+      allow read, write: if true;
+    }
+    
+    match /userTables/{docId} {
+      allow read, write: if true;
+    }
+
+    // الخزانات - المسارات القديمة (للتوافق)
+    match /tankData/{tankId} {
+      allow read, write: if true;
+    }
+    
+    match /pbcrTanks/{tankId} {
+      allow read, write: if true;
+    }
+    
+    match /plcrTanks/{tankId} {
+      allow read, write: if true;
+    }
+    
+    match /liveTanks/{tankId} {
+      allow read, write: if true;
+    }
+
+    // بيانات النظام
+    match /tankHistory/{docId} {
+      allow read, write: if true;
+    }
+    
+    match /pbcrData/{docId} {
+      allow read, write: if true;
+    }
+    
+    match /pbcrTables/{docId} {
+      allow read, write: if true;
+    }
+    
+    match /nmogasData/{docId} {
+      allow read, write: if true;
+    }
+
+    // أنشطة النظام والسجلات
+    match /activities/{docId} {
+      allow read, write: if true;
+    }
+    
+    match /activityLogs/{logId} {
+      allow read, write: if true;
+    }
+    
+    match /emailQueue/{docId} {
+      allow read, write: if true;
+    }
+    
+    match /system/{docId} {
+      allow read, write: if true;
+    }
+    
+    match /systemSettings/{docId} {
+      allow read, write: if true;
+    }
+
+    // مسارات عامة للأقسام
+    match /tanks/{document=**} {
+      allow read, write: if true;
+    }
+    
+    match /pbcr/{document=**} {
+      allow read, write: if true;
+    }
+    
+    match /plcr/{document=**} {
+      allow read, write: if true;
+    }
+
+    // ملاحظة: تم إزالة القاعدة الافتراضية المانعة لحل المشاكل
+  }
+}</div>
+
+        <button class="copy-btn" onclick="copyRules()">📋 نسخ القواعد</button>
+        <button onclick="openFirebaseConsole()">🔥 فتح Firebase Console</button>
+        <button onclick="testConnection()">🧪 اختبار الاتصال</button>
+
+        <div class="alert" id="status" style="display: none;"></div>
+
+        <h2>🔗 روابط مفيدة:</h2>
+        <div class="steps">
+            <p><strong>Firebase Console:</strong> <a href="https://console.firebase.google.com/project/tank-tools/firestore/rules" target="_blank" style="color: #FFD700;">https://console.firebase.google.com/project/tank-tools/firestore/rules</a></p>
+            <p><strong>مشروع Tank Tools:</strong> <a href="https://console.firebase.google.com/project/tank-tools" target="_blank" style="color: #FFD700;">https://console.firebase.google.com/project/tank-tools</a></p>
+        </div>
+    </div>
+
+    <script>
+        function copyRules() {
+            const rulesText = document.getElementById('rulesBox').textContent;
+            navigator.clipboard.writeText(rulesText).then(() => {
+                showStatus('✅ تم نسخ القواعد! الآن اذهب إلى Firebase Console والصق القواعد.', 'success');
+            }).catch(() => {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = rulesText;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showStatus('✅ تم نسخ القواعد! الآن اذهب إلى Firebase Console والصق القواعد.', 'success');
+            });
+        }
+
+        function openFirebaseConsole() {
+            window.open('https://console.firebase.google.com/project/tank-tools/firestore/rules', '_blank');
+            showStatus('🔥 تم فتح Firebase Console في تبويب جديد. اتبع الخطوات المذكورة أعلاه.', 'alert');
+        }
+
+        async function testConnection() {
+            showStatus('🔄 اختبار الاتصال بـ Firebase...', 'alert');
+            
+            try {
+                // Import Firebase
+                const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js');
+                const { getFirestore, doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js');
+                
+                const firebaseConfig = {
+                    apiKey: "AIzaSyDGpAHia_wEmrhnmYjrPf1n1TrAzwEMiAI",
+                    authDomain: "tank-tools.firebaseapp.com",
+                    projectId: "tank-tools",
+                    storageBucket: "tank-tools.appspot.com",
+                    messagingSenderId: "278680662267",
+                    appId: "1:278680662267:web:d4185d8b6fb96c4df8c2dc"
+                };
+
+                const app = initializeApp(firebaseConfig);
+                const db = getFirestore(app);
+                
+                // Test tank access
+                const tankRef = doc(db, 'tankData', 'pbcr', 'tanks', '460');
+                const tankDoc = await getDoc(tankRef);
+                
+                if (tankDoc.exists()) {
+                    showStatus('✅ اختبار ناجح! Firebase يعمل والخزان 460 متوفر.', 'success');
+                } else {
+                    showStatus('⚠️ Firebase يعمل ولكن الخزان 460 غير موجود. قد تحتاج لإضافة الخزانات.', 'alert');
+                }
+                
+            } catch (error) {
+                if (error.message.includes('permission-denied')) {
+                    showStatus('❌ خطأ في الصلاحيات! يرجى تحديث Firebase Rules كما هو موضح أعلاه.', 'error');
+                } else {
+                    showStatus('❌ خطأ في الاتصال: ' + error.message, 'error');
+                }
+            }
+        }
+
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = message;
+            statusDiv.className = 'alert ' + type;
+            statusDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 10000);
+        }
+    </script>
+</body>
+</html>

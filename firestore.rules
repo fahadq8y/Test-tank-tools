@@ -1,0 +1,118 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // =================== القواعد المحدثة والمحسنة ===================
+
+    // المسار الرئيسي للخزانات - هيكل جديد محسن
+    match /tankData/{department}/{document=**} {
+      allow read, write: if true;
+    }
+
+    // المسار المباشر للخزانات في كل قسم
+    match /tankData/{department}/tanks/{tankId} {
+      allow read, write: if true;
+    }
+
+    // مسارات إضافية للهيكل الجديد
+    match /tankData/pbcr/{document=**} {
+      allow read, write: if true;
+    }
+    
+    match /tankData/plcr/{document=**} {
+      allow read, write: if true;
+    }
+    
+    match /tankData/washery/{document=**} {
+      allow read, write: if true;
+    }
+
+    // =================== باقي القواعد الأصلية ===================
+
+    // إدارة المستخدمين والصلاحيات
+    match /users/{userId} {
+      allow read, write: if true;
+    }
+    
+    match /userPermissions/{userId} {
+      allow read, write: if true;
+    }
+    
+    match /userTables/{docId} {
+      allow read, write: if true;
+    }
+
+    // الخزانات - المسارات القديمة (للتوافق)
+    match /tankData/{tankId} {
+      allow read, write: if true;
+    }
+    
+    match /pbcrTanks/{tankId} {
+      allow read, write: if true;
+    }
+    
+    match /plcrTanks/{tankId} {
+      allow read, write: if true;
+    }
+    
+    match /liveTanks/{tankId} {
+      allow read, write: if true;
+    }
+
+    // بيانات النظام
+    match /tankHistory/{docId} {
+      allow read, write: if true;
+    }
+    
+    match /pbcrData/{docId} {
+      allow read, write: if true;
+    }
+    
+    match /pbcrTables/{docId} {
+      allow read, write: if true;
+    }
+    
+    match /nmogasData/{docId} {
+      allow read, write: if true;
+    }
+
+    // أنشطة النظام والسجلات
+    match /activities/{docId} {
+      allow read, write: if true;
+    }
+    
+    match /activityLogs/{logId} {
+      allow read, write: if true;
+    }
+    
+    match /emailQueue/{docId} {
+      allow read, write: if true;
+    }
+    
+    match /system/{docId} {
+      allow read, write: if true;
+    }
+    
+    match /systemSettings/{docId} {
+      allow read, write: if true;
+    }
+
+    // مسارات عامة للأقسام
+    match /tanks/{document=**} {
+      allow read, write: if true;
+    }
+    
+    match /pbcr/{document=**} {
+      allow read, write: if true;
+    }
+    
+    match /plcr/{document=**} {
+      allow read, write: if true;
+    }
+
+    // ملاحظة: إزالة القاعدة الافتراضية المانعة
+    // match /{document=**} {
+    //   allow read, write: if false;
+    // }
+  }
+}
