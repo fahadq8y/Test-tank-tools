@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Tanks to Firebase</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f0f8ff; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .status { padding: 15px; border-radius: 8px; margin: 15px 0; font-weight: bold; }
+        .loading { background: #e3f2fd; color: #1976d2; }
+        .success { background: #e8f5e8; color: #2e7d32; }
+        .error { background: #ffebee; color: #d32f2f; }
+        button { padding: 12px 25px; background: linear-gradient(45deg, #4CAF50, #45a049); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold; }
+        button:hover { background: linear-gradient(45deg, #45a049, #4CAF50); }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        .tank-list { background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0; }
+        .progress { width: 100%; height: 20px; background: #e0e0e0; border-radius: 10px; margin: 10px 0; }
+        .progress-bar { height: 100%; background: linear-gradient(45deg, #4CAF50, #45a049); border-radius: 10px; transition: width 0.3s; }
+        .tank-item { padding: 10px; margin: 5px 0; border-radius: 5px; border-left: 4px solid #4CAF50; background: #f0f8ff; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔥 Add Essential PBCR Tanks to Firebase</h1>
+        
+        <div class="tank-list">
+            <h3>🎯 Tanks to be Added:</h3>
+            <div class="tank-item"><strong>Tank 460</strong> - BPM: 11500, Min: 1.5m, Max: 16.0m</div>
+            <div class="tank-item"><strong>Tank 301</strong> - BPM: 10500, Min: 1.6m, Max: 15.8m</div>
+            <div class="tank-item"><strong>Tank 834</strong> - BPM: 13200, Min: 1.4m, Max: 15.5m</div>
+            <div class="tank-item"><strong>Tank 533</strong> - BPM: 12100, Min: 1.5m, Max: 16.0m</div>
+            <div class="tank-item"><strong>Tank 532</strong> - BPM: 12000, Min: 1.5m, Max: 16.0m</div>
+        </div>
+
+        <div id="status" class="status loading">🔄 Ready to add tanks...</div>
+        
+        <div style="text-align: center;">
+            <button id="addButton" onclick="addTanksToFirebase()">🚀 Add Tanks to Firebase</button>
+        </div>
+
+        <div class="progress" id="progressContainer" style="display: none;">
+            <div class="progress-bar" id="progressBar" style="width: 0%;"></div>
+        </div>
+
+        <div id="results"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js';
+        import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js';
+
+        const app = initializeApp({
+            apiKey: "AIzaSyDGpAHia_wEmrhnmYjrPf1n1TrAzwEMiAI",
+            authDomain: "tank-tools.firebaseapp.com",
+            projectId: "tank-tools",
+            storageBucket: "tank-tools.appspot.com",
+            messagingSenderId: "278680662267",
+            appId: "1:278680662267:web:d4185d8b6fb96c4df8c2dc"
+        });
+
+        const db = getFirestore(app);
+
+        // Essential PBCR tanks data
+        const tanksToAdd = [
+            { id: '460', bpm: 11500, min: 1.5, max: 16.0, description: 'PBCR Tank 460 - High Priority User Request' },
+            { id: '301', bpm: 10500, min: 1.6, max: 15.8, description: 'PBCR Tank 301 - User Request' },
+            { id: '834', bpm: 13200, min: 1.4, max: 15.5, description: 'PBCR Tank 834 - User Request' },
+            { id: '533', bpm: 12100, min: 1.5, max: 16.0, description: 'PBCR Tank 533 - User Request' },
+            { id: '532', bpm: 12000, min: 1.5, max: 16.0, description: 'PBCR Tank 532 - User Request' }
+        ];
+
+        window.addTanksToFirebase = async function() {
+            const statusDiv = document.getElementById('status');
+            const addButton = document.getElementById('addButton');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            const resultsDiv = document.getElementById('results');
+
+            // Disable button and show progress
+            addButton.disabled = true;
+            progressContainer.style.display = 'block';
+            resultsDiv.innerHTML = '';
+
+            let addedCount = 0;
+            let skippedCount = 0;
+            let errorCount = 0;
+            const results = [];
+
+            statusDiv.innerHTML = '🔄 Starting to add tanks to Firebase...';
+            statusDiv.className = 'status loading';
+
+            for (let i = 0; i < tanksToAdd.length; i++) {
+                const tank = tanksToAdd[i];
+                const progress = ((i + 1) / tanksToAdd.length) * 100;
+                progressBar.style.width = progress + '%';
+
+                try {
+                    statusDiv.innerHTML = `🔄 Processing Tank ${tank.id}... (${i + 1}/${tanksToAdd.length})`;
+
+                    // Check if tank already exists
+                    const tankRef = doc(db, 'tankData', 'pbcr', 'tanks', tank.id);
+                    const existingTank = await getDoc(tankRef);
+
+                    if (existingTank.exists()) {
+                        results.push(`⏭️ Tank ${tank.id}: Already exists (skipped)`);
+                        skippedCount++;
+                        console.log(`⏭️ Tank ${tank.id} already exists`);
+                    } else {
+                        // Add new tank
+                        const tankData = {
+                            comment: tank.bpm,
+                            min: tank.min,
+                            max: tank.max,
+                            capacity: tank.bpm * tank.max,
+                            description: tank.description,
+                            location: 'PBCR Area',
+                            status: 'active',
+                            lastModified: serverTimestamp(),
+                            addedBy: 'automated_system',
+                            addedAt: serverTimestamp(),
+                            source: 'user_request_fix'
+                        };
+
+                        await setDoc(tankRef, tankData);
+                        results.push(`✅ Tank ${tank.id}: Successfully added (BPM: ${tank.bpm})`);
+                        addedCount++;
+                        console.log(`✅ Tank ${tank.id} added successfully`);
+                    }
+
+                    // Small delay to prevent overwhelming Firebase
+                    await new Promise(resolve => setTimeout(resolve, 200));
+
+                } catch (error) {
+                    results.push(`❌ Tank ${tank.id}: Error - ${error.message}`);
+                    errorCount++;
+                    console.error(`❌ Error adding Tank ${tank.id}:`, error);
+                }
+            }
+
+            // Final status
+            if (errorCount > 0) {
+                statusDiv.innerHTML = `⚠️ Process completed with ${errorCount} errors. ${addedCount} added, ${skippedCount} skipped.`;
+                statusDiv.className = 'status error';
+            } else if (addedCount > 0) {
+                statusDiv.innerHTML = `🎉 Success! ${addedCount} tanks added, ${skippedCount} already existed.`;
+                statusDiv.className = 'status success';
+            } else {
+                statusDiv.innerHTML = `ℹ️ All ${skippedCount} tanks already exist in Firebase.`;
+                statusDiv.className = 'status success';
+            }
+
+            // Show detailed results
+            resultsDiv.innerHTML = `
+                <div class="tank-list">
+                    <h3>📊 Detailed Results:</h3>
+                    ${results.map(result => `<div class="tank-item">${result}</div>`).join('')}
+                </div>
+                <div style="text-align: center; margin-top: 20px;">
+                    <button onclick="location.reload()">🔄 Run Again</button>
+                    <button onclick="window.open('/', '_blank')" style="background: linear-gradient(45deg, #2196F3, #1976D2);">🏠 Test Main App</button>
+                </div>
+            `;
+
+            // Re-enable button
+            addButton.disabled = false;
+            progressBar.style.width = '100%';
+        };
+
+        // Initial status
+        document.getElementById('status').innerHTML = '✅ Firebase connected. Ready to add essential PBCR tanks.';
+        document.getElementById('status').className = 'status success';
+    </script>
+</body>
+</html>

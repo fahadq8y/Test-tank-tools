@@ -20,5 +20,8 @@
       "src": "/",
       "dest": "/index.html"
     }
-  ]
+  ],
+  "env": {
+    "BUILD_TIMESTAMP": "2025-09-27T13:00:00Z"
+  }
 }
