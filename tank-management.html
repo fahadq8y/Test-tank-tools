@@ -167,6 +167,7 @@
         <div>
           <button class="btn btn-primary" onclick="addNewTank()">➕ إضافة خزان جديد</button>
           <button class="btn btn-secondary" onclick="refreshTanks()">🔄 تحديث</button>
+          <button class="btn btn-warning" onclick="debugFirebaseStructure()">🔍 Debug Firebase</button>
         </div>
       </div>
 
@@ -297,6 +298,9 @@
         return;
       }
       
+      // Debug Firebase structure first
+      await debugFirebaseStructure();
+      
       // Load all tanks
       await loadAllTanks();
       
@@ -304,6 +308,59 @@
       setupEventListeners();
       
       console.log('✅ Tank Management ready!');
+    }
+    
+    // Debug function to explore Firebase structure
+    async function debugFirebaseStructure() {
+      try {
+        console.log('🔍 === FIREBASE STRUCTURE DEBUG ===');
+        
+        // Check root collections
+        console.log('📊 Checking root collections...');
+        
+        // Try to list all possible collections
+        const possibleCollections = ['tankData', 'tanks', 'pbcr', 'plcr', 'washery'];
+        
+        for (const collectionName of possibleCollections) {
+          try {
+            const collectionRef = collection(db, collectionName);
+            const snapshot = await getDocs(collectionRef);
+            console.log(`📁 Collection '${collectionName}': ${snapshot.size} documents`);
+            
+            if (snapshot.size > 0 && snapshot.size < 10) {
+              snapshot.forEach((doc) => {
+                console.log(`  📄 ${collectionName}/${doc.id}:`, doc.data());
+              });
+            }
+          } catch (error) {
+            console.log(`❌ Collection '${collectionName}' not accessible:`, error.message);
+          }
+        }
+        
+        // Check the exact structure used in other pages
+        console.log('🔍 Checking tankData structure from other pages...');
+        try {
+          const departments = ['pbcr', 'plcr', 'washery'];
+          for (const dept of departments) {
+            const tanksCollectionRef = collection(db, "tankData", dept, "tanks");
+            const querySnapshot = await getDocs(tanksCollectionRef);
+            console.log(`📊 tankData/${dept}/tanks: ${querySnapshot.size} documents`);
+            
+            if (querySnapshot.size > 0) {
+              querySnapshot.forEach((doc) => {
+                console.log(`  🛢️ Tank ${doc.id}:`, doc.data());
+              });
+            }
+          }
+        } catch (error) {
+          console.log('❌ Standard tankData structure not accessible:', error.message);
+        }
+        
+        console.log('🔍 === END FIREBASE DEBUG ===');
+        
+      } catch (error) {
+        console.error('❌ Debug failed:', error);
+      }
     }
 
     // Check admin access
@@ -355,22 +412,77 @@
         allTanks = [];
         const departments = ['pbcr', 'plcr', 'washery'];
         
+        console.log('🔍 Starting to load tanks from Firebase...');
+        
         for (const dept of departments) {
-          const tanksCollectionRef = collection(db, "tankData", dept, "tanks");
-          const querySnapshot = await getDocs(tanksCollectionRef);
+          console.log(`🔍 Loading ${dept} tanks...`);
           
-          querySnapshot.forEach((doc) => {
-            const tankData = { 
-              id: doc.id, 
-              department: dept,
-              ...doc.data(),
-              lastModified: doc.data().lastModified || 'غير محدد'
-            };
-            allTanks.push(tankData);
-          });
+          try {
+            const tanksCollectionRef = collection(db, "tankData", dept, "tanks");
+            const querySnapshot = await getDocs(tanksCollectionRef);
+            
+            console.log(`📊 ${dept} collection size:`, querySnapshot.size);
+            
+            querySnapshot.forEach((doc) => {
+              const tankData = { 
+                id: doc.id, 
+                department: dept,
+                ...doc.data(),
+                lastModified: doc.data().lastModified || 'غير محدد'
+              };
+              console.log(`✅ Loaded tank ${doc.id} from ${dept}:`, tankData);
+              allTanks.push(tankData);
+            });
+            
+          } catch (deptError) {
+            console.warn(`⚠️ Could not load ${dept} tanks:`, deptError);
+            
+            // Try alternative structure: tankData/{tankId} with department field
+            try {
+              console.log(`🔄 Trying alternative structure for ${dept}...`);
+              const altCollectionRef = collection(db, "tankData");
+              const altQuerySnapshot = await getDocs(altCollectionRef);
+              
+              altQuerySnapshot.forEach((doc) => {
+                const data = doc.data();
+                if (data.department === dept) {
+                  const tankData = { 
+                    id: doc.id,
+                    department: dept,
+                    ...data,
+                    lastModified: data.lastModified || 'غير محدد'
+                  };
+                  console.log(`✅ Loaded tank ${doc.id} from alternative structure:`, tankData);
+                  allTanks.push(tankData);
+                }
+              });
+              
+            } catch (altError) {
+              console.warn(`⚠️ Alternative structure also failed for ${dept}:`, altError);
+            }
+          }
         }
         
-        console.log(`✅ تم تحميل ${allTanks.length} خزان`);
+        // Remove duplicates based on id and department
+        const uniqueTanks = [];
+        const seen = new Set();
+        
+        allTanks.forEach(tank => {
+          const key = `${tank.department}-${tank.id}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            uniqueTanks.push(tank);
+          }
+        });
+        
+        allTanks = uniqueTanks;
+        
+        console.log(`✅ Final tanks loaded: ${allTanks.length}`);
+        console.log('Tank breakdown:', {
+          pbcr: allTanks.filter(t => t.department === 'pbcr').length,
+          plcr: allTanks.filter(t => t.department === 'plcr').length,
+          washery: allTanks.filter(t => t.department === 'washery').length
+        });
         
         // Update statistics
         updateStatistics();
@@ -378,19 +490,24 @@
         // Display tanks
         displayTanks(allTanks);
         
-        showMessage(`✅ تم تحميل ${allTanks.length} خزان بنجاح!`, 'success');
+        if (allTanks.length === 0) {
+          showMessage('⚠️ لم يتم العثور على خزانات في Firebase. تحقق من هيكل قاعدة البيانات.', 'warning');
+        } else {
+          showMessage(`✅ تم تحميل ${allTanks.length} خزان بنجاح!`, 'success');
+        }
         
       } catch (error) {
-        console.error('Error loading tanks:', error);
+        console.error('❌ Critical error loading tanks:', error);
         showMessage('❌ خطأ في تحميل بيانات الخزانات: ' + error.message, 'error');
         
-        // Show error in table
+        // Show error in table with debug info
         const tbody = document.getElementById('tanksTableBody');
         tbody.innerHTML = `
           <tr>
             <td colspan="8" style="padding: 50px; text-align: center; color: #f44336;">
               ❌ فشل في تحميل بيانات الخزانات
-              <br><small>${error.message}</small>
+              <br><small>الخطأ: ${error.message}</small>
+              <br><small>تحقق من Console للمزيد من التفاصيل</small>
             </td>
           </tr>
         `;
@@ -735,6 +852,7 @@
     window.deleteTank = deleteTank;
     window.closeTankModal = closeTankModal;
     window.refreshTanks = refreshTanks;
+    window.debugFirebaseStructure = debugFirebaseStructure;
     window.logout = logout;
 
     // Initialize when page loads
