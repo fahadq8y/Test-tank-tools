@@ -1026,6 +1026,25 @@
                 alarmButton.onclick = setAlarmWithWakeLock;
             }
         });
+
+        // Listen for messages from live-tanks page
+        window.addEventListener('message', function(event) {
+            if (event.origin !== window.location.origin) return;
+            
+            if (event.data.type === 'TRIGGER_PERSISTENT_ALARM') {
+                const { title, message, tankNumber } = event.data;
+                console.log('🔔 Received alarm trigger from live-tanks:', title);
+                
+                // Trigger persistent alarm
+                createPersistentAlarm(title, message);
+                
+                // Update system status
+                const statusElement = document.getElementById('systemStatus');
+                if (statusElement) {
+                    statusElement.textContent += `\n🚨 ACTIVE ALARM: ${title}`;
+                }
+            }
+        });
     </script>
 </body>
 </html>

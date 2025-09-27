@@ -94,6 +94,27 @@
     .btn-view{background:#2196F3}
     .btn-reminder{background:#ff9800}
     .action-btn:hover{transform:scale(1.05)}
+    .tank-bell{
+      display:inline-block;
+      margin-left:5px;
+      padding:4px 6px;
+      background:linear-gradient(45deg,#ff9800,#f57c00);
+      color:white;
+      border-radius:50%;
+      font-size:12px;
+      cursor:pointer;
+      transition:all 0.3s ease;
+      animation:ring 2s ease-in-out infinite;
+    }
+    .tank-bell:hover{
+      transform:scale(1.2);
+      box-shadow:0 0 10px rgba(255,152,0,0.5);
+    }
+    @keyframes ring{
+      0%,100%{transform:rotate(0deg)}
+      25%{transform:rotate(-10deg)}
+      75%{transform:rotate(10deg)}
+    }
     .empty-state{text-align:center;padding:40px;color:#666}
     .empty-icon{font-size:3rem;margin-bottom:15px;opacity:0.5}
     .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:1000;backdrop-filter:blur(5px)}
@@ -303,6 +324,82 @@
       </div>
       <div id="tankDetailsBody">
         <!-- Tank details will be populated here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Reminder Options Modal -->
+  <div id="reminderOptionsModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">📅 Choose Reminder Type</h3>
+        <button class="close-btn" onclick="closeReminderOptions()">&times;</button>
+      </div>
+      <div style="margin-bottom: 20px;">
+        <div id="reminderTankInfo" style="background: rgba(33, 150, 243, 0.1); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+          <!-- Tank info will be populated here -->
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+          <button class="btn btn-primary" onclick="chooseGoogleReminder()" style="padding: 20px; flex-direction: column; gap: 10px;">
+            <span style="font-size: 2rem;">📅</span>
+            <span style="font-weight: bold;">Google Calendar</span>
+            <span style="font-size: 0.9rem; opacity: 0.8;">Add to your calendar</span>
+          </button>
+          
+          <button class="btn btn-warning" onclick="chooseBuiltInReminder()" style="padding: 20px; flex-direction: column; gap: 10px;">
+            <span style="font-size: 2rem;">🔔</span>
+            <span style="font-weight: bold;">Built-in Alarm</span>
+            <span style="font-size: 0.9rem; opacity: 0.8;">Persistent notification</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bell Settings Modal -->
+  <div id="bellSettingsModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">🔔 Alarm Settings</h3>
+        <button class="close-btn" onclick="closeBellSettings()">&times;</button>
+      </div>
+      <div id="bellTankInfo" style="background: rgba(33, 150, 243, 0.1); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+        <!-- Tank info will be populated here -->
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">⏰ Alert Timing:</label>
+        <select class="form-select" id="alertTiming">
+          <option value="10">10 minutes before finish</option>
+          <option value="15" selected>15 minutes before finish</option>
+          <option value="20">20 minutes before finish</option>
+          <option value="30">30 minutes before finish</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label">🔊 Alert Type:</label>
+        <div style="display: grid; gap: 10px;">
+          <label style="display: flex; align-items: center; gap: 10px; padding: 10px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; cursor: pointer;">
+            <input type="radio" name="alertType" value="persistent" checked>
+            <span>🔔 Persistent Alarm + Vibration (Keeps ringing until stopped)</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 10px; padding: 10px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; cursor: pointer;">
+            <input type="radio" name="alertType" value="regular">
+            <span>📢 Regular Notification (Shows for 10 seconds)</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 10px; padding: 10px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; cursor: pointer;">
+            <input type="radio" name="alertType" value="sound">
+            <span>🔊 Sound Only (No persistent notification)</span>
+          </label>
+        </div>
+      </div>
+      
+      <div class="modal-buttons">
+        <button class="btn btn-secondary" onclick="closeBellSettings()">Cancel</button>
+        <button class="btn btn-danger" onclick="removeBuiltInReminder()" id="removeReminderBtn" style="display: none;">Remove Reminder</button>
+        <button class="btn btn-primary" onclick="saveBellSettings()">Save Settings</button>
       </div>
     </div>
   </div>
@@ -1075,7 +1172,7 @@
         
         html += `
           <tr class="${rowClass}">
-            <td class="tank-number">${tank.tankNumber}</td>
+            <td class="tank-number">${tank.tankNumber}${hasBuiltInReminder(tank.id) ? `<span class="tank-bell" onclick="showBellSettings('${tank.id}')" title="Built-in Alarm Active">🔔</span>` : ''}</td>
             <td><span class="product-badge ${getProductClass(tank.product)}">${tank.product}</span></td>
             <td>${targetText}</td>
             <td>${rateText}</td>
@@ -1298,17 +1395,55 @@
         <div class="tank-actions">
           ${permissions.canEdit ? `<button class="btn btn-primary" onclick="editTank('${tank.id}')">✏️ Edit Tank</button>` : ''}
           ${permissions.canDelete ? `<button class="btn btn-danger" onclick="deleteTank('${tank.id}')">🗑️ Delete Tank</button>` : ''}
-          <button class="btn btn-warning" onclick="addReminder('${tank.id}')">📅 Add Reminder</button>
+          <button class="btn btn-warning" onclick="showReminderOptions('${tank.id}')">📅 Add Reminder</button>
         </div>
       `;
       document.getElementById('tankDetailsBody').innerHTML = detailsHTML;
       document.getElementById('tankDetailsModal').classList.add('show');
     }
 
-    // Add Reminder Function
-    window.addReminder = function(tankId) {
+    // Global variable to store built-in reminders
+    window.builtInReminders = JSON.parse(localStorage.getItem('tanktools_builtin_reminders') || '{}');
+    let currentReminderTank = null;
+
+    // Check if tank has built-in reminder
+    function hasBuiltInReminder(tankId) {
+      return window.builtInReminders[tankId] && window.builtInReminders[tankId].active;
+    }
+
+    // Show reminder options modal
+    window.showReminderOptions = function(tankId) {
       const tank = window.currentTanks?.find(t => t.id === tankId);
       if (!tank) return;
+      
+      currentReminderTank = tank;
+      
+      // Populate tank info
+      const finishDateTime = tank.finishDateTime ? 
+        (tank.finishDateTime.toDate ? tank.finishDateTime.toDate() : new Date(tank.finishDateTime)) :
+        new Date(tank.finishDate + ' ' + tank.finishTime);
+      
+      document.getElementById('reminderTankInfo').innerHTML = `
+        <h4><strong>Tank ${tank.tankNumber}</strong> - ${tank.product} (${tank.department})</h4>
+        <p><strong>Target:</strong> ${tank.targetValue || 'N/A'} ${tank.targetType || ''}</p>
+        <p><strong>Rate:</strong> ${tank.rate || 'N/A'} ${tank.rateUnit || ''}</p>
+        <p><strong>Finish Time:</strong> ${finishDateTime.toLocaleString()}</p>
+      `;
+      
+      document.getElementById('reminderOptionsModal').classList.add('show');
+    }
+
+    // Close reminder options modal
+    function closeReminderOptions() {
+      document.getElementById('reminderOptionsModal').classList.remove('show');
+      currentReminderTank = null;
+    }
+
+    // Choose Google Calendar reminder
+    function chooseGoogleReminder() {
+      if (!currentReminderTank) return;
+      
+      const tank = currentReminderTank;
       
       // Create reminder data
       const finishDateTime = tank.finishDateTime ? 
@@ -1327,8 +1462,245 @@
       // Open in new window
       window.open(calendarUrl, '_blank');
       
-      showMessage('📅 Reminder created! Check your Google Calendar.', 'success');
+      closeReminderOptions();
+      showMessage('📅 Google Calendar reminder created!', 'success');
     }
+
+    // Choose built-in reminder
+    function chooseBuiltInReminder() {
+      if (!currentReminderTank) return;
+      
+      // Set default built-in reminder
+      const tankId = currentReminderTank.id;
+      const finishDateTime = currentReminderTank.finishDateTime ? 
+        (currentReminderTank.finishDateTime.toDate ? currentReminderTank.finishDateTime.toDate() : new Date(currentReminderTank.finishDateTime)) :
+        new Date(currentReminderTank.finishDate + ' ' + currentReminderTank.finishTime);
+      
+      // Default settings: 15 minutes before, persistent alarm
+      const reminderSettings = {
+        tankId: tankId,
+        tankNumber: currentReminderTank.tankNumber,
+        product: currentReminderTank.product,
+        department: currentReminderTank.department,
+        finishDateTime: finishDateTime,
+        alertMinutes: 15,
+        alertType: 'persistent',
+        active: true,
+        created: new Date()
+      };
+      
+      // Save to localStorage
+      window.builtInReminders[tankId] = reminderSettings;
+      localStorage.setItem('tanktools_builtin_reminders', JSON.stringify(window.builtInReminders));
+      
+      // Schedule the alarm
+      scheduleBuiltInAlarm(reminderSettings);
+      
+      closeReminderOptions();
+      
+      // Refresh table to show bell icon
+      displayTanks(window.currentTanks);
+      
+      showMessage('🔔 Built-in alarm set! Bell icon added to tank.', 'success');
+    }
+
+    // Show bell settings modal
+    window.showBellSettings = function(tankId) {
+      const tank = window.currentTanks?.find(t => t.id === tankId);
+      const reminder = window.builtInReminders[tankId];
+      
+      if (!tank || !reminder) return;
+      
+      currentReminderTank = tank;
+      
+      // Populate tank info
+      const finishDateTime = tank.finishDateTime ? 
+        (tank.finishDateTime.toDate ? tank.finishDateTime.toDate() : new Date(tank.finishDateTime)) :
+        new Date(tank.finishDate + ' ' + tank.finishTime);
+      
+      document.getElementById('bellTankInfo').innerHTML = `
+        <h4><strong>Tank ${tank.tankNumber}</strong> - ${tank.product} (${tank.department})</h4>
+        <p><strong>Target:</strong> ${tank.targetValue || 'N/A'} ${tank.targetType || ''}</p>
+        <p><strong>Rate:</strong> ${tank.rate || 'N/A'} ${tank.rateUnit || ''}</p>
+        <p><strong>Finish Time:</strong> ${finishDateTime.toLocaleString()}</p>
+        <p><strong>Alert Time:</strong> ${new Date(finishDateTime.getTime() - (reminder.alertMinutes * 60000)).toLocaleString()}</p>
+      `;
+      
+      // Set current settings
+      document.getElementById('alertTiming').value = reminder.alertMinutes;
+      document.querySelector(`input[name="alertType"][value="${reminder.alertType}"]`).checked = true;
+      
+      // Show remove button if reminder exists
+      document.getElementById('removeReminderBtn').style.display = 'block';
+      
+      document.getElementById('bellSettingsModal').classList.add('show');
+    }
+
+    // Close bell settings modal
+    function closeBellSettings() {
+      document.getElementById('bellSettingsModal').classList.remove('show');
+      currentReminderTank = null;
+    }
+
+    // Save bell settings
+    function saveBellSettings() {
+      if (!currentReminderTank) return;
+      
+      const tankId = currentReminderTank.id;
+      const alertMinutes = parseInt(document.getElementById('alertTiming').value);
+      const alertType = document.querySelector('input[name="alertType"]:checked').value;
+      
+      // Update reminder settings
+      if (window.builtInReminders[tankId]) {
+        window.builtInReminders[tankId].alertMinutes = alertMinutes;
+        window.builtInReminders[tankId].alertType = alertType;
+        window.builtInReminders[tankId].updated = new Date();
+        
+        // Save to localStorage
+        localStorage.setItem('tanktools_builtin_reminders', JSON.stringify(window.builtInReminders));
+        
+        // Reschedule alarm with new settings
+        scheduleBuiltInAlarm(window.builtInReminders[tankId]);
+        
+        closeBellSettings();
+        showMessage('🔔 Alarm settings updated!', 'success');
+      }
+    }
+
+    // Remove built-in reminder
+    function removeBuiltInReminder() {
+      if (!currentReminderTank) return;
+      
+      const tankId = currentReminderTank.id;
+      
+      if (confirm('Are you sure you want to remove this built-in alarm?')) {
+        // Remove from storage
+        delete window.builtInReminders[tankId];
+        localStorage.setItem('tanktools_builtin_reminders', JSON.stringify(window.builtInReminders));
+        
+        // Clear any scheduled timeouts
+        clearBuiltInAlarm(tankId);
+        
+        closeBellSettings();
+        
+        // Refresh table to remove bell icon
+        displayTanks(window.currentTanks);
+        
+        showMessage('🔔 Built-in alarm removed!', 'success');
+      }
+    }
+
+    // Schedule built-in alarm
+    function scheduleBuiltInAlarm(reminderSettings) {
+      const { tankId, alertMinutes, finishDateTime, alertType } = reminderSettings;
+      
+      // Calculate alert time
+      const alertTime = new Date(finishDateTime.getTime() - (alertMinutes * 60000));
+      const now = new Date();
+      const timeUntilAlert = alertTime.getTime() - now.getTime();
+      
+      console.log('🔔 Scheduling alarm:', {
+        tankId,
+        finishDateTime,
+        alertTime,
+        timeUntilAlert: Math.round(timeUntilAlert / 1000 / 60) + ' minutes'
+      });
+      
+      if (timeUntilAlert > 0) {
+        // Clear any existing timeout for this tank
+        clearBuiltInAlarm(tankId);
+        
+        // Set new timeout
+        const timeoutId = setTimeout(() => {
+          triggerBuiltInAlarm(reminderSettings);
+        }, timeUntilAlert);
+        
+        // Store timeout ID
+        if (!window.alarmTimeouts) window.alarmTimeouts = {};
+        window.alarmTimeouts[tankId] = timeoutId;
+      } else {
+        console.log('⚠️ Alert time has already passed for tank', reminderSettings.tankNumber);
+      }
+    }
+
+    // Trigger built-in alarm
+    function triggerBuiltInAlarm(reminderSettings) {
+      const { tankNumber, product, department, alertType } = reminderSettings;
+      
+      const title = `🔔 Tank ${tankNumber} Alert`;
+      const message = `Tank ${tankNumber} (${product} - ${department}) is finishing soon!`;
+      
+      console.log('🚨 Triggering alarm:', title, message);
+      
+      // Show notification based on type
+      if (alertType === 'persistent') {
+        // Open notifications page with persistent alarm
+        const notifyWindow = window.open('/notifications.html', '_blank');
+        
+        // Send message to notifications page after it loads
+        setTimeout(() => {
+          if (notifyWindow && !notifyWindow.closed) {
+            notifyWindow.postMessage({
+              type: 'TRIGGER_PERSISTENT_ALARM',
+              title: title,
+              message: message,
+              tankNumber: tankNumber
+            }, '*');
+          }
+        }, 1000);
+        
+      } else if (alertType === 'regular') {
+        // Regular browser notification
+        if ('Notification' in window && Notification.permission === 'granted') {
+          const notification = new Notification(title, {
+            body: message,
+            icon: '/icon.png',
+            requireInteraction: false
+          });
+          
+          setTimeout(() => notification.close(), 10000);
+        } else {
+          alert(title + '\n\n' + message);
+        }
+        
+      } else if (alertType === 'sound') {
+        // Sound only - play notification sound
+        playAlarmSound();
+      }
+      
+      // Show in-page message
+      showMessage(`🚨 ${title}: ${message}`, 'warning');
+    }
+
+    // Clear built-in alarm timeout
+    function clearBuiltInAlarm(tankId) {
+      if (window.alarmTimeouts && window.alarmTimeouts[tankId]) {
+        clearTimeout(window.alarmTimeouts[tankId]);
+        delete window.alarmTimeouts[tankId];
+      }
+    }
+
+    // Play alarm sound
+    function playAlarmSound() {
+      // Create audio element if not exists
+      if (!window.alarmAudio) {
+        window.alarmAudio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwYAzyA0OzdiwQAZFl1FQ==');
+      }
+      
+      window.alarmAudio.play().catch(e => console.log('Could not play alarm sound:', e));
+    }
+
+    // Initialize built-in alarms on page load
+    function initializeBuiltInAlarms() {
+      Object.values(window.builtInReminders).forEach(reminder => {
+        if (reminder.active) {
+          scheduleBuiltInAlarm(reminder);
+        }
+      });
+    }
+
+    // Legacy function for backward compatibility
+    window.addReminder = window.showReminderOptions;
 
 
     // Calculate actual rate based on level difference and time - FIREBASE ENABLED VERSION
@@ -2727,6 +3099,20 @@
       console.log('🚀 Initializing Live Tanks with Firebase data...');
       await loadTanksFromFirebase();
       console.log('✅ Tanks data loaded, ready for calculations with real KNPC values');
+      
+      // Initialize built-in alarms
+      initializeBuiltInAlarms();
+      console.log('🔔 Built-in alarms initialized');
+    });
+
+    // Listen for messages from notifications page
+    window.addEventListener('message', function(event) {
+      if (event.origin !== window.location.origin) return;
+      
+      if (event.data.type === 'ALARM_STOPPED') {
+        console.log('🔔 Alarm stopped from notifications page');
+        // Handle alarm stop if needed
+      }
     });
     
   </script>
