@@ -1069,7 +1069,37 @@ window.updateLTProducts=function(){const dept=document.getElementById('ltDept').
 document.getElementById('otherProductField').classList.remove('show');}
 window.checkOtherProduct=function(){const productSelect=document.getElementById('ltProduct');const otherField=document.getElementById('otherProductField');const otherInput=document.getElementById('otherProductInput');if(productSelect.value==='OTHER'){otherField.classList.add('show');otherInput.required=true;}else{otherField.classList.remove('show');otherInput.required=false;otherInput.value='';}}
 document.getElementById('ltForm').addEventListener('submit',async function(e){e.preventDefault();const dept=document.getElementById('ltDept').value;const tankNumber=document.getElementById('ltTank').value;const productSelect=document.getElementById('ltProduct').value;const otherProduct=document.getElementById('otherProductInput').value;const product=productSelect==='OTHER'?otherProduct:productSelect;const targetValue=document.getElementById('ltTargetValue').value;const targetType=document.getElementById('ltTargetType').value;const rate=document.getElementById('ltRate').value;const rateUnit=document.getElementById('ltRateUnit').value;const finishDate=document.getElementById('ltDate').value;const finishTime=document.getElementById('ltTime').value;const notes=document.getElementById('ltNotes').value;if(!product){alert('Please select or specify a product.');return;}
-try{const finishDateTime=new Date(finishDate+' '+finishTime);const tankData={department:dept,tankNumber:tankNumber,product:product,currentLevel:parseFloat(document.getElementById('level').value)||null,targetType:targetType,targetValue:parseFloat(targetValue),rate:parseFloat(rate),rateUnit:rateUnit,finishDate:finishDate,finishTime:finishTime,finishDateTime:finishDateTime,notes:notes,addedBy:currentUser.username,userName:currentUser.fullName||currentUser.username,addedAt:serverTimestamp(),lastModified:serverTimestamp(),modifiedBy:currentUser.username,status:'active',source:'PBCR_Calculator'};await addDoc(collection(db,'liveTanks'),tankData);alert('✅ Tank added to Live Tanks successfully!');closeLTModal();}catch(error){console.error('Error adding to Live Tanks:',error);alert('❌ Error adding to Live Tanks: '+error.message);}});
+try {
+    const finishDateTime = new Date(finishDate + ' ' + finishTime);
+    const tankData = {
+      department: dept,
+      tankNumber: tankNumber,
+      product: product,
+      currentLevel: parseFloat(document.getElementById('level').value) || null,
+      targetType: targetType,
+      targetValue: parseFloat(targetValue),
+      rate: parseFloat(rate),
+      rateUnit: rateUnit,
+      finishDate: finishDate,
+      finishTime: finishTime,
+      finishDateTime: finishDateTime,
+      notes: notes,
+      addedBy: currentUser.username,
+      userName: currentUser.fullName || currentUser.username,
+      addedAt: serverTimestamp(),
+      lastModified: serverTimestamp(),
+      modifiedBy: currentUser.username,
+      status: 'active',
+      source: 'PBCR_Calculator'
+    };
+    await addDoc(collection(db, 'liveTanks'), tankData);
+    alert('✅ Tank added to Live Tanks successfully!');
+    closeLTModal();
+  } catch(error) {
+    console.error('Error adding to Live Tanks:', error);
+    alert('❌ Error adding to Live Tanks: ' + error.message);
+  }
+});
 let currentFontSize=parseInt(localStorage.getItem('tanktools_font_size_index')||'16');
 function increaseFontSize(){if(currentFontSize<24){currentFontSize+=2;applyFontSize();localStorage.setItem('tanktools_font_size_index',currentFontSize);showFontMessage(`📈 Font size increased to ${currentFontSize}px`);}}
 function decreaseFontSize(){if(currentFontSize>12){currentFontSize-=2;applyFontSize();localStorage.setItem('tanktools_font_size_index',currentFontSize);showFontMessage(`📉 Font size decreased to ${currentFontSize}px`);}}

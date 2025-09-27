@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Check Specific Tanks</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f0f0f0; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; }
+        .status { padding: 10px; margin: 5px 0; border-radius: 5px; }
+        .found { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .not-found { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .testing { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Check Specific Tanks Status</h1>
+        <p>Testing availability of tanks: 460, 301, 834, 533, 532</p>
+        
+        <div id="status">
+            <div class="testing">🔄 Initializing Firebase connection...</div>
+        </div>
+        
+        <button onclick="testTanks()">🔄 Test Again</button>
+        <button onclick="window.location.href='index.html'">← Back to PBCR</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js';
+        import { getFirestore, doc, getDoc, collection, getDocs } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js';
+
+        const app = initializeApp({
+            apiKey: "AIzaSyD7lJcoY33FEC9d6eWy67QIO9SV4lS24pg",
+            authDomain: "tank-tools-knpc-c2d95.firebaseapp.com",
+            projectId: "tank-tools-knpc-c2d95",
+            storageBucket: "tank-tools-knpc-c2d95.firebasestorage.app",
+            messagingSenderId: "510062594324",
+            appId: "1:510062594324:web:b892fd02007a5ca2f0da01"
+        });
+
+        const db = getFirestore(app);
+        window.db = db;
+        window.doc = doc;
+        window.getDoc = getDoc;
+        
+        const REQUESTED_TANKS = ['460', '301', '834', '533', '532'];
+        
+        async function testSpecificTanks() {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = '<div class="testing">🔄 Checking Firebase tankData collections...</div>';
+            
+            try {
+                const departments = ['pbcr', 'plcr', 'washery'];
+                let results = [];
+                
+                for (const dept of departments) {
+                    statusDiv.innerHTML += `<div class="testing">📊 Checking ${dept} department...</div>`;
+                    
+                    const collectionRef = collection(db, 'tankData', dept, 'tanks');
+                    const snapshot = await getDocs(collectionRef);
+                    
+                    snapshot.forEach((docSnap) => {
+                        const tankId = docSnap.id;
+                        const data = docSnap.data();
+                        
+                        if (REQUESTED_TANKS.includes(tankId)) {
+                            results.push({
+                                tank: tankId,
+                                department: dept,
+                                found: true,
+                                data: data
+                            });
+                        }
+                    });
+                }
+                
+                // Check which tanks are missing
+                const foundTanks = results.map(r => r.tank);
+                const missingTanks = REQUESTED_TANKS.filter(tank => !foundTanks.includes(tank));
+                
+                // Display results
+                let html = '<h3>📊 Tank Status Results:</h3>';
+                
+                results.forEach(result => {
+                    html += `<div class="found">
+                        ✅ Tank ${result.tank} - Found in ${result.department} department<br>
+                        BPM: ${result.data.BPM || 'N/A'}, Min: ${result.data.min || 'N/A'}m, Max: ${result.data.max || 'N/A'}m
+                    </div>`;
+                });
+                
+                missingTanks.forEach(tank => {
+                    html += `<div class="not-found">
+                        ❌ Tank ${tank} - Not found in any department
+                    </div>`;
+                });
+                
+                html += `<div class="status" style="background: #e3f2fd; color: #0d47a1; border: 1px solid #bbdefb;">
+                    📈 Summary: ${results.length}/${REQUESTED_TANKS.length} tanks found
+                </div>`;
+                
+                statusDiv.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error checking tanks:', error);
+                statusDiv.innerHTML = `<div class="not-found">❌ Error: ${error.message}</div>`;
+            }
+        }
+        
+        window.testTanks = testSpecificTanks;
+        
+        // Auto-run on page load
+        setTimeout(testSpecificTanks, 1000);
+    </script>
+</body>
+</html>
