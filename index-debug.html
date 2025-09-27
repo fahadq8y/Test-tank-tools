@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PBCR & WASHERY - Debug Version</title>
+<link href="icon.png" rel="icon" type="image/png"/>
+
+<!-- Simplified PWA -->
+<link rel="manifest" href="manifest.json?v=3.1.2">
+<meta name="theme-color" content="#003366">
+
+<!-- Use simplified permissions -->
+<script src="permissions-simple.js"></script>
+
+<style>
+body {
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    color: white;
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    min-height: 100vh;
+}
+.main-container {
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 30px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+    text-align: center;
+}
+h1 {
+    color: #FFD700;
+    margin-bottom: 30px;
+}
+.status {
+    background: rgba(76,175,80,0.2);
+    padding: 20px;
+    border-radius: 10px;
+    margin: 20px 0;
+    border-left: 5px solid #4CAF50;
+}
+.error {
+    background: rgba(244,67,54,0.2);
+    border-left-color: #f44336;
+}
+input, select, button {
+    background: rgba(255,255,255,0.9);
+    border-radius: 12px;
+    border: none;
+    color: #003366;
+    font-size: 16px;
+    margin: 10px;
+    padding: 12px 20px;
+    cursor: pointer;
+}
+button:hover {
+    background: rgba(255,255,255,1);
+    transform: translateY(-1px);
+}
+</style>
+</head>
+<body>
+    <div class="main-container">
+        <h1>🔧 PBCR Calculator - Debug Version</h1>
+        
+        <div id="status" class="status">
+            🔄 تحميل النظام...
+        </div>
+        
+        <div>
+            <label>Tank Number:</label><br>
+            <input type="number" id="tankNumber" placeholder="أدخل رقم الخزان (مثل: 460)" value="460">
+        </div>
+        
+        <div>
+            <label>Current Level (m):</label><br>
+            <input type="number" id="currentLevel" placeholder="المستوى الحالي" step="0.1">
+        </div>
+        
+        <div>
+            <button onclick="testTank()">🧪 اختبار الخزان</button>
+            <button onclick="addMissingTanks()">➕ إضافة الخزانات</button>
+            <button onclick="goToFull()">🏠 النسخة الكاملة</button>
+        </div>
+        
+        <div id="result" style="margin-top: 20px;"></div>
+    </div>
+
+<script>
+console.log('🚀 Index debug version starting...');
+
+// Test tanks data
+const testTanks = {
+    '460': { BPM: 11500, minLevel: 1.5, maxLevel: 16.0 },
+    '301': { BPM: 10500, minLevel: 1.6, maxLevel: 15.8 },
+    '834': { BPM: 13200, minLevel: 1.4, maxLevel: 15.5 },
+    '533': { BPM: 12100, minLevel: 1.5, maxLevel: 16.0 },
+    '532': { BPM: 12000, minLevel: 1.5, maxLevel: 16.0 }
+};
+
+async function initializeApp() {
+    console.log('🔄 Initializing debug app...');
+    
+    const statusDiv = document.getElementById('status');
+    
+    try {
+        // Check permissions
+        const hasAccess = await window.checkPageAccess();
+        
+        if (hasAccess) {
+            statusDiv.innerHTML = '✅ النظام جاهز! جميع الخزانات المطلوبة متوفرة.';
+            statusDiv.className = 'status';
+        } else {
+            statusDiv.innerHTML = '❌ مشكلة في الصلاحيات';
+            statusDiv.className = 'status error';
+        }
+        
+    } catch (error) {
+        console.error('Initialization error:', error);
+        statusDiv.innerHTML = `❌ خطأ في التحميل: ${error.message}`;
+        statusDiv.className = 'status error';
+    }
+}
+
+function testTank() {
+    const tankNumber = document.getElementById('tankNumber').value;
+    const currentLevel = parseFloat(document.getElementById('currentLevel').value);
+    const resultDiv = document.getElementById('result');
+    
+    if (!tankNumber || !currentLevel) {
+        resultDiv.innerHTML = '<div class="status error">⚠️ يرجى إدخال رقم الخزان والمستوى الحالي</div>';
+        return;
+    }
+    
+    const tank = testTanks[tankNumber];
+    
+    if (tank) {
+        const barrels = currentLevel * tank.BPM;
+        resultDiv.innerHTML = `
+            <div class="status">
+                <strong>🎯 نتيجة الاختبار:</strong><br>
+                خزان ${tankNumber}: ✅ متوفر<br>
+                BPM: ${tank.BPM.toLocaleString()}<br>
+                المستوى: ${currentLevel}m<br>
+                البراميل: ${barrels.toLocaleString()} برميل
+            </div>
+        `;
+    } else {
+        resultDiv.innerHTML = `
+            <div class="status error">
+                ❌ خزان ${tankNumber} غير متوفر في قاعدة البيانات<br>
+                الخزانات المتوفرة: 460, 301, 834, 533, 532
+            </div>
+        `;
+    }
+}
+
+function addMissingTanks() {
+    const resultDiv = document.getElementById('result');
+    resultDiv.innerHTML = `
+        <div class="status">
+            ✅ جميع الخزانات المطلوبة متوفرة:<br>
+            ${Object.keys(testTanks).map(tank => `• خزان ${tank}`).join('<br>')}
+        </div>
+    `;
+}
+
+function goToFull() {
+    window.location.href = '/index.html';
+}
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', initializeApp);
+
+console.log('✅ Debug version loaded successfully');
+</script>
+
+</body>
+</html>
+<!-- DEBUG VERSION - No complex Firebase or service worker -->
