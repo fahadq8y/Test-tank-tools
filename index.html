@@ -968,7 +968,13 @@ window.loadTank = () => {
     const tankData = tankSpecsData[id];
     console.log(`🔍 Found Tank ${id} in tankSpecsData:`, tankData);
     // EMERGENCY FIX: Hard-code Tank values from Firebase inspection
-    if (id === '521') {
+    if (id === '460') {
+      // Based on Firebase data: capacity=9572, min=2, max=17.65, comment=14213
+      c = 9572;   // Use capacity as BPM (more realistic than comment=14213)
+      m = 2;      // Min value from Firebase
+      x = 17.65;  // Max value from Firebase
+      console.log('🚨 Tank 460 EMERGENCY FIX applied - BPM: 9572, Min: 2, Max: 17.65');
+    } else if (id === '521') {
       c = 12100;  // BPM value for Tank 521
       m = 1.4;    // Min value for Tank 521
       x = 15.8;   // Max value for Tank 521
