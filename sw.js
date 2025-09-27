@@ -3,8 +3,8 @@
 // Version: 3.1.1 - Fixed integrity issues
 // Last Updated: 2025-09-27
 
-const CACHE_NAME = 'tanktools-v3.1.2';
-const CACHE_VERSION = '3.1.2';
+const CACHE_NAME = 'tanktools-v3.1.3';
+const CACHE_VERSION = '3.1.3';
 
 // Files to cache for offline functionality
 const CORE_ASSETS = [
@@ -15,6 +15,7 @@ const CORE_ASSETS = [
   '/plcr.html',
   '/NMOGASBL.html',
   '/notifications.html',
+  '/permissions.js',
   '/icon.png',
   '/background.jpg',
   '/manifest.json'
@@ -187,10 +188,18 @@ async function staleWhileRevalidate(request) {
   const cachedResponse = await caches.match(request);
   
   const networkResponsePromise = fetch(request).then(networkResponse => {
-    if (networkResponse.ok) {
-      caches.open(CACHE_NAME).then(cache => {
-        cache.put(request, networkResponse.clone());
-      });
+    if (networkResponse && networkResponse.ok && networkResponse.body) {
+      // Safe clone handling to prevent "body already used" error
+      try {
+        const responseClone = networkResponse.clone();
+        caches.open(CACHE_NAME).then(cache => {
+          cache.put(request, responseClone);
+        }).catch(cacheError => {
+          console.warn('SW: Cache update failed:', cacheError.message);
+        });
+      } catch (cloneError) {
+        console.warn('SW: Response clone failed:', cloneError.message);
+      }
     }
     return networkResponse;
   }).catch(() => {
