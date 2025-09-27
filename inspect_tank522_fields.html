@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Inspect Tank 522 Fields</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f0f0f0; }
+        .container { max-width: 800px; background: white; padding: 30px; border-radius: 10px; margin: 0 auto; }
+        .btn { background: #4CAF50; color: white; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; margin: 10px; }
+        .result { margin: 20px 0; padding: 15px; border-radius: 8px; background: #f8f9fa; border: 1px solid #ddd; }
+        .field { background: #e7f3ff; padding: 10px; margin: 5px 0; border-radius: 5px; border-left: 4px solid #2196F3; }
+        .field-name { font-weight: bold; color: #1976D2; }
+        .field-value { margin-top: 5px; font-family: monospace; }
+        .missing { background: #ffebee; border-left-color: #f44336; }
+        .found { background: #e8f5e8; border-left-color: #4CAF50; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🔍 Tank 522 Field Inspector</h2>
+        <p>This will show the EXACT field names and values for Tank 522 in Firebase</p>
+        
+        <button class="btn" onclick="inspectTank522()">🔍 Inspect Tank 522 Fields</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const app = initializeApp({
+            apiKey: "AIzaSyD7lJcoY33FEC9d6eWy67QIO9SV4lS24pg",
+            authDomain: "tank-tools-knpc-c2d95.firebaseapp.com",
+            projectId: "tank-tools-knpc-c2d95",
+            storageBucket: "tank-tools-knpc-c2d95.firebasestorage.app",
+            messagingSenderId: "510062594324",
+            appId: "1:510062564324:web:b892fd02007a5ca2f0da01"
+        });
+        
+        window.db = getFirestore(app);
+        window.doc = doc;
+        window.getDoc = getDoc;
+        console.log('🔥 Firebase initialized');
+    </script>
+
+    <script>
+        function showResult(html) {
+            document.getElementById('result').innerHTML = html;
+        }
+
+        async function inspectTank522() {
+            showResult('<div class="result">⏳ Inspecting Tank 522 in Firebase...</div>');
+            
+            let resultHtml = '<div class="result"><h3>📊 Tank 522 Field Analysis:</h3>';
+            
+            try {
+                // Get Tank 522 from Firebase
+                const tank522Ref = doc(window.db, "tankData", "pbcr", "tanks", "522");
+                const tank522Doc = await getDoc(tank522Ref);
+                
+                if (tank522Doc.exists()) {
+                    const tankData = tank522Doc.data();
+                    
+                    resultHtml += '<div class="found">✅ Tank 522 found in Firebase</div>';
+                    
+                    // Show complete raw data
+                    resultHtml += '<h4>📋 Complete Raw Data:</h4>';
+                    resultHtml += '<pre>' + JSON.stringify(tankData, null, 2) + '</pre>';
+                    
+                    // Analyze each field
+                    resultHtml += '<h4>🔍 Field Analysis:</h4>';
+                    
+                    const fields = Object.keys(tankData);
+                    resultHtml += `<div class="field"><strong>Total fields found: ${fields.length}</strong></div>`;
+                    
+                    // Check for BPM-related fields
+                    const bpmFields = ['comment', 'Comment', 'BPM', 'bpm', 'capacity', 'Capacity'];
+                    let foundBPM = null;
+                    
+                    for (const field of bpmFields) {
+                        if (tankData.hasOwnProperty(field)) {
+                            resultHtml += `<div class="field found">
+                                <div class="field-name">✅ BPM Field Found: "${field}"</div>
+                                <div class="field-value">Value: ${tankData[field]}</div>
+                            </div>`;
+                            if (!foundBPM) foundBPM = field;
+                        } else {
+                            resultHtml += `<div class="field missing">
+                                <div class="field-name">❌ Not found: "${field}"</div>
+                            </div>`;
+                        }
+                    }
+                    
+                    // Check for Min/Max fields
+                    const minFields = ['min', 'Min', 'minimum', 'Minimum'];
+                    const maxFields = ['max', 'Max', 'maximum', 'Maximum'];
+                    
+                    let foundMin = null, foundMax = null;
+                    
+                    for (const field of minFields) {
+                        if (tankData.hasOwnProperty(field)) {
+                            resultHtml += `<div class="field found">
+                                <div class="field-name">✅ Min Field Found: "${field}"</div>
+                                <div class="field-value">Value: ${tankData[field]}</div>
+                            </div>`;
+                            if (!foundMin) foundMin = field;
+                        }
+                    }
+                    
+                    for (const field of maxFields) {
+                        if (tankData.hasOwnProperty(field)) {
+                            resultHtml += `<div class="field found">
+                                <div class="field-name">✅ Max Field Found: "${field}"</div>
+                                <div class="field-value">Value: ${tankData[field]}</div>
+                            </div>`;
+                            if (!foundMax) foundMax = field;
+                        }
+                    }
+                    
+                    // Show ALL fields
+                    resultHtml += '<h4>📝 All Fields in Tank 522:</h4>';
+                    for (const [key, value] of Object.entries(tankData)) {
+                        resultHtml += `<div class="field">
+                            <div class="field-name">"${key}"</div>
+                            <div class="field-value">Type: ${typeof value} | Value: ${JSON.stringify(value)}</div>
+                        </div>`;
+                    }
+                    
+                    // Generate correction code
+                    if (foundBPM || foundMin || foundMax) {
+                        resultHtml += '<h4>🛠️ Correction Code for index.html:</h4>';
+                        resultHtml += '<pre>// Replace the field extraction with:\n';
+                        resultHtml += `c = tankData.${foundBPM || 'comment'} || 0;\n`;
+                        resultHtml += `m = tankData.${foundMin || 'min'} || 0;\n`;
+                        resultHtml += `x = tankData.${foundMax || 'max'} || 0;</pre>`;
+                    }
+                    
+                } else {
+                    resultHtml += '<div class="missing">❌ Tank 522 not found in Firebase</div>';
+                }
+                
+            } catch (error) {
+                resultHtml += `<div class="missing">❌ Error: ${error.message}</div>`;
+            }
+            
+            resultHtml += '</div>';
+            showResult(resultHtml);
+        }
+
+        // Make function global
+        window.inspectTank522 = inspectTank522;
+    </script>
+</body>
+</html>

@@ -1,22 +1,19 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#003366">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Tank Tools - منبه">
+    <meta name="apple-mobile-web-app-title" content="Tank Tools - Alarms">
     <meta name="mobile-web-app-capable" content="yes">
     
     <!-- iOS Safari specific settings -->
     <meta name="format-detection" content="telephone=no">
     <meta name="apple-touch-fullscreen" content="yes">
     
-    <!-- Prevent zoom on focus -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    
-    <title>Tank Tools - تنبيهات ومنبه مستمر</title>
+    <title>Tank Tools - Notifications & Persistent Alarms</title>
     
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" href="/icon.png" type="image/png">
@@ -35,7 +32,7 @@
             min-height: 100vh;
             padding: 20px;
             color: white;
-            direction: rtl;
+            direction: ltr;
         }
 
         .container {
@@ -233,7 +230,7 @@
         }
 
         .sound-option input[type="radio"] {
-            margin-left: 10px;
+            margin-right: 10px;
         }
 
         .volume-control {
@@ -264,6 +261,46 @@
             transform: scale(1.1);
         }
 
+        .how-it-works {
+            background: rgba(33, 150, 243, 0.1);
+            border: 1px solid rgba(33, 150, 243, 0.3);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .how-it-works h3 {
+            color: #2196F3;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .how-it-works ul {
+            list-style-position: inside;
+            line-height: 1.6;
+        }
+
+        .how-it-works li {
+            margin-bottom: 8px;
+            padding-left: 10px;
+        }
+
+        .status-info {
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .status-info h4 {
+            color: #FFC107;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
         @media (max-width: 768px) {
             .container {
                 margin: 10px;
@@ -285,124 +322,161 @@
     
     <div class="container">
         <div class="header">
-            <h1>🔔 تنبيهات ومنبه مستمر</h1>
-            <p>إعداد التنبيهات والمنبه للتطبيق</p>
+            <h1>🔔 Notifications & Persistent Alarms</h1>
+            <p>Setup notifications and persistent alarms for Tank Tools</p>
         </div>
 
-        <!-- صلاحيات التنبيهات -->
+        <!-- How it Works Section -->
+        <div class="how-it-works">
+            <h3>📋 How the Alarm System Works</h3>
+            <ul>
+                <li><strong>Manual Operation:</strong> User sets alarm times manually</li>
+                <li><strong>Persistent Alarms:</strong> Keep ringing until manually stopped</li>
+                <li><strong>Browser-Based:</strong> Works in web browsers (Chrome, Safari, Firefox)</li>
+                <li><strong>Requires Permission:</strong> Browser notification permission needed</li>
+                <li><strong>Stay Active:</strong> Keep the browser tab open for alarms to work</li>
+                <li><strong>Multiple Sounds:</strong> Choose from different alarm sounds</li>
+                <li><strong>Auto Reminders:</strong> Set hourly or work-hour reminders</li>
+            </ul>
+        </div>
+
+        <!-- Current Status -->
+        <div class="status-info">
+            <h4>⚡ Current System Status</h4>
+            <p id="systemStatus">Checking alarm system status...</p>
+        </div>
+
+        <!-- Notification Permissions -->
         <div class="notification-section">
             <div class="section-title">
                 <span class="icon">🔐</span>
-                صلاحيات التنبيهات
+                Notification Permissions
             </div>
             
             <div class="permission-status" id="permissionStatus">
-                <span>حالة صلاحيات التنبيهات:</span>
+                <span>Notification Permission Status:</span>
                 <div style="display: flex; align-items: center;">
-                    <span id="permissionText">جاري التحقق...</span>
+                    <span id="permissionText">Checking...</span>
                     <div class="status-indicator status-default" id="permissionIndicator"></div>
                 </div>
             </div>
 
             <button class="btn" id="requestPermissionBtn" onclick="requestNotificationPermission()">
-                طلب صلاحية التنبيهات
+                Request Notification Permission
             </button>
         </div>
 
-        <!-- اختبار التنبيهات -->
+        <!-- Test Notifications -->
         <div class="notification-section">
             <div class="section-title">
                 <span class="icon">📢</span>
-                اختبار التنبيهات
+                Test Notifications
             </div>
             
             <button class="btn btn-warning" onclick="testNotification()">
-                إرسال تنبيه تجريبي
+                Send Test Notification
             </button>
             
             <button class="btn btn-warning" onclick="testPersistentNotification()">
-                إرسال تنبيه مستمر تجريبي
+                Send Persistent Test Notification
             </button>
         </div>
 
-        <!-- المنبه المستمر -->
+        <!-- Persistent Alarm -->
         <div class="notification-section">
             <div class="section-title">
                 <span class="icon">⏰</span>
-                المنبه المستمر
+                Persistent Alarm
             </div>
             
             <div class="alarm-controls">
                 <input type="time" id="alarmTime" class="time-input" value="07:00">
-                <button class="btn" onclick="setAlarm()">تفعيل المنبه</button>
+                <button class="btn" onclick="setAlarm()">Set Alarm</button>
             </div>
             
             <div id="activeAlarms"></div>
             
             <button class="btn btn-danger" onclick="stopAllAlarms()" style="margin-top: 15px;">
-                إيقاف جميع المنبهات
+                Stop All Alarms
             </button>
         </div>
 
-        <!-- إعدادات الصوت -->
+        <!-- Sound Settings -->
         <div class="notification-section">
             <div class="section-title">
                 <span class="icon">🔊</span>
-                إعدادات الصوت
+                Sound Settings
             </div>
             
             <div class="notification-sound-controls">
                 <div class="sound-option">
                     <input type="radio" name="notificationSound" value="default" id="soundDefault" checked>
-                    <label for="soundDefault">الصوت الافتراضي</label>
+                    <label for="soundDefault">Default Sound</label>
                 </div>
                 <div class="sound-option">
                     <input type="radio" name="notificationSound" value="beep" id="soundBeep">
-                    <label for="soundBeep">صوت بيب متكرر</label>
+                    <label for="soundBeep">Repeating Beep</label>
                 </div>
                 <div class="sound-option">
                     <input type="radio" name="notificationSound" value="alarm" id="soundAlarm">
-                    <label for="soundAlarm">صوت منبه قوي</label>
+                    <label for="soundAlarm">Strong Alarm Sound</label>
                 </div>
                 
                 <div class="volume-control">
-                    <label for="volumeRange">مستوى الصوت:</label>
+                    <label for="volumeRange">Volume Level:</label>
                     <input type="range" id="volumeRange" class="volume-slider" min="0" max="100" value="80">
                     <span id="volumeValue">80%</span>
                 </div>
             </div>
         </div>
 
-        <!-- التنبيهات التلقائية -->
+        <!-- Automatic Reminders -->
         <div class="notification-section">
             <div class="section-title">
                 <span class="icon">🤖</span>
-                التنبيهات التلقائية
+                Automatic Reminders
             </div>
             
             <button class="btn" onclick="scheduleHourlyReminders()">
-                تفعيل التذكير كل ساعة
+                Enable Hourly Reminders
             </button>
             
             <button class="btn btn-warning" onclick="scheduleWorkReminders()">
-                تذكير أوقات العمل (كل 30 دقيقة)
+                Work Hours Reminders (Every 30 minutes)
             </button>
             
             <button class="btn btn-danger" onclick="clearAllReminders()">
-                إلغاء جميع التذكيرات
+                Clear All Reminders
             </button>
+        </div>
+
+        <!-- Requirements & Limitations -->
+        <div class="notification-section">
+            <div class="section-title">
+                <span class="icon">⚠️</span>
+                Requirements & Limitations
+            </div>
+            
+            <ul style="line-height: 1.8; padding-left: 20px;">
+                <li><strong>Browser Tab:</strong> Keep this tab open for alarms to work</li>
+                <li><strong>Permissions:</strong> Allow notifications when prompted</li>
+                <li><strong>Sound:</strong> Enable sound in your device settings</li>
+                <li><strong>Mobile:</strong> Add to home screen for better performance</li>
+                <li><strong>Battery:</strong> Alarms may not work if device sleeps</li>
+                <li><strong>Internet:</strong> No internet required once page is loaded</li>
+            </ul>
         </div>
     </div>
 
-    <!-- التنبيه المستمر -->
+    <!-- Persistent Notification Display -->
     <div class="persistent-notification" id="persistentNotification">
         <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span>منبه نشط - اضغط لإيقافه</span>
+            <span>Active Alarm - Click to Stop</span>
             <button onclick="closePersistentNotification()" style="background: none; border: none; color: white; font-size: 18px; cursor: pointer;">×</button>
         </div>
     </div>
 
-    <!-- ملفات الصوت للمنبه -->
+    <!-- Audio files for alarms -->
     <audio id="alarmBeep" preload="auto" loop>
         <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwYAzyA0OzdiwQAZFl1FQ==" type="audio/wav">
     </audio>
@@ -412,20 +486,51 @@
     </audio>
 
     <script>
-        // متغيرات عامة
+        // Global variables
         let activeAlarms = [];
         let alarmIntervals = [];
         let persistentAlarmInterval = null;
         let notificationPermission = 'default';
 
-        // تحديد صلاحيات التنبيهات عند تحميل الصفحة
+        // Initialize when page loads
         document.addEventListener('DOMContentLoaded', function() {
             checkNotificationPermission();
             updateVolumeDisplay();
             loadSavedSettings();
+            updateSystemStatus();
         });
 
-        // تحديث عرض مستوى الصوت
+        // Update system status
+        function updateSystemStatus() {
+            const statusElement = document.getElementById('systemStatus');
+            let status = '';
+            
+            if ('Notification' in window) {
+                status += '✅ Browser supports notifications\n';
+            } else {
+                status += '❌ Browser does not support notifications\n';
+            }
+            
+            if ('serviceWorker' in navigator) {
+                status += '✅ Service Worker supported\n';
+            } else {
+                status += '⚠️ Service Worker not supported\n';
+            }
+            
+            if ('wakeLock' in navigator) {
+                status += '✅ Wake Lock supported (keeps screen on)\n';
+            } else {
+                status += '⚠️ Wake Lock not supported\n';
+            }
+            
+            status += `📱 Platform: ${navigator.platform}\n`;
+            status += `🌐 User Agent: ${navigator.userAgent.substring(0, 50)}...`;
+            
+            statusElement.style.whiteSpace = 'pre-line';
+            statusElement.textContent = status;
+        }
+
+        // Update volume display
         function updateVolumeDisplay() {
             const volumeRange = document.getElementById('volumeRange');
             const volumeValue = document.getElementById('volumeValue');
@@ -436,14 +541,14 @@
             });
         }
 
-        // تحديث مستوى صوت الملفات الصوتية
+        // Update audio volume
         function updateAudioVolume() {
             const volume = document.getElementById('volumeRange').value / 100;
             document.getElementById('alarmBeep').volume = volume;
             document.getElementById('alarmSound').volume = volume;
         }
 
-        // حفظ الإعدادات
+        // Save settings
         function saveSettings() {
             const settings = {
                 volume: document.getElementById('volumeRange').value,
@@ -453,7 +558,7 @@
             localStorage.setItem('tankToolsNotificationSettings', JSON.stringify(settings));
         }
 
-        // تحميل الإعدادات المحفوظة
+        // Load saved settings
         function loadSavedSettings() {
             const saved = localStorage.getItem('tankToolsNotificationSettings');
             if (saved) {
@@ -474,19 +579,19 @@
             }
         }
 
-        // فحص صلاحيات التنبيهات
+        // Check notification permissions
         function checkNotificationPermission() {
             if ('Notification' in window) {
                 notificationPermission = Notification.permission;
                 updatePermissionDisplay();
             } else {
-                document.getElementById('permissionText').textContent = 'غير مدعوم في هذا المتصفح';
+                document.getElementById('permissionText').textContent = 'Not supported in this browser';
                 document.getElementById('permissionIndicator').className = 'status-indicator status-denied';
                 document.getElementById('requestPermissionBtn').disabled = true;
             }
         }
 
-        // تحديث عرض حالة الصلاحيات
+        // Update permission display
         function updatePermissionDisplay() {
             const permissionText = document.getElementById('permissionText');
             const permissionIndicator = document.getElementById('permissionIndicator');
@@ -494,26 +599,26 @@
 
             switch(notificationPermission) {
                 case 'granted':
-                    permissionText.textContent = 'مسموح ✓';
+                    permissionText.textContent = 'Granted ✓';
                     permissionIndicator.className = 'status-indicator status-granted';
-                    requestBtn.textContent = 'الصلاحيات مفعلة';
+                    requestBtn.textContent = 'Permissions Enabled';
                     requestBtn.disabled = true;
                     break;
                 case 'denied':
-                    permissionText.textContent = 'مرفوض ✗';
+                    permissionText.textContent = 'Denied ✗';
                     permissionIndicator.className = 'status-indicator status-denied';
-                    requestBtn.textContent = 'الصلاحيات مرفوضة - فعلها من إعدادات المتصفح';
+                    requestBtn.textContent = 'Permissions Denied - Enable in Browser Settings';
                     requestBtn.disabled = true;
                     break;
                 default:
-                    permissionText.textContent = 'في انتظار الموافقة';
+                    permissionText.textContent = 'Waiting for approval';
                     permissionIndicator.className = 'status-indicator status-default';
-                    requestBtn.textContent = 'طلب صلاحية التنبيهات';
+                    requestBtn.textContent = 'Request Notification Permission';
                     requestBtn.disabled = false;
             }
         }
 
-        // طلب صلاحية التنبيهات
+        // Request notification permission
         async function requestNotificationPermission() {
             if ('Notification' in window) {
                 const permission = await Notification.requestPermission();
@@ -521,20 +626,20 @@
                 updatePermissionDisplay();
                 
                 if (permission === 'granted') {
-                    showSuccessMessage('تم منح صلاحيات التنبيهات بنجاح! 🎉');
+                    showSuccessMessage('Notification permissions granted successfully! 🎉');
                 }
             }
         }
 
-        // إرسال تنبيه تجريبي
+        // Send test notification
         function testNotification() {
             if (notificationPermission !== 'granted') {
-                alert('يجب منح صلاحيات التنبيهات أولاً');
+                alert('Please grant notification permissions first');
                 return;
             }
 
-            const notification = new Notification('Tank Tools - تنبيه تجريبي', {
-                body: 'هذا تنبيه تجريبي من تطبيق Tank Tools',
+            const notification = new Notification('Tank Tools - Test Notification', {
+                body: 'This is a test notification from Tank Tools',
                 icon: '/icon.png',
                 tag: 'test-notification'
             });
@@ -551,27 +656,27 @@
             }, 5000);
         }
 
-        // إرسال تنبيه مستمر تجريبي
+        // Send persistent test notification
         function testPersistentNotification() {
             if (notificationPermission !== 'granted') {
-                alert('يجب منح صلاحيات التنبيهات أولاً');
+                alert('Please grant notification permissions first');
                 return;
             }
 
-            createPersistentAlarm('تنبيه مستمر تجريبي', 'هذا تنبيه مستمر - اضغط لإيقافه');
+            createPersistentAlarm('Persistent Test Notification', 'This is a persistent notification - click to stop');
         }
 
-        // إنشاء منبه مستمر
+        // Create persistent alarm
         function createPersistentAlarm(title, message) {
-            // إظهار التنبيه المستمر في الواجهة
+            // Show persistent notification in UI
             const persistentDiv = document.getElementById('persistentNotification');
             persistentDiv.querySelector('span').textContent = title;
             persistentDiv.style.display = 'block';
 
-            // تشغيل الصوت المستمر
+            // Play continuous sound
             playAlarmSound();
 
-            // إرسال تنبيهات متكررة
+            // Send repeated notifications
             persistentAlarmInterval = setInterval(() => {
                 if (notificationPermission === 'granted') {
                     const notification = new Notification(title, {
@@ -585,15 +690,15 @@
                         closePersistentNotification();
                     };
                 }
-            }, 10000); // كل 10 ثواني
+            }, 10000); // Every 10 seconds
 
-            // اهتزاز إذا كان مدعوماً
+            // Vibrate if supported
             if ('vibrate' in navigator) {
                 navigator.vibrate([200, 100, 200, 100, 200]);
             }
         }
 
-        // إغلاق التنبيه المستمر
+        // Close persistent notification
         function closePersistentNotification() {
             document.getElementById('persistentNotification').style.display = 'none';
             
@@ -605,35 +710,35 @@
             stopAlarmSound();
         }
 
-        // تشغيل صوت التنبيه
+        // Play notification sound
         function playNotificationSound() {
             const soundType = document.querySelector('input[name="notificationSound"]:checked').value;
             
             if (soundType === 'beep') {
                 const beepSound = document.getElementById('alarmBeep');
-                beepSound.play().catch(e => console.log('لا يمكن تشغيل الصوت:', e));
+                beepSound.play().catch(e => console.log('Cannot play sound:', e));
             } else if (soundType === 'alarm') {
                 const alarmSound = document.getElementById('alarmSound');
-                alarmSound.play().catch(e => console.log('لا يمكن تشغيل الصوت:', e));
+                alarmSound.play().catch(e => console.log('Cannot play sound:', e));
             }
         }
 
-        // تشغيل صوت المنبه المستمر
+        // Play alarm sound continuously
         function playAlarmSound() {
             const soundType = document.querySelector('input[name="notificationSound"]:checked').value;
             
             if (soundType === 'beep') {
                 const beepSound = document.getElementById('alarmBeep');
                 beepSound.loop = true;
-                beepSound.play().catch(e => console.log('لا يمكن تشغيل الصوت:', e));
+                beepSound.play().catch(e => console.log('Cannot play sound:', e));
             } else if (soundType === 'alarm') {
                 const alarmSound = document.getElementById('alarmSound');
                 alarmSound.loop = true;
-                alarmSound.play().catch(e => console.log('لا يمكن تشغيل الصوت:', e));
+                alarmSound.play().catch(e => console.log('Cannot play sound:', e));
             }
         }
 
-        // إيقاف صوت المنبه
+        // Stop alarm sound
         function stopAlarmSound() {
             document.getElementById('alarmBeep').pause();
             document.getElementById('alarmSound').pause();
@@ -641,18 +746,18 @@
             document.getElementById('alarmSound').currentTime = 0;
         }
 
-        // تعيين منبه
+        // Set alarm
         function setAlarm() {
             const timeInput = document.getElementById('alarmTime');
             const alarmTime = timeInput.value;
             
             if (!alarmTime) {
-                alert('يرجى اختيار وقت للمنبه');
+                alert('Please select a time for the alarm');
                 return;
             }
 
             if (notificationPermission !== 'granted') {
-                alert('يجب منح صلاحيات التنبيهات أولاً');
+                alert('Please grant notification permissions first');
                 return;
             }
 
@@ -667,17 +772,17 @@
             displayActiveAlarms();
             saveSettings();
 
-            showSuccessMessage(`تم تعيين المنبه لـ ${alarmTime} ⏰`);
+            showSuccessMessage(`Alarm set for ${alarmTime} ⏰`);
         }
 
-        // جدولة المنبه
+        // Schedule alarm
         function scheduleAlarm(alarm) {
             const now = new Date();
             const [hours, minutes] = alarm.time.split(':');
             let alarmDate = new Date(now);
             alarmDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
-            // إذا كان الوقت قد مضى اليوم، اجعله غداً
+            // If time has passed today, schedule for tomorrow
             if (alarmDate <= now) {
                 alarmDate.setDate(alarmDate.getDate() + 1);
             }
@@ -694,14 +799,14 @@
             });
         }
 
-        // تفعيل المنبه
+        // Trigger alarm
         function triggerAlarm(alarm) {
             createPersistentAlarm(
-                `⏰ منبه Tank Tools - ${alarm.time}`,
-                'حان وقت المنبه! اضغط لإيقافه'
+                `⏰ Tank Tools Alarm - ${alarm.time}`,
+                'Alarm time! Click to stop the alarm'
             );
 
-            // جدولة المنبه للغد
+            // Schedule alarm for next day
             setTimeout(() => {
                 if (alarm.active) {
                     scheduleAlarm(alarm);
@@ -709,7 +814,7 @@
             }, 1000);
         }
 
-        // عرض المنبهات النشطة
+        // Display active alarms
         function displayActiveAlarms() {
             const container = document.getElementById('activeAlarms');
             container.innerHTML = '';
@@ -720,21 +825,21 @@
                 alarmDiv.innerHTML = `
                     <div>
                         <div class="alarm-time">${alarm.time}</div>
-                        <div style="font-size: 0.9rem; opacity: 0.8;">منبه نشط</div>
+                        <div style="font-size: 0.9rem; opacity: 0.8;">Active Alarm</div>
                     </div>
                     <div class="alarm-actions">
-                        <button class="btn btn-danger btn-small" onclick="deleteAlarm(${alarm.id})">حذف</button>
+                        <button class="btn btn-danger btn-small" onclick="deleteAlarm(${alarm.id})">Delete</button>
                     </div>
                 `;
                 container.appendChild(alarmDiv);
             });
         }
 
-        // حذف منبه
+        // Delete alarm
         function deleteAlarm(alarmId) {
             activeAlarms = activeAlarms.filter(alarm => alarm.id !== alarmId);
             
-            // إلغاء المؤقت
+            // Cancel timer
             const intervalIndex = alarmIntervals.findIndex(interval => interval.id === alarmId);
             if (intervalIndex !== -1) {
                 clearTimeout(alarmIntervals[intervalIndex].timeoutId);
@@ -743,10 +848,10 @@
 
             displayActiveAlarms();
             saveSettings();
-            showSuccessMessage('تم حذف المنبه');
+            showSuccessMessage('Alarm deleted');
         }
 
-        // إيقاف جميع المنبهات
+        // Stop all alarms
         function stopAllAlarms() {
             activeAlarms = [];
             alarmIntervals.forEach(interval => clearTimeout(interval.timeoutId));
@@ -756,23 +861,23 @@
             displayActiveAlarms();
             saveSettings();
             
-            showSuccessMessage('تم إيقاف جميع المنبهات');
+            showSuccessMessage('All alarms stopped');
         }
 
-        // جدولة تذكيرات كل ساعة
+        // Schedule hourly reminders
         function scheduleHourlyReminders() {
             if (notificationPermission !== 'granted') {
-                alert('يجب منح صلاحيات التنبيهات أولاً');
+                alert('Please grant notification permissions first');
                 return;
             }
 
-            // إلغاء التذكيرات السابقة
+            // Clear previous reminders
             clearAllReminders();
 
             const hourlyInterval = setInterval(() => {
                 const now = new Date();
-                const notification = new Notification('Tank Tools - تذكير كل ساعة', {
-                    body: `الوقت الآن ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`,
+                const notification = new Notification('Tank Tools - Hourly Reminder', {
+                    body: `Current time: ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`,
                     icon: '/icon.png',
                     tag: 'hourly-reminder'
                 });
@@ -780,16 +885,16 @@
                 playNotificationSound();
 
                 setTimeout(() => notification.close(), 10000);
-            }, 60 * 60 * 1000); // كل ساعة
+            }, 60 * 60 * 1000); // Every hour
 
             localStorage.setItem('tankToolsHourlyReminder', hourlyInterval);
-            showSuccessMessage('تم تفعيل التذكير كل ساعة ⏰');
+            showSuccessMessage('Hourly reminders enabled ⏰');
         }
 
-        // جدولة تذكيرات أوقات العمل
+        // Schedule work reminders
         function scheduleWorkReminders() {
             if (notificationPermission !== 'granted') {
-                alert('يجب منح صلاحيات التنبيهات أولاً');
+                alert('Please grant notification permissions first');
                 return;
             }
 
@@ -797,10 +902,10 @@
                 const now = new Date();
                 const hour = now.getHours();
                 
-                // أوقات العمل من 6 صباحاً إلى 6 مساءً
+                // Work hours 6 AM to 6 PM
                 if (hour >= 6 && hour <= 18) {
-                    const notification = new Notification('Tank Tools - تذكير العمل', {
-                        body: 'تذكير: راجع حالة الخزانات والعمليات',
+                    const notification = new Notification('Tank Tools - Work Reminder', {
+                        body: 'Reminder: Check tank status and operations',
                         icon: '/icon.png',
                         tag: 'work-reminder'
                     });
@@ -809,13 +914,13 @@
 
                     setTimeout(() => notification.close(), 15000);
                 }
-            }, 30 * 60 * 1000); // كل 30 دقيقة
+            }, 30 * 60 * 1000); // Every 30 minutes
 
             localStorage.setItem('tankToolsWorkReminder', workInterval);
-            showSuccessMessage('تم تفعيل تذكير أوقات العمل 💼');
+            showSuccessMessage('Work hours reminders enabled 💼');
         }
 
-        // إلغاء جميع التذكيرات
+        // Clear all reminders
         function clearAllReminders() {
             const hourlyReminder = localStorage.getItem('tankToolsHourlyReminder');
             const workReminder = localStorage.getItem('tankToolsWorkReminder');
@@ -830,10 +935,10 @@
                 localStorage.removeItem('tankToolsWorkReminder');
             }
 
-            showSuccessMessage('تم إلغاء جميع التذكيرات');
+            showSuccessMessage('All reminders cleared');
         }
 
-        // عرض رسالة نجاح
+        // Show success message
         function showSuccessMessage(message) {
             const successDiv = document.createElement('div');
             successDiv.style.cssText = `
@@ -857,7 +962,7 @@
             }, 3000);
         }
 
-        // العودة للصفحة السابقة
+        // Go back to previous page
         function goBack() {
             if (document.referrer) {
                 window.history.back();
@@ -866,7 +971,7 @@
             }
         }
 
-        // تسجيل Service Worker للتنبيهات
+        // Register Service Worker for notifications
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js')
                 .then(registration => {
@@ -877,16 +982,16 @@
                 });
         }
 
-        // منع إغلاق الصفحة عند وجود منبه نشط
+        // Prevent page closure when alarm is active
         window.addEventListener('beforeunload', function(e) {
             if (persistentAlarmInterval) {
                 e.preventDefault();
-                e.returnValue = 'يوجد منبه نشط. هل تريد حقاً المغادرة؟';
+                e.returnValue = 'There is an active alarm. Do you really want to leave?';
                 return e.returnValue;
             }
         });
 
-        // الحفاظ على النشاط عند تشغيل المنبه
+        // Wake lock functionality
         let wakeLock = null;
 
         async function requestWakeLock() {
@@ -908,13 +1013,13 @@
             }
         }
 
-        // طلب Wake Lock عند تفعيل منبه
+        // Set alarm with wake lock
         function setAlarmWithWakeLock() {
             setAlarm();
             requestWakeLock();
         }
 
-        // تحديث زر المنبه لاستخدام Wake Lock
+        // Update alarm button to use wake lock
         document.addEventListener('DOMContentLoaded', function() {
             const alarmButton = document.querySelector('.alarm-controls .btn');
             if (alarmButton) {

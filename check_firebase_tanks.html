@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Check Firebase Tanks</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f0f0f0; }
+        .container { max-width: 800px; background: white; padding: 30px; border-radius: 10px; margin: 0 auto; }
+        .btn { background: #4CAF50; color: white; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; margin: 10px; }
+        .result { margin: 20px 0; padding: 15px; border-radius: 8px; background: #f8f9fa; border: 1px solid #ddd; }
+        .tank-info { background: #e7f3ff; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #2196F3; }
+        .tank-missing { background: #ffebee; border-left: 4px solid #f44336; }
+        .tank-found { background: #e8f5e8; border-left: 4px solid #4CAF50; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🔍 Firebase Tank Checker</h2>
+        <p>Check if Tank 522 and 668 exist in Firebase database</p>
+        
+        <button class="btn" onclick="checkAllTanks()">🔍 Check All Tanks</button>
+        <button class="btn" onclick="checkSpecificTanks()">🎯 Check Tank 522 & 668</button>
+        <button class="btn" onclick="searchTanksByKeyword()">🔎 Search Tank Keywords</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, getDocs, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const app = initializeApp({
+            apiKey: "AIzaSyD7lJcoY33FEC9d6eWy67QIO9SV4lS24pg",
+            authDomain: "tank-tools-knpc-c2d95.firebaseapp.com",
+            projectId: "tank-tools-knpc-c2d95",
+            storageBucket: "tank-tools-knpc-c2d95.firebasestorage.app",
+            messagingSenderId: "510062594324",
+            appId: "1:510062594324:web:b892fd02007a5ca2f0da01"
+        });
+        
+        window.db = getFirestore(app);
+        window.collection = collection;
+        window.getDocs = getDocs;
+        window.doc = doc;
+        window.getDoc = getDoc;
+        console.log('🔥 Firebase initialized for tank checking');
+    </script>
+
+    <script>
+        function showResult(html) {
+            document.getElementById('result').innerHTML = html;
+        }
+
+        async function checkAllTanks() {
+            showResult('<div class="result">⏳ Checking all tanks in Firebase...</div>');
+            
+            try {
+                const departments = ['pbcr', 'plcr', 'washery'];
+                let allTanks = {};
+                let totalCount = 0;
+                let resultHtml = '<div class="result"><h3>📊 Firebase Tank Database Status:</h3>';
+
+                for (const dept of departments) {
+                    console.log(`📊 Loading ${dept.toUpperCase()} tanks...`);
+                    const tanksCollectionRef = collection(window.db, "tankData", dept, "tanks");
+                    const querySnapshot = await getDocs(tanksCollectionRef);
+                    let deptCount = 0;
+                    let deptTanks = [];
+
+                    querySnapshot.forEach((doc) => { 
+                        allTanks[doc.id] = {department: dept, ...doc.data()};
+                        deptTanks.push(doc.id);
+                        deptCount++;
+                    });
+                    
+                    totalCount += deptCount;
+                    resultHtml += `<div class="tank-info"><strong>${dept.toUpperCase()}:</strong> ${deptCount} tanks<br>`;
+                    if (deptCount > 0) {
+                        const sampleTanks = deptTanks.slice(0, 10).join(', ');
+                        resultHtml += `Sample IDs: ${sampleTanks}${deptCount > 10 ? '...' : ''}</div>`;
+                    } else {
+                        resultHtml += 'No tanks found</div>';
+                    }
+                }
+
+                // Check specifically for Tank 522 and 668
+                const tank522 = allTanks['522'];
+                const tank668 = allTanks['668'];
+
+                resultHtml += `<h3>🎯 Specific Tank Check:</h3>`;
+                
+                if (tank522) {
+                    resultHtml += `<div class="tank-info tank-found">
+                        <strong>✅ Tank 522 FOUND</strong><br>
+                        Department: ${tank522.department.toUpperCase()}<br>
+                        BPM: ${tank522.comment || 'Not set'}<br>
+                        Min: ${tank522.min || 'Not set'}m<br>
+                        Max: ${tank522.max || 'Not set'}m<br>
+                        Capacity: ${tank522.capacity || 'Not set'} bbl
+                    </div>`;
+                } else {
+                    resultHtml += `<div class="tank-info tank-missing">❌ Tank 522 NOT FOUND in Firebase</div>`;
+                }
+
+                if (tank668) {
+                    resultHtml += `<div class="tank-info tank-found">
+                        <strong>✅ Tank 668 FOUND</strong><br>
+                        Department: ${tank668.department.toUpperCase()}<br>
+                        BPM: ${tank668.comment || 'Not set'}<br>
+                        Min: ${tank668.min || 'Not set'}m<br>
+                        Max: ${tank668.max || 'Not set'}m<br>
+                        Capacity: ${tank668.capacity || 'Not set'} bbl
+                    </div>`;
+                } else {
+                    resultHtml += `<div class="tank-info tank-missing">❌ Tank 668 NOT FOUND in Firebase</div>`;
+                }
+
+                resultHtml += `<h3>📈 Summary:</h3>`;
+                resultHtml += `<strong>Total tanks in Firebase: ${totalCount}</strong><br>`;
+                resultHtml += `Tank 522 status: ${tank522 ? '✅ Found' : '❌ Missing'}<br>`;
+                resultHtml += `Tank 668 status: ${tank668 ? '✅ Found' : '❌ Missing'}`;
+                resultHtml += '</div>';
+
+                showResult(resultHtml);
+                
+            } catch (error) {
+                console.error('Error checking tanks:', error);
+                showResult(`<div class="result">❌ Error: ${error.message}</div>`);
+            }
+        }
+
+        async function checkSpecificTanks() {
+            showResult('<div class="result">⏳ Checking Tank 522 and 668...</div>');
+            
+            try {
+                const departments = ['pbcr', 'plcr', 'washery'];
+                let found522 = null;
+                let found668 = null;
+
+                for (const dept of departments) {
+                    // Check Tank 522
+                    const tank522Ref = doc(window.db, "tankData", dept, "tanks", "522");
+                    const tank522Doc = await getDoc(tank522Ref);
+                    if (tank522Doc.exists()) {
+                        found522 = {department: dept, ...tank522Doc.data()};
+                    }
+
+                    // Check Tank 668
+                    const tank668Ref = doc(window.db, "tankData", dept, "tanks", "668");
+                    const tank668Doc = await getDoc(tank668Ref);
+                    if (tank668Doc.exists()) {
+                        found668 = {department: dept, ...tank668Doc.data()};
+                    }
+                }
+
+                let resultHtml = '<div class="result"><h3>🎯 Specific Tank Search Results:</h3>';
+
+                if (found522) {
+                    resultHtml += `<div class="tank-info tank-found">
+                        <strong>✅ Tank 522 FOUND in ${found522.department.toUpperCase()}</strong><br>
+                        BPM (comment): ${found522.comment}<br>
+                        Min Level: ${found522.min}m<br>
+                        Max Level: ${found522.max}m<br>
+                        Capacity: ${found522.capacity ? found522.capacity.toLocaleString() : 'Not set'} bbl<br>
+                        Description: ${found522.description || 'Not set'}<br>
+                        Status: ${found522.status || 'Not set'}
+                    </div>`;
+                } else {
+                    resultHtml += `<div class="tank-info tank-missing">❌ Tank 522 NOT FOUND in any department</div>`;
+                }
+
+                if (found668) {
+                    resultHtml += `<div class="tank-info tank-found">
+                        <strong>✅ Tank 668 FOUND in ${found668.department.toUpperCase()}</strong><br>
+                        BPM (comment): ${found668.comment}<br>
+                        Min Level: ${found668.min}m<br>
+                        Max Level: ${found668.max}m<br>
+                        Capacity: ${found668.capacity ? found668.capacity.toLocaleString() : 'Not set'} bbl<br>
+                        Description: ${found668.description || 'Not set'}<br>
+                        Status: ${found668.status || 'Not set'}
+                    </div>`;
+                } else {
+                    resultHtml += `<div class="tank-info tank-missing">❌ Tank 668 NOT FOUND in any department</div>`;
+                }
+
+                resultHtml += '</div>';
+                showResult(resultHtml);
+                
+            } catch (error) {
+                console.error('Error checking specific tanks:', error);
+                showResult(`<div class="result">❌ Error: ${error.message}</div>`);
+            }
+        }
+
+        async function searchTanksByKeyword() {
+            showResult('<div class="result">⏳ Searching for tanks containing "522" or "668"...</div>');
+            
+            try {
+                const departments = ['pbcr', 'plcr', 'washery'];
+                let matches = [];
+
+                for (const dept of departments) {
+                    const tanksCollectionRef = collection(window.db, "tankData", dept, "tanks");
+                    const querySnapshot = await getDocs(tanksCollectionRef);
+                    
+                    querySnapshot.forEach((doc) => {
+                        const tankId = doc.id;
+                        const tankData = doc.data();
+                        
+                        if (tankId.includes('522') || tankId.includes('668') || 
+                            (tankData.description && (tankData.description.includes('522') || tankData.description.includes('668')))) {
+                            matches.push({
+                                id: tankId,
+                                department: dept,
+                                data: tankData
+                            });
+                        }
+                    });
+                }
+
+                let resultHtml = `<div class="result"><h3>🔎 Search Results for "522" and "668":</h3>`;
+                
+                if (matches.length > 0) {
+                    resultHtml += `<p>Found ${matches.length} matching tanks:</p>`;
+                    matches.forEach(tank => {
+                        resultHtml += `<div class="tank-info tank-found">
+                            <strong>Tank ${tank.id}</strong> (${tank.department.toUpperCase()})<br>
+                            BPM: ${tank.data.comment || 'Not set'}<br>
+                            Description: ${tank.data.description || 'Not set'}<br>
+                            Min: ${tank.data.min}m | Max: ${tank.data.max}m
+                        </div>`;
+                    });
+                } else {
+                    resultHtml += `<div class="tank-info tank-missing">❌ No tanks found containing "522" or "668"</div>`;
+                }
+
+                resultHtml += '</div>';
+                showResult(resultHtml);
+                
+            } catch (error) {
+                console.error('Error searching tanks:', error);
+                showResult(`<div class="result">❌ Error: ${error.message}</div>`);
+            }
+        }
+
+        // Make functions global
+        window.checkAllTanks = checkAllTanks;
+        window.checkSpecificTanks = checkSpecificTanks;
+        window.searchTanksByKeyword = searchTanksByKeyword;
+    </script>
+</body>
+</html>

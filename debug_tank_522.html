@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Tank 522 Issue</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f0f0f0; }
+        .container { max-width: 900px; background: white; padding: 30px; border-radius: 10px; margin: 0 auto; }
+        .btn { background: #4CAF50; color: white; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; margin: 10px; }
+        .result { margin: 20px 0; padding: 15px; border-radius: 8px; background: #f8f9fa; border: 1px solid #ddd; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .step { margin: 15px 0; padding: 10px; border-left: 4px solid #007bff; background: #f8f9fa; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; }
+        .tank-data { background: #e7f3ff; padding: 15px; border-radius: 8px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🔧 Tank 522 Debug Tool</h2>
+        <p>This will diagnose why Tank 522 is not working in PBCR Calculator</p>
+        
+        <button class="btn" onclick="step1_checkFirebase()">Step 1: Check Firebase Connection</button>
+        <button class="btn" onclick="step2_loadTankData()">Step 2: Load Tank Data</button>
+        <button class="btn" onclick="step3_testTank522()">Step 3: Test Tank 522 Specifically</button>
+        <button class="btn" onclick="step4_simulateLoadTank()">Step 4: Simulate loadTank() Function</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, getDocs, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const app = initializeApp({
+            apiKey: "AIzaSyD7lJcoY33FEC9d6eWy67QIO9SV4lS24pg",
+            authDomain: "tank-tools-knpc-c2d95.firebaseapp.com",
+            projectId: "tank-tools-knpc-c2d95",
+            storageBucket: "tank-tools-knpc-c2d95.firebasestorage.app",
+            messagingSenderId: "510062594324",
+            appId: "1:510062594324:web:b892fd02007a5ca2f0da01"
+        });
+        
+        window.db = getFirestore(app);
+        window.collection = collection;
+        window.getDocs = getDocs;
+        window.doc = doc;
+        window.getDoc = getDoc;
+        console.log('🔥 Firebase initialized');
+    </script>
+
+    <script>
+        let tankSpecsData = {};
+        
+        function showResult(html) {
+            document.getElementById('result').innerHTML = html;
+        }
+
+        async function step1_checkFirebase() {
+            showResult('<div class="result info">⏳ Step 1: Checking Firebase connection...</div>');
+            
+            let resultHtml = '<div class="result"><h3>📡 Firebase Connection Test:</h3>';
+            
+            // Check Firebase initialization
+            if (window.db && window.collection && window.getDocs) {
+                resultHtml += '<div class="success">✅ Firebase SDK loaded successfully</div>';
+            } else {
+                resultHtml += '<div class="error">❌ Firebase SDK not loaded properly</div>';
+                showResult(resultHtml + '</div>');
+                return;
+            }
+
+            try {
+                // Test Firebase connection with a simple query
+                const testRef = collection(window.db, "tankData", "pbcr", "tanks");
+                const testSnapshot = await getDocs(testRef);
+                resultHtml += `<div class="success">✅ Firebase connection working - Found ${testSnapshot.size} PBCR tanks</div>`;
+            } catch (error) {
+                resultHtml += `<div class="error">❌ Firebase connection failed: ${error.message}</div>`;
+            }
+
+            resultHtml += '</div>';
+            showResult(resultHtml);
+        }
+
+        async function step2_loadTankData() {
+            showResult('<div class="result info">⏳ Step 2: Loading all tank data (simulating index.html process)...</div>');
+            
+            let resultHtml = '<div class="result"><h3>📊 Tank Data Loading Test:</h3>';
+            
+            try {
+                const departments = ['pbcr', 'plcr', 'washery'];
+                let allTanks = {};
+                let totalLoaded = 0;
+
+                for (const dept of departments) {
+                    resultHtml += `<div class="step">Loading ${dept.toUpperCase()} tanks...</div>`;
+                    
+                    const tanksCollectionRef = collection(window.db, "tankData", dept, "tanks");
+                    const querySnapshot = await getDocs(tanksCollectionRef);
+                    let deptCount = 0;
+                    
+                    querySnapshot.forEach((doc) => { 
+                        allTanks[doc.id] = doc.data(); 
+                        deptCount++;
+                    });
+                    
+                    totalLoaded += deptCount;
+                    resultHtml += `<div class="success">✅ Loaded ${deptCount} tanks from ${dept.toUpperCase()}</div>`;
+                }
+
+                tankSpecsData = allTanks; // Store globally like in index.html
+                
+                resultHtml += `<div class="info"><strong>Total tanks loaded: ${totalLoaded}</strong></div>`;
+                
+                // Check specifically for Tank 522
+                if (allTanks['522']) {
+                    resultHtml += '<div class="tank-data"><h4>🛢️ Tank 522 Data Found:</h4><pre>' + 
+                                JSON.stringify(allTanks['522'], null, 2) + '</pre></div>';
+                } else {
+                    resultHtml += '<div class="error">❌ Tank 522 NOT found in loaded data</div>';
+                }
+
+                // Show sample of loaded tank IDs
+                const sampleIds = Object.keys(allTanks).slice(0, 20).join(', ');
+                resultHtml += `<div class="info">Sample tank IDs: ${sampleIds}...</div>`;
+
+            } catch (error) {
+                resultHtml += `<div class="error">❌ Error loading tank data: ${error.message}</div>`;
+            }
+
+            resultHtml += '</div>';
+            showResult(resultHtml);
+        }
+
+        async function step3_testTank522() {
+            showResult('<div class="result info">⏳ Step 3: Testing Tank 522 specifically...</div>');
+            
+            let resultHtml = '<div class="result"><h3>🎯 Tank 522 Specific Test:</h3>';
+            
+            try {
+                // Direct Firebase query for Tank 522
+                const tank522Ref = doc(window.db, "tankData", "pbcr", "tanks", "522");
+                const tank522Doc = await getDoc(tank522Ref);
+                
+                if (tank522Doc.exists()) {
+                    const tank522Data = tank522Doc.data();
+                    resultHtml += '<div class="success">✅ Tank 522 exists in Firebase</div>';
+                    resultHtml += '<div class="tank-data"><h4>🛢️ Direct Firebase Data:</h4><pre>' + 
+                                JSON.stringify(tank522Data, null, 2) + '</pre></div>';
+                    
+                    // Test data validity
+                    const comment = tank522Data.comment;
+                    const min = tank522Data.min;
+                    const max = tank522Data.max;
+                    
+                    resultHtml += '<div class="step"><h4>📋 Data Validation:</h4>';
+                    resultHtml += `BPM (comment): ${comment} ${comment ? '✅' : '❌'}<br>`;
+                    resultHtml += `Min Level: ${min} ${min !== undefined ? '✅' : '❌'}<br>`;
+                    resultHtml += `Max Level: ${max} ${max !== undefined ? '✅' : '❌'}</div>`;
+                    
+                    // Test if data would pass the index.html validation
+                    if (!comment || min === undefined || max === undefined) {
+                        resultHtml += '<div class="error">❌ Data would FAIL index.html validation!</div>';
+                        resultHtml += '<div class="warning">⚠️ This explains why Tank 522 shows as incomplete</div>';
+                    } else {
+                        resultHtml += '<div class="success">✅ Data would PASS index.html validation</div>';
+                    }
+                    
+                } else {
+                    resultHtml += '<div class="error">❌ Tank 522 does NOT exist in Firebase</div>';
+                }
+
+                // Check if it's in our loaded data
+                if (tankSpecsData['522']) {
+                    resultHtml += '<div class="success">✅ Tank 522 found in loaded tankSpecsData</div>';
+                } else {
+                    resultHtml += '<div class="error">❌ Tank 522 NOT in loaded tankSpecsData</div>';
+                }
+
+            } catch (error) {
+                resultHtml += `<div class="error">❌ Error testing Tank 522: ${error.message}</div>`;
+            }
+
+            resultHtml += '</div>';
+            showResult(resultHtml);
+        }
+
+        async function step4_simulateLoadTank() {
+            showResult('<div class="result info">⏳ Step 4: Simulating loadTank() function from index.html...</div>');
+            
+            let resultHtml = '<div class="result"><h3>🧪 loadTank() Simulation:</h3>';
+            
+            // Make sure we have tank data loaded
+            if (Object.keys(tankSpecsData).length === 0) {
+                resultHtml += '<div class="warning">⚠️ No tank data loaded, running Step 2 first...</div>';
+                await step2_loadTankData();
+            }
+
+            // Simulate the exact loadTank() logic from index.html
+            const id = "522";
+            let c = 0, m = 0, x = 0;
+            
+            resultHtml += `<div class="step">Testing Tank ID: "${id}"</div>`;
+            resultHtml += `<div class="step">Length check: ${id.length} >= 3? ${id.length >= 3 ? 'PASS' : 'FAIL'}</div>`;
+            
+            if (id.length < 3) {
+                resultHtml += '<div class="warning">Tank ID too short, would return early</div>';
+            } else {
+                if (tankSpecsData[id]) {
+                    const tankData = tankSpecsData[id];
+                    c = tankData.comment;
+                    m = tankData.min;
+                    x = tankData.max;
+                    
+                    resultHtml += '<div class="success">✅ Tank found in tankSpecsData</div>';
+                    resultHtml += '<div class="tank-data"><h4>📊 Extracted Values:</h4>';
+                    resultHtml += `c (BPM): ${c}<br>`;
+                    resultHtml += `m (Min): ${m}<br>`;
+                    resultHtml += `x (Max): ${x}</div>`;
+                    
+                    // Test the validation logic
+                    if (!c || m === undefined || x === undefined) {
+                        resultHtml += '<div class="error">❌ VALIDATION FAILED - Would show alert to user</div>';
+                        resultHtml += `<div class="warning">Alert message would be: "Tank ${id} data is incomplete in Firebase database.\\n\\nMissing: ${!c ? 'BPM value' : ''} ${m === undefined ? 'Min Level' : ''} ${x === undefined ? 'Max Level' : ''}\\n\\nUse Tank Management page to add/edit this tank's specifications."</div>`;
+                        c = m = x = 0;
+                    } else {
+                        resultHtml += '<div class="success">✅ VALIDATION PASSED - Tank data is complete</div>';
+                    }
+                } else {
+                    resultHtml += '<div class="error">❌ Tank NOT found in tankSpecsData</div>';
+                    resultHtml += `<div class="warning">Alert message would be: "Tank ${id} not found in database.\\n\\nPlease check the tank number or contact admin to add this tank."</div>`;
+                }
+            }
+
+            resultHtml += `<div class="step"><h4>🎯 Final Values:</h4>`;
+            resultHtml += `c (BPM): ${c}<br>`;
+            resultHtml += `m (Min): ${m}<br>`;
+            resultHtml += `x (Max): ${x}</div>`;
+
+            resultHtml += '</div>';
+            showResult(resultHtml);
+        }
+
+        // Make functions global
+        window.step1_checkFirebase = step1_checkFirebase;
+        window.step2_loadTankData = step2_loadTankData;
+        window.step3_testTank522 = step3_testTank522;
+        window.step4_simulateLoadTank = step4_simulateLoadTank;
+    </script>
+</body>
+</html>

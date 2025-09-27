@@ -134,9 +134,9 @@
       ]
     },
     {
-      "name": "تنبيهات المنبه",
-      "short_name": "المنبه",
-      "description": "إعداد التنبيهات والمنبه المستمر", 
+      "name": "Notifications & Alarms",
+      "short_name": "Alarms",
+      "description": "Setup notifications and persistent alarms", 
       "url": "/notifications.html",
       "icons": [
         {

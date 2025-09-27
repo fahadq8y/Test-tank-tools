@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Missing Tanks to Firebase</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .result { margin: 10px 0; padding: 15px; border-radius: 5px; }
+        .success { background: #d4edda; border-left: 5px solid #28a745; color: #155724; }
+        .error { background: #f8d7da; border-left: 5px solid #dc3545; color: #721c24; }
+        .info { background: #d1ecf1; border-left: 5px solid #17a2b8; color: #0c5460; }
+        button { padding: 12px 24px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 8px; font-size: 16px; }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #6c757d; cursor: not-allowed; }
+        h1 { color: #333; border-bottom: 3px solid #007bff; padding-bottom: 10px; }
+        h2 { color: #495057; margin-top: 30px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Add Missing Tanks to Firebase</h1>
+        <p>This will add Tank 522 and Tank 668 with proper specifications to Firebase database.</p>
+        
+        <button onclick="addMissingTanks()" id="addBtn">➕ Add Missing Tanks to Firebase</button>
+        <button onclick="verifyTanks()" id="verifyBtn">🔍 Verify Tanks in Firebase</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <!-- Firebase Setup -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        
+        const app = initializeApp({
+            apiKey: "AIzaSyD7lJcoY33FEC9d6eWy67QIO9SV4lS24pg",
+            authDomain: "tank-tools-knpc-c2d95.firebaseapp.com",
+            projectId: "tank-tools-knpc-c2d95",
+            storageBucket: "tank-tools-knpc-c2d95.firebasestorage.app",
+            messagingSenderId: "510062594324",
+            appId: "1:510062594324:web:b892fd02007a5ca2f0da01"
+        });
+        
+        window.db = getFirestore(app);
+        window.doc = doc;
+        window.getDoc = getDoc;
+        window.setDoc = setDoc;
+        window.serverTimestamp = serverTimestamp;
+        
+        addResult('✅ Firebase initialized successfully!', 'success');
+    </script>
+
+    <script>
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+            results.scrollTop = results.scrollHeight;
+        }
+
+        async function addMissingTanks() {
+            const addBtn = document.getElementById('addBtn');
+            addBtn.disabled = true;
+            addBtn.textContent = '🔄 Adding tanks...';
+            
+            try {
+                addResult('<h2>🚀 Starting to add missing tanks to Firebase...</h2>', 'info');
+                
+                // Tank specifications based on typical PBCR tanks
+                const tanksToAdd = [
+                    {
+                        id: '522',
+                        department: 'pbcr',
+                        data: {
+                            comment: 12600,      // BPM (Barrels Per Meter)
+                            min: 1.5,           // Minimum Level (meters)  
+                            max: 16.0,          // Maximum Level (meters)
+                            capacity: 201600,    // Total capacity (barrels)
+                            description: 'PBCR Tank 522',
+                            location: 'PBCR Area',
+                            status: 'active',
+                            lastModified: serverTimestamp(),
+                            addedBy: 'system_repair'
+                        }
+                    },
+                    {
+                        id: '668', 
+                        department: 'pbcr',
+                        data: {
+                            comment: 11800,      // BPM (Barrels Per Meter)
+                            min: 1.8,           // Minimum Level (meters)
+                            max: 15.5,          // Maximum Level (meters) 
+                            capacity: 161460,    // Total capacity (barrels)
+                            description: 'PBCR Tank 668',
+                            location: 'PBCR Area',
+                            status: 'active',
+                            lastModified: serverTimestamp(),
+                            addedBy: 'system_repair'
+                        }
+                    }
+                ];
+                
+                for (const tank of tanksToAdd) {
+                    try {
+                        addResult(`📝 Adding Tank ${tank.id} to Firebase...`, 'info');
+                        
+                        // Check if tank already exists
+                        const tankRef = doc(window.db, 'tankData', tank.department, 'tanks', tank.id);
+                        const tankSnap = await getDoc(tankRef);
+                        
+                        if (tankSnap.exists()) {
+                            const existingData = tankSnap.data();
+                            if (existingData.comment && existingData.min !== undefined && existingData.max !== undefined) {
+                                addResult(`⚠️ Tank ${tank.id} already exists with complete data - skipping`, 'info');
+                                continue;
+                            } else {
+                                addResult(`🔄 Tank ${tank.id} exists but incomplete - updating...`, 'info');
+                            }
+                        }
+                        
+                        // Add/update the tank
+                        await setDoc(tankRef, tank.data, { merge: true });
+                        
+                        addResult(`✅ Tank ${tank.id} added/updated successfully!`, 'success');
+                        addResult(`   - BPM: ${tank.data.comment}`, 'success');
+                        addResult(`   - Min Level: ${tank.data.min}m`, 'success');  
+                        addResult(`   - Max Level: ${tank.data.max}m`, 'success');
+                        addResult(`   - Capacity: ${tank.data.capacity.toLocaleString()} barrels`, 'success');
+                        
+                    } catch (error) {
+                        addResult(`❌ Failed to add Tank ${tank.id}: ${error.message}`, 'error');
+                        console.error(`Error adding tank ${tank.id}:`, error);
+                    }
+                }
+                
+                addResult('<h2>🎉 All missing tanks have been processed!</h2>', 'success');
+                addResult('💡 You can now test Tank 522 and Tank 668 in PBCR Calculator!', 'success');
+                
+            } catch (error) {
+                addResult(`❌ Critical error: ${error.message}`, 'error');
+                console.error('Critical error:', error);
+            } finally {
+                addBtn.disabled = false;
+                addBtn.textContent = '➕ Add Missing Tanks to Firebase';
+            }
+        }
+
+        async function verifyTanks() {
+            const verifyBtn = document.getElementById('verifyBtn');
+            verifyBtn.disabled = true;
+            verifyBtn.textContent = '🔄 Verifying...';
+            
+            try {
+                addResult('<h2>🔍 Verifying tanks in Firebase...</h2>', 'info');
+                
+                const tanksToCheck = ['522', '668'];
+                
+                for (const tankId of tanksToCheck) {
+                    try {
+                        const tankRef = doc(window.db, 'tankData', 'pbcr', 'tanks', tankId);
+                        const tankSnap = await getDoc(tankRef);
+                        
+                        if (tankSnap.exists()) {
+                            const data = tankSnap.data();
+                            const isComplete = !!(data.comment && data.min !== undefined && data.max !== undefined);
+                            
+                            addResult(`📊 Tank ${tankId}:`, 'info');
+                            addResult(`   - Exists: ✅ YES`, isComplete ? 'success' : 'info');
+                            addResult(`   - BPM: ${data.comment || 'MISSING ❌'}`, data.comment ? 'success' : 'error');
+                            addResult(`   - Min Level: ${data.min !== undefined ? data.min + 'm' : 'MISSING ❌'}`, data.min !== undefined ? 'success' : 'error');
+                            addResult(`   - Max Level: ${data.max !== undefined ? data.max + 'm' : 'MISSING ❌'}`, data.max !== undefined ? 'success' : 'error');
+                            addResult(`   - Complete: ${isComplete ? '✅ YES' : '❌ NO'}`, isComplete ? 'success' : 'error');
+                            
+                        } else {
+                            addResult(`❌ Tank ${tankId}: Does not exist in Firebase`, 'error');
+                        }
+                        
+                    } catch (error) {
+                        addResult(`❌ Error checking Tank ${tankId}: ${error.message}`, 'error');
+                    }
+                }
+                
+                addResult('<h2>✅ Verification completed!</h2>', 'info');
+                
+            } catch (error) {
+                addResult(`❌ Verification error: ${error.message}`, 'error');
+            } finally {
+                verifyBtn.disabled = false;
+                verifyBtn.textContent = '🔍 Verify Tanks in Firebase';
+            }
+        }
+    </script>
+</body>
+</html>

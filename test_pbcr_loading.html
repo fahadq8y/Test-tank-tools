@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test PBCR Loading</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #003366;
+  color: white;
+  padding: 20px;
+}
+.loading {
+  text-align: center;
+  padding: 40px;
+}
+.result {
+  background: rgba(255,255,255,0.1);
+  padding: 20px;
+  border-radius: 10px;
+  margin: 20px 0;
+}
+</style>
+</head>
+<body>
+
+<div class="loading" id="loading">
+  <h2>🔄 Testing PBCR Tank Loading</h2>
+  <p>Loading tank data from Firebase...</p>
+</div>
+
+<div class="result" id="result" style="display:none;">
+  <h3>Results:</h3>
+  <div id="results-content"></div>
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+  import { getFirestore, collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyD7lJcoY33FEC9d6eWy67QIO9SV4lS24pg",
+    authDomain: "tank-tools-knpc-c2d95.firebaseapp.com",
+    projectId: "tank-tools-knpc-c2d95",
+    storageBucket: "tank-tools-knpc-c2d95.firebasestorage.app",
+    messagingSenderId: "510062594324",
+    appId: "1:510062594324:web:b892fd02007a5ca2f0da01"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // Test PBCR data loading
+  async function testPBCRLoading() {
+    try {
+      console.log('🔄 Starting PBCR tank loading test...');
+      
+      const departments = ['pbcr', 'plcr', 'washery'];
+      let allTanks = {};
+      let totalCount = 0;
+      
+      for (const dept of departments) {
+        console.log(`📊 Loading ${dept.toUpperCase()} tanks...`);
+        
+        const tanksCollectionRef = collection(db, "tankData", dept, "tanks");
+        const querySnapshot = await getDocs(tanksCollectionRef);
+        
+        let deptCount = 0;
+        querySnapshot.forEach((doc) => { 
+          allTanks[doc.id] = doc.data(); 
+          deptCount++;
+          totalCount++;
+        });
+        
+        console.log(`✅ Loaded ${deptCount} tanks from ${dept.toUpperCase()}`);
+      }
+      
+      console.log(`🎯 Total tanks loaded: ${totalCount}`);
+      
+      // Sample some tanks
+      const sampleTanks = Object.keys(allTanks).slice(0, 5);
+      console.log('📋 Sample tanks:', sampleTanks.map(id => ({ id, data: allTanks[id] })));
+      
+      // Update UI
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('result').style.display = 'block';
+      
+      document.getElementById('results-content').innerHTML = `
+        <h4>✅ Success!</h4>
+        <p><strong>Total Tanks Loaded:</strong> ${totalCount}</p>
+        <p><strong>PBCR Tanks:</strong> ${Object.keys(allTanks).filter(id => allTanks[id].department === 'pbcr' || id.startsWith('2')).length}</p>
+        <p><strong>Sample Tank Data:</strong></p>
+        <ul>
+          ${sampleTanks.map(id => `
+            <li><strong>Tank ${id}:</strong> 
+              BPM: ${allTanks[id].comment || 'N/A'}, 
+              Min: ${allTanks[id].min || 'N/A'}, 
+              Max: ${allTanks[id].max || 'N/A'}
+            </li>
+          `).join('')}
+        </ul>
+        <p><strong>Firebase Connection:</strong> ✅ Working</p>
+      `;
+      
+    } catch (error) {
+      console.error('❌ Error loading tanks:', error);
+      
+      document.getElementById('loading').innerHTML = `
+        <h2>❌ Loading Failed</h2>
+        <p>Error: ${error.message}</p>
+        <button onclick="location.reload()">🔄 Retry</button>
+      `;
+    }
+  }
+  
+  // Start test
+  testPBCRLoading();
+</script>
+
+</body>
+</html>

@@ -158,18 +158,25 @@ async function checkPageAccess() {
   console.log('checkPageAccess: Starting...');
   try {
     const user = await getCurrentUser();
+    const currentPageName = getCurrentPageName();
+    
+    // ✅ PBCR Calculator (index.html) is public - no login required
+    if (currentPageName === 'index.html') {
+      console.log('checkPageAccess: PBCR Calculator is public, allowing access without login.');
+      return true;
+    }
+    
     if (!user) {
       console.log('checkPageAccess: No current user, redirecting to login.');
       redirectToLogin();
       return false;
     }
 
-    const currentPage = getCurrentPageName();
-    console.log('checkPageAccess: Current page:', currentPage);
+    console.log('checkPageAccess: Current page:', currentPageName);
     console.log('checkPageAccess: User data for access check:', user);
     
-    const hasAccess = await checkUserPageAccess(user, currentPage);
-    console.log('checkPageAccess: Page access result for', currentPage, ':', hasAccess);
+    const hasAccess = await checkUserPageAccess(user, currentPageName);
+    console.log('checkPageAccess: Page access result for', currentPageName, ':', hasAccess);
     
     if (!hasAccess) {
       console.log('checkPageAccess: Access denied for page:', currentPage);

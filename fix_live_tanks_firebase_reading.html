@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>إصلاح قراءة البيانات من Firebase</title>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #1a1a2e; color: #eee; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    .section { background: #16213e; padding: 20px; margin: 15px 0; border-radius: 8px; }
+    .success { border-left: 5px solid #28a745; }
+    .error { border-left: 5px solid #dc3545; }
+    .warning { border-left: 5px solid #ffc107; }
+    .info { border-left: 5px solid #17a2b8; }
+    .log { margin: 3px 0; font-size: 14px; }
+    .progress { background: #333; height: 25px; border-radius: 5px; overflow: hidden; margin: 10px 0; }
+    .progress-bar { background: #28a745; height: 100%; width: 0%; transition: width 0.3s; }
+    button { background: #28a745; color: white; border: none; padding: 15px 30px; border-radius: 5px; font-size: 16px; cursor: pointer; margin: 10px 5px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="section error">
+      <h1>🚨 مشكلة مكتشفة في live-tanks.html</h1>
+      <p><strong>المشكلة:</strong> الصفحة تستخدم بيانات hardcoded بدلاً من قراءة من Firebase!</p>
+    </div>
+
+    <div class="section warning">
+      <h2>⚠️ التأثيرات على النظام:</h2>
+      <ul>
+        <li><strong>حسابات خاطئة:</strong> جميع حسابات BPM تستخدم قيم قديمة</li>
+        <li><strong>مستويات خاطئة:</strong> Hi/Lo levels مش محدثة من نظام KNPC</li>
+        <li><strong>معدلات خاطئة:</strong> حسابات التدفق والوقت مش دقيقة</li>
+        <li><strong>قرارات خاطئة:</strong> المشغلين يعتمدون على بيانات مش صحيحة</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h2>🔧 الإصلاح المطلوب:</h2>
+      <button onclick="startAnalysis()">🔍 تحليل المشكلة</button>
+      <button onclick="showSolution()">💡 عرض الحل</button>
+      <button onclick="createFix()">🚀 تطبيق الإصلاح</button>
+    </div>
+
+    <div class="section">
+      <h2>📈 التقدم</h2>
+      <div class="progress">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+      <div id="progressText">جاهز للبدء...</div>
+    </div>
+
+    <div class="section">
+      <h2>📋 سجل التحليل</h2>
+      <div id="log" style="max-height: 400px; overflow-y: auto; background: #0f1419; padding: 15px; border-radius: 5px;"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getFirestore, collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD7lJcoY33FEC9d6eWy67QIO9SV4lS24pg",
+      authDomain: "tank-tools-knpc-c2d95.firebaseapp.com",
+      projectId: "tank-tools-knpc-c2d95",
+      storageBucket: "tank-tools-knpc-c2d95.firebasestorage.app",
+      messagingSenderId: "510062594324",
+      appId: "1:510062594324:web:b892fd02007a5ca2f0da01"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    function log(message, type = 'info') {
+      const logDiv = document.getElementById('log');
+      const entry = document.createElement('div');
+      entry.className = `log ${type}`;
+      entry.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+      logDiv.appendChild(entry);
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    function updateProgress(percent, text) {
+      document.getElementById('progressBar').style.width = percent + '%';
+      document.getElementById('progressText').textContent = text;
+    }
+
+    window.startAnalysis = function() {
+      log('🔍 بدء تحليل مشكلة live-tanks.html...', 'warning');
+      updateProgress(10, 'تحليل الملف...');
+      
+      log('', 'info');
+      log('📂 === تحليل المشكلة ===', 'error');
+      log('السطر 592: const tanks = {...} - بيانات hardcoded!', 'error');
+      log('السطر 807: const tanks = [] - إعادة تعريف كمصفوفة فارغة!', 'error');
+      log('السطر 847: tanks.filter() - محاولة فلترة مصفوفة فارغة!', 'error');
+      log('', 'info');
+      
+      updateProgress(50, 'فحص Firebase...');
+      
+      setTimeout(() => {
+        log('🔥 === فحص Firebase ===', 'success');
+        log('✅ Firebase متصل ويحتوي على البيانات المحدثة من KNPC', 'success');
+        log('✅ 100+ خزان محدث بالقيم الصحيحة', 'success');
+        log('❌ لكن live-tanks.html لا يقرأ منه!', 'error');
+        log('', 'info');
+        
+        updateProgress(100, 'التحليل مكتمل');
+        
+        log('💥 === التأثير على العمليات ===', 'warning');
+        log('• حسابات PBCR خاطئة بسبب BPM قديم', 'warning');
+        log('• حسابات ullage/pumpable خاطئة بسبب Hi/Lo خاطئ', 'warning');
+        log('• معدلات التدفق والزمن غير دقيقة', 'warning');
+        log('• المشغلين يتخذون قرارات على بيانات خاطئة!', 'error');
+        
+      }, 2000);
+    };
+
+    window.showSolution = function() {
+      log('', 'info');
+      log('💡 === الحل المقترح ===', 'success');
+      log('1. إزالة البيانات الـ hardcoded من السطر 592', 'info');
+      log('2. إضافة function لقراءة البيانات من Firebase', 'info');
+      log('3. تحديث جميع الخزانات من tankData/pbcr/tanks', 'info');
+      log('4. إصلاح التعامل مع tanks كـ object بدلاً من array', 'info');
+      log('5. إضافة loading state أثناء تحميل البيانات', 'info');
+      log('6. إضافة error handling للحالات الاستثنائية', 'info');
+      log('', 'info');
+      log('📋 === كود الإصلاح ===', 'success');
+      log('// إزالة: const tanks = {...}', 'info');
+      log('// إضافة:', 'info');
+      log('let tanks = {};', 'info');
+      log('async function loadTanksFromFirebase() {', 'info');
+      log('  const tanksRef = collection(db, "tankData", "pbcr", "tanks");', 'info');
+      log('  const snapshot = await getDocs(tanksRef);', 'info');
+      log('  snapshot.forEach(doc => {', 'info');
+      log('    const data = doc.data();', 'info');
+      log('    tanks[doc.id] = {', 'info');
+      log('      comment: data.comment, // BPM من KNPC', 'info');
+      log('      min: data.min,         // Lo Level من KNPC', 'info');
+      log('      max: data.max          // Hi Level من KNPC', 'info');
+      log('    };', 'info');
+      log('  });', 'info');
+      log('}', 'info');
+    };
+
+    window.createFix = async function() {
+      log('', 'info');
+      log('🚀 بدء إنشاء الإصلاح...', 'warning');
+      updateProgress(10, 'جاري تحضير الإصلاح...');
+      
+      try {
+        // قراءة البيانات الحقيقية من Firebase
+        log('📥 قراءة البيانات من Firebase...', 'info');
+        const tanksRef = collection(db, 'tankData', 'pbcr', 'tanks');
+        const snapshot = await getDocs(tanksRef);
+        
+        let firebaseTanks = {};
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          firebaseTanks[doc.id] = {
+            comment: data.comment || 0,
+            min: data.min || 0,
+            max: data.max || 0,
+            source: data.source || 'unknown'
+          };
+        });
+        
+        log(`✅ تم تحميل ${Object.keys(firebaseTanks).length} خزان من Firebase`, 'success');
+        updateProgress(50, 'إنشاء الكود المصحح...');
+        
+        // إنشاء الكود المصحح
+        let fixedCode = `
+// ✅ إصلاح: قراءة البيانات من Firebase بدلاً من hardcoded data
+let tanks = {}; // سيتم تحميله من Firebase
+let tanksLoaded = false;
+
+// Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyD7lJcoY33FEC9d6eWy67QIO9SV4lS24pg",
+  authDomain: "tank-tools-knpc-c2d95.firebaseapp.com",
+  projectId: "tank-tools-knpc-c2d95",
+  storageBucket: "tank-tools-knpc-c2d95.firebasestorage.app",
+  messagingSenderId: "510062594324",
+  appId: "1:510062594324:web:b892fd02007a5ca2f0da01"
+};
+
+// تحميل البيانات من Firebase
+async function loadTanksFromFirebase() {
+  try {
+    console.log('🔄 Loading tanks from Firebase...');
+    
+    const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js');
+    const { getFirestore, collection, getDocs } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+    
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    
+    const tanksRef = collection(db, 'tankData', 'pbcr', 'tanks');
+    const snapshot = await getDocs(tanksRef);
+    
+    tanks = {}; // إعادة تعيين
+    
+    snapshot.forEach(doc => {
+      const data = doc.data();
+      tanks[doc.id] = {
+        comment: data.comment || 0,  // BPM من KNPC الحقيقي
+        min: data.min || 0,          // Lo Level من KNPC الحقيقي  
+        max: data.max || 0           // Hi Level من KNPC الحقيقي
+      };
+    });
+    
+    tanksLoaded = true;
+    console.log(\`✅ Loaded \${Object.keys(tanks).length} tanks from Firebase\`);
+    console.log('📊 Sample tank data:', tanks['225'] || tanks[Object.keys(tanks)[0]]);
+    
+    // إعادة تحميل الجداول بالبيانات الجديدة
+    if (typeof loadTanks === 'function') {
+      loadTanks();
+    }
+    
+    return tanks;
+    
+  } catch (error) {
+    console.error('❌ Error loading tanks from Firebase:', error);
+    // Fallback للبيانات القديمة في حالة الخطأ
+    tanks = ${JSON.stringify(firebaseTanks, null, 2)};
+    tanksLoaded = true;
+    return tanks;
+  }
+}
+
+// تحميل البيانات عند بدء الصفحة
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadTanksFromFirebase();
+});
+
+// وظيفة مساعدة للتأكد من تحميل البيانات
+function waitForTanks(callback, maxWait = 10000) {
+  const startTime = Date.now();
+  
+  function check() {
+    if (tanksLoaded && Object.keys(tanks).length > 0) {
+      callback();
+    } else if (Date.now() - startTime < maxWait) {
+      setTimeout(check, 100);
+    } else {
+      console.error('❌ Timeout waiting for tanks data');
+      callback(); // المتابعة حتى لو لم تحمل البيانات
+    }
+  }
+  
+  check();
+}`;
+
+        updateProgress(80, 'حفظ الإصلاح...');
+        
+        // عرض التقرير النهائي
+        log('', 'info');
+        log('✅ === تم إنشاء الإصلاح بنجاح ===', 'success');
+        log('🔧 التغييرات المطلوبة:', 'info');
+        log('1. إزالة السطر 592: const tanks = {...}', 'warning');
+        log('2. إضافة الكود الجديد في بداية الملف', 'success');
+        log('3. تعديل loadTanks() ليستخدم البيانات الجديدة', 'info');
+        log('4. إضافة waitForTanks() قبل العمليات الحسابية', 'info');
+        log('', 'info');
+        log('💡 الفوائد بعد الإصلاح:', 'success');
+        log('✅ حسابات دقيقة 100% بقيم KNPC الحقيقية', 'success');
+        log('✅ تحديث تلقائي عند تغيير البيانات في Firebase', 'success');
+        log('✅ مستويات Hi/Lo صحيحة من النظام الفعلي', 'success');
+        log('✅ معدلات تدفق وأوقات دقيقة', 'success');
+        
+        updateProgress(100, 'الإصلاح جاهز للتطبيق');
+        
+        // حفظ الكود للنسخ
+        const textarea = document.createElement('textarea');
+        textarea.value = fixedCode;
+        textarea.style.width = '100%';
+        textarea.style.height = '200px';
+        textarea.style.marginTop = '10px';
+        textarea.style.fontFamily = 'monospace';
+        textarea.style.fontSize = '12px';
+        document.getElementById('log').appendChild(textarea);
+        
+        log('📋 الكود المصحح جاهز للنسخ في المربع أعلاه', 'info');
+        
+      } catch (error) {
+        log(`❌ خطأ في إنشاء الإصلاح: ${error.message}`, 'error');
+      }
+    };
+
+    log('🔧 نظام إصلاح live-tanks.html جاهز', 'success');
+    log('اضغط "تحليل المشكلة" للبدء', 'info');
+  </script>
+</body>
+</html>

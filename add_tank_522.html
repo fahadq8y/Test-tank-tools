@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Tank 522 to Firebase</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f0f0f0; }
+        .container { max-width: 600px; background: white; padding: 30px; border-radius: 10px; margin: 0 auto; }
+        .btn { background: #4CAF50; color: white; padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; margin: 10px; }
+        .result { margin: 20px 0; padding: 15px; border-radius: 8px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🛢️ Add Missing Tank 522 to Firebase</h2>
+        <p>This will add Tank 522 with proper specifications to Firebase database.</p>
+        
+        <button class="btn" onclick="addTank522()">🚀 Add Tank 522</button>
+        <button class="btn" onclick="addTank668()">🚀 Add Tank 668</button>
+        <button class="btn" onclick="addBothTanks()">🚀 Add Both Tanks</button>
+        
+        <div id="result"></div>
+        
+        <h3>Tank 522 Specifications:</h3>
+        <ul>
+            <li><strong>BPM (comment):</strong> 12600 bbl/meter</li>
+            <li><strong>Min Level:</strong> 1.5 meters</li>
+            <li><strong>Max Level:</strong> 16.0 meters</li>
+            <li><strong>Capacity:</strong> 201,600 barrels</li>
+        </ul>
+        
+        <h3>Tank 668 Specifications:</h3>
+        <ul>
+            <li><strong>BPM (comment):</strong> 11800 bbl/meter</li>
+            <li><strong>Min Level:</strong> 1.8 meters</li>
+            <li><strong>Max Level:</strong> 15.5 meters</li>
+            <li><strong>Capacity:</strong> 161,460 barrels</li>
+        </ul>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, doc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const app = initializeApp({
+            apiKey: "AIzaSyD7lJcoY33FEC9d6eWy67QIO9SV4lS24pg",
+            authDomain: "tank-tools-knpc-c2d95.firebaseapp.com",
+            projectId: "tank-tools-knpc-c2d95",
+            storageBucket: "tank-tools-knpc-c2d95.firebasestorage.app",
+            messagingSenderId: "510062594324",
+            appId: "1:510062594324:web:b892fd02007a5ca2f0da01"
+        });
+        
+        window.db = getFirestore(app);
+        window.doc = doc;
+        window.setDoc = setDoc;
+        window.serverTimestamp = serverTimestamp;
+        console.log('🔥 Firebase initialized for tank addition');
+    </script>
+
+    <script>
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `<div class="result ${type}">${message}</div>`;
+        }
+
+        async function addTank522() {
+            try {
+                showResult('⏳ Adding Tank 522 to Firebase...', 'info');
+                
+                const tankData = {
+                    comment: 12600,          // BPM value
+                    min: 1.5,               // Minimum level
+                    max: 16.0,              // Maximum level
+                    capacity: 201600,       // Total capacity
+                    description: 'PBCR Tank 522',
+                    location: 'PBCR Area',
+                    status: 'active',
+                    lastModified: serverTimestamp(),
+                    addedBy: 'manual_fix',
+                    addedDate: new Date().toISOString()
+                };
+
+                const tankRef = doc(window.db, 'tankData', 'pbcr', 'tanks', '522');
+                await setDoc(tankRef, tankData);
+                
+                showResult('✅ Tank 522 added successfully!<br><br><strong>Specifications:</strong><br>• BPM: 12,600 bbl/m<br>• Min: 1.5m<br>• Max: 16.0m<br>• Capacity: 201,600 bbl', 'success');
+                
+            } catch (error) {
+                console.error('Error adding Tank 522:', error);
+                showResult('❌ Error adding Tank 522: ' + error.message, 'error');
+            }
+        }
+
+        async function addTank668() {
+            try {
+                showResult('⏳ Adding Tank 668 to Firebase...', 'info');
+                
+                const tankData = {
+                    comment: 11800,          // BPM value
+                    min: 1.8,               // Minimum level
+                    max: 15.5,              // Maximum level
+                    capacity: 161460,       // Total capacity
+                    description: 'PBCR Tank 668',
+                    location: 'PBCR Area',
+                    status: 'active',
+                    lastModified: serverTimestamp(),
+                    addedBy: 'manual_fix',
+                    addedDate: new Date().toISOString()
+                };
+
+                const tankRef = doc(window.db, 'tankData', 'pbcr', 'tanks', '668');
+                await setDoc(tankRef, tankData);
+                
+                showResult('✅ Tank 668 added successfully!<br><br><strong>Specifications:</strong><br>• BPM: 11,800 bbl/m<br>• Min: 1.8m<br>• Max: 15.5m<br>• Capacity: 161,460 bbl', 'success');
+                
+            } catch (error) {
+                console.error('Error adding Tank 668:', error);
+                showResult('❌ Error adding Tank 668: ' + error.message, 'error');
+            }
+        }
+
+        async function addBothTanks() {
+            try {
+                showResult('⏳ Adding both tanks to Firebase...', 'info');
+                
+                // Tank 522
+                const tank522Data = {
+                    comment: 12600,
+                    min: 1.5,
+                    max: 16.0,
+                    capacity: 201600,
+                    description: 'PBCR Tank 522',
+                    location: 'PBCR Area',
+                    status: 'active',
+                    lastModified: serverTimestamp(),
+                    addedBy: 'batch_fix',
+                    addedDate: new Date().toISOString()
+                };
+
+                // Tank 668
+                const tank668Data = {
+                    comment: 11800,
+                    min: 1.8,
+                    max: 15.5,
+                    capacity: 161460,
+                    description: 'PBCR Tank 668',
+                    location: 'PBCR Area',
+                    status: 'active',
+                    lastModified: serverTimestamp(),
+                    addedBy: 'batch_fix',
+                    addedDate: new Date().toISOString()
+                };
+
+                // Add both tanks
+                const tank522Ref = doc(window.db, 'tankData', 'pbcr', 'tanks', '522');
+                const tank668Ref = doc(window.db, 'tankData', 'pbcr', 'tanks', '668');
+                
+                await Promise.all([
+                    setDoc(tank522Ref, tank522Data),
+                    setDoc(tank668Ref, tank668Data)
+                ]);
+                
+                showResult('🎉 Both tanks added successfully!<br><br><strong>Tank 522:</strong> BPM 12,600 | Min 1.5m | Max 16.0m<br><strong>Tank 668:</strong> BPM 11,800 | Min 1.8m | Max 15.5m<br><br>✅ Ready to use in PBCR Calculator!', 'success');
+                
+            } catch (error) {
+                console.error('Error adding tanks:', error);
+                showResult('❌ Error adding tanks: ' + error.message, 'error');
+            }
+        }
+
+        // Make functions global
+        window.addTank522 = addTank522;
+        window.addTank668 = addTank668;
+        window.addBothTanks = addBothTanks;
+    </script>
+</body>
+</html>

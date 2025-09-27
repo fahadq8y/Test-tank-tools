@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manual Tank Fix</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; margin: 10px; }
+        .result { margin: 10px 0; padding: 10px; border-radius: 5px; background: #f8f9fa; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Manual Tank Data Fix</h1>
+    <p>This will fix Tank 522 and Tank 668 data in Firebase</p>
+    
+    <button onclick="runFix()">Fix Tank Data Now</button>
+    <div id="result"></div>
+
+    <script>
+        function runFix() {
+            // Open PBCR Calculator in new window and execute fix
+            const newWindow = window.open('/index.html', '_blank');
+            
+            // Wait for it to load, then execute fix
+            setTimeout(() => {
+                if (newWindow && newWindow.fixTankData) {
+                    newWindow.fixTankData();
+                    document.getElementById('result').innerHTML = '✅ Fix command sent to PBCR Calculator!<br>Check the other window for results.';
+                } else {
+                    document.getElementById('result').innerHTML = '⏳ Wait for PBCR Calculator to load, then try again...';
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
