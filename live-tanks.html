@@ -1634,8 +1634,8 @@
       
       // Show notification based on type
       if (alertType === 'persistent') {
-        // Open notifications page with persistent alarm
-        const notifyWindow = window.open('/notifications.html', '_blank');
+        // Show persistent notification directly in browser
+        // Note: notifications.html page removed - using browser notification API directly
         
         // Send message to notifications page after it loads
         setTimeout(() => {
