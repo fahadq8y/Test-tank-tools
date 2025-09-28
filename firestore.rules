@@ -2,117 +2,155 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // =================== القواعد المحدثة والمحسنة ===================
+    // =================== القواعد المحسنة مع الحماية ===================
+    
+    // دالة للتحقق من أن المستخدم مسجل في النظام
+    function isValidUser() {
+      return request.auth != null && 
+             request.auth.token.email != null &&
+             request.auth.token.email_verified == true;
+    }
+    
+    // دالة للتحقق من صلاحيات الإدارة
+    function isAdmin() {
+      return isValidUser() && 
+             (request.auth.token.email in ['fam030@knpc.com', 'admin@knpc.com'] ||
+              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'supervisor']);
+    }
 
-    // المسار الرئيسي للخزانات - هيكل جديد محسن
+    // =================== بيانات الخزانات - حماية متوسطة ===================
+
+    // المسار الرئيسي للخزانات - قراءة مفتوحة، كتابة محمية
     match /tankData/{department}/{document=**} {
-      allow read, write: if true;
+      allow read: if true; // القراءة مفتوحة لضمان عمل الصفحات
+      allow write: if isAdmin(); // الكتابة للإدمن فقط
     }
 
-    // المسار المباشر للخزانات في كل قسم
-    match /tankData/{department}/tanks/{tankId} {
-      allow read, write: if true;
-    }
-
-    // مسارات إضافية للهيكل الجديد
+    // مسارات الأقسام المختلفة
     match /tankData/pbcr/{document=**} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if isAdmin();
     }
     
     match /tankData/plcr/{document=**} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if isAdmin();
     }
     
     match /tankData/washery/{document=**} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
-    // =================== باقي القواعد الأصلية ===================
+    // =================== إدارة المستخدمين - حماية قوية ===================
 
-    // إدارة المستخدمين والصلاحيات
+    // بيانات المستخدمين - حماية شخصية
     match /users/{userId} {
-      allow read, write: if true;
+      allow read: if isValidUser() && (request.auth.uid == userId || isAdmin());
+      allow write: if isAdmin();
     }
     
     match /userPermissions/{userId} {
-      allow read, write: if true;
+      allow read, write: if isAdmin();
     }
     
     match /userTables/{docId} {
-      allow read, write: if true;
+      allow read: if isValidUser();
+      allow write: if isAdmin();
     }
 
-    // الخزانات - المسارات القديمة (للتوافق)
-    match /tankData/{tankId} {
-      allow read, write: if true;
+    // =================== البيانات التشغيلية - حماية متوسطة ===================
+
+    // الخزانات المباشرة - قراءة مفتوحة للتطبيق
+    match /liveTanks/{tankId} {
+      allow read: if true;
+      allow write: if isValidUser();
     }
     
     match /pbcrTanks/{tankId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if isAdmin();
     }
     
     match /plcrTanks/{tankId} {
-      allow read, write: if true;
-    }
-    
-    match /liveTanks/{tankId} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
-    // بيانات النظام
-    match /tankHistory/{docId} {
-      allow read, write: if true;
-    }
-    
+    // بيانات الحسابات والجداول
     match /pbcrData/{docId} {
-      allow read, write: if true;
+      allow read: if isValidUser();
+      allow write: if isValidUser();
     }
     
     match /pbcrTables/{docId} {
-      allow read, write: if true;
+      allow read: if isValidUser();
+      allow write: if isValidUser();
     }
     
     match /nmogasData/{docId} {
-      allow read, write: if true;
+      allow read: if isValidUser();
+      allow write: if isValidUser();
     }
 
-    // أنشطة النظام والسجلات
+    // تاريخ الخزانات - قراءة للمستخدمين، كتابة محمية
+    match /tankHistory/{docId} {
+      allow read: if isValidUser();
+      allow write: if isAdmin();
+    }
+
+    // =================== السجلات والأنشطة - حماية إدارية ===================
+
+    // أنشطة النظام - إدارية فقط
     match /activities/{docId} {
-      allow read, write: if true;
+      allow read: if isAdmin();
+      allow write: if isValidUser(); // السماح بتسجيل الأنشطة
     }
     
     match /activityLogs/{logId} {
-      allow read, write: if true;
+      allow read: if isAdmin();
+      allow write: if isValidUser();
     }
-    
-    match /emailQueue/{docId} {
-      allow read, write: if true;
-    }
+
+    // =================== إعدادات النظام - حماية قوية ===================
     
     match /system/{docId} {
-      allow read, write: if true;
+      allow read: if isAdmin();
+      allow write: if isAdmin();
     }
     
     match /systemSettings/{docId} {
-      allow read, write: if true;
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
+    
+    match /emailQueue/{docId} {
+      allow read, write: if isAdmin();
     }
 
-    // مسارات عامة للأقسام
+    // =================== مسارات عامة للتوافق ===================
+
+    // مسارات الأقسام العامة - حماية متوسطة
     match /tanks/{document=**} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if isValidUser();
     }
     
     match /pbcr/{document=**} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if isValidUser();
     }
     
     match /plcr/{document=**} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if isValidUser();
     }
 
-    // ملاحظة: إزالة القاعدة الافتراضية المانعة
-    // match /{document=**} {
-    //   allow read, write: if false;
-    // }
+    // =================== الحماية الافتراضية ===================
+    
+    // منع الوصول لأي شيء آخر
+    match /{document=**} {
+      allow read, write: if false;
+    }
   }
 }

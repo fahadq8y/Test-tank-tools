@@ -1705,14 +1705,35 @@
 
     // Calculate actual rate based on level difference and time - FIREBASE ENABLED VERSION
     function calculateActualRate() {
+      console.log('🔄 Starting calculateActualRate function...');
+      
       // ✅ Wait for tanks data from Firebase before calculating
       waitForTanks(() => {
         const currentLevel = parseFloat(document.getElementById('editCurrentLevel').value);
-        const previousLevel = parseFloat(document.getElementById('editPreviousLevel').value);
+        const previousLevel = parseFloat(document.getElementById('editPreviousLevelDisplay').value);
         const rateUnit = document.getElementById('editRateUnit').value;
         const department = document.getElementById('editDepartment').value;
         
-        if (!currentLevel || !previousLevel || !currentEditingTank) return;
+        console.log('🔍 Raw values from form:', {
+          currentLevelRaw: document.getElementById('editCurrentLevel').value,
+          previousLevelRaw: document.getElementById('editPreviousLevelDisplay').value,
+          currentLevel,
+          previousLevel,
+          rateUnit,
+          department,
+          currentEditingTank: !!currentEditingTank,
+          tanksLoaded: tanksLoaded,
+          tanksCount: Object.keys(tanks).length
+        });
+        
+        if (!currentLevel || !previousLevel || !currentEditingTank) {
+          console.log('⚠️ Missing required values:', {
+            hasCurrentLevel: !!currentLevel,
+            hasPreviousLevel: !!previousLevel,
+            hasCurrentEditingTank: !!currentEditingTank
+          });
+          return;
+        }
         
         console.log('📊 Calculating actual rate with real KNPC data:', {
           currentLevel,
@@ -1729,9 +1750,21 @@
         new Date(currentEditingTank.lastLevelUpdate.seconds * 1000) : 
         new Date(currentEditingTank.addedAt.seconds * 1000);
       
-      const timeDiffHours = (now - lastUpdateTime) / (1000 * 60 * 60);
+      let timeDiffHours = (now - lastUpdateTime) / (1000 * 60 * 60);
       
-      if (timeDiffHours <= 0) return;
+      console.log('⏰ Time calculation details:', {
+        now: now.toISOString(),
+        lastUpdateTime: lastUpdateTime.toISOString(),
+        timeDiffHours: timeDiffHours,
+        hasLastLevelUpdate: !!currentEditingTank.lastLevelUpdate,
+        hasAddedAt: !!currentEditingTank.addedAt
+      });
+      
+      if (timeDiffHours <= 0) {
+        console.log('⚠️ Invalid time difference:', timeDiffHours, 'hours - using 1 hour as default');
+        // Use 1 hour as default instead of returning
+        timeDiffHours = 1;
+      }
       
       // Calculate level difference
       const levelDiff = Math.abs(currentLevel - previousLevel);
@@ -1820,9 +1853,14 @@
       }
       
       // Update rate field with decimal precision
-        document.getElementById('editRate').value = actualRate.toFixed(2);
-        
+      const rateElement = document.getElementById('editRate');
+      if (rateElement) {
+        rateElement.value = actualRate.toFixed(2);
         console.log('✅ Rate updated to:', actualRate.toFixed(2), rateUnit, 'using real KNPC data');
+        console.log('🔍 Rate field value after update:', rateElement.value);
+      } else {
+        console.error('❌ Rate field not found!');
+      }
         
         // Recalculate finish time
         calculateEditTime();
@@ -2174,29 +2212,22 @@
         // Auto-fill current level from saved data
         if (tank.currentLevel) {
           document.getElementById('editPreviousLevelDisplay').value = tank.currentLevel;
+          document.getElementById('editPreviousLevel').value = tank.currentLevel; // For hidden field
           document.getElementById('editCurrentLevel').value = ''; // Always leave empty for new input
           console.log('✅ Auto-filled previous level:', tank.currentLevel);
         } else if (tank.initialLevel) {
           // If no currentLevel, use initialLevel as fallback
           document.getElementById('editPreviousLevelDisplay').value = tank.initialLevel;
+          document.getElementById('editPreviousLevel').value = tank.initialLevel; // For hidden field
           document.getElementById('editCurrentLevel').value = '';
           console.log('✅ Auto-filled previous level from initial:', tank.initialLevel);
         } else {
           document.getElementById('editPreviousLevelDisplay').value = '';
+          document.getElementById('editPreviousLevel').value = '';
           document.getElementById('editCurrentLevel').value = '';
           console.log('⚠️ No level found in tank data');
         }
-        
-        // ✅ FIXED: Proper Previous Level handling for all departments
-        if (tank.department === 'PLCR') {
-          // For PLCR, use saved previousLevel or currentLevel as fallback
-          const previousLevel = tank.previousLevel || tank.currentLevel || '';
-          document.getElementById('editPreviousLevel').value = previousLevel;
-          console.log('✅ PLCR Previous Level set to:', previousLevel);
-        } else {
-          // For PBCR/WASHERY, use currentLevel as previous
-          document.getElementById('editPreviousLevel').value = tank.currentLevel || '';
-        }
+
         
         document.getElementById('editRate').value = tank.rate || '';
         
