@@ -1289,7 +1289,41 @@ window.calculate = () => {
 };
 
 function isSameShift(now,finish){const getShift=h=>{const m=h.getHours()*60+h.getMinutes();return m>=360&&m<840?"morning":m>=840&&m<1320?"evening":"night"};const currentShift=getShift(now),finishShift=getShift(finish);if(currentShift!==finishShift)return false;if(currentShift==="night"){const nowHour=now.getHours(),finishHour=finish.getHours();if(nowHour>=0&&nowHour<6){if(finishHour>=0&&finishHour<6)return Math.floor((finish.getTime()-now.getTime())/(24*60*60*1000))<=1;else if(finishHour>=22)return Math.floor((finish.getTime()-now.getTime())/(24*60*60*1000))===0}else if(nowHour>=22){if(finishHour>=22)return now.toDateString()===finish.toDateString();else if(finishHour>=0&&finishHour<6)return Math.floor((finish.getTime()-now.getTime())/(24*60*60*1000))===1}return false}return now.toDateString()===finish.toDateString()}
-window.addToTable=()=>{if(!calcData||!calcData.tankNumber){alert("Please calculate a tank first!");return}const table=document.getElementById("tankTable").getElementsByTagName("tbody")[0],row=table.insertRow();const now=new Date();const finishDateTime=new Date(`${calcData.finishDate} ${calcData.finishTime}`);const sameShift=isSameShift(now,finishDateTime);row.className=sameShift?'same-shift':'next-shift';row.innerHTML=`<td>${calcData.tankNumber}</td><td>${calcData.finishDate}</td><td>${calcData.finishTime}</td><td><button class="delete-btn" onclick="this.parentNode.parentNode.remove();saveData()">Delete</button></td>`;saveData()};
+window.addToTable=()=>{
+  // Check if calculation was done successfully
+  const outputDiv = document.getElementById('output');
+  const tankInput = document.getElementById('tankInput');
+  
+  if (!tankInput.value) {
+    alert("⚠️ يرجى إدخال رقم الخزان أولاً!");
+    return;
+  }
+  
+  if (!outputDiv.innerHTML.includes('Finish at:')) {
+    alert("⚠️ يرجى حساب الخزان بنجاح أولاً!\n\nتأكد من:\n• إدخال جميع البيانات\n• ظهور نتيجة الحساب");
+    return;
+  }
+  
+  // Extract data from result if calcData is missing
+  if (!calcData || !calcData.tankNumber) {
+    const resultText = outputDiv.innerHTML;
+    const finishMatch = resultText.match(/Finish at: (.+?) - (.+?)(?:<|$)/);
+    
+    if (!finishMatch) {
+      alert("❌ لا يمكن استخراج بيانات الحساب. يرجى إعادة الحساب.");
+      return;
+    }
+    
+    // Create calcData from the result
+    calcData = {
+      tankNumber: tankInput.value,
+      finishTime: finishMatch[1].trim(),
+      finishDate: finishMatch[2].trim()
+    };
+  }
+  
+  const table=document.getElementById("tankTable").getElementsByTagName("tbody")[0],row=table.insertRow();const now=new Date();const finishDateTime=new Date(`${calcData.finishDate} ${calcData.finishTime}`);const sameShift=isSameShift(now,finishDateTime);row.className=sameShift?'same-shift':'next-shift';row.innerHTML=`<td>${calcData.tankNumber}</td><td>${calcData.finishDate}</td><td>${calcData.finishTime}</td><td><button class="delete-btn" onclick="this.parentNode.parentNode.remove();saveData()">Delete</button></td>`;saveData();
+};
 function saveData(){const table=document.getElementById("tankTable").getElementsByTagName("tbody")[0],data=[];for(let i=0;i<table.rows.length;i++){const row=table.rows[i];data.push({tank:row.cells[0].innerText,date:row.cells[1].innerText,time:row.cells[2].innerText})}localStorage.setItem("tankData",JSON.stringify(data))}
 function loadData(){const data=JSON.parse(localStorage.getItem("tankData")||"[]"),table=document.getElementById("tankTable").getElementsByTagName("tbody")[0];data.forEach(item=>{const row=table.insertRow();const now=new Date();const finishDateTime=new Date(`${item.date} ${item.time}`);const sameShift=isSameShift(now,finishDateTime);row.className=sameShift?'same-shift':'next-shift';row.innerHTML=`<td>${item.tank}</td><td>${item.date}</td><td>${item.time}</td><td><button class="delete-btn" onclick="this.parentNode.parentNode.remove();saveData()">Delete</button></td>`})}
 function setupDark(){const btn=document.getElementById("darkModeButton");btn.addEventListener("click",()=>{document.body.style.filter=document.body.style.filter?"":"invert(1) hue-rotate(180deg)";btn.textContent=document.body.style.filter?"☀️":"🌙"})}
@@ -1422,7 +1456,7 @@ window.showReminderOptions = function() {
   const rateInput = document.getElementById('flowrate');
   const outputDiv = document.getElementById('output');
   
-  if (!tankNumberInput.value || !outputDiv.innerHTML.includes('hours') || outputDiv.innerHTML.includes('❌')) {
+  if (!tankNumberInput.value || (!outputDiv.innerHTML.includes('Time:') && !outputDiv.innerHTML.includes('hours')) || outputDiv.innerHTML.includes('❌')) {
     alert('⚠️ يرجى حساب الخزان أولاً قبل إضافة التذكير!\n\nتأكد من:\n• إدخال رقم الخزان\n• إدخال المستوى الحالي والمطلوب\n• إدخال معدل التدفق\n• ظهور نتيجة الحساب بنجاح');
     return;
   }
