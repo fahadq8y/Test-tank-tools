@@ -157,31 +157,14 @@ input,select{background:rgba(255,255,255,0.9);border-radius:12px;border:none;col
 <button onclick="showLiveTanksHelp()" class="help-btn" id="add-to-live-tanks-help" title="About Live Tanks" style="display:none">ℹ️</button>
 </div>
 <div class="button-row">
-<a href="#" id="calendarLink" target="_blank">
-<button class="action-btn reminder-btn">📅 Add Reminder</button>
-</a>
+<button onclick="showReminderOptions()" class="action-btn reminder-btn">📅 Add Reminder</button>
 <button onclick="showCalendarHelp()" class="help-btn" title="How to use Calendar Reminder">ℹ️</button>
 </div>
 <div class="button-row">
 <button onclick="addToTable()" class="action-btn table-btn">📊 Add to Table</button>
 <button onclick="showTableHelp()" class="help-btn" title="About Personal Table">ℹ️</button>
 </div>
-<div class="button-row">
-<button onclick="addMissingTanks()" class="action-btn" style="background: linear-gradient(45deg, #FF9800, #F57C00); color: white; box-shadow: 0 2px 8px rgba(255,152,0,0.3)">🔧 Add Missing Tanks</button>
-<button onclick="showAddTanksHelp()" class="help-btn" title="About Adding Missing Tanks">ℹ️</button>
-</div>
-<div class="button-row">
-<button onclick="checkTank460()" class="action-btn" style="background: linear-gradient(45deg, #2196F3, #1976D2); color: white; box-shadow: 0 2px 8px rgba(33,150,243,0.3)">🔍 Check Tank 460</button>
-</div>
-<div class="button-row">
-<button onclick="directAddTank460()" class="action-btn" style="background: linear-gradient(45deg, #4CAF50, #45a049); color: white; box-shadow: 0 2px 8px rgba(76,175,80,0.3)">⚡ Direct Add Tank 460</button>
-</div>
-<div class="button-row">
-<button onclick="forceReloadAllTanks()" class="action-btn" style="background: linear-gradient(45deg, #9C27B0, #7B1FA2); color: white; box-shadow: 0 2px 8px rgba(156,39,176,0.3)">🔄 Force Reload All Tanks</button>
-</div>
-<div class="button-row">
-<button onclick="reloadAllTanksFromFirebase()" class="action-btn" style="background: linear-gradient(45deg, #9C27B0, #7B1FA2); color: white; box-shadow: 0 2px 8px rgba(156,39,176,0.3)">🔄 Reload All Tanks</button>
-</div>
+
 </div>
 <h3 style="margin-top:40px">Your tanks finishing in current shift:</h3>
 <table id="tankTable">
@@ -1428,6 +1411,80 @@ window.addMissingTanks = async function() {
 
 window.showAddTanksHelp = function() {
   alert('🔧 Add Missing PBCR Tanks\n\n• Adds common PBCR tank numbers to Firebase\n• Uses standard BPM values for each tank\n• Solves "tank not found" errors\n• Only adds missing tanks - existing data is safe\n• Direct addition to Firebase tankData/pbcr collection\n\n💡 Use this if you see "Tank XXX not found" messages.');
+};
+
+// Add Reminder functionality (same as Live Tanks)
+window.showReminderOptions = function() {
+  // Get the calculated result values
+  const tankNumberInput = document.getElementById('tankNumber');
+  const targetValueInput = document.getElementById('targetValue');
+  const currentLevelInput = document.getElementById('currentLevel');
+  const rateInput = document.getElementById('rate');
+  const outputDiv = document.getElementById('output');
+  
+  if (!tankNumberInput.value || !outputDiv.innerHTML.includes('hours') || outputDiv.innerHTML.includes('❌')) {
+    alert('⚠️ يرجى حساب الخزان أولاً قبل إضافة التذكير!\n\nتأكد من:\n• إدخال رقم الخزان\n• إدخال المستوى الحالي والمطلوب\n• إدخال معدل التدفق\n• ظهور نتيجة الحساب بنجاح');
+    return;
+  }
+  
+  // Extract finish date and time from the result
+  const resultText = outputDiv.innerHTML;
+  const finishMatch = resultText.match(/Finish: (.+?) - (.+?)<\/strong>/);
+  
+  if (!finishMatch) {
+    alert('❌ لم يتم العثور على وقت الانتهاء في النتيجة. يرجى إعادة الحساب.');
+    return;
+  }
+  
+  const finishTime = finishMatch[1].trim();
+  const finishDate = finishMatch[2].trim();
+  
+  try {
+    // Parse the finish date and time
+    const finishDateTime = new Date(finishDate + ' ' + finishTime);
+    
+    if (isNaN(finishDateTime.getTime())) {
+      alert('❌ تنسيق التاريخ والوقت غير صحيح. يرجى إعادة الحساب.');
+      return;
+    }
+    
+    // Create reminder data
+    const tankNumber = tankNumberInput.value;
+    const targetValue = targetValueInput.value;
+    const currentLevel = currentLevelInput.value;
+    const rate = rateInput.value;
+    const rateUnit = document.getElementById('rateUnit').value;
+    
+    // Format date and time for Google Calendar (same as live-tanks)
+    const reminderDate = finishDateTime.toISOString().split('T')[0].replace(/-/g, '');
+    const reminderTime = finishDateTime.toTimeString().slice(0, 5).replace(':', '') + '00';
+    
+    // Create event title and details
+    const eventTitle = `Tank ${tankNumber} - PBCR Calculation`;
+    const eventDetails = `Current Level: ${currentLevel} meter\\nTarget: ${targetValue}\\nRate: ${rate} ${rateUnit}\\n\\nFinish Time: ${finishTime} - ${finishDate}\\n\\nCalculated by: PBCR Tank Calculator\\nLocation: KNPC`;
+    
+    // Create Google Calendar URL (exact same format as live-tanks)
+    const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(eventTitle)}&dates=${reminderDate}T${reminderTime}/${reminderDate}T${reminderTime}&details=${encodeURIComponent(eventDetails)}&location=KNPC&sf=true&output=xml`;
+    
+    // Open in new window
+    window.open(calendarUrl, '_blank');
+    
+    // Show success message
+    const successMsg = document.createElement('div');
+    successMsg.style.cssText = 'position:fixed;top:20px;right:20px;background:rgba(76,175,80,0.9);color:white;padding:15px 20px;border-radius:8px;z-index:1000;max-width:300px;font-weight:bold;box-shadow:0 4px 12px rgba(0,0,0,0.3)';
+    successMsg.innerHTML = '✅ تم فتح Google Calendar!<br>أكمل حفظ التذكير في التقويم';
+    document.body.appendChild(successMsg);
+    
+    setTimeout(() => {
+      if (successMsg.parentNode) {
+        successMsg.remove();
+      }
+    }, 4000);
+    
+  } catch (error) {
+    console.error('Reminder creation error:', error);
+    alert('❌ حدث خطأ في إنشاء التذكير. يرجى المحاولة مرة أخرى.');
+  }
 };
 
 window.showLiveTanksHelp=showLiveTanksHelp;window.showTableHelp=showTableHelp;window.addMissingTanks=addMissingTanks;window.showAddTanksHelp=showAddTanksHelp;window.directAddTank460=directAddTank460;window.forceReloadAllTanks=forceReloadAllTanks;window.reloadAllTanksFromFirebase=reloadAllTanksFromFirebase;window.checkAddToLiveTanksPermission=checkAddToLiveTanksPermission;
