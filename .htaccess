@@ -1,12 +1,20 @@
-# Prevent caching of deleted files
+# Redirect deleted work-reminder.html to index
+RewriteEngine On
+RewriteRule ^work-reminder\.html$ index.html [R=301,L]
+
+# Prevent access to deleted files
 <Files "work-reminder.html">
     Order Allow,Deny
     Deny from all
 </Files>
 
-# Cache control for main files
+# Cache control for main files - prevent browser caching
 <FilesMatch "\.(html|js|css)$">
     Header set Cache-Control "no-cache, no-store, must-revalidate"
     Header set Pragma "no-cache"
     Header set Expires 0
 </FilesMatch>
+
+# Additional security headers
+Header always set X-Frame-Options "SAMEORIGIN"
+Header always set X-Content-Type-Options "nosniff"
