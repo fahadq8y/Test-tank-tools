@@ -1182,8 +1182,20 @@ window.addEventListener('load', () => {
 // --- نهاية التعديل المهم ---
 
 
-function loadUser(){if(!currentUser)return;document.getElementById('userName').textContent=currentUser.username;document.getElementById('userAvatar').textContent=(currentUser.fullName||currentUser.username).charAt(0).toUpperCase();if(currentUser.username==='fam030'||currentUser.role==='admin')document.getElementById('adminLink').style.display='inline-block';
-  // checkLiveTanksAccess is now handled by permissions.js
+function loadUser(){
+  if(!currentUser) return;
+  
+  // Update user display info
+  document.getElementById('userName').textContent=currentUser.username;
+  document.getElementById('userAvatar').textContent=(currentUser.fullName||currentUser.username).charAt(0).toUpperCase();
+  
+  // Show admin dashboard for admins
+  if(currentUser.username==='fam030'||currentUser.role==='admin') {
+    document.getElementById('adminLink').style.display='inline-block';
+  }
+  
+  // Show Live Tanks navigation link for all logged users
+  document.getElementById('live-tanks-btn').style.display='inline-block';
 }
 
 window.calculate = () => {
