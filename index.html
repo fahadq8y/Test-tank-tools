@@ -1429,10 +1429,17 @@ window.showReminderOptions = function() {
   
   // Extract finish date and time from the result
   const resultText = outputDiv.innerHTML;
-  const finishMatch = resultText.match(/Finish: (.+?) - (.+?)<\/strong>/);
+  console.log('Result HTML:', resultText); // Debug
+  
+  // Try multiple patterns to match different result formats
+  let finishMatch = resultText.match(/Finish at: (.+?) - (.+?)(?:<|$)/);
+  if (!finishMatch) {
+    finishMatch = resultText.match(/Finish: (.+?) - (.+?)(?:<|$)/);
+  }
   
   if (!finishMatch) {
-    alert('❌ لم يتم العثور على وقت الانتهاء في النتيجة. يرجى إعادة الحساب.');
+    alert('❌ لم يتم العثور على وقت الانتهاء في النتيجة.\n\nتأكد من ظهور نتيجة الحساب بنجاح أولاً.\n\nالنتيجة المطلوبة: "Finish at: XX:XX - YYYY-MM-DD"');
+    console.log('No match found in:', resultText);
     return;
   }
   
