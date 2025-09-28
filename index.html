@@ -336,6 +336,22 @@ function showMessage(text, type = 'info') {
   }
 }
 
+// Check Add to Live Tanks permission (replacement for removed permissions.js)
+function checkAddToLiveTanksPermission() {
+  return new Promise((resolve) => {
+    // Allow all logged-in users to add to Live Tanks
+    // In future, this can be enhanced with role-based permissions
+    const session = sessionStorage.getItem('tanktools_session');
+    const userData = localStorage.getItem('tanktools_current_user');
+    
+    if (session === 'active' && userData) {
+      resolve(true); // All logged users can add to Live Tanks
+    } else {
+      resolve(false);
+    }
+  });
+}
+
 const products={
   "PBCR":["LSFO","EGO 10PPM","EGO 500PPM","RHN","PCNA","NMOGAS","OLMOGAS","ATK","ARDR","IC5","ISOM","SLOP","OTHER"],
   "WASHERY":["MOGAS 98","MOGAS 95","MOGAS 91","GO","KERO","ATK","Slop","OTHER"],
@@ -1402,7 +1418,7 @@ window.showAddTanksHelp = function() {
   alert('🔧 Add Missing PBCR Tanks\n\n• Adds common PBCR tank numbers to Firebase\n• Uses standard BPM values for each tank\n• Solves "tank not found" errors\n• Only adds missing tanks - existing data is safe\n• Direct addition to Firebase tankData/pbcr collection\n\n💡 Use this if you see "Tank XXX not found" messages.');
 };
 
-window.showLiveTanksHelp=showLiveTanksHelp;window.showTableHelp=showTableHelp;window.addMissingTanks=addMissingTanks;window.showAddTanksHelp=showAddTanksHelp;window.directAddTank460=directAddTank460;window.forceReloadAllTanks=forceReloadAllTanks;window.reloadAllTanksFromFirebase=reloadAllTanksFromFirebase;
+window.showLiveTanksHelp=showLiveTanksHelp;window.showTableHelp=showTableHelp;window.addMissingTanks=addMissingTanks;window.showAddTanksHelp=showAddTanksHelp;window.directAddTank460=directAddTank460;window.forceReloadAllTanks=forceReloadAllTanks;window.reloadAllTanksFromFirebase=reloadAllTanksFromFirebase;window.checkAddToLiveTanksPermission=checkAddToLiveTanksPermission;
 </script>
 
 <!-- PWA Service Worker Registration -->
