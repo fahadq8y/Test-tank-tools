@@ -241,6 +241,10 @@
             <button class="btn btn-secondary" onclick="tryManualDeepLinks()">
                 🔗 تجربة روابط يدوية
             </button>
+            
+            <button class="btn" style="background: linear-gradient(45deg, #9C27B0, #673AB7); color: white;" onclick="tryWebAlarmAPI()">
+                🌐 منبه ويب مباشر
+            </button>
         </div>
 
         <div id="statusMessages"></div>
@@ -491,18 +495,23 @@
         // محاولة طرق Android متعددة  
         function tryAndroidAlarmMethods(title, dateTime, hours, minutes) {
             const methods = [
-                // Google Clock
-                `intent://alarm?hour=${hours}&minutes=${minutes}&message=${encodeURIComponent(title)}#Intent;scheme=android.intent.action.SET_ALARM;package=com.google.android.deskclock;end`,
-                // Samsung Clock
-                `intent://alarm?hour=${hours}&minutes=${minutes}&message=${encodeURIComponent(title)}#Intent;scheme=android.intent.action.SET_ALARM;package=com.samsung.android.app.clockpackage;end`,
-                // AOSP Clock
-                `intent://alarm?hour=${hours}&minutes=${minutes}&message=${encodeURIComponent(title)}#Intent;scheme=android.intent.action.SET_ALARM;package=com.android.deskclock;end`,
-                // Standard Android Alarm Intent
-                `intent://alarm#Intent;action=android.intent.action.SET_ALARM;i.android.intent.extra.alarm.HOUR=${hours};i.android.intent.extra.alarm.MINUTES=${minutes};S.android.intent.extra.alarm.MESSAGE=${encodeURIComponent(title)};end`,
-                // Alternative format
-                `android-app://com.google.android.deskclock/alarm?hour=${hours}&minutes=${minutes}&message=${encodeURIComponent(title)}`,
-                // Generic alarm action
-                `intent:#Intent;action=android.intent.action.SET_ALARM;i.android.intent.extra.alarm.HOUR=${hours};i.android.intent.extra.alarm.MINUTES=${minutes};S.android.intent.extra.alarm.MESSAGE=${title};end`
+                // الطريقة الصحيحة - Android Standard SET_ALARM
+                `intent:#Intent;action=android.intent.action.SET_ALARM;i.android.intent.extra.alarm.HOUR=${hours};i.android.intent.extra.alarm.MINUTES=${minutes};S.android.intent.extra.alarm.MESSAGE=${encodeURIComponent(title)};end`,
+                
+                // Google Clock بدون package محدد
+                `intent:#Intent;action=android.intent.action.SET_ALARM;i.android.intent.extra.alarm.HOUR=${hours};i.android.intent.extra.alarm.MINUTES=${minutes};S.android.intent.extra.alarm.MESSAGE=${encodeURIComponent(title)};S.android.intent.extra.alarm.SKIP_UI=false;end`,
+                
+                // فتح تطبيق الساعة فقط ثم إعداد يدوي
+                `intent:#Intent;action=android.intent.action.SHOW_ALARMS;end`,
+                
+                // محاولة مع Google Clock فقط إذا كان مثبت
+                `intent://com.google.android.deskclock/alarms#Intent;scheme=android-app;end`,
+                
+                // محاولة عامة لفتح قائمة المنبهات
+                `intent:#Intent;action=android.intent.action.SHOW_ALARMS;category=android.intent.category.DEFAULT;end`,
+                
+                // طريقة Web Intent API
+                `https://clock.google.com/alarm/set?hour=${hours}&minute=${minutes}&label=${encodeURIComponent(title)}`
             ];
             
             let currentMethod = 0;
@@ -883,6 +892,158 @@ END:VCALENDAR`;
             }, 5000);
         }
         
+        // منبه ويب مباشر باستخدام Web APIs
+        function tryWebAlarmAPI() {
+            const title = document.getElementById('alarmTitle').value;
+            const time = document.getElementById('alarmTime').value;
+            const date = document.getElementById('alarmDate').value;
+            const description = document.getElementById('alarmDescription').value;
+            
+            if (!title || !time || !date) {
+                showMessage('يرجى ملء جميع الحقول المطلوبة', 'error');
+                return;
+            }
+            
+            const alarmDateTime = new Date(`${date}T${time}`);
+            const now = new Date();
+            
+            if (alarmDateTime <= now) {
+                showMessage('وقت المنبه يجب أن يكون في المستقبل', 'error');
+                return;
+            }
+            
+            showMessage('🌐 جاري إعداد منبه الويب...', 'info');
+            
+            // 1. محاولة استخدام Notification API
+            if ('Notification' in window) {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        const timeUntilAlarm = alarmDateTime.getTime() - now.getTime();
+                        
+                        showMessage(`✅ تم إعداد تنبيه الويب! سينبهك بعد ${Math.round(timeUntilAlarm / 60000)} دقيقة`, 'success');
+                        
+                        // إعداد التنبيه
+                        setTimeout(() => {
+                            // تشغيل عدة تنبيهات متتالية
+                            for (let i = 0; i < 5; i++) {
+                                setTimeout(() => {
+                                    new Notification(`🚨 ${title}`, {
+                                        body: `${description}\n⏰ ${alarmDateTime.toLocaleString('ar-SA')}`,
+                                        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23ff4444"/><text x="50" y="60" text-anchor="middle" font-size="40" fill="white">⏰</text></svg>',
+                                        tag: 'work-alarm',
+                                        requireInteraction: true,
+                                        vibrate: [200, 100, 200, 100, 200, 100, 200]
+                                    });
+                                    
+                                    // اهتزاز إضافي
+                                    if (navigator.vibrate) {
+                                        navigator.vibrate([500, 200, 500, 200, 500]);
+                                    }
+                                }, i * 2000);
+                            }
+                            
+                            // تشغيل صوت تنبيه
+                            playAlarmSound();
+                            
+                        }, timeUntilAlarm);
+                        
+                        // حفظ في localStorage للمتابعة
+                        const alarmData = {
+                            title,
+                            description,
+                            dateTime: alarmDateTime.toISOString(),
+                            created: new Date().toISOString()
+                        };
+                        
+                        let savedAlarms = JSON.parse(localStorage.getItem('webAlarms') || '[]');
+                        savedAlarms.push(alarmData);
+                        localStorage.setItem('webAlarms', JSON.stringify(savedAlarms));
+                        
+                        // إظهار معلومات المنبه المحفوظ
+                        displayActiveAlarms();
+                        
+                    } else {
+                        showMessage('تم رفض إذن التنبيهات. فعّل التنبيهات للحصول على المنبه', 'error');
+                    }
+                });
+            } else {
+                showMessage('التنبيهات غير مدعومة في هذا المتصفح', 'error');
+            }
+        }
+        
+        // تشغيل صوت المنبه
+        function playAlarmSound() {
+            // إنشاء صوت تنبيه باستخدام Web Audio API
+            if ('AudioContext' in window || 'webkitAudioContext' in window) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                const audioContext = new AudioContext();
+                
+                // تشغيل نغمة تنبيه متكررة
+                for (let i = 0; i < 10; i++) {
+                    setTimeout(() => {
+                        const oscillator = audioContext.createOscillator();
+                        const gainNode = audioContext.createGain();
+                        
+                        oscillator.connect(gainNode);
+                        gainNode.connect(audioContext.destination);
+                        
+                        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                        
+                        oscillator.start();
+                        oscillator.stop(audioContext.currentTime + 0.5);
+                    }, i * 1000);
+                }
+            }
+        }
+        
+        // عرض المنبهات النشطة
+        function displayActiveAlarms() {
+            const savedAlarms = JSON.parse(localStorage.getItem('webAlarms') || '[]');
+            const now = new Date();
+            
+            // فلترة المنبهات المستقبلية فقط
+            const futureAlarms = savedAlarms.filter(alarm => new Date(alarm.dateTime) > now);
+            
+            if (futureAlarms.length > 0) {
+                let alarmsList = `
+                    <div style="background: rgba(76, 175, 80, 0.1); padding: 15px; border-radius: 10px; margin: 15px 0;">
+                        <h4>⏰ المنبهات النشطة:</h4>
+                `;
+                
+                futureAlarms.forEach((alarm, index) => {
+                    const alarmTime = new Date(alarm.dateTime);
+                    const timeUntil = alarmTime.getTime() - now.getTime();
+                    const hoursUntil = Math.floor(timeUntil / (1000 * 60 * 60));
+                    const minutesUntil = Math.floor((timeUntil % (1000 * 60 * 60)) / (1000 * 60));
+                    
+                    alarmsList += `
+                        <div style="background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; margin: 10px 0;">
+                            <p><strong>${alarm.title}</strong></p>
+                            <p>📅 ${alarmTime.toLocaleDateString('ar-SA')} ⏰ ${alarmTime.toLocaleTimeString('ar-SA')}</p>
+                            <p>⏳ بعد ${hoursUntil} ساعة و ${minutesUntil} دقيقة</p>
+                            <button onclick="cancelWebAlarm(${index})" style="background: #f44336; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">
+                                ❌ إلغاء
+                            </button>
+                        </div>
+                    `;
+                });
+                
+                alarmsList += '</div>';
+                document.getElementById('statusMessages').innerHTML = alarmsList;
+            }
+        }
+        
+        // إلغاء منبه ويب
+        function cancelWebAlarm(index) {
+            let savedAlarms = JSON.parse(localStorage.getItem('webAlarms') || '[]');
+            savedAlarms.splice(index, 1);
+            localStorage.setItem('webAlarms', JSON.stringify(savedAlarms));
+            
+            showMessage('تم إلغاء المنبه', 'success');
+            displayActiveAlarms();
+        }
+        
         // تجربة روابط يدوية للاختبار
         function tryManualDeepLinks() {
             const device = detectDevice();
@@ -921,37 +1082,47 @@ END:VCALENDAR`;
             
             return `
                 <div style="text-align: right;">
-                    <h5>🤖 روابط Android:</h5>
+                    <h5>🤖 روابط Android المحدثة:</h5>
                     <div style="line-height: 2;">
-                        <p><strong>1. Google Clock:</strong></p>
-                        <a href="intent://alarm?hour=${testHour}&minutes=${testMinutes}&message=${encodeURIComponent(testMessage)}#Intent;scheme=android.intent.action.SET_ALARM;package=com.google.android.deskclock;end" 
+                        <p><strong>1. Android Standard SET_ALARM:</strong></p>
+                        <a href="intent:#Intent;action=android.intent.action.SET_ALARM;i.android.intent.extra.alarm.HOUR=${testHour};i.android.intent.extra.alarm.MINUTES=${testMinutes};S.android.intent.extra.alarm.MESSAGE=${encodeURIComponent(testMessage)};end" 
                            style="color: #4CAF50; text-decoration: underline;">
-                           Google Clock - الطريقة الأساسية
+                           🎯 الطريقة الصحيحة - جربها أولاً
                         </a><br>
                         
-                        <p><strong>2. Samsung Clock:</strong></p>
-                        <a href="intent://alarm?hour=${testHour}&minutes=${testMinutes}&message=${encodeURIComponent(testMessage)}#Intent;scheme=android.intent.action.SET_ALARM;package=com.samsung.android.app.clockpackage;end" 
+                        <p><strong>2. Show Alarms List:</strong></p>
+                        <a href="intent:#Intent;action=android.intent.action.SHOW_ALARMS;end" 
                            style="color: #4CAF50; text-decoration: underline;">
-                           Samsung Clock App
+                           🕐 فتح قائمة المنبهات (آمن)
                         </a><br>
                         
-                        <p><strong>3. Android Standard:</strong></p>
-                        <a href="intent:#Intent;action=android.intent.action.SET_ALARM;i.android.intent.extra.alarm.HOUR=${testHour};i.android.intent.extra.alarm.MINUTES=${testMinutes};S.android.intent.extra.alarm.MESSAGE=${testMessage};end" 
+                        <p><strong>3. Google Clock Web:</strong></p>
+                        <a href="https://clock.google.com/alarm/set?hour=${testHour}&minute=${testMinutes}&label=${encodeURIComponent(testMessage)}" 
                            style="color: #4CAF50; text-decoration: underline;">
-                           Android Generic Intent
+                           🌐 Google Clock على الويب
                         </a><br>
                         
-                        <p><strong>4. Alternative Format:</strong></p>
-                        <a href="android-app://com.google.android.deskclock/alarm?hour=${testHour}&minutes=${testMinutes}&message=${encodeURIComponent(testMessage)}" 
+                        <p><strong>4. Google Clock App Direct:</strong></p>
+                        <a href="intent://com.google.android.deskclock/alarms#Intent;scheme=android-app;end" 
                            style="color: #4CAF50; text-decoration: underline;">
-                           Android App Link
+                           📱 Google Clock مباشر (إذا مثبت)
                         </a><br>
                         
-                        <p><strong>5. Simple Clock Open:</strong></p>
-                        <a href="intent://alarm#Intent;scheme=clock;package=com.android.deskclock;end" 
+                        <p><strong>5. Simple Open Any Clock:</strong></p>
+                        <a href="intent:#Intent;action=android.intent.action.SHOW_ALARMS;category=android.intent.category.DEFAULT;end" 
                            style="color: #4CAF50; text-decoration: underline;">
-                           فتح تطبيق الساعة فقط
+                           🔓 أي تطبيق ساعة متاح
                         </a>
+                    </div>
+                    
+                    <div style="background: rgba(76, 175, 80, 0.1); padding: 10px; border-radius: 8px; margin: 10px 0;">
+                        <p><strong>💡 تعليمات:</strong></p>
+                        <ul style="line-height: 1.6;">
+                            <li><strong>الرابط الأول</strong> هو الأصح نظرياً</li>
+                            <li><strong>الرابط الثاني</strong> آمن ويفتح قائمة المنبهات</li>
+                            <li>إذا لم تعمل، المشكلة في المتصفح أو الأمان</li>
+                            <li>استخدم <strong>"منبه ويب مباشر"</strong> كبديل</li>
+                        </ul>
                     </div>
                 </div>
             `;
@@ -1012,6 +1183,9 @@ END:VCALENDAR`;
             document.getElementById('alarmType').addEventListener('change', updateAlarmPreview);
             
             updateAlarmPreview();
+            
+            // عرض المنبهات النشطة المحفوظة
+            displayActiveAlarms();
         };
     </script>
 </body>
