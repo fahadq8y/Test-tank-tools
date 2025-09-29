@@ -1,56 +1,34 @@
 {
   "version": 2,
   "name": "tank-tools-knpc",
-  "builds": [
+  "rewrites": [
     {
-      "src": "**/*.html",
-      "use": "@vercel/static"
+      "source": "/",
+      "destination": "/index.html"
     },
     {
-      "src": "**/*.js",
-      "use": "@vercel/static"
+      "source": "/dashboard",
+      "destination": "/dashboard.html"
     },
     {
-      "src": "**/*.css",
-      "use": "@vercel/static"
+      "source": "/login",
+      "destination": "/login.html"
     },
     {
-      "src": "**/*.png",
-      "use": "@vercel/static"
+      "source": "/live-tanks",
+      "destination": "/live-tanks.html"
     },
     {
-      "src": "**/*.jpg",
-      "use": "@vercel/static"
-    }
-  ],
-  "routes": [
-    {
-      "src": "/",
-      "dest": "/index.html"
+      "source": "/plcr",
+      "destination": "/plcr.html"
     },
     {
-      "src": "/dashboard",
-      "dest": "/dashboard.html"
+      "source": "/nmogas",
+      "destination": "/nmogas.html"
     },
     {
-      "src": "/login",
-      "dest": "/login.html"
-    },
-    {
-      "src": "/live-tanks",
-      "dest": "/live-tanks.html"
-    },
-    {
-      "src": "/plcr",
-      "dest": "/plcr.html"
-    },
-    {
-      "src": "/nmogas",
-      "dest": "/nmogas.html"
-    },
-    {
-      "src": "/dashboard-test",
-      "dest": "/dashboard-test.html"
+      "source": "/dashboard-test",
+      "destination": "/dashboard-test.html"
     }
   ],
   "headers": [
@@ -68,13 +46,12 @@
         {
           "key": "X-XSS-Protection",
           "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "origin-when-cross-origin"
         }
       ]
     }
-  ],
-  "functions": {
-    "app/**/*": {
-      "runtime": "@vercel/node@18.x"
-    }
-  }
+  ]
 }
