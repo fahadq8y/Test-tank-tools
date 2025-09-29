@@ -3,11 +3,13 @@
   "version": "5.0.0",
   "description": "KNPC Tank Management Tools - PBCR, PLCR, Live Tanks, NMOGAS Blender, and Admin Dashboard",
   "main": "index.html",
+  "homepage": "https://test-tank-tools.vercel.app",
   "scripts": {
-    "dev": "vercel dev",
-    "build": "echo 'Static build complete'",
-    "start": "vercel dev",
-    "deploy": "vercel --prod"
+    "dev": "python -m http.server 3000",
+    "build": "echo 'Static site - no build required. Files ready in root directory.'",
+    "start": "python -m http.server 8000",
+    "deploy": "vercel --prod",
+    "test": "echo 'No tests specified'"
   },
   "keywords": [
     "knpc",
@@ -17,18 +19,22 @@
     "live-tanks",
     "nmogas",
     "firebase",
-    "dashboard"
+    "dashboard",
+    "static-site"
   ],
   "author": "Fahad - 17877",
   "license": "MIT",
-  "dependencies": {
-    "firebase": "^10.7.1"
-  },
-  "devDependencies": {
-    "@vercel/node": "^3.0.0",
-    "vercel": "^32.0.0"
-  },
+  "type": "module",
+  "files": [
+    "*.html",
+    "*.js",
+    "*.css",
+    "*.png",
+    "*.jpg",
+    "*.json",
+    "*.md"
+  ],
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=16.0.0"
   }
 }
