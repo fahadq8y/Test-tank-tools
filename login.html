@@ -484,15 +484,49 @@
             
             showMessage('✅ Admin login successful! Redirecting...', 'success');
             
+            // 🔧 EXTENDED DELAY + SESSION VERIFICATION
             setTimeout(() => {
+              // Double-check session is saved
+              const savedSession = sessionStorage.getItem('tanktools_session');
+              const savedUser = localStorage.getItem('tanktools_current_user');
+              
+              console.log('🔍 Pre-redirect check:', {
+                session: savedSession,
+                user: !!savedUser,
+                userDataLength: savedUser ? savedUser.length : 0
+              });
+              
+              if (!savedSession || !savedUser) {
+                console.error('❌ Session not properly saved, re-saving...');
+                sessionStorage.setItem('tanktools_session', 'active');
+                localStorage.setItem('tanktools_current_user', JSON.stringify({
+                  id: 1,
+                  username: 'fam030',
+                  fullName: 'Fahad Admin',
+                  email: 'fam030@knpc.com',
+                  role: 'admin',
+                  isActive: true,
+                  loginTime: new Date().toISOString()
+                }));
+                
+                // Additional delay after re-saving
+                setTimeout(() => {
+                  console.log('🔄 Redirecting after session re-save...');
+                  window.location.href = 'dashboard.html';
+                }, 500);
+                return;
+              }
+              
               const redirect = sessionStorage.getItem('tanktools_redirect');
               if (redirect) {
+                console.log('🔄 Redirecting to saved redirect:', redirect);
                 sessionStorage.removeItem('tanktools_redirect');
                 window.location.href = redirect;
               } else {
+                console.log('🔄 Redirecting to dashboard.html');
                 window.location.href = 'dashboard.html';
               }
-            }, 1500);
+            }, 2000); // Increased delay from 1500ms to 2000ms
             return;
           } else {
             showMessage('❌ User not found. Please register first.', 'error');
@@ -563,16 +597,44 @@
         
         showMessage('✅ Login successful! Redirecting...', 'success');
         
+        // 🔧 EXTENDED DELAY + SESSION VERIFICATION FOR REGULAR USERS
         setTimeout(() => {
+          // Double-check session is saved
+          const savedSession = sessionStorage.getItem('tanktools_session');
+          const savedUser = localStorage.getItem('tanktools_current_user');
+          
+          console.log('🔍 Regular user pre-redirect check:', {
+            session: savedSession,
+            user: !!savedUser,
+            username: username,
+            role: userData.role
+          });
+          
+          if (!savedSession || !savedUser) {
+            console.error('❌ Regular user session not properly saved, re-saving...');
+            sessionStorage.setItem('tanktools_session', 'active');
+            localStorage.setItem('tanktools_current_user', JSON.stringify(sessionUserData));
+            
+            // Additional delay after re-saving
+            setTimeout(() => {
+              console.log('🔄 Redirecting regular user after session re-save...');
+              const defaultUrl = userData.role === 'admin' ? 'dashboard.html' : 'index.html';
+              window.location.href = defaultUrl;
+            }, 500);
+            return;
+          }
+          
           const redirect = sessionStorage.getItem('tanktools_redirect');
           if (redirect) {
+            console.log('🔄 Redirecting regular user to saved redirect:', redirect);
             sessionStorage.removeItem('tanktools_redirect');
             window.location.href = redirect;
           } else {
             const defaultUrl = userData.role === 'admin' ? 'dashboard.html' : 'index.html';
+            console.log('🔄 Redirecting regular user to default:', defaultUrl);
             window.location.href = defaultUrl;
           }
-        }, 1500);
+        }, 2000); // Increased delay from 1500ms to 2000ms
         
       } catch (error) {
         console.error('❌ Login error:', error);
