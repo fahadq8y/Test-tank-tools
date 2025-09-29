@@ -243,20 +243,9 @@ input,select{background:rgba(255,255,255,0.9);border-radius:12px;border:none;col
 </div>
 </div>
 <script type="module">
-import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, serverTimestamp, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-
-// ✅ PREVENT DUPLICATE APP INITIALIZATION
-let app;
-const existingApps = getApps();
-if (existingApps.length === 0) {
-    app = initializeApp({apiKey:"AIzaSyD7lJcoY33FEC9d6eWy67QIO9SV4lS24pg",authDomain:"tank-tools-knpc-c2d95.firebaseapp.com",projectId:"tank-tools-knpc-c2d95",storageBucket:"tank-tools-knpc-c2d95.firebasestorage.app",messagingSenderId:"510062594324",appId:"1:510062594324:web:b892fd02007a5ca2f0da01"});
-    console.log('🔥 Firebase initialized for Index Calculator!');
-} else {
-    app = getApp();
-    console.log('🔄 Using existing Firebase app for Index Calculator');
-}
-
+const app = initializeApp({apiKey:"AIzaSyD7lJcoY33FEC9d6eWy67QIO9SV4lS24pg",authDomain:"tank-tools-knpc-c2d95.firebaseapp.com",projectId:"tank-tools-knpc-c2d95",storageBucket:"tank-tools-knpc-c2d95.firebasestorage.app",messagingSenderId:"510062594324",appId:"1:510062594324:web:b892fd02007a5ca2f0da01"});
 window.db = getFirestore(app);
 window.doc = doc;
 window.getDoc = getDoc;
@@ -421,130 +410,35 @@ function loadUser(){if(!currentUser)return;document.getElementById('userName').t
   // checkLiveTanksAccess is now handled by permissions.js
 }
 
-window.calculate = () => {
-  const level = parseFloat(document.getElementById("level").value || 0);
-  const target = parseFloat(document.getElementById("target").value || 0);
-  const flowRaw = parseFloat(document.getElementById("flowrate").value || 0);
-  const unit = document.getElementById("flowUnit").value;
-  const mode = document.getElementById("mode").value;
-  
-  const available = document.getElementById("availablePumpable");
-  const ullageDiv = document.getElementById("currentUllage");
-  const levelEst = document.getElementById("levelEstimate");
-  const valueDiff = document.getElementById("valueDiff");
-  const output = document.getElementById("output");
-  const calendar = document.getElementById("calendarLink");
-  
-  calcData = null;
-  document.getElementById('add-to-live-tanks-btn').style.display = 'none';
-  
-  if (!c || isNaN(level)) {
-    available.innerText = ullageDiv.innerText = valueDiff.innerText = levelEst.innerText = output.innerHTML = "";
-    return;
-  }
-  
-  const availablePumpable = (level - m) * c;
-  const currentUllage = (x - level) * c;
-  available.innerText = `Available Pumpable: ${availablePumpable.toFixed(2)} bbl`;
-  ullageDiv.innerText = `Current Ullage: ${currentUllage.toFixed(2)} bbl`;
-  
-  if (!isNaN(target)) {
-    let estLevel = 0;
-    if (mode === "pumpable") estLevel = (target / c) + m;
-    else if (mode === "ullage") estLevel = x - (target / c);
-    else if (mode === "level") estLevel = target;
-    
-    const levelDiff = estLevel - level;
-    let estText = `Level Estimate: ${estLevel.toFixed(2)} m\nLevel Difference: ${levelDiff.toFixed(2)} m`;
-    
-    if (estLevel >= x - 0.5 || estLevel < m) {
-      levelEst.style.color = "#ff5555";
-      estText += `\nHigh Level = ${x.toFixed(2)} m`;
-    } else {
-      levelEst.style.color = "#00ffff";
-    }
-    levelEst.innerText = estText;
-    
-    let diff = 0;
-    if (mode === "pumpable") {
-      diff = target - availablePumpable;
-      valueDiff.innerText = `Difference: ${diff.toLocaleString()} bbl`;
-    } else if (mode === "ullage") {
-      diff = currentUllage - target;
-      valueDiff.innerText = `To leave ${target.toLocaleString()} bbl ullage, fill: ${diff.toLocaleString()} bbl`;
-    } else if (mode === "level") {
-      const meters = level - target;
-      diff = meters * c;
-      valueDiff.innerText = `Level Difference: ${Math.abs(meters).toFixed(2)} m`;
-    }
-    
-    const flow = unit === "m3" ? flowRaw * 6.28 : unit === "mtr" ? flowRaw : flowRaw;
-    let time = 0;
-    
-    if (unit === "mtr") {
-      time = Math.abs(diff) / (flow * c);
-    } else {
-      time = Math.abs(diff) / flow;
-    }
-    
-    const hrs = Math.floor(time);
-    const mins = Math.round((time - hrs) * 60);
-    
-    if (!isNaN(time) && flow > 0) {
-      const now = new Date();
-      const finishTime = new Date(now.getTime() + time * 60 * 60 * 1000);
-      
-      const ft = finishTime.toLocaleTimeString('en-GB', {hour12: false}).substring(0, 5);
-      const fd = finishTime.toLocaleDateString('en-CA');
-      
-      output.innerHTML = `<strong>Time: ${hrs}h ${mins}m</strong><br>Finish at: ${ft} - ${fd}`;
-      calendar.href = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=Tank%20${encodeURIComponent(document.getElementById("tankInput").value)}%20Finish&dates=${finishTime.toISOString().replace(/[-:]/g, '').split('.')[0]}Z/${finishTime.toISOString().replace(/[-:]/g, '').split('.')[0]}Z&details=Tank%20Number:%20${encodeURIComponent(document.getElementById("tankInput").value)}%0ATarget%20Value:%20${encodeURIComponent(target)}%20${encodeURIComponent(mode)}%0AFlow%20Rate:%20${encodeURIComponent(flowRaw)}%20${encodeURIComponent(unit)}`;
-      
-      // 🔥 CRITICAL FIX: Set calcData for button functionality
-      calcData = {
-        tankNumber: document.getElementById("tankInput").value,
-        finishTime: ft,
-        finishDate: fd
-      };
-      
-      // ✅ Check Add to Live Tanks button permission after successful calculation
-      if (window.checkAddToLiveTanksButtonAccess) {
-        window.checkAddToLiveTanksButtonAccess('index.html').then(hasButtonAccess => {
-          if (hasButtonAccess) {
-            document.getElementById('add-to-live-tanks-btn').style.display = 'inline-flex';
-            document.getElementById('add-to-live-tanks-help').style.display = 'inline-flex';
-            console.log('✅ Live Tanks button shown after permission check');
-          } else {
-            document.getElementById('add-to-live-tanks-btn').style.display = 'none';
-            document.getElementById('add-to-live-tanks-help').style.display = 'none';
-            console.log('❌ Live Tanks button hidden due to insufficient permissions');
-          }
-          console.log('🔘 Button access for index.html:', hasButtonAccess);
-        }).catch(error => {
-          console.error('Error checking button access:', error);
-          // في حالة الخطأ، نخفي الزر للأمان
-          document.getElementById('add-to-live-tanks-btn').style.display = 'none';
-          document.getElementById('add-to-live-tanks-help').style.display = 'none';
-        });
-      } else {
-        console.log('⚠️ checkAddToLiveTanksButtonAccess function not available, hiding button');
-        document.getElementById('add-to-live-tanks-btn').style.display = 'none';
-        document.getElementById('add-to-live-tanks-help').style.display = 'none';
-      }
-      
-      // checkAddToLiveTanksPermission is now handled by permissions.js
-      if (currentUser && document.getElementById("tankInput").value) {
-        logPBCRCalculation(document.getElementById("tankInput").value, hrs, mins, ft, fd);
-      }
-    }
-  }
-};
+window.calculate=()=>{const level=parseFloat(document.getElementById("level").value||0),target=parseFloat(document.getElementById("target").value||0),flowRaw=parseFloat(document.getElementById("flowrate").value||0),unit=document.getElementById("flowUnit").value,mode=document.getElementById("mode").value;const available=document.getElementById("availablePumpable"),ullageDiv=document.getElementById("currentUllage"),levelEst=document.getElementById("levelEstimate"),valueDiff=document.getElementById("valueDiff"),output=document.getElementById("output"),calendar=document.getElementById("calendarLink");calcData=null;document.getElementById('add-to-live-tanks-btn').style.display='none';if(!c||isNaN(level)){available.innerText=ullageDiv.innerText=valueDiff.innerText=levelEst.innerText=output.innerHTML="";return}const availablePumpable=(level-m)*c,currentUllage=(x-level)*c;available.innerText=`Available Pumpable: ${availablePumpable.toFixed(2)} bbl`;ullageDiv.innerText=`Current Ullage: ${currentUllage.toFixed(2)} bbl`;if(!isNaN(target)){let estLevel=0;if(mode==="pumpable")estLevel=(target/c)+m;else if(mode==="ullage")estLevel=x-(target/c);else if(mode==="level")estLevel=target;const levelDiff=estLevel-level;let estText=`Level Estimate: ${estLevel.toFixed(2)} m\nLevel Difference: ${levelDiff.toFixed(2)} m`;if(estLevel>=x-0.5||estLevel<m){levelEst.style.color="#ff5555";estText+=`\nHigh Level = ${x.toFixed(2)} m`}else{levelEst.style.color="#00ffff"}levelEst.innerText=estText;let diff=0;if(mode==="pumpable"){diff=target-availablePumpable;valueDiff.innerText=`Difference: ${diff.toLocaleString()} bbl`}else if(mode==="ullage"){diff=currentUllage-target;valueDiff.innerText=`To leave ${target.toLocaleString()} bbl ullage, fill: ${diff.toLocaleString()} bbl`}else if(mode==="level"){const meters=level-target;diff=meters*c;valueDiff.innerText=`Level Difference: ${Math.abs(meters).toFixed(2)} m`}const flow=unit==="m3"?flowRaw*6.28:unit==="mtr"?flowRaw:flowRaw;let time=0;if(unit==="mtr"&&mode!=="level"){time=Math.abs(diff/c)/flowRaw}else if(mode==="level"&&unit==="mtr"){time=Math.abs(level-target)/flowRaw}else{time=Math.abs(diff)/flow}if(!isNaN(time)&&time>0){const hrs=Math.floor(time),mins=Math.round((time%1)*60),now=new Date(),finish=new Date(now.getTime()+time*3600000);let ft,fd;try{ft=finish.toLocaleTimeString('en-GB',{hour:"2-digit",minute:"2-digit",hour12:false});fd=finish.toLocaleDateString('en-GB')}catch{ft=`${finish.getHours().toString().padStart(2,'0')}:${finish.getMinutes().toString().padStart(2,'0')}`;fd=`${finish.getDate()}/${finish.getMonth()+1}/${finish.getFullYear()}`}output.innerHTML=`Time Needed: ${hrs} hr ${mins} min<br>Finish Time: ${ft}<br>Finish Date: ${fd}`;const s=new Date(finish.getTime()-600000),e=new Date(s.getTime()+900000);calendar.href=`https://calendar.google.com/calendar/render?action=TEMPLATE&text=Tank+${document.getElementById("tankInput").value||"Tank"}+Reminder&dates=${s.toISOString().replace(/[-:]|\.\d{3}/g,"")}/${e.toISOString().replace(/[-:]|\.\d{3}/g,"")}`;output.style.color=isSameShift(now,finish)?"red":"lightgreen";calcData={tankNumber:document.getElementById("tankInput").value,finishDate:`${finish.getFullYear()}-${String(finish.getMonth()+1).padStart(2,'0')}-${String(finish.getDate()).padStart(2,'0')}`,finishTime:ft};
 
+// ✅ FIXED: Show "Add to Live Tanks" button for everyone after calculation
+document.getElementById('add-to-live-tanks-btn').style.display = 'inline-flex';
+document.getElementById('add-to-live-tanks-help').style.display = 'inline-flex';
+console.log('✅ Live Tanks button shown for all users');
+
+// Additional check for logged-in users (but show button regardless)
+if (currentUser) {
+  window.checkAddToLiveTanksPermission().then(hasPermission => {
+    console.log('✅ User permission check:', hasPermission);
+  });
+}
+
+// checkAddToLiveTanksPermission is now handled by permissions.js
+if(currentUser&&document.getElementById("tankInput").value){logPBCRCalculation(document.getElementById("tankInput").value,hrs,mins,ft,fd);}}}
 function isSameShift(now,finish){const getShift=h=>{const m=h.getHours()*60+h.getMinutes();return m>=360&&m<840?"morning":m>=840&&m<1320?"evening":"night"};const currentShift=getShift(now),finishShift=getShift(finish);if(currentShift!==finishShift)return false;if(currentShift==="night"){const nowHour=now.getHours(),finishHour=finish.getHours();if(nowHour>=0&&nowHour<6){if(finishHour>=0&&finishHour<6)return Math.floor((finish.getTime()-now.getTime())/(24*60*60*1000))<=1;else if(finishHour>=22)return Math.floor((finish.getTime()-now.getTime())/(24*60*60*1000))===0}else if(nowHour>=22){if(finishHour>=22)return now.toDateString()===finish.toDateString();else if(finishHour>=0&&finishHour<6)return Math.floor((finish.getTime()-now.getTime())/(24*60*60*1000))===1}return false}return now.toDateString()===finish.toDateString()}
 window.addToTable=()=>{if(!calcData||!calcData.tankNumber){alert("Please calculate a tank first!");return}const table=document.getElementById("tankTable").getElementsByTagName("tbody")[0],row=table.insertRow();const now=new Date();const finishDateTime=new Date(`${calcData.finishDate} ${calcData.finishTime}`);const sameShift=isSameShift(now,finishDateTime);row.className=sameShift?'same-shift':'next-shift';row.innerHTML=`<td>${calcData.tankNumber}</td><td>${calcData.finishDate}</td><td>${calcData.finishTime}</td><td><button class="delete-btn" onclick="this.parentNode.parentNode.remove();saveData()">Delete</button></td>`;saveData()};
 function saveData(){const table=document.getElementById("tankTable").getElementsByTagName("tbody")[0],data=[];for(let i=0;i<table.rows.length;i++){const row=table.rows[i];data.push({tank:row.cells[0].innerText,date:row.cells[1].innerText,time:row.cells[2].innerText})}localStorage.setItem("tankData",JSON.stringify(data))}
 function loadData(){const data=JSON.parse(localStorage.getItem("tankData")||"[]"),table=document.getElementById("tankTable").getElementsByTagName("tbody")[0];data.forEach(item=>{const row=table.insertRow();const now=new Date();const finishDateTime=new Date(`${item.date} ${item.time}`);const sameShift=isSameShift(now,finishDateTime);row.className=sameShift?'same-shift':'next-shift';row.innerHTML=`<td>${item.tank}</td><td>${item.date}</td><td>${item.time}</td><td><button class="delete-btn" onclick="this.parentNode.parentNode.remove();saveData()">Delete</button></td>`})}
 function setupDark(){const btn=document.getElementById("darkModeButton");btn.addEventListener("click",()=>{document.body.style.filter=document.body.style.filter?"":"invert(1) hue-rotate(180deg)";btn.textContent=document.body.style.filter?"☀️":"🌙"})}
+window.openLTModal=function(){if(!calcData||!calcData.tankNumber){alert("Please calculate a tank first!");return}
+document.getElementById('ltTank').value=calcData.tankNumber;document.getElementById('ltTargetValue').value=document.getElementById('target').value;document.getElementById('ltTargetType').value=document.getElementById('mode').value;document.getElementById('ltRate').value=document.getElementById('flowrate').value;document.getElementById('ltRateUnit').value=document.getElementById('flowUnit').value;document.getElementById('ltDate').value=calcData.finishDate;document.getElementById('ltTime').value=calcData.finishTime;document.getElementById('ltModal').classList.add('show');}
+window.closeLTModal=function(){document.getElementById('ltModal').classList.remove('show');document.getElementById('ltForm').reset();document.getElementById('otherProductField').classList.remove('show');}
+window.updateLTProducts=function(){const dept=document.getElementById('ltDept').value;const productSelect=document.getElementById('ltProduct');productSelect.innerHTML='<option value="">Select Product</option>';if(dept&&products[dept]){products[dept].forEach(product=>{const option=document.createElement('option');option.value=product;option.textContent=product;productSelect.appendChild(option);});}
+document.getElementById('otherProductField').classList.remove('show');}
+window.checkOtherProduct=function(){const productSelect=document.getElementById('ltProduct');const otherField=document.getElementById('otherProductField');const otherInput=document.getElementById('otherProductInput');if(productSelect.value==='OTHER'){otherField.classList.add('show');otherInput.required=true;}else{otherField.classList.remove('show');otherInput.required=false;otherInput.value='';}}
+document.getElementById('ltForm').addEventListener('submit',async function(e){e.preventDefault();const dept=document.getElementById('ltDept').value;const tankNumber=document.getElementById('ltTank').value;const productSelect=document.getElementById('ltProduct').value;const otherProduct=document.getElementById('otherProductInput').value;const product=productSelect==='OTHER'?otherProduct:productSelect;const targetValue=document.getElementById('ltTargetValue').value;const targetType=document.getElementById('ltTargetType').value;const rate=document.getElementById('ltRate').value;const rateUnit=document.getElementById('ltRateUnit').value;const finishDate=document.getElementById('ltDate').value;const finishTime=document.getElementById('ltTime').value;const notes=document.getElementById('ltNotes').value;if(!product){alert('Please select or specify a product.');return;}
+try{const finishDateTime=new Date(finishDate+' '+finishTime);const tankData={department:dept,tankNumber:tankNumber,product:product,currentLevel:parseFloat(document.getElementById('level').value)||null,targetType:targetType,targetValue:parseFloat(targetValue),rate:parseFloat(rate),rateUnit:rateUnit,finishDate:finishDate,finishTime:finishTime,finishDateTime:finishDateTime,notes:notes,addedBy:currentUser.username,userName:currentUser.fullName||currentUser.username,addedAt:serverTimestamp(),lastModified:serverTimestamp(),modifiedBy:currentUser.username,status:'active',source:'PBCR_Calculator'};await addDoc(collection(db,'liveTanks'),tankData);alert('✅ Tank added to Live Tanks successfully!');closeLTModal();}catch(error){console.error('Error adding to Live Tanks:',error);alert('❌ Error adding to Live Tanks: '+error.message);}});
 let currentFontSize=parseInt(localStorage.getItem('tanktools_font_size_index')||'16');
 function increaseFontSize(){if(currentFontSize<24){currentFontSize+=2;applyFontSize();localStorage.setItem('tanktools_font_size_index',currentFontSize);showFontMessage(`📈 Font size increased to ${currentFontSize}px`);}}
 function decreaseFontSize(){if(currentFontSize>12){currentFontSize-=2;applyFontSize();localStorage.setItem('tanktools_font_size_index',currentFontSize);showFontMessage(`📉 Font size decreased to ${currentFontSize}px`);}}
@@ -748,7 +642,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
-
+} // ✅ Balance fix for JavaScript syntax
 </script>
 <footer>
   By <a href="#" class="whatsapp-link" onclick="window.open('https://wa.me/96555222550','_blank'); return false;">Fahad - 17877</a> – Version v5 - FIXED

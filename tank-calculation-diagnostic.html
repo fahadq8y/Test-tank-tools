@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 Tank Calculation Diagnostic Tool</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+        .diagnostic-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 5px solid #007bff;
+        }
+        .test-tank {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            position: relative;
+        }
+        .tank-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #eee;
+        }
+        .tank-number {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .status-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .status-working { background: #d4edda; color: #155724; }
+        .status-broken { background: #f8d7da; color: #721c24; }
+        .status-testing { background: #fff3cd; color: #856404; }
+        .calculation-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .detail-group {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 3px solid #007bff;
+        }
+        .detail-label {
+            font-weight: bold;
+            color: #555;
+            font-size: 0.9em;
+        }
+        .detail-value {
+            color: #333;
+            font-family: monospace;
+            font-size: 1.1em;
+            margin-top: 5px;
+        }
+        .debug-log {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.9em;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        .test-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-warning { background: #ffc107; color: #333; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        .firebase-info {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .error-highlight { background: #ffebee; border-color: #f44336; }
+        .success-highlight { background: #e8f5e8; border-color: #4caf50; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 Tank Calculation Diagnostic Tool</h1>
+            <p>تشخيص شامل للحسابات والبيانات</p>
+        </div>
+
+        <div class="test-controls">
+            <button class="btn btn-primary" onclick="loadFirebaseData()">🔄 Load Firebase Data</button>
+            <button class="btn btn-success" onclick="testAllTanks()">🧪 Test All Sample Tanks</button>
+            <button class="btn btn-warning" onclick="testSpecificTank()">🎯 Test Specific Tank</button>
+            <button class="btn btn-danger" onclick="clearLogs()">🗑️ Clear Logs</button>
+        </div>
+
+        <div class="firebase-info" id="firebaseInfo">
+            <h3>📊 Firebase Status</h3>
+            <div id="firebaseStatus">Loading...</div>
+        </div>
+
+        <div class="diagnostic-section">
+            <h2>🧪 Tank Test Results</h2>
+            <div id="testResults">Click "Test All Sample Tanks" to start diagnostic...</div>
+        </div>
+
+        <div class="diagnostic-section">
+            <h2>🔍 Debug Log</h2>
+            <div class="debug-log" id="debugLog">Diagnostic tool ready. Click buttons above to start testing...</div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, doc, getDoc, collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBCdv37V6vOFMe42rGlPyl9lVq-9JldEPg",
+            authDomain: "tank-tools-knpc-c2d95.firebaseapp.com",
+            projectId: "tank-tools-knpc-c2d95",
+            storageBucket: "tank-tools-knpc-c2d95.appspot.com",
+            messagingSenderId: "678793823159",
+            appId: "1:678793823159:web:7a7b1398aefdb7f24462b9"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Make Firebase available globally
+        window.db = db;
+        window.doc = doc;
+        window.getDoc = getDoc;
+        window.collection = collection;
+        window.getDocs = getDocs;
+
+        console.log('🔥 Firebase Diagnostic Tool initialized!');
+    </script>
+
+    <script>
+        let tanks = {};
+        let debugLog = [];
+
+        // Sample tanks for testing (covering different scenarios)
+        const SAMPLE_TANKS = [
+            { number: "757", dept: "pbcr", expectedRate: 1746.40, rateUnit: "bbl" },
+            { number: "221", dept: "pbcr", expectedRate: "unknown", rateUnit: "bbl" },
+            { number: "460", dept: "pbcr", expectedRate: "unknown", rateUnit: "bbl" },
+            { number: "462", dept: "plcr", expectedRate: "unknown", rateUnit: "MT/hr" },
+            { number: "834", dept: "washery", expectedRate: "unknown", rateUnit: "m3/hr" },
+            { number: "833", dept: "washery", expectedRate: "unknown", rateUnit: "m3/hr" },
+            { number: "520", dept: "pbcr", expectedRate: "unknown", rateUnit: "bbl" },
+            { number: "521", dept: "pbcr", expectedRate: "unknown", rateUnit: "bbl" }
+        ];
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            debugLog.push({ message: logEntry, type });
+            
+            console.log(message);
+            
+            const debugLogElement = document.getElementById('debugLog');
+            const colorMap = {
+                'info': '#00ff00',
+                'warning': '#ffff00', 
+                'error': '#ff4444',
+                'success': '#00ff88'
+            };
+            
+            debugLogElement.innerHTML += `<div style="color: ${colorMap[type] || '#00ff00'}">${logEntry}</div>`;
+            debugLogElement.scrollTop = debugLogElement.scrollHeight;
+        }
+
+        function clearLogs() {
+            debugLog = [];
+            document.getElementById('debugLog').innerHTML = 'Debug log cleared...';
+        }
+
+        // Load Firebase data using same logic as live-tanks.html
+        async function loadFirebaseData() {
+            log('🔄 Starting Firebase data loading...', 'info');
+            
+            try {
+                tanks = {};
+                let totalTanks = 0;
+                
+                // Same paths as live-tanks.html  
+                const possiblePaths = [
+                    ['tankData', 'pbcr', 'tanks'],
+                    ['tankData', 'plcr', 'tanks'],
+                    ['tankData', 'washery', 'tanks'],
+                    ['tanks', 'pbcr'],
+                    ['tanks', 'plcr'], 
+                    ['tanks', 'washery'],
+                    ['pbcr_tanks'],
+                    ['plcr_tanks'],
+                    ['washery_tanks'],
+                    ['tankSpecifications'],
+                    ['tankData']
+                ];
+                
+                log(`🔍 Testing ${possiblePaths.length} possible Firebase paths...`, 'info');
+                
+                for (const pathArray of possiblePaths) {
+                    try {
+                        log(`🔍 Checking path: ${pathArray.join('/')}`, 'info');
+                        
+                        let collectionRef;
+                        if (pathArray.length === 1) {
+                            collectionRef = collection(window.db, pathArray[0]);
+                        } else if (pathArray.length === 2) {
+                            collectionRef = collection(window.db, pathArray[0], pathArray[1]);
+                        } else if (pathArray.length === 3) {
+                            collectionRef = collection(window.db, pathArray[0], pathArray[1], pathArray[2]);
+                        }
+                        
+                        const snapshot = await getDocs(collectionRef, { source: 'server' });
+                        
+                        if (snapshot.size > 0) {
+                            log(`✅ Found ${snapshot.size} documents at path: ${pathArray.join('/')}`, 'success');
+                            
+                            snapshot.forEach(doc => {
+                                const data = doc.data();
+                                
+                                // Determine department
+                                let department = 'UNKNOWN';
+                                if (pathArray.includes('pbcr')) department = 'PBCR';
+                                else if (pathArray.includes('plcr')) department = 'PLCR';
+                                else if (pathArray.includes('washery')) department = 'WASHERY';
+                                else if (data.department) department = data.department.toUpperCase();
+                                
+                                tanks[doc.id] = {
+                                    comment: data.comment || data.bpm || data.capacity || 0,
+                                    min: data.min || data.minLevel || data.low || 0,
+                                    max: data.max || data.maxLevel || data.high || 0,
+                                    department: department,
+                                    path: pathArray.join('/'),
+                                    rawData: data
+                                };
+                                totalTanks++;
+                                
+                                log(`📋 Tank ${doc.id}: BPM=${tanks[doc.id].comment}, Dept=${department}`, 'info');
+                            });
+                        } else {
+                            log(`⚠️ No documents at path: ${pathArray.join('/')}`, 'warning');
+                        }
+                    } catch (pathError) {
+                        log(`❌ Error checking path ${pathArray.join('/')}: ${pathError.message}`, 'error');
+                    }
+                }
+                
+                log(`🎯 TOTAL: Loaded ${totalTanks} tanks from Firebase`, 'success');
+                
+                // Update Firebase status
+                document.getElementById('firebaseStatus').innerHTML = `
+                    <strong>Status:</strong> ✅ Connected<br>
+                    <strong>Total Tanks:</strong> ${totalTanks}<br>
+                    <strong>Departments:</strong> ${[...new Set(Object.values(tanks).map(t => t.department))].join(', ')}
+                `;
+                
+                return tanks;
+                
+            } catch (error) {
+                log(`❌ Firebase loading failed: ${error.message}`, 'error');
+                document.getElementById('firebaseStatus').innerHTML = `<strong>Status:</strong> ❌ Error: ${error.message}`;
+            }
+        }
+
+        // Test specific tank calculation
+        function testTankCalculation(tankNumber, previousLevel = 13.21, currentLevel = 13.126, rateUnit = 'bbl') {
+            log(`\n🧪 TESTING TANK ${tankNumber}`, 'info');
+            log(`📊 Inputs: Previous=${previousLevel}, Current=${currentLevel}, Unit=${rateUnit}`, 'info');
+            
+            const result = {
+                tankNumber,
+                previousLevel,
+                currentLevel,
+                rateUnit,
+                levelDiff: Math.abs(currentLevel - previousLevel),
+                firebaseData: null,
+                calculatedRate: null,
+                calculationMethod: null,
+                status: 'unknown',
+                errors: []
+            };
+            
+            // Check if tank exists in Firebase
+            const tankData = tanks[tankNumber];
+            if (!tankData) {
+                result.errors.push(`❌ Tank ${tankNumber} not found in Firebase`);
+                result.status = 'missing';
+                log(`❌ Tank ${tankNumber} not found in Firebase data`, 'error');
+            } else {
+                result.firebaseData = tankData;
+                log(`✅ Tank ${tankNumber} found in Firebase:`, 'success');
+                log(`   📍 Path: ${tankData.path}`, 'info');
+                log(`   🏭 Department: ${tankData.department}`, 'info');
+                log(`   📊 BPM (comment): ${tankData.comment}`, 'info');
+                log(`   📏 Min/Max: ${tankData.min}/${tankData.max}`, 'info');
+            }
+            
+            // Simulate calculation logic from live-tanks.html
+            const timeDiffHours = 1.0; // Assume 1 hour for testing
+            let actualRate = 0;
+            
+            if (!tankData || !tankData.comment || tankData.comment === 0) {
+                // Fallback calculation
+                actualRate = result.levelDiff / timeDiffHours;
+                result.calculationMethod = 'FALLBACK (no Firebase data)';
+                result.status = 'fallback';
+                log(`⚠️ Using fallback calculation: ${result.levelDiff} / ${timeDiffHours} = ${actualRate}`, 'warning');
+            } else {
+                // Firebase-based calculation
+                const bpm = tankData.comment;
+                
+                if (rateUnit === 'MT/hr') {
+                    // PLCR calculation
+                    const volumeDiffBarrels = result.levelDiff * bpm;
+                    const volumeM3 = volumeDiffBarrels * 0.159;
+                    const massMT = volumeM3 * 0.85;
+                    actualRate = massMT / timeDiffHours;
+                    result.calculationMethod = 'PLCR MT/hr';
+                    log(`🏭 PLCR calculation: ${result.levelDiff} × ${bpm} × 0.159 × 0.85 / ${timeDiffHours} = ${actualRate}`, 'info');
+                } else if (rateUnit === 'm3/hr' || rateUnit === 'm³/hr') {
+                    // PBCR m³/hr calculation
+                    const volumeDiffBarrels = result.levelDiff * bpm;
+                    actualRate = (volumeDiffBarrels * 0.159) / timeDiffHours;
+                    result.calculationMethod = 'PBCR m³/hr';
+                    log(`📦 PBCR m³/hr calculation: ${result.levelDiff} × ${bpm} × 0.159 / ${timeDiffHours} = ${actualRate}`, 'info');
+                } else {
+                    // Default bbl/hr calculation
+                    const volumeDiff = result.levelDiff * bpm;
+                    actualRate = volumeDiff / timeDiffHours;
+                    result.calculationMethod = 'PBCR bbl/hr';
+                    log(`🛢️ PBCR bbl/hr calculation: ${result.levelDiff} × ${bpm} / ${timeDiffHours} = ${actualRate}`, 'info');
+                }
+                
+                result.status = 'calculated';
+            }
+            
+            result.calculatedRate = actualRate;
+            log(`🎯 Final Rate: ${actualRate.toFixed(2)} ${rateUnit}`, actualRate > 0 ? 'success' : 'error');
+            
+            return result;
+        }
+
+        // Test all sample tanks
+        async function testAllTanks() {
+            log('\n🚀 STARTING COMPREHENSIVE TANK TESTING', 'info');
+            
+            if (Object.keys(tanks).length === 0) {
+                log('⚠️ Loading Firebase data first...', 'warning');
+                await loadFirebaseData();
+            }
+            
+            const results = [];
+            
+            for (const tank of SAMPLE_TANKS) {
+                const result = testTankCalculation(tank.number, 13.21, 13.126, tank.rateUnit);
+                result.expectedRate = tank.expectedRate;
+                result.department = tank.dept;
+                results.push(result);
+            }
+            
+            displayTestResults(results);
+            
+            log(`\n📊 TESTING COMPLETE - ${results.length} tanks tested`, 'success');
+        }
+
+        // Display test results
+        function displayTestResults(results) {
+            const container = document.getElementById('testResults');
+            let html = '';
+            
+            results.forEach(result => {
+                const statusClass = {
+                    'calculated': 'status-working',
+                    'fallback': 'status-broken', 
+                    'missing': 'status-broken',
+                    'unknown': 'status-testing'
+                }[result.status] || 'status-testing';
+                
+                const statusText = {
+                    'calculated': '✅ Working',
+                    'fallback': '⚠️ Using Fallback',
+                    'missing': '❌ Missing Data',
+                    'unknown': '❓ Unknown'
+                }[result.status] || '❓ Unknown';
+                
+                html += `
+                    <div class="test-tank ${result.status === 'calculated' ? 'success-highlight' : 'error-highlight'}">
+                        <div class="tank-header">
+                            <div class="tank-number">Tank ${result.tankNumber}</div>
+                            <div class="status-badge ${statusClass}">${statusText}</div>
+                        </div>
+                        
+                        <div class="calculation-details">
+                            <div class="detail-group">
+                                <div class="detail-label">📊 Calculation Input</div>
+                                <div class="detail-value">
+                                    Previous: ${result.previousLevel}m<br>
+                                    Current: ${result.currentLevel}m<br>
+                                    Diff: ${result.levelDiff.toFixed(3)}m<br>
+                                    Unit: ${result.rateUnit}
+                                </div>
+                            </div>
+                            
+                            <div class="detail-group">
+                                <div class="detail-label">🔥 Firebase Data</div>
+                                <div class="detail-value">
+                                    ${result.firebaseData ? `
+                                        BPM: ${result.firebaseData.comment}<br>
+                                        Dept: ${result.firebaseData.department}<br>
+                                        Path: ${result.firebaseData.path}<br>
+                                        Min/Max: ${result.firebaseData.min}/${result.firebaseData.max}
+                                    ` : 'Not Found ❌'}
+                                </div>
+                            </div>
+                            
+                            <div class="detail-group">
+                                <div class="detail-label">⚡ Calculation Result</div>
+                                <div class="detail-value">
+                                    Method: ${result.calculationMethod || 'N/A'}<br>
+                                    Rate: <strong>${result.calculatedRate ? result.calculatedRate.toFixed(2) : 'N/A'}</strong><br>
+                                    Expected: ${result.expectedRate}<br>
+                                    ${result.expectedRate !== 'unknown' && Math.abs(result.calculatedRate - result.expectedRate) < 0.1 ? 
+                                        '✅ Match!' : '⚠️ Different'}
+                                </div>
+                            </div>
+                            
+                            ${result.errors.length > 0 ? `
+                                <div class="detail-group">
+                                    <div class="detail-label">❌ Errors</div>
+                                    <div class="detail-value">
+                                        ${result.errors.join('<br>')}
+                                    </div>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        // Test specific tank (user input)
+        function testSpecificTank() {
+            const tankNumber = prompt('Enter Tank Number to test:');
+            if (!tankNumber) return;
+            
+            const previousLevel = parseFloat(prompt('Enter Previous Level:', '13.21')) || 13.21;
+            const currentLevel = parseFloat(prompt('Enter Current Level:', '13.126')) || 13.126;
+            const rateUnit = prompt('Enter Rate Unit (bbl/MT/hr/m3/hr):', 'bbl') || 'bbl';
+            
+            const result = testTankCalculation(tankNumber, previousLevel, currentLevel, rateUnit);
+            displayTestResults([result]);
+        }
+
+        // Make functions globally available
+        window.loadFirebaseData = loadFirebaseData;
+        window.testAllTanks = testAllTanks;
+        window.testSpecificTank = testSpecificTank;
+        window.clearLogs = clearLogs;
+
+        // Auto-load Firebase data on page load
+        window.addEventListener('load', () => {
+            log('🔧 Tank Calculation Diagnostic Tool Ready!', 'success');
+            loadFirebaseData();
+        });
+    </script>
+</body>
+</html>

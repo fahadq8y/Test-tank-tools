@@ -61,6 +61,7 @@
     .badge-section-head{background:#795548;color:white}
     .badge-operator{background:#607D8B;color:white}
     .badge-planning{background:#E91E63;color:white}
+    .badge-info{background:#17a2b8;color:white}
     .action-buttons{display:flex;gap:8px;flex-wrap:wrap}
     .action-btn{padding:8px 12px;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:500;transition:all 0.3s ease}
     .action-btn:hover{transform:scale(1.05)}
@@ -142,7 +143,8 @@
         <a href="live-tanks.html" class="nav-btn">🔴 Live Tanks</a>
 
         <a href="tank-management.html" class="nav-btn" id="tank-management-link" style="display:none">🛢️ Tank Management</a>
-        <a href="user-management.html" class="nav-btn" id="user-management-link" style="display:none">👥 User Management</a>
+
+        <a href="#device-management" onclick="showDeviceManagement()" class="nav-btn" id="device-management-link" style="display:none">📱 Device Management</a>
       </div>
       <div class="user-section">
         <div class="user-top">
@@ -317,6 +319,52 @@
       </div>
     </div>
 
+    <!-- Device Management Section - User-Based View -->
+    <div class="section" id="deviceManagementSection" style="display:none">
+      <div class="section-title">📱 User Device Management</div>
+      
+      <div class="controls">
+        <input type="text" class="search-box" id="userSearch" placeholder="🔍 Search users by username or name...">
+        <select class="filter-select" id="userDeviceFilter">
+          <option value="all">All Users</option>
+          <option value="has_devices">Users with Devices</option>
+          <option value="over_limit">Over Device Limit</option>
+          <option value="no_devices">No Devices</option>
+        </select>
+        <button class="btn btn-primary" onclick="loadUsersDeviceData()">🔄 Refresh</button>
+        <button class="btn btn-warning" onclick="showDeviceRequests()">📋 Device Requests</button>
+        <button class="btn btn-secondary" onclick="showDeviceLimitsConfig()">⚙️ Device Limits</button>
+        <button class="btn btn-info" onclick="showBulkDeviceActions()">🛠️ Bulk Actions</button>
+      </div>
+
+      <!-- User Device Statistics -->
+      <div class="stats-grid" style="margin-bottom: 20px;">
+        <div class="stat-card">
+          <div class="stat-number" id="totalUsersCount">0</div>
+          <div class="stat-label">Total Users</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="usersWithDevicesCount">0</div>
+          <div class="stat-label">Users with Devices</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="totalDevicesCount">0</div>
+          <div class="stat-label">Total Devices</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="pendingDeviceRequestsCount">0</div>
+          <div class="stat-label">Pending Requests</div>
+        </div>
+      </div>
+
+      <div id="usersDeviceContainer">
+        <div class="loading">
+          <div class="loading-spinner"></div>
+          <div>Loading users and devices from Firebase...</div>
+        </div>
+      </div>
+    </div>
+
     <!-- Recent Activities -->
     <div style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 15px; padding: 25px; margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.2); width: 100%; max-width: none;">
       <div class="section-title">📋 Recent Activities</div>
@@ -449,9 +497,122 @@
     </div>
   </div>
 
+  <!-- Device Management Modals -->
+  
+  <!-- User Devices Details Modal -->
+  <div id="userDevicesModal" class="modal">
+    <div class="modal-content" style="max-width: 800px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="userDevicesModalTitle">👤 User Device Details</h3>
+        <button class="close-btn" onclick="closeUserDevicesModal()">&times;</button>
+      </div>
+      <div id="userDevicesModalContent">
+        <!-- User devices will be loaded here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Device Limits Configuration Modal -->
+  <div id="deviceLimitsModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">⚙️ Device Limits Configuration</h3>
+        <button class="close-btn" onclick="closeDeviceLimitsModal()">&times;</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Default Device Limit for New Users:</label>
+        <input type="number" class="form-input" id="defaultDeviceLimit" value="1" min="1" max="10">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Bulk Update Device Limits:</label>
+        <select class="form-select" id="bulkLimitAction">
+          <option value="">Choose action...</option>
+          <option value="set_all_1">Set all users to 1 device</option>
+          <option value="set_all_2">Set all users to 2 devices</option>
+          <option value="set_all_3">Set all users to 3 devices</option>
+          <option value="reset_defaults">Reset all to default</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:15px;justify-content:flex-end;margin-top:25px">
+        <button type="button" class="btn btn-secondary" onclick="closeDeviceLimitsModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="saveDeviceLimitsConfig()">💾 Save Configuration</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Device Requests Modal -->
+  <div id="deviceRequestsModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">📋 Pending Device Requests</h3>
+        <button class="close-btn" onclick="closeDeviceRequestsModal()">&times;</button>
+      </div>
+      <div id="deviceRequestsContainer">
+        <div class="loading">
+          <div class="loading-spinner"></div>
+          <div>Loading device requests...</div>
+        </div>
+      </div>
+      <div style="margin-top:20px;text-align:center">
+        <button class="btn btn-primary" onclick="approveAllDeviceRequests()">✅ Approve All</button>
+        <button class="btn btn-danger" onclick="rejectAllDeviceRequests()">❌ Reject All</button>
+        <button class="btn btn-secondary" onclick="closeDeviceRequestsModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Device Details Modal -->
+  <div id="deviceModal" class="modal">
+    <div class="modal-content" style="max-width: 800px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="deviceModalTitle">📱 Device Details</h3>
+        <button class="close-btn" onclick="closeDeviceModal()">&times;</button>
+      </div>
+      <div id="deviceModalContent">
+        <!-- Device details will be loaded here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Bulk Device Actions Modal -->
+  <div id="bulkDeviceModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">⚙️ Bulk Device Actions</h3>
+        <button class="close-btn" onclick="closeBulkDeviceModal()">&times;</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Select Action:</label>
+        <select class="form-select" id="bulkDeviceAction">
+          <option value="">Choose an action...</option>
+          <option value="deactivate_inactive">Deactivate Inactive Devices (30+ days)</option>
+          <option value="remove_old">Remove Old Devices (90+ days)</option>
+          <option value="reset_user_devices">Reset Specific User's Devices</option>
+          <option value="device_audit">Generate Device Audit Report</option>
+        </select>
+      </div>
+      <div class="form-group" id="userSelectGroup" style="display:none">
+        <label class="form-label">Select User:</label>
+        <select class="form-select" id="bulkDeviceUser">
+          <!-- Users will be populated dynamically -->
+        </select>
+      </div>
+      <div style="margin-top: 20px; padding: 15px; background: rgba(255,193,7,0.1); border-radius: 8px; border: 1px solid rgba(255,193,7,0.3);">
+        <div style="color: #f57c00; font-weight: bold; margin-bottom: 10px;">⚠️ Warning</div>
+        <div style="color: #666; font-size: 14px;">
+          These actions are irreversible. Please ensure you understand the consequences before proceeding.
+        </div>
+      </div>
+      <div style="display:flex;gap:15px;justify-content:flex-end;margin-top:25px">
+        <button type="button" class="btn btn-secondary" onclick="closeBulkDeviceModal()">Cancel</button>
+        <button type="button" class="btn btn-danger" onclick="executeBulkDeviceAction()">🚀 Execute Action</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Firebase SDK -->
   <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
     import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs, addDoc, serverTimestamp, query, orderBy, limit, where } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
     // Firebase configuration
@@ -464,8 +625,17 @@
       appId: "1:678793823159:web:7a7b1398aefdb7f24462b9"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    // ✅ PREVENT DUPLICATE APP INITIALIZATION
+    let app, db;
+    const existingApps = getApps();
+    if (existingApps.length === 0) {
+        app = initializeApp(firebaseConfig);
+        console.log('🔥 Firebase initialized for Dashboard!');
+    } else {
+        app = getApp();
+        console.log('🔄 Using existing Firebase app for Dashboard');
+    }
+    db = getFirestore(app);
 
     // Make Firebase functions globally available
     window.db = db;
@@ -531,7 +701,8 @@
           
           // Show admin links
           document.getElementById('tank-management-link').style.display = 'inline-block';
-          document.getElementById('user-management-link').style.display = 'inline-block';
+
+          document.getElementById('device-management-link').style.display = 'inline-block';
           
           return true;
         } else {
@@ -819,8 +990,10 @@
                 <th>🔑 Username</th>
                 <th>📧 Email</th>
                 <th>🏢 Specialization</th>
+                <th>👔 Job Title</th>
                 <th>📄 Pages Access</th>
                 <th>🛢️ Live Tanks</th>
+                <th>🔘 Add Buttons</th>
                 <th>🔄 Status</th>
                 <th>⏰ Last Login</th>
                 <th>⚙️ Actions</th>
@@ -842,6 +1015,12 @@
         // Get pages access
         const pagesAccess = getUserPagesAccess(user);
         
+        // Get job title (السلم الوظيفي)
+        const jobTitle = getUserJobTitle(user);
+        
+        // Get Add to Live Tanks button access
+        const buttonAccess = getUserButtonAccess(user);
+        
         const lastLoginDate = user.lastLogin?.toDate?.() || (user.lastLogin ? new Date(user.lastLogin?.seconds * 1000) : null);
         
         html += `
@@ -855,8 +1034,10 @@
             <td>${user.username}</td>
             <td>${user.email || `${user.username}@example.com`}</td>
             <td><span class="status-badge ${specializationClass}">${formatSpecializationName(specialization)}</span></td>
+            <td><span class="status-badge badge-info">${jobTitle}</span></td>
             <td><small>${pagesAccess}</small></td>
             <td><span class="status-badge ${liveTanksAccess.class}">${liveTanksAccess.text}</span></td>
+            <td><small>${buttonAccess}</small></td>
             <td><span class="status-badge ${statusClass}">${statusText}</span></td>
             <td>${lastLoginDate ? lastLoginDate.toLocaleString() : 'Never'}</td>
             <td>
@@ -992,9 +1173,20 @@
         }).join(', ');
       }
 
+      // تعريف محلي للصفحات الافتراضية (تجنب dependency على permissions.js)
+      const localDefaultPages = {
+        'admin': ['all'],
+        'supervisor': ['index.html', 'plcr.html', 'NMOGASBL.html', 'dashboard.html'],
+        'planning': ['index.html', 'plcr.html', 'NMOGASBL.html', 'dashboard.html'],
+        'control_panel': ['live-tanks.html', 'dashboard.html'],
+        'field_operator': ['dashboard.html'],
+        'default_user': ['index.html', 'plcr.html', 'dashboard.html']
+      };
+
       // استخدام الصفحات الافتراضية للتخصص
-      if (window.TankToolsPermissions && window.TankToolsPermissions.SPECIALIZATIONS[user.specialization]) {
-        const defaultPages = window.TankToolsPermissions.SPECIALIZATIONS[user.specialization].defaultPages;
+      const specialization = user.specialization || 'default_user';
+      if (localDefaultPages[specialization]) {
+        const defaultPages = localDefaultPages[specialization];
         if (defaultPages.includes('all')) return 'All Pages';
         return defaultPages.map(page => {
           const pageNames = {
@@ -1010,6 +1202,99 @@
       }
 
       return 'Dashboard';
+    }
+
+    // ✅ دالة الحصول على السلم الوظيفي للمستخدم
+    function getUserJobTitle(user) {
+      try {
+        // تعريف محلي للوظائف (في حالة عدم توفر permissions.js)
+        const localJobTitles = {
+          'section_head': 'رئيس قسم',
+          'planning': 'تخطيط',
+          'supervisor': 'مشرف',
+          'panel_operator': 'مشغل لوحة تحكم',
+          'senior': 'أقدم',
+          'field_operator': 'مشغل ميداني'
+        };
+        
+        const localSpecializations = {
+          'admin': 'مدير النظام',
+          'supervisor': 'مشرف',
+          'planning': 'تخطيط',
+          'control_panel': 'غرفة التحكم',
+          'field_operator': 'مشغل ميداني',
+          'default_user': 'مستخدم افتراضي'
+        };
+        
+        // إذا كان السلم الوظيفي محدد مخصصاً
+        if (user.jobTitle && localJobTitles[user.jobTitle]) {
+          return localJobTitles[user.jobTitle];
+        }
+        
+        // استخدام التخصص كسلم وظيفي افتراضي
+        if (user.specialization && localSpecializations[user.specialization]) {
+          return localSpecializations[user.specialization];
+        }
+        
+        // إذا كان يستخدم النظام القديم
+        if (user.role) {
+          const roleMapping = {
+            'admin': 'مدير النظام',
+            'supervisor': 'مشرف',
+            'panel_operator': 'مشغل لوحة',
+            'field_operator': 'مشغل ميداني'
+          };
+          return roleMapping[user.role] || user.role;
+        }
+        
+        return 'غير محدد';
+      } catch (error) {
+        console.error('Error in getUserJobTitle:', error);
+        return 'غير محدد';
+      }
+    }
+
+    // ✅ دالة الحصول على حالة أزرار Add to Live Tanks للمستخدم
+    function getUserButtonAccess(user) {
+      try {
+        // للأدمن: كل الأزرار تظهر
+        if (user.username === 'fam030' || user.role === 'admin') {
+          return 'All Buttons ✅';
+        }
+
+        // فحص الصلاحيات المخصصة أولاً
+        if (user.customButtonAccess && user.customButtonAccess.addToLiveTanks) {
+          const buttonAccess = user.customButtonAccess.addToLiveTanks;
+          const indexAccess = buttonAccess.index ? '📊' : '❌';
+          const plcrAccess = buttonAccess.plcr ? '🔧' : '❌';
+          return `PBCR: ${indexAccess} | PLCR: ${plcrAccess}`;
+        }
+
+        // تعريف محلي للصلاحيات الافتراضية
+        const localDefaults = {
+          'admin': { index: true, plcr: true },
+          'control_panel': { index: true, plcr: true },
+          'supervisor': { index: false, plcr: false },
+          'planning': { index: false, plcr: false },
+          'field_operator': { index: false, plcr: false },
+          'default_user': { index: false, plcr: false }
+        };
+
+        // استخدام الصلاحيات الافتراضية للتخصص
+        const specialization = user.specialization || 'default_user';
+        if (localDefaults[specialization]) {
+          const buttonAccess = localDefaults[specialization];
+          const indexAccess = buttonAccess.index ? '📊' : '❌';
+          const plcrAccess = buttonAccess.plcr ? '🔧' : '❌';
+          return `PBCR: ${indexAccess} | PLCR: ${plcrAccess}`;
+        }
+
+        // الافتراضي: مخفية للجميع
+        return 'Hidden ❌';
+      } catch (error) {
+        console.error('Error in getUserButtonAccess:', error);
+        return 'Hidden ❌';
+      }
     }
 
     // Display activities in table format with pagination
@@ -1371,12 +1656,26 @@
           </div>
           <div style="padding: 20px;">
             <div class="form-group">
-              <label class="form-label">Specialization:</label>
+              <label class="form-label">Specialization (للنظام):</label>
               <select id="userSpecialization" class="form-select">
                 <option value="admin">Administrator</option>
                 <option value="supervisor">Supervisor</option>
                 <option value="planning">Planning</option>
                 <option value="control_panel">Control Panel</option>
+                <option value="field_operator">Field Operator</option>
+                <option value="default_user">Default User</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">👔 Job Title (السلم الوظيفي للعرض):</label>
+              <select id="userJobTitle" class="form-select">
+                <option value="">اختر السلم الوظيفي</option>
+                <option value="section_head">Section Head</option>
+                <option value="planning">Planning</option>
+                <option value="supervisor">Supervisor</option>
+                <option value="panel_operator">Panel Operator</option>
+                <option value="senior">Senior</option>
                 <option value="field_operator">Field Operator</option>
               </select>
             </div>
@@ -1403,6 +1702,15 @@
               </div>
             </div>
             
+            <div class="form-group">
+              <label class="form-label">🔘 Add to Live Tanks Button Access:</label>
+              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; background: rgba(0,51,102,0.1); padding: 15px; border-radius: 10px;">
+                <label><input type="checkbox" id="showAddButtonIndex"> 📊 Show in PBCR (Index)</label>
+                <label><input type="checkbox" id="showAddButtonPLCR"> 🔧 Show in PLCR</label>
+              </div>
+              <small style="color: #666; margin-top: 5px; display: block;">💡 يتحكم في ظهور/اختفاء زر "Add to Live Tanks" في صفحات الحساب</small>
+            </div>
+            
             <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
               <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
               <button class="btn btn-primary" onclick="saveUserPermissions('${user.username}', this.closest('.modal'))">Save Permissions</button>
@@ -1417,19 +1725,62 @@
       const specialization = user.specialization || user.role || 'planning';
       permissionsModal.querySelector('#userSpecialization').value = specialization;
       
+      // تعريف محلي للصفحات والصلاحيات الافتراضية
+      const localDefaults = {
+        'admin': {
+          pages: ['all'],
+          permissions: { canViewLiveTanks: true, canEditLiveTanks: true, canAddToLiveTanks: true, canDeleteFromLiveTanks: true },
+          buttons: { index: true, plcr: true }
+        },
+        'supervisor': {
+          pages: ['index.html', 'plcr.html', 'NMOGASBL.html', 'dashboard.html'],
+          permissions: { canViewLiveTanks: true, canEditLiveTanks: false, canAddToLiveTanks: false, canDeleteFromLiveTanks: false },
+          buttons: { index: false, plcr: false }
+        },
+        'planning': {
+          pages: ['index.html', 'plcr.html', 'NMOGASBL.html', 'dashboard.html'],
+          permissions: { canViewLiveTanks: false, canEditLiveTanks: false, canAddToLiveTanks: false, canDeleteFromLiveTanks: false },
+          buttons: { index: false, plcr: false }
+        },
+        'control_panel': {
+          pages: ['live-tanks.html', 'dashboard.html'],
+          permissions: { canViewLiveTanks: true, canEditLiveTanks: true, canAddToLiveTanks: true, canDeleteFromLiveTanks: true },
+          buttons: { index: true, plcr: true }
+        },
+        'field_operator': {
+          pages: ['dashboard.html'],
+          permissions: { canViewLiveTanks: false, canEditLiveTanks: false, canAddToLiveTanks: false, canDeleteFromLiveTanks: false },
+          buttons: { index: false, plcr: false }
+        },
+        'default_user': {
+          pages: ['index.html', 'plcr.html', 'dashboard.html'],
+          permissions: { canViewLiveTanks: true, canEditLiveTanks: false, canAddToLiveTanks: false, canDeleteFromLiveTanks: false },
+          buttons: { index: false, plcr: false }
+        }
+      };
+      
       // تعبئة الصفحات المسموحة
-      const currentPages = user.customPages || (window.TankToolsPermissions?.SPECIALIZATIONS[specialization]?.defaultPages) || [];
+      const currentPages = user.customPages || localDefaults[specialization]?.pages || [];
       const pageCheckboxes = permissionsModal.querySelectorAll('input[type="checkbox"][value]');
       pageCheckboxes.forEach(checkbox => {
         checkbox.checked = currentPages.includes(checkbox.value) || currentPages.includes('all');
       });
       
+      // تعبئة السلم الوظيفي
+      const jobTitle = user.jobTitle || '';
+      permissionsModal.querySelector('#userJobTitle').value = jobTitle;
+      
       // تعبئة صلاحيات Live Tanks
-      const permissions = user.customPermissions || (window.TankToolsPermissions?.SPECIALIZATIONS[specialization]?.defaultPermissions) || {};
+      const permissions = user.customPermissions || localDefaults[specialization]?.permissions || {};
       permissionsModal.querySelector('#canViewLiveTanks').checked = permissions.canViewLiveTanks || false;
       permissionsModal.querySelector('#canEditLiveTanks').checked = permissions.canEditLiveTanks || false;
       permissionsModal.querySelector('#canAddToLiveTanks').checked = permissions.canAddToLiveTanks || false;
       permissionsModal.querySelector('#canDeleteFromLiveTanks').checked = permissions.canDeleteFromLiveTanks || false;
+      
+      // تعبئة صلاحيات الأزرار
+      const buttonAccess = user.customButtonAccess?.addToLiveTanks || localDefaults[specialization]?.buttons || {};
+      permissionsModal.querySelector('#showAddButtonIndex').checked = buttonAccess.index || false;
+      permissionsModal.querySelector('#showAddButtonPLCR').checked = buttonAccess.plcr || false;
     }
 
     // Save user permissions
@@ -1444,6 +1795,10 @@
         
         const specialization = modal.querySelector('#userSpecialization').value;
         console.log('Specialization:', specialization);
+        
+        // جمع السلم الوظيفي
+        const jobTitle = modal.querySelector('#userJobTitle').value;
+        console.log('Job Title:', jobTitle);
         
         // جمع الصفحات المحددة
         const selectedPages = [];
@@ -1460,6 +1815,15 @@
           canManageUsers: specialization === 'admin'
         };
         console.log('Custom permissions:', customPermissions);
+        
+        // جمع صلاحيات الأزرار
+        const customButtonAccess = {
+          addToLiveTanks: {
+            index: modal.querySelector('#showAddButtonIndex').checked,
+            plcr: modal.querySelector('#showAddButtonPLCR').checked
+          }
+        };
+        console.log('Custom button access:', customButtonAccess);
         
         // البحث عن المستخدم بغض النظر عن حالة الأحرف
         const usersRef = collection(db, 'users');
@@ -1488,8 +1852,10 @@
           const updateData = {
             username: normalizedUsername, // تخزين المعرف بحالة موحدة
             specialization: specialization,
+            jobTitle: jobTitle, // ✅ السلم الوظيفي
             customPages: selectedPages,
             customPermissions: customPermissions,
+            customButtonAccess: customButtonAccess, // ✅ صلاحيات الأزرار
             updatedAt: serverTimestamp()
           };
           
@@ -1516,8 +1882,10 @@
             fullName: username, // قيمة افتراضية
             email: `${normalizedUsername}@example.com`, // قيمة افتراضية
             specialization: specialization,
+            jobTitle: jobTitle, // ✅ السلم الوظيفي
             customPages: selectedPages,
             customPermissions: customPermissions,
+            customButtonAccess: customButtonAccess, // ✅ صلاحيات الأزرار
             isActive: true,
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp()
@@ -1966,6 +2334,1390 @@
       }
     };
     
+    // ========================================
+    // USER-BASED DEVICE MANAGEMENT SYSTEM
+    // ========================================
+    
+    let allDevices = [];
+    let allDeviceRequests = [];
+    let allUsersWithDevices = [];
+    let deviceLimitsConfig = {};
+    let currentViewingUser = null;
+    
+    // Show Device Management Section
+    function showDeviceManagement() {
+      // Hide other sections
+      document.querySelector('#deviceManagementSection').style.display = 'block';
+      document.querySelector('#deviceManagementSection').scrollIntoView({ behavior: 'smooth' });
+      
+      // Show admin link
+      document.getElementById('device-management-link').style.display = 'inline-block';
+      
+      // Load users device data
+      loadUsersDeviceData();
+    }
+    
+    // Load Users Device Data from Firebase
+    async function loadUsersDeviceData() {
+      try {
+        console.log('🔄 Loading users and device data...');
+        showMessage('👥 Loading users and devices...', 'info');
+        
+        // Load all users
+        const usersRef = collection(db, 'users');
+        const usersSnapshot = await getDocs(usersRef);
+        
+        const allUsers = [];
+        usersSnapshot.forEach(doc => {
+          const userData = doc.data();
+          allUsers.push({
+            id: doc.id,
+            username: userData.username,
+            fullName: userData.fullName,
+            email: userData.email,
+            isActive: userData.isActive,
+            role: userData.role
+          });
+        });
+        
+        // Load registered devices
+        const devicesRef = collection(db, 'userDevices');
+        const devicesSnapshot = await getDocs(devicesRef);
+        
+        allDevices = [];
+        devicesSnapshot.forEach(doc => {
+          const deviceData = doc.data();
+          allDevices.push({
+            id: doc.id,
+            ...deviceData,
+            registeredAt: deviceData.registeredAt?.toDate?.() || new Date(deviceData.registeredAt),
+            lastUsed: deviceData.lastUsed?.toDate?.() || new Date(deviceData.lastUsed)
+          });
+        });
+        
+        // Load device requests
+        const requestsRef = collection(db, 'deviceRequests');
+        const requestsSnapshot = await getDocs(requestsRef);
+        
+        allDeviceRequests = [];
+        requestsSnapshot.forEach(doc => {
+          const requestData = doc.data();
+          allDeviceRequests.push({
+            id: doc.id,
+            ...requestData,
+            timestamp: requestData.timestamp?.toDate?.() || new Date(requestData.timestamp)
+          });
+        });
+        
+        // Load device limits configuration
+        await loadDeviceLimitsConfig();
+        
+        // Combine users with their devices
+        allUsersWithDevices = allUsers.map(user => {
+          const userDevices = allDevices.filter(device => device.username === user.username);
+          const deviceLimit = deviceLimitsConfig[user.username] || deviceLimitsConfig.default || 1;
+          
+          return {
+            ...user,
+            devices: userDevices,
+            deviceCount: userDevices.length,
+            deviceLimit: deviceLimit,
+            isOverLimit: userDevices.length > deviceLimit
+          };
+        });
+        
+        console.log(`👥 Loaded ${allUsersWithDevices.length} users with ${allDevices.length} devices`);
+        
+        // Update statistics
+        updateUserDeviceStatistics();
+        
+        // Render users table
+        renderUsersDeviceTable();
+        
+        showMessage(`✅ Loaded ${allUsersWithDevices.length} users successfully`, 'success');
+        
+      } catch (error) {
+        console.error('❌ Error loading users device data:', error);
+        showMessage(`❌ Failed to load data: ${error.message}`, 'error');
+      }
+    }
+    
+    // Load Device Limits Configuration
+    async function loadDeviceLimitsConfig() {
+      try {
+        const limitsRef = doc(db, 'config', 'deviceLimits');
+        const limitsDoc = await getDoc(limitsRef);
+        
+        if (limitsDoc.exists()) {
+          deviceLimitsConfig = limitsDoc.data();
+        } else {
+          // Set default configuration
+          deviceLimitsConfig = { default: 1 };
+          await setDoc(limitsRef, deviceLimitsConfig);
+        }
+      } catch (error) {
+        console.warn('⚠️ Could not load device limits config:', error);
+        deviceLimitsConfig = { default: 1 };
+      }
+    }
+
+    // Update User Device Statistics
+    function updateUserDeviceStatistics() {
+      const totalUsers = allUsersWithDevices.length;
+      const usersWithDevices = allUsersWithDevices.filter(user => user.deviceCount > 0).length;
+      const totalDevices = allDevices.length;
+      const pendingRequests = allDeviceRequests.filter(req => req.status === 'pending').length;
+      
+      document.getElementById('totalUsersCount').textContent = totalUsers;
+      document.getElementById('usersWithDevicesCount').textContent = usersWithDevices;
+      document.getElementById('totalDevicesCount').textContent = totalDevices;
+      document.getElementById('pendingDeviceRequestsCount').textContent = pendingRequests;
+    }
+    
+    // Render Users Device Table
+    function renderUsersDeviceTable() {
+      const container = document.getElementById('usersDeviceContainer');
+      
+      if (allUsersWithDevices.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.7);">
+            👥 No users found
+          </div>
+        `;
+        return;
+      }
+      
+      // Apply filters
+      let filteredUsers = [...allUsersWithDevices];
+      
+      const searchTerm = document.getElementById('userSearch')?.value?.toLowerCase() || '';
+      const userFilter = document.getElementById('userDeviceFilter')?.value || 'all';
+      
+      if (searchTerm) {
+        filteredUsers = filteredUsers.filter(user => 
+          user.username?.toLowerCase().includes(searchTerm) ||
+          user.fullName?.toLowerCase().includes(searchTerm) ||
+          user.email?.toLowerCase().includes(searchTerm)
+        );
+      }
+      
+      if (userFilter !== 'all') {
+        filteredUsers = filteredUsers.filter(user => {
+          switch(userFilter) {
+            case 'has_devices': return user.deviceCount > 0;
+            case 'over_limit': return user.isOverLimit;
+            case 'no_devices': return user.deviceCount === 0;
+            default: return true;
+          }
+        });
+      }
+      
+      // Sort by device count (highest first), then by username
+      filteredUsers.sort((a, b) => b.deviceCount - a.deviceCount || a.username.localeCompare(b.username));
+      
+      const tableHTML = `
+        <div class="users-table-container" style="width: 100%; overflow-x: auto;">
+          <table class="users-table" style="min-width: 900px;">
+            <thead>
+              <tr>
+                <th>👤 User Info</th>
+                <th>📱 Devices</th>
+                <th>⚙️ Device Limit</th>
+                <th>📊 Status</th>
+                <th>⚙️ Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filteredUsers.map(user => `
+                <tr>
+                  <td>
+                    <div style="font-weight: bold; color: #003366;">${user.fullName || user.username || 'Unknown'}</div>
+                    <div style="font-size: 12px; color: #666;">${user.username}@knpc.com</div>
+                    <div style="font-size: 11px; color: #888; margin-top: 2px;">
+                      <span style="background: rgba(0,51,102,0.1); color: #003366; padding: 1px 4px; border-radius: 3px;">
+                        ${user.role || 'operator'}
+                      </span>
+                      ${user.isActive ? '<span style="color: #4CAF50; margin-left: 5px;">✓ Active</span>' : '<span style="color: #f44336; margin-left: 5px;">❌ Inactive</span>'}
+                    </div>
+                  </td>
+                  <td>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <div style="font-size: 18px; font-weight: bold; color: ${user.deviceCount > user.deviceLimit ? '#f44336' : user.deviceCount > 0 ? '#4CAF50' : '#999'};">
+                        ${user.deviceCount}
+                      </div>
+                      <div>
+                        <div style="font-size: 11px; color: #666;">devices registered</div>
+                        ${user.deviceCount > 0 ? `
+                          <div style="font-size: 10px; color: #888;">
+                            Last: ${user.lastDeviceUsed || 'Unknown'}
+                          </div>
+                        ` : ''}
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <div style="font-size: 16px; font-weight: bold; color: #2196F3;">
+                        ${user.deviceLimit || 1}
+                      </div>
+                      <div>
+                        <div style="font-size: 11px; color: #666;">device limit</div>
+                        <button class="action-btn" onclick="editUserDeviceLimit('${user.username}', ${user.deviceLimit || 1})"
+                                style="font-size: 10px; padding: 2px 6px; background: #FF9800; color: white; border: none; border-radius: 3px; cursor: pointer;">
+                          Edit
+                        </button>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div style="text-align: center;">
+                      ${user.isOverLimit ? `
+                        <div style="color: #f44336; font-weight: bold; font-size: 12px;">⚠️ OVER LIMIT</div>
+                        <div style="font-size: 10px; color: #666;">+${user.deviceCount - user.deviceLimit} extra</div>
+                      ` : user.deviceCount === 0 ? `
+                        <div style="color: #999; font-size: 12px;">📵 No Devices</div>
+                      ` : `
+                        <div style="color: #4CAF50; font-size: 12px;">✅ Normal</div>
+                        <div style="font-size: 10px; color: #666;">${user.deviceLimit - user.deviceCount} available</div>
+                      `}
+                    </div>
+                  </td>
+                  <td>
+                    <div class="action-buttons" style="display: flex; gap: 5px; flex-wrap: wrap;">
+                      ${user.deviceCount > 0 ? `
+                        <button class="action-btn" onclick="showUserDevicesModal('${user.username}')" 
+                                style="font-size: 11px; padding: 4px 8px; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                          📱 View Devices
+                        </button>
+                      ` : ''}
+                      <button class="action-btn" onclick="resetUserDevices('${user.username}')" 
+                              style="font-size: 11px; padding: 4px 8px; background: #FF9800; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        🔄 Reset
+                      </button>
+                      ${user.isOverLimit ? `
+                        <button class="action-btn" onclick="removeExtraDevices('${user.username}')" 
+                                style="font-size: 11px; padding: 4px 8px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                          ✂️ Remove Extra
+                        </button>
+                      ` : ''}
+                    </div>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+        
+        <div style="margin-top: 15px; text-align: center; color: rgba(255,255,255,0.7); font-size: 13px;">
+          Showing ${filteredUsers.length} users
+          ${filteredUsers.length !== allUsersWithDevices.length ? ` of ${allUsersWithDevices.length} total` : ''}
+        </div>
+      `;
+      
+      container.innerHTML = tableHTML;
+    }
+    
+    // View Device Details
+    async function viewDeviceDetails(deviceId) {
+      const device = allDevices.find(d => d.id === deviceId);
+      if (!device) {
+        showMessage('❌ Device not found', 'error');
+        return;
+      }
+      
+      const deviceInfo = device.fullDeviceInfo || {};
+      
+      const detailsHTML = `
+        <div style="max-height: 500px; overflow-y: auto;">
+          <div style="margin-bottom: 20px; padding: 15px; background: rgba(33,150,243,0.1); border-radius: 8px; border: 1px solid rgba(33,150,243,0.3);">
+            <h4 style="color: #2196F3; margin-bottom: 10px;">📱 Basic Information</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 14px;">
+              <div><strong>User:</strong> ${device.username}</div>
+              <div><strong>Device Name:</strong> ${device.deviceName || 'Unknown'}</div>
+              <div><strong>Device Type:</strong> ${device.deviceType || 'Unknown'}</div>
+              <div><strong>Status:</strong> ${device.isActive ? '✅ Active' : '❌ Inactive'}</div>
+              <div><strong>Registered:</strong> ${device.registeredAt ? formatDateTime(device.registeredAt) : 'Unknown'}</div>
+              <div><strong>Last Used:</strong> ${device.lastUsed ? formatDateTime(device.lastUsed) : 'Never'}</div>
+            </div>
+          </div>
+          
+          <div style="margin-bottom: 20px; padding: 15px; background: rgba(76,175,80,0.1); border-radius: 8px; border: 1px solid rgba(76,175,80,0.3);">
+            <h4 style="color: #4CAF50; margin-bottom: 10px;">💻 System Information</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 14px;">
+              <div><strong>Browser:</strong> ${device.browser || 'Unknown'}</div>
+              <div><strong>Operating System:</strong> ${device.os || 'Unknown'}</div>
+              <div><strong>Screen Resolution:</strong> ${device.screenResolution || 'Unknown'}</div>
+              <div><strong>Last IP Address:</strong> ${device.lastIP || 'Unknown'}</div>
+            </div>
+          </div>
+          
+          <div style="margin-bottom: 20px; padding: 15px; background: rgba(255,152,0,0.1); border-radius: 8px; border: 1px solid rgba(255,152,0,0.3);">
+            <h4 style="color: #FF9800; margin-bottom: 10px;">🔒 Security Information</h4>
+            <div style="font-size: 14px;">
+              <div style="margin-bottom: 8px;"><strong>Device ID:</strong> 
+                <code style="background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 4px; font-size: 12px;">
+                  ${device.deviceId || 'Unknown'}
+                </code>
+              </div>
+              <div style="margin-bottom: 8px;"><strong>Registration Type:</strong> 
+                ${device.registeredDuringSignup ? 'During User Signup' : 'During Login'}
+              </div>
+            </div>
+          </div>
+          
+          ${deviceInfo.readableInfo ? `
+          <div style="margin-bottom: 20px; padding: 15px; background: rgba(156,39,176,0.1); border-radius: 8px; border: 1px solid rgba(156,39,176,0.3);">
+            <h4 style="color: #9C27B0; margin-bottom: 10px;">🔍 Detailed Device Fingerprint</h4>
+            <div style="font-size: 13px; line-height: 1.6;">
+              <div><strong>Timezone:</strong> ${deviceInfo.readableInfo.timezone || 'Unknown'}</div>
+              <div><strong>Language:</strong> ${deviceInfo.readableInfo.language || 'Unknown'}</div>
+              <div><strong>Cookie Enabled:</strong> ${deviceInfo.readableInfo.cookieEnabled ? 'Yes' : 'No'}</div>
+              <div><strong>Java Enabled:</strong> ${deviceInfo.readableInfo.javaEnabled ? 'Yes' : 'No'}</div>
+              <div><strong>Touch Support:</strong> ${deviceInfo.readableInfo.touchSupport ? 'Yes' : 'No'}</div>
+            </div>
+          </div>
+          ` : ''}
+        </div>
+        
+        <div style="display: flex; gap: 15px; justify-content: center; margin-top: 25px;">
+          <button class="btn btn-warning" onclick="toggleDeviceStatus('${device.id}'); closeDeviceModal();">
+            ${device.isActive ? '⏸️ Disable Device' : '▶️ Enable Device'}
+          </button>
+          <button class="btn btn-danger" onclick="removeDevice('${device.id}'); closeDeviceModal();">
+            🗑️ Remove Device
+          </button>
+          <button class="btn btn-secondary" onclick="closeDeviceModal()">Close</button>
+        </div>
+      `;
+      
+      document.getElementById('deviceModalTitle').textContent = `📱 Device: ${device.deviceName || 'Unknown'}`;
+      document.getElementById('deviceModalContent').innerHTML = detailsHTML;
+      document.getElementById('deviceModal').classList.add('show');
+    }
+    
+    // Toggle Device Status
+    async function toggleDeviceStatus(deviceId) {
+      const device = allDevices.find(d => d.id === deviceId);
+      if (!device) {
+        showMessage('❌ Device not found', 'error');
+        return;
+      }
+      
+      const newStatus = !device.isActive;
+      const action = newStatus ? 'enabled' : 'disabled';
+      
+      try {
+        await updateDoc(doc(db, 'userDevices', deviceId), {
+          isActive: newStatus,
+          lastModified: serverTimestamp(),
+          modifiedBy: currentUser.username
+        });
+        
+        device.isActive = newStatus;
+        renderDevicesTable();
+        updateDeviceStatistics();
+        
+        showMessage(`✅ Device ${action} successfully`, 'success');
+        
+        // Log activity
+        await addDoc(collection(db, 'activities'), {
+          action: `Device ${action} by admin: ${device.deviceName} (${device.username})`,
+          username: currentUser.username,
+          timestamp: serverTimestamp(),
+          page: 'device-management'
+        });
+        
+      } catch (error) {
+        console.error('Error toggling device status:', error);
+        showMessage(`❌ Failed to ${action === 'enabled' ? 'enable' : 'disable'} device: ${error.message}`, 'error');
+      }
+    }
+    
+    // Remove Device
+    async function removeDevice(deviceId) {
+      const device = allDevices.find(d => d.id === deviceId);
+      if (!device) {
+        showMessage('❌ Device not found', 'error');
+        return;
+      }
+      
+      if (!confirm(`Are you sure you want to permanently remove device "${device.deviceName}" for user "${device.username}"?\n\nThis action cannot be undone.`)) {
+        return;
+      }
+      
+      try {
+        await deleteDoc(doc(db, 'userDevices', deviceId));
+        
+        // Remove from local array
+        const index = allDevices.findIndex(d => d.id === deviceId);
+        if (index > -1) {
+          allDevices.splice(index, 1);
+        }
+        
+        renderDevicesTable();
+        updateDeviceStatistics();
+        
+        showMessage(`✅ Device removed successfully`, 'success');
+        
+        // Log activity
+        await addDoc(collection(db, 'activities'), {
+          action: `Device removed by admin: ${device.deviceName} (${device.username})`,
+          username: currentUser.username,
+          timestamp: serverTimestamp(),
+          page: 'device-management'
+        });
+        
+      } catch (error) {
+        console.error('Error removing device:', error);
+        showMessage(`❌ Failed to remove device: ${error.message}`, 'error');
+      }
+    }
+    
+    // Show Device Requests
+    function showDeviceRequests() {
+      const pendingRequests = allDeviceRequests.filter(req => req.status === 'pending');
+      
+      if (pendingRequests.length === 0) {
+        showMessage('ℹ️ No pending device requests', 'info');
+        return;
+      }
+      
+      const requestsHTML = pendingRequests.map(request => `
+        <div class="pending-card" style="background: rgba(33,150,243,0.1); border: 2px solid rgba(33,150,243,0.3);">
+          <div class="pending-header">
+            <div class="pending-name" style="color: #2196F3;">📱 ${request.deviceInfo?.deviceName || 'Unknown Device'}</div>
+            <span class="status-badge badge-pending">Pending</span>
+          </div>
+          <div class="pending-details">
+            <div><strong>User:</strong> ${request.username}</div>
+            <div><strong>Device Type:</strong> ${request.deviceInfo?.deviceType || 'Unknown'}</div>
+            <div><strong>Browser:</strong> ${request.deviceInfo?.browser || 'Unknown'}</div>
+            <div><strong>OS:</strong> ${request.deviceInfo?.os || 'Unknown'}</div>
+            <div><strong>Requested:</strong> ${request.timestamp ? formatDateTime(request.timestamp) : 'Unknown'}</div>
+            <div><strong>IP:</strong> ${request.requestIP || 'Unknown'}</div>
+            ${request.existingDevices?.length > 0 ? `
+              <div style="margin-top: 10px; padding: 10px; background: rgba(255,193,7,0.1); border-radius: 6px;">
+                <strong>⚠️ Existing Devices:</strong>
+                ${request.existingDevices.map(device => 
+                  `<div style="font-size: 12px;">• ${device.name}</div>`
+                ).join('')}
+              </div>
+            ` : ''}
+          </div>
+          <div class="pending-actions">
+            <button class="btn btn-primary" onclick="approveDeviceRequest('${request.id}')">
+              ✅ Approve
+            </button>
+            <button class="btn btn-danger" onclick="rejectDeviceRequest('${request.id}')">
+              ❌ Reject
+            </button>
+          </div>
+        </div>
+      `).join('');
+      
+      document.getElementById('deviceRequestsContainer').innerHTML = 
+        `<div class="pending-users-grid">${requestsHTML}</div>`;
+      document.getElementById('deviceRequestsModal').classList.add('show');
+    }
+    
+    // Approve Device Request
+    async function approveDeviceRequest(requestId) {
+      try {
+        const request = allDeviceRequests.find(req => req.id === requestId);
+        if (!request) {
+          showMessage('❌ Request not found', 'error');
+          return;
+        }
+        
+        showMessage('🔄 Approving device request...', 'info');
+        
+        // Add device to userDevices
+        const deviceData = {
+          username: request.username,
+          deviceId: request.requestedDeviceId,
+          deviceName: request.deviceInfo?.deviceName || 'Approved Device',
+          deviceType: request.deviceInfo?.deviceType || 'Unknown',
+          browser: request.deviceInfo?.browser || 'Unknown',
+          os: request.deviceInfo?.os || 'Unknown',
+          screenResolution: request.deviceInfo?.screenResolution || 'Unknown',
+          registeredAt: serverTimestamp(),
+          lastUsed: serverTimestamp(),
+          isActive: true,
+          lastIP: request.requestIP || 'Unknown',
+          fullDeviceInfo: { readableInfo: request.deviceInfo },
+          approvedByAdmin: currentUser.username,
+          approvedAt: serverTimestamp()
+        };
+        
+        await addDoc(collection(db, 'userDevices'), deviceData);
+        
+        // Update request status
+        await updateDoc(doc(db, 'deviceRequests', requestId), {
+          status: 'approved',
+          approvedBy: currentUser.username,
+          approvedAt: serverTimestamp()
+        });
+        
+        // Update local arrays
+        const requestIndex = allDeviceRequests.findIndex(req => req.id === requestId);
+        if (requestIndex > -1) {
+          allDeviceRequests[requestIndex].status = 'approved';
+        }
+        
+        showMessage(`✅ Device approved for ${request.username}`, 'success');
+        
+        // Refresh the requests modal
+        showDeviceRequests();
+        
+        // Log activity
+        await addDoc(collection(db, 'activities'), {
+          action: `Device request approved by admin: ${request.deviceInfo?.deviceName} for ${request.username}`,
+          username: currentUser.username,
+          timestamp: serverTimestamp(),
+          page: 'device-management'
+        });
+        
+      } catch (error) {
+        console.error('Error approving device request:', error);
+        showMessage(`❌ Error approving request: ${error.message}`, 'error');
+      }
+    }
+    
+    // Reject Device Request  
+    async function rejectDeviceRequest(requestId) {
+      try {
+        const request = allDeviceRequests.find(req => req.id === requestId);
+        if (!request) {
+          showMessage('❌ Request not found', 'error');
+          return;
+        }
+        
+        if (!confirm(`Are you sure you want to reject device request from ${request.username}?`)) {
+          return;
+        }
+        
+        showMessage('🔄 Rejecting device request...', 'info');
+        
+        // Update request status
+        await updateDoc(doc(db, 'deviceRequests', requestId), {
+          status: 'rejected',
+          rejectedBy: currentUser.username,
+          rejectedAt: serverTimestamp()
+        });
+        
+        // Update local array
+        const requestIndex = allDeviceRequests.findIndex(req => req.id === requestId);
+        if (requestIndex > -1) {
+          allDeviceRequests[requestIndex].status = 'rejected';
+        }
+        
+        showMessage(`❌ Device request rejected for ${request.username}`, 'success');
+        
+        // Refresh the requests modal
+        showDeviceRequests();
+        
+        // Log activity
+        await addDoc(collection(db, 'activities'), {
+          action: `Device request rejected by admin: ${request.deviceInfo?.deviceName} for ${request.username}`,
+          username: currentUser.username,
+          timestamp: serverTimestamp(),
+          page: 'device-management'
+        });
+        
+      } catch (error) {
+        console.error('Error rejecting device request:', error);
+        showMessage(`❌ Error rejecting request: ${error.message}`, 'error');
+      }
+    }
+    
+    // Approve All Device Requests
+    async function approveAllDeviceRequests() {
+      const pendingRequests = allDeviceRequests.filter(req => req.status === 'pending');
+      
+      if (pendingRequests.length === 0) {
+        showMessage('ℹ️ No pending requests to approve', 'info');
+        return;
+      }
+      
+      if (!confirm(`Are you sure you want to approve all ${pendingRequests.length} pending device requests?`)) {
+        return;
+      }
+      
+      try {
+        showMessage(`🔄 Approving ${pendingRequests.length} requests...`, 'info');
+        
+        for (const request of pendingRequests) {
+          await approveDeviceRequest(request.id);
+          // Small delay to avoid overwhelming Firebase
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+        
+        showMessage(`✅ All ${pendingRequests.length} requests approved successfully`, 'success');
+        
+      } catch (error) {
+        console.error('Error approving all requests:', error);
+        showMessage(`❌ Error approving all requests: ${error.message}`, 'error');
+      }
+    }
+    
+    // Reject All Device Requests
+    async function rejectAllDeviceRequests() {
+      const pendingRequests = allDeviceRequests.filter(req => req.status === 'pending');
+      
+      if (pendingRequests.length === 0) {
+        showMessage('ℹ️ No pending requests to reject', 'info');
+        return;
+      }
+      
+      if (!confirm(`Are you sure you want to REJECT all ${pendingRequests.length} pending device requests?\n\nThis action cannot be undone.`)) {
+        return;
+      }
+      
+      try {
+        showMessage(`🔄 Rejecting ${pendingRequests.length} requests...`, 'info');
+        
+        for (const request of pendingRequests) {
+          await rejectDeviceRequest(request.id);
+          // Small delay to avoid overwhelming Firebase
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+        
+        showMessage(`❌ All ${pendingRequests.length} requests rejected`, 'success');
+        
+      } catch (error) {
+        console.error('Error rejecting all requests:', error);
+        showMessage(`❌ Error rejecting all requests: ${error.message}`, 'error');
+      }
+    }
+    
+    // Show Bulk Device Actions
+    function showBulkDeviceActions() {
+      document.getElementById('bulkDeviceModal').classList.add('show');
+      
+      // Populate user list for reset action
+      const userSelect = document.getElementById('bulkDeviceUser');
+      const uniqueUsers = [...new Set(allDevices.map(d => d.username))].sort();
+      
+      userSelect.innerHTML = '<option value="">Select a user...</option>' +
+        uniqueUsers.map(username => `<option value="${username}">${username}</option>`).join('');
+    }
+    
+    // Execute Bulk Device Action
+    async function executeBulkDeviceAction() {
+      const action = document.getElementById('bulkDeviceAction').value;
+      
+      if (!action) {
+        showMessage('❌ Please select an action', 'error');
+        return;
+      }
+      
+      try {
+        switch(action) {
+          case 'deactivate_inactive':
+            await deactivateInactiveDevices();
+            break;
+          case 'remove_old':
+            await removeOldDevices();
+            break;
+          case 'reset_user_devices':
+            await bulkResetUserDevices();
+            break;
+          case 'device_audit':
+            await generateDeviceAuditReport();
+            break;
+          default:
+            showMessage('❌ Unknown action', 'error');
+            return;
+        }
+        
+        closeBulkDeviceModal();
+        
+      } catch (error) {
+        console.error('Error executing bulk action:', error);
+        showMessage(`❌ Error executing action: ${error.message}`, 'error');
+      }
+    }
+    
+    // Deactivate Inactive Devices (30+ days)
+    async function deactivateInactiveDevices() {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      const inactiveDevices = allDevices.filter(device => {
+        const lastUsed = device.lastUsed ? new Date(device.lastUsed) : new Date(device.registeredAt);
+        return device.isActive && lastUsed < thirtyDaysAgo;
+      });
+      
+      if (inactiveDevices.length === 0) {
+        showMessage('ℹ️ No inactive devices found (30+ days)', 'info');
+        return;
+      }
+      
+      if (!confirm(`Found ${inactiveDevices.length} devices inactive for 30+ days.\n\nDeactivate these devices?`)) {
+        return;
+      }
+      
+      showMessage(`🔄 Deactivating ${inactiveDevices.length} inactive devices...`, 'info');
+      
+      const updatePromises = inactiveDevices.map(device => 
+        updateDoc(doc(db, 'userDevices', device.id), {
+          isActive: false,
+          lastModified: serverTimestamp(),
+          modifiedBy: currentUser.username,
+          deactivatedReason: 'Bulk deactivation - inactive 30+ days'
+        })
+      );
+      
+      await Promise.all(updatePromises);
+      
+      // Update local data
+      inactiveDevices.forEach(device => device.isActive = false);
+      
+      renderUsersDeviceTable();
+      updateUsersDeviceStatistics();
+      
+      showMessage(`✅ Deactivated ${inactiveDevices.length} inactive devices`, 'success');
+      
+      // Log activity
+      await addDoc(collection(db, 'activities'), {
+        action: `Bulk deactivation: ${inactiveDevices.length} inactive devices (30+ days)`,
+        username: currentUser.username,
+        timestamp: serverTimestamp(),
+        page: 'device-management'
+      });
+    }
+    
+    // Remove Old Devices (90+ days)
+    async function removeOldDevices() {
+      const ninetyDaysAgo = new Date();
+      ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+      
+      const oldDevices = allDevices.filter(device => {
+        const lastUsed = device.lastUsed ? new Date(device.lastUsed) : new Date(device.registeredAt);
+        return lastUsed < ninetyDaysAgo;
+      });
+      
+      if (oldDevices.length === 0) {
+        showMessage('ℹ️ No old devices found (90+ days)', 'info');
+        return;
+      }
+      
+      if (!confirm(`Found ${oldDevices.length} devices not used for 90+ days.\n\nPERMANENTLY DELETE these devices?\n\nThis action cannot be undone.`)) {
+        return;
+      }
+      
+      showMessage(`🔄 Removing ${oldDevices.length} old devices...`, 'info');
+      
+      const deletePromises = oldDevices.map(device => deleteDoc(doc(db, 'userDevices', device.id)));
+      await Promise.all(deletePromises);
+      
+      // Remove from local arrays
+      oldDevices.forEach(device => {
+        const index = allDevices.findIndex(d => d.id === device.id);
+        if (index > -1) {
+          allDevices.splice(index, 1);
+        }
+      });
+      
+      // Update user device counts
+      const affectedUsernames = [...new Set(oldDevices.map(d => d.username))];
+      affectedUsernames.forEach(username => {
+        const user = allUsersWithDevices.find(u => u.username === username);
+        if (user) {
+          const removedCount = oldDevices.filter(d => d.username === username).length;
+          user.deviceCount = Math.max(0, user.deviceCount - removedCount);
+          user.isOverLimit = user.deviceCount > (user.deviceLimit || 1);
+        }
+      });
+      
+      renderUsersDeviceTable();
+      updateUsersDeviceStatistics();
+      
+      showMessage(`✅ Removed ${oldDevices.length} old devices`, 'success');
+      
+      // Log activity
+      await addDoc(collection(db, 'activities'), {
+        action: `Bulk removal: ${oldDevices.length} old devices (90+ days)`,
+        username: currentUser.username,
+        timestamp: serverTimestamp(),
+        page: 'device-management'
+      });
+    }
+    
+    // Bulk Reset User Devices
+    async function bulkResetUserDevices() {
+      const username = document.getElementById('bulkDeviceUser').value;
+      
+      if (!username) {
+        showMessage('❌ Please select a user', 'error');
+        return;
+      }
+      
+      await resetUserDevices(username);
+    }
+    
+    // Generate Device Audit Report
+    async function generateDeviceAuditReport() {
+      showMessage('🔄 Generating device audit report...', 'info');
+      
+      // Collect statistics
+      const totalDevices = allDevices.length;
+      const activeDevices = allDevices.filter(d => d.isActive).length;
+      const inactiveDevices = totalDevices - activeDevices;
+      const usersWithDevices = allUsersWithDevices.filter(u => u.deviceCount > 0).length;
+      const usersOverLimit = allUsersWithDevices.filter(u => u.isOverLimit).length;
+      
+      // Device types breakdown
+      const deviceTypes = {};
+      allDevices.forEach(device => {
+        const type = device.deviceType || 'Unknown';
+        deviceTypes[type] = (deviceTypes[type] || 0) + 1;
+      });
+      
+      // Browser breakdown
+      const browsers = {};
+      allDevices.forEach(device => {
+        const browser = device.browser || 'Unknown';
+        browsers[browser] = (browsers[browser] || 0) + 1;
+      });
+      
+      // Generate report
+      const report = `
+📊 DEVICE AUDIT REPORT
+Generated: ${new Date().toLocaleString()}
+Admin: ${currentUser.fullName || currentUser.username}
+
+═══════════════════════════════════════
+
+📈 DEVICE STATISTICS:
+• Total Devices: ${totalDevices}
+• Active Devices: ${activeDevices}
+• Inactive Devices: ${inactiveDevices}
+
+👥 USER STATISTICS:
+• Total Users: ${allUsersWithDevices.length}
+• Users with Devices: ${usersWithDevices}
+• Users Over Limit: ${usersOverLimit}
+
+📱 DEVICE TYPES:
+${Object.entries(deviceTypes).map(([type, count]) => `• ${type}: ${count}`).join('\n')}
+
+🌐 BROWSERS:
+${Object.entries(browsers).map(([browser, count]) => `• ${browser}: ${count}`).join('\n')}
+
+⚠️ USERS OVER DEVICE LIMIT:
+${allUsersWithDevices.filter(u => u.isOverLimit).map(user => 
+  `• ${user.username}: ${user.deviceCount}/${user.deviceLimit || 1} devices`
+).join('\n') || 'None'}
+
+📵 USERS WITHOUT DEVICES:
+${allUsersWithDevices.filter(u => u.deviceCount === 0).map(u => `• ${u.username}`).join('\n') || 'None'}
+
+═══════════════════════════════════════
+Report End
+      `;
+      
+      // Show report in modal
+      const reportWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes');
+      reportWindow.document.write(`
+        <html>
+          <head>
+            <title>Device Audit Report - ${new Date().toDateString()}</title>
+            <style>
+              body { font-family: 'Courier New', monospace; padding: 20px; background: #f5f5f5; }
+              .report { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); white-space: pre-wrap; }
+              .print-btn { margin-bottom: 20px; padding: 10px 20px; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; }
+              .print-btn:hover { background: #1976D2; }
+            </style>
+          </head>
+          <body>
+            <button class="print-btn" onclick="window.print()">🖨️ Print Report</button>
+            <div class="report">${report.replace(/\n/g, '<br>')}</div>
+          </body>
+        </html>
+      `);
+      
+      showMessage('✅ Device audit report generated', 'success');
+      
+      // Log activity
+      await addDoc(collection(db, 'activities'), {
+        action: `Device audit report generated (${totalDevices} devices, ${usersWithDevices} users)`,
+        username: currentUser.username,
+        timestamp: serverTimestamp(),
+        page: 'device-management'
+      });
+    }
+    
+    // Modal Functions
+    function closeDeviceModal() {
+      document.getElementById('deviceModal').classList.remove('show');
+    }
+    
+    function closeDeviceRequestsModal() {
+      document.getElementById('deviceRequestsModal').classList.remove('show');
+    }
+    
+    function closeBulkDeviceModal() {
+      document.getElementById('bulkDeviceModal').classList.remove('show');
+    }
+    
+    // Helper Functions
+    function formatDateTime(date) {
+      if (!date) return 'Unknown';
+      if (typeof date === 'string') date = new Date(date);
+      
+      const now = new Date();
+      const diff = now - date;
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      
+      if (days === 0) {
+        return 'Today ' + date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+      } else if (days === 1) {
+        return 'Yesterday ' + date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+      } else if (days < 7) {
+        return `${days} days ago`;
+      } else {
+        return date.toLocaleDateString('en-GB') + ' ' + date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+      }
+    }
+    
+    // Event Listeners for Device Management
+    document.addEventListener('DOMContentLoaded', function() {
+      // Search and filter events
+      const deviceSearch = document.getElementById('deviceSearch');
+      const deviceFilter = document.getElementById('deviceFilter');
+      const deviceTypeFilter = document.getElementById('deviceTypeFilter');
+      
+      if (deviceSearch) {
+        deviceSearch.addEventListener('input', () => {
+          setTimeout(renderDevicesTable, 300); // Debounce
+        });
+      }
+      
+      if (deviceFilter) {
+        deviceFilter.addEventListener('change', renderDevicesTable);
+      }
+      
+      if (deviceTypeFilter) {
+        deviceTypeFilter.addEventListener('change', renderDevicesTable);
+      }
+      
+      // Bulk device action select handler
+      const bulkActionSelect = document.getElementById('bulkDeviceAction');
+      if (bulkActionSelect) {
+        bulkActionSelect.addEventListener('change', function() {
+          const userSelectGroup = document.getElementById('userSelectGroup');
+          if (this.value === 'reset_user_devices') {
+            userSelectGroup.style.display = 'block';
+          } else {
+            userSelectGroup.style.display = 'none';
+          }
+        });
+      }
+    });
+    
+    // Make device management functions globally available
+    window.showDeviceManagement = showDeviceManagement;
+    window.loadDeviceData = loadDeviceData;
+    window.viewDeviceDetails = viewDeviceDetails;
+    window.toggleDeviceStatus = toggleDeviceStatus;
+    window.removeDevice = removeDevice;
+    window.showDeviceRequests = showDeviceRequests;
+    window.approveDeviceRequest = approveDeviceRequest;
+    window.rejectDeviceRequest = rejectDeviceRequest;
+    window.showBulkDeviceActions = showBulkDeviceActions;
+    window.executeBulkDeviceAction = executeBulkDeviceAction;
+    window.closeDeviceModal = closeDeviceModal;
+    window.closeDeviceRequestsModal = closeDeviceRequestsModal;
+    window.closeBulkDeviceModal = closeBulkDeviceModal;
+    window.approveAllDeviceRequests = approveAllDeviceRequests;
+    window.rejectAllDeviceRequests = rejectAllDeviceRequests;
+    
+    // ========================================
+    // USER-CENTRIC DEVICE MANAGEMENT FUNCTIONS
+    // ========================================
+    
+    // Show User Devices Modal
+    async function showUserDevicesModal(username) {
+      try {
+        const user = allUsersWithDevices.find(u => u.username === username);
+        if (!user) {
+          showMessage('❌ User not found', 'error');
+          return;
+        }
+        
+        // Get user's devices
+        const userDevices = allDevices.filter(d => d.username === username);
+        
+        if (userDevices.length === 0) {
+          showMessage('ℹ️ User has no registered devices', 'info');
+          return;
+        }
+        
+        const devicesHTML = `
+          <div style="max-height: 500px; overflow-y: auto;">
+            <div style="margin-bottom: 20px; padding: 15px; background: rgba(33,150,243,0.1); border-radius: 8px; border: 1px solid rgba(33,150,243,0.3);">
+              <h4 style="color: #2196F3; margin-bottom: 10px;">👤 User Information</h4>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 14px;">
+                <div><strong>Full Name:</strong> ${user.fullName || 'N/A'}</div>
+                <div><strong>Username:</strong> ${user.username}</div>
+                <div><strong>Email:</strong> ${user.username}@knpc.com</div>
+                <div><strong>Role:</strong> ${user.role || 'operator'}</div>
+                <div><strong>Device Limit:</strong> ${user.deviceLimit || 1}</div>
+                <div><strong>Devices Count:</strong> ${userDevices.length}</div>
+              </div>
+            </div>
+            
+            <h4 style="color: #4CAF50; margin-bottom: 15px;">📱 Registered Devices (${userDevices.length})</h4>
+            
+            ${userDevices.map(device => `
+              <div style="margin-bottom: 15px; padding: 15px; background: rgba(76,175,80,0.1); border-radius: 8px; border: 1px solid rgba(76,175,80,0.3);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                  <div>
+                    <div style="font-weight: bold; color: #4CAF50; font-size: 16px;">${device.deviceName || 'Unknown Device'}</div>
+                    <div style="font-size: 12px; color: #666; margin-top: 2px;">
+                      <span style="background: rgba(255,152,0,0.2); color: #FF9800; padding: 2px 6px; border-radius: 4px;">
+                        ${device.deviceType || 'Unknown Type'}
+                      </span>
+                      <span style="margin-left: 10px; background: rgba(33,150,243,0.2); color: #2196F3; padding: 2px 6px; border-radius: 4px;">
+                        ID: ${device.deviceId ? device.deviceId.substring(0, 8) + '...' : 'Unknown'}
+                      </span>
+                    </div>
+                  </div>
+                  <div style="text-align: right;">
+                    <span class="status-badge ${device.isActive ? 'badge-active' : 'badge-inactive'}" style="font-size: 12px;">
+                      ${device.isActive ? '✅ Active' : '❌ Inactive'}
+                    </span>
+                  </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 13px; margin-bottom: 10px;">
+                  <div><strong>Browser:</strong> ${device.browser || 'Unknown'}</div>
+                  <div><strong>OS:</strong> ${device.os || 'Unknown'}</div>
+                  <div><strong>Screen:</strong> ${device.screenResolution || 'Unknown'}</div>
+                  <div><strong>Last IP:</strong> ${device.lastIP || 'Unknown'}</div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 12px; color: #666;">
+                  <div><strong>Registered:</strong> ${device.registeredAt ? formatDateTime(device.registeredAt) : 'Unknown'}</div>
+                  <div><strong>Last Used:</strong> ${device.lastUsed ? formatDateTime(device.lastUsed) : 'Never'}</div>
+                </div>
+                
+                <div style="margin-top: 10px; display: flex; gap: 8px;">
+                  <button class="btn" onclick="toggleDeviceStatus('${device.id}')" 
+                          style="font-size: 11px; padding: 4px 8px; background: ${device.isActive ? '#FF9800' : '#4CAF50'}; color: white; border: none; border-radius: 4px;">
+                    ${device.isActive ? '⏸️ Disable' : '▶️ Enable'}
+                  </button>
+                  <button class="btn" onclick="removeDevice('${device.id}')" 
+                          style="font-size: 11px; padding: 4px 8px; background: #f44336; color: white; border: none; border-radius: 4px;">
+                    🗑️ Remove
+                  </button>
+                  <button class="btn" onclick="viewDeviceDetails('${device.id}')" 
+                          style="font-size: 11px; padding: 4px 8px; background: #2196F3; color: white; border: none; border-radius: 4px;">
+                    👁️ Details
+                  </button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+          
+          <div style="display: flex; gap: 15px; justify-content: center; margin-top: 25px;">
+            <button class="btn btn-warning" onclick="resetUserDevices('${username}'); closeUserDevicesModal();">
+              🔄 Reset All Devices
+            </button>
+            ${userDevices.length > user.deviceLimit ? `
+              <button class="btn btn-danger" onclick="removeExtraDevices('${username}'); closeUserDevicesModal();">
+                ✂️ Remove Extra Devices
+              </button>
+            ` : ''}
+            <button class="btn btn-secondary" onclick="closeUserDevicesModal()">Close</button>
+          </div>
+        `;
+        
+        document.getElementById('userDevicesModalTitle').textContent = `👤 ${user.fullName || user.username} - Device Management`;
+        document.getElementById('userDevicesModalContent').innerHTML = devicesHTML;
+        document.getElementById('userDevicesModal').classList.add('show');
+        
+      } catch (error) {
+        console.error('Error showing user devices modal:', error);
+        showMessage('❌ Error loading user devices', 'error');
+      }
+    }
+    
+    // Close User Devices Modal
+    function closeUserDevicesModal() {
+      document.getElementById('userDevicesModal').classList.remove('show');
+    }
+    
+    // Edit User Device Limit
+    function editUserDeviceLimit(username, currentLimit) {
+      const newLimit = prompt(`Enter new device limit for user "${username}":\n\nCurrent limit: ${currentLimit}`, currentLimit);
+      
+      if (newLimit === null) return; // User cancelled
+      
+      const limit = parseInt(newLimit);
+      if (isNaN(limit) || limit < 1 || limit > 10) {
+        showMessage('❌ Device limit must be between 1 and 10', 'error');
+        return;
+      }
+      
+      updateUserDeviceLimit(username, limit);
+    }
+    
+    // Update User Device Limit
+    async function updateUserDeviceLimit(username, newLimit) {
+      try {
+        showMessage('🔄 Updating device limit...', 'info');
+        
+        // Update in Firebase
+        await updateDoc(doc(db, 'users', username), {
+          deviceLimit: newLimit,
+          lastModified: serverTimestamp(),
+          modifiedBy: currentUser.username
+        });
+        
+        // Update local data
+        const user = allUsersWithDevices.find(u => u.username === username);
+        if (user) {
+          user.deviceLimit = newLimit;
+          user.isOverLimit = user.deviceCount > newLimit;
+        }
+        
+        renderUsersDeviceTable();
+        updateUsersDeviceStatistics();
+        
+        showMessage(`✅ Device limit updated to ${newLimit} for user ${username}`, 'success');
+        
+        // Log activity
+        await addDoc(collection(db, 'activities'), {
+          action: `Device limit updated: ${username} limit set to ${newLimit}`,
+          username: currentUser.username,
+          timestamp: serverTimestamp(),
+          page: 'device-management'
+        });
+        
+      } catch (error) {
+        console.error('Error updating device limit:', error);
+        showMessage(`❌ Failed to update device limit: ${error.message}`, 'error');
+      }
+    }
+    
+    // Reset User Devices
+    async function resetUserDevices(username) {
+      if (!confirm(`Are you sure you want to reset ALL devices for user "${username}"?\n\nThis will remove all their registered devices and they will need to register again.\n\nThis action cannot be undone.`)) {
+        return;
+      }
+      
+      try {
+        showMessage('🔄 Resetting user devices...', 'info');
+        
+        // Get user's devices
+        const userDevices = allDevices.filter(d => d.username === username);
+        
+        if (userDevices.length === 0) {
+          showMessage('ℹ️ User has no devices to reset', 'info');
+          return;
+        }
+        
+        // Delete all user devices from Firebase
+        const deletePromises = userDevices.map(device => deleteDoc(doc(db, 'userDevices', device.id)));
+        await Promise.all(deletePromises);
+        
+        // Remove from local arrays
+        userDevices.forEach(device => {
+          const index = allDevices.findIndex(d => d.id === device.id);
+          if (index > -1) {
+            allDevices.splice(index, 1);
+          }
+        });
+        
+        // Update user data
+        const user = allUsersWithDevices.find(u => u.username === username);
+        if (user) {
+          user.deviceCount = 0;
+          user.isOverLimit = false;
+          user.lastDeviceUsed = null;
+        }
+        
+        renderUsersDeviceTable();
+        updateUsersDeviceStatistics();
+        
+        showMessage(`✅ Reset ${userDevices.length} devices for user ${username}`, 'success');
+        
+        // Log activity
+        await addDoc(collection(db, 'activities'), {
+          action: `User devices reset: ${username} (${userDevices.length} devices removed)`,
+          username: currentUser.username,
+          timestamp: serverTimestamp(),
+          page: 'device-management'
+        });
+        
+      } catch (error) {
+        console.error('Error resetting user devices:', error);
+        showMessage(`❌ Failed to reset devices: ${error.message}`, 'error');
+      }
+    }
+    
+    // Remove Extra Devices
+    async function removeExtraDevices(username) {
+      const user = allUsersWithDevices.find(u => u.username === username);
+      if (!user || !user.isOverLimit) {
+        showMessage('❌ User is not over device limit', 'error');
+        return;
+      }
+      
+      const extraCount = user.deviceCount - user.deviceLimit;
+      
+      if (!confirm(`User "${username}" has ${user.deviceCount} devices but limit is ${user.deviceLimit}.\n\nThis will remove the ${extraCount} oldest devices.\n\nContinue?`)) {
+        return;
+      }
+      
+      try {
+        showMessage('🔄 Removing extra devices...', 'info');
+        
+        // Get user's devices sorted by last used (oldest first)
+        const userDevices = allDevices
+          .filter(d => d.username === username)
+          .sort((a, b) => {
+            const aTime = a.lastUsed || a.registeredAt || 0;
+            const bTime = b.lastUsed || b.registeredAt || 0;
+            return aTime - bTime; // oldest first
+          });
+        
+        // Get devices to remove (oldest ones)
+        const devicesToRemove = userDevices.slice(0, extraCount);
+        
+        // Delete devices from Firebase
+        const deletePromises = devicesToRemove.map(device => deleteDoc(doc(db, 'userDevices', device.id)));
+        await Promise.all(deletePromises);
+        
+        // Remove from local arrays
+        devicesToRemove.forEach(device => {
+          const index = allDevices.findIndex(d => d.id === device.id);
+          if (index > -1) {
+            allDevices.splice(index, 1);
+          }
+        });
+        
+        // Update user data
+        user.deviceCount = user.deviceLimit;
+        user.isOverLimit = false;
+        
+        renderUsersDeviceTable();
+        updateUsersDeviceStatistics();
+        
+        showMessage(`✅ Removed ${devicesToRemove.length} extra devices for user ${username}`, 'success');
+        
+        // Log activity
+        await addDoc(collection(db, 'activities'), {
+          action: `Extra devices removed: ${username} (${devicesToRemove.length} devices removed)`,
+          username: currentUser.username,
+          timestamp: serverTimestamp(),
+          page: 'device-management'
+        });
+        
+      } catch (error) {
+        console.error('Error removing extra devices:', error);
+        showMessage(`❌ Failed to remove extra devices: ${error.message}`, 'error');
+      }
+    }
+    
+    // Show Device Limits Configuration Modal
+    function showDeviceLimitsConfig() {
+      document.getElementById('deviceLimitsModal').classList.add('show');
+    }
+    
+    // Close Device Limits Configuration Modal
+    function closeDeviceLimitsModal() {
+      document.getElementById('deviceLimitsModal').classList.remove('show');
+    }
+    
+    // Save Device Limits Configuration
+    async function saveDeviceLimitsConfig() {
+      try {
+        const defaultLimit = parseInt(document.getElementById('defaultDeviceLimit').value);
+        const bulkAction = document.getElementById('bulkLimitAction').value;
+        
+        if (isNaN(defaultLimit) || defaultLimit < 1 || defaultLimit > 10) {
+          showMessage('❌ Default device limit must be between 1 and 10', 'error');
+          return;
+        }
+        
+        showMessage('🔄 Updating device limits configuration...', 'info');
+        
+        // Update global settings
+        await updateDoc(doc(db, 'settings', 'global'), {
+          defaultDeviceLimit: defaultLimit,
+          lastModified: serverTimestamp(),
+          modifiedBy: currentUser.username
+        });
+        
+        // Handle bulk actions
+        if (bulkAction) {
+          const updatePromises = [];
+          let targetLimit = defaultLimit;
+          
+          switch(bulkAction) {
+            case 'set_all_1': targetLimit = 1; break;
+            case 'set_all_2': targetLimit = 2; break;
+            case 'set_all_3': targetLimit = 3; break;
+            case 'reset_defaults': targetLimit = defaultLimit; break;
+          }
+          
+          // Update all users
+          allUsersWithDevices.forEach(user => {
+            updatePromises.push(updateDoc(doc(db, 'users', user.username), {
+              deviceLimit: targetLimit,
+              lastModified: serverTimestamp(),
+              modifiedBy: currentUser.username
+            }));
+            
+            // Update local data
+            user.deviceLimit = targetLimit;
+            user.isOverLimit = user.deviceCount > targetLimit;
+          });
+          
+          await Promise.all(updatePromises);
+          
+          renderUsersDeviceTable();
+          updateUsersDeviceStatistics();
+          
+          showMessage(`✅ Updated device limits for ${allUsersWithDevices.length} users to ${targetLimit}`, 'success');
+          
+          // Log activity
+          await addDoc(collection(db, 'activities'), {
+            action: `Bulk device limit update: ${bulkAction} (${targetLimit} devices)`,
+            username: currentUser.username,
+            timestamp: serverTimestamp(),
+            page: 'device-management'
+          });
+        } else {
+          showMessage(`✅ Default device limit updated to ${defaultLimit}`, 'success');
+        }
+        
+        closeDeviceLimitsModal();
+        
+      } catch (error) {
+        console.error('Error saving device limits configuration:', error);
+        showMessage(`❌ Failed to save configuration: ${error.message}`, 'error');
+      }
+    }
+    
+    // Make user device management functions globally available
+    window.showUserDevicesModal = showUserDevicesModal;
+    window.closeUserDevicesModal = closeUserDevicesModal;
+    window.editUserDeviceLimit = editUserDeviceLimit;
+    window.updateUserDeviceLimit = updateUserDeviceLimit;
+    window.resetUserDevices = resetUserDevices;
+    window.removeExtraDevices = removeExtraDevices;
+    window.showDeviceLimitsConfig = showDeviceLimitsConfig;
+    window.closeDeviceLimitsModal = closeDeviceLimitsModal;
+    window.saveDeviceLimitsConfig = saveDeviceLimitsConfig;
+    
+    // ========================================
+    // END DEVICE MANAGEMENT SYSTEM
+    // ========================================
+
     // Make pagination functions globally available
     window.goToPage = goToPage;
     window.goToPreviousPage = goToPreviousPage; 
