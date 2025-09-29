@@ -17,7 +17,7 @@
   
   <!-- Firebase v9 SDK -->
   <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
     import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, limit, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
     
     // Firebase configuration
@@ -30,9 +30,17 @@
       appId: "1:678793823159:web:7a7b1398aefdb7f24462b9"
     };
     
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    // ✅ PREVENT DUPLICATE APP INITIALIZATION
+    let app, db;
+    const existingApps = getApps();
+    if (existingApps.length === 0) {
+        app = initializeApp(firebaseConfig);
+        console.log('🔥 Firebase initialized for PLCR Calculator!');
+    } else {
+        app = getApp();
+        console.log('🔄 Using existing Firebase app for PLCR Calculator');
+    }
+    db = getFirestore(app);
     
     // Make Firebase functions globally available
     window.db = db;
