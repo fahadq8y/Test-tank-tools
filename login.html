@@ -37,6 +37,11 @@
     <div class="logo">🛠️ Tank Tools</div>
     <div class="subtitle">Kuwait National Petroleum Company</div>
     <div class="firebase-status">🔥 Firebase Cloud Database - Real-time & Secure</div>
+    <div class="device-info-container" style="text-align: center; margin: 10px 0;">
+      <button onclick="showDeviceInfo()" class="btn" style="background: rgba(33,150,243,0.2); color: #2196F3; font-size: 12px; padding: 8px 16px; margin: 5px;">
+        📱 View Device Info
+      </button>
+    </div>
     
     <div id="mainContainer">
       <div class="tab-container">
@@ -123,6 +128,9 @@
     <div class="footer"><strong>🔥 Firebase Powered</strong><br>By <a href="#" class="whatsapp-link" onclick="openWhatsApp(); return false;">Fahad - 17877</a> | Version v5 Fixed<br><small>Real-time cloud database</small></div>
   </div>
 
+  <!-- Device Fingerprinting System - Simple & Reliable -->
+  <script src="device-fingerprint-simple.js"></script>
+  
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
@@ -358,7 +366,7 @@
 
     const WHATSAPP_ADMIN = "96555222550";
 
-    // Enhanced login function with Firebase
+    // Enhanced login function with Firebase and Device Fingerprinting
     async function handleLogin(event) {
       event.preventDefault();
       showMessage("", "");
@@ -376,6 +384,76 @@
         showMessage('❌ Please enter username and password', 'error');
         showLoading("loginBtn", "loginLoading", false);
         return;
+      }
+      
+      try {
+        // Step 1: Generate device fingerprint
+        console.log('🔍 Generating device fingerprint...');
+        showMessage('🔍 Checking device security...', 'info');
+        
+        const deviceInfo = await generateDeviceFingerprint();
+        const deviceId = deviceInfo.fingerprint;
+        console.log('📱 Device ID:', deviceId);
+        console.log('📱 Device Type:', deviceInfo.readableInfo.deviceType);
+        
+        // Step 2: Check device authorization for this user
+        let deviceAllowed;
+        try {
+          deviceAllowed = await checkDeviceAuthorization(username, deviceId, deviceInfo);
+        } catch (authError) {
+          console.error('❌ Device authorization check failed:', authError);
+          showMessage('❌ Unable to verify device. Please check your internet connection and try again.', 'error');
+          showLoading("loginBtn", "loginLoading", false);
+          return;
+        }
+        
+        if (!deviceAllowed.allowed) {
+          showMessage(`🚫 ${deviceAllowed.message}`, 'error');
+          showLoading("loginBtn", "loginLoading", false);
+          
+          // Log unauthorized device access attempt
+          try {
+            await addDoc(collection(db, 'activities'), {
+              action: `Unauthorized device access attempt: ${username} from device ${deviceId.slice(0, 20)}...`,
+              username: username,
+              timestamp: serverTimestamp(),
+              ip: await getUserIP(),
+              userAgent: navigator.userAgent.substring(0, 100),
+              page: 'login',
+              deviceInfo: deviceInfo.readableInfo
+            });
+          } catch (logError) {
+            console.error('Error logging unauthorized attempt:', logError);
+          }
+          
+          return;
+        }
+        
+        if (deviceAllowed.isNewDevice) {
+          showMessage('📱 New device registered successfully!', 'success');
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        } else {
+          showMessage('✅ Device recognized. Welcome back!', 'success');
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+        
+        showMessage('🔐 Device authorized. Logging in...', 'success');
+        
+      } catch (deviceError) {
+        console.error('❌ Device fingerprint error:', deviceError);
+        showMessage('❌ Device security check failed. Please try again or contact admin.', 'error');
+        showLoading("loginBtn", "loginLoading", false);
+        
+        // For admin account, allow complete bypass
+        if (username === 'fam030') {
+          console.log('⚠️ Admin access: Bypassing device check completely');
+          showMessage('🔓 Admin access: Device security bypassed', 'warning');
+          // Skip device check entirely for admin
+        } else {
+          // For regular users, require device check
+          showMessage('🔒 Device verification required. Please try again.', 'error');
+          return; // Stop login process
+        }
       }
       
       try {
@@ -561,6 +639,35 @@
         // Save user to Firebase
         await setDoc(userDocRef, userData);
         
+        // Register user's first device during registration
+        try {
+          console.log('📱 Registering device during user registration...');
+          const deviceInfo = await generateDeviceFingerprint();
+          
+          const deviceData = {
+            username: username,
+            deviceId: deviceInfo.fingerprint,
+            deviceName: deviceInfo.readableInfo.deviceName,
+            deviceType: deviceInfo.readableInfo.deviceType,
+            browser: deviceInfo.readableInfo.browser,
+            os: deviceInfo.readableInfo.os,
+            screenResolution: deviceInfo.readableInfo.screenResolution,
+            registeredAt: serverTimestamp(),
+            lastUsed: serverTimestamp(),
+            isActive: true,
+            lastIP: await getUserIP(),
+            fullDeviceInfo: deviceInfo,
+            registeredDuringSignup: true
+          };
+          
+          await addDoc(collection(db, 'userDevices'), deviceData);
+          console.log('✅ Device registered during signup');
+          
+        } catch (deviceError) {
+          console.error('⚠️ Device registration during signup failed:', deviceError);
+          // Don't fail registration if device registration fails
+        }
+        
         // Add registration activity
         await addActivity('user_registered', username);
         
@@ -634,6 +741,216 @@
         console.log('✅ Activity logged:', detailedAction);
       } catch (error) {
         console.error('❌ Error logging activity:', error);
+      }
+    }
+
+    // Device Authorization System - Enhanced Error Handling
+    async function checkDeviceAuthorization(username, deviceId, deviceInfo) {
+      console.log('🔍 Checking device authorization for:', username, deviceId?.substring(0, 20) + '...');
+      
+      // التأكد من وجود المعاملات المطلوبة
+      if (!username || !deviceId || !deviceInfo) {
+        console.error('❌ Missing required parameters for device authorization');
+        return { 
+          allowed: false, 
+          isNewDevice: false, 
+          message: 'Missing device information. Please try again.' 
+        };
+      }
+      
+      try {
+        
+        // Check user's registered devices with timeout
+        console.log('📊 Querying user devices from Firebase...');
+        
+        const userDevicesQuery = query(
+          collection(db, 'userDevices'), 
+          where('username', '==', username)
+        );
+        
+        // إضافة timeout للاستعلام
+        const deviceDocs = await Promise.race([
+          getDocs(userDevicesQuery),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Database query timeout')), 10000)
+          )
+        ]);
+        const userDevices = [];
+        
+        deviceDocs.forEach(doc => {
+          userDevices.push({ id: doc.id, ...doc.data() });
+        });
+        
+        console.log('📱 User devices found:', userDevices.length);
+        
+        // Debug: طباعة معلومات الأجهزة للمقارنة
+        if (userDevices.length > 0) {
+          console.log('🔍 Debug - Current device ID:', deviceId?.substring(0, 30) + '...');
+          userDevices.forEach((device, index) => {
+            console.log(`🔍 Debug - Saved device ${index + 1}:`, {
+              id: device.deviceId?.substring(0, 30) + '...',
+              name: device.deviceName,
+              type: device.deviceType,
+              registered: device.registeredAt
+            });
+          });
+        }
+        
+        // Check if current device is already registered
+        const existingDevice = userDevices.find(device => device.deviceId === deviceId);
+        
+        if (existingDevice) {
+          console.log('✅ Device already registered:', existingDevice.deviceName);
+          
+          // Update last used time
+          try {
+            await updateDoc(doc(db, 'userDevices', existingDevice.id), {
+              lastUsed: serverTimestamp(),
+              lastIP: await getUserIP()
+            });
+          } catch (updateError) {
+            console.warn('⚠️ Could not update device last used time:', updateError);
+            // Don't fail login for this
+          }
+          
+          return { 
+            allowed: true, 
+            isNewDevice: false, 
+            message: 'Device already registered and authorized' 
+          };
+        }
+        
+        // اختبار مطابقة fingerprint بطريقة أكثر مرونة
+        const similarDevice = userDevices.find(device => {
+          // المطابقة بناءً على أجزاء من fingerprint أو device info
+          if (!device.fullDeviceInfo || !deviceInfo) return false;
+          
+          const savedInfo = device.fullDeviceInfo.readableInfo || device.fullDeviceInfo.readable || {};
+          const currentInfo = deviceInfo.readableInfo || deviceInfo.readable || {};
+          
+          // مقارنة الشاشة والمتصفح
+          const screenMatch = savedInfo.screenResolution === currentInfo.screenResolution;
+          const browserMatch = savedInfo.browser === currentInfo.browser;
+          const osMatch = savedInfo.os === currentInfo.os;
+          
+          // إذا تطابقت معايير كافية، اعتبر نفس الجهاز
+          return screenMatch && browserMatch && osMatch;
+        });
+        
+        if (similarDevice) {
+          console.log('✅ Device recognized by characteristics (updating fingerprint)');
+          
+          // تحديث fingerprint للجهاز المتشابه
+          try {
+            await updateDoc(doc(db, 'userDevices', similarDevice.id), {
+              deviceId: deviceId,  // تحديث fingerprint الجديد
+              fullDeviceInfo: deviceInfo,
+              lastUsed: serverTimestamp(),
+              lastIP: await getUserIP(),
+              fingerprintUpdated: serverTimestamp()
+            });
+            
+            console.log('🔄 Device fingerprint updated successfully');
+          } catch (updateError) {
+            console.warn('⚠️ Could not update device fingerprint:', updateError);
+          }
+          
+          return { 
+            allowed: true, 
+            isNewDevice: false, 
+            message: 'Device recognized and fingerprint updated' 
+          };
+        }
+        
+        // Check if user has reached device limit (1 device per user)
+        const activeDevices = userDevices.filter(device => device.isActive);
+        
+        if (activeDevices.length >= 1) {
+          // User has reached limit, need admin approval for new device
+          console.log('🚫 Device limit reached');
+          
+          // Log the attempt for admin review
+          await addDoc(collection(db, 'deviceRequests'), {
+            username: username,
+            requestedDeviceId: deviceId,
+            deviceInfo: deviceInfo.readableInfo,
+            timestamp: serverTimestamp(),
+            status: 'pending',
+            requestIP: await getUserIP(),
+            existingDevices: activeDevices.map(d => ({
+              name: d.deviceName,
+              registeredOn: d.registeredAt
+            }))
+          });
+          
+          return { 
+            allowed: false, 
+            isNewDevice: true, 
+            message: 'Device limit reached: Only 1 device allowed per user. This device is not authorized. Contact admin for approval: +965 55222550' 
+          };
+        }
+        
+        // Register new device (user's first device)
+        const newDeviceData = {
+          username: username,
+          deviceId: deviceId,
+          deviceName: deviceInfo.readableInfo.deviceName,
+          deviceType: deviceInfo.readableInfo.deviceType,
+          browser: deviceInfo.readableInfo.browser,
+          os: deviceInfo.readableInfo.os,
+          screenResolution: deviceInfo.readableInfo.screenResolution,
+          registeredAt: serverTimestamp(),
+          lastUsed: serverTimestamp(),
+          isActive: true,
+          lastIP: await getUserIP(),
+          fullDeviceInfo: deviceInfo
+        };
+        
+        await addDoc(collection(db, 'userDevices'), newDeviceData);
+        
+        console.log('✅ New device registered successfully');
+        return { 
+          allowed: true, 
+          isNewDevice: true, 
+          message: 'New device registered successfully' 
+        };
+        
+      } catch (error) {
+        console.error('❌ Device authorization error:', error);
+        
+        // Enhanced error handling
+        if (error.code === 'permission-denied') {
+          return { 
+            allowed: false, 
+            isNewDevice: false, 
+            message: 'Database access denied. Please contact admin.' 
+          };
+        } else if (error.code === 'unavailable') {
+          return { 
+            allowed: false, 
+            isNewDevice: false, 
+            message: 'Database temporarily unavailable. Please try again.' 
+          };
+        } else {
+          // For other errors, still block access
+          return { 
+            allowed: false, 
+            isNewDevice: false, 
+            message: `Device verification failed: ${error.message}` 
+          };
+        }
+      }
+    }
+    
+    // Helper function to get user IP
+    async function getUserIP() {
+      try {
+        const response = await fetch('https://api.ipify.org?format=json');
+        const data = await response.json();
+        return data.ip;
+      } catch (error) {
+        console.error('Error getting IP:', error);
+        return 'Unknown';
       }
     }
 
@@ -981,6 +1298,70 @@ Thank you.`;
     // Apply saved font size on page load
     applyFontSize();
 
+    // Device Info Display Function
+    async function showDeviceInfo() {
+      try {
+        showMessage('🔍 Analyzing your device...', 'info');
+        
+        const deviceInfo = await generateDeviceFingerprint();
+        const readableInfo = deviceInfo.readableInfo;
+        
+        const deviceInfoHTML = `
+          <div style="background: rgba(0,0,0,0.8); position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 10000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px);" onclick="this.remove()">
+            <div style="background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05)); border: 1px solid rgba(255,255,255,0.2); border-radius: 15px; padding: 25px; max-width: 400px; color: white; box-shadow: 0 8px 32px rgba(0,0,0,0.3); backdrop-filter: blur(10px);" onclick="event.stopPropagation()">
+              <h3 style="text-align: center; margin: 0 0 20px 0; color: #2196F3;">📱 Your Device Information</h3>
+              
+              <div style="margin: 10px 0;">
+                <strong>🏷️ Device Name:</strong><br>
+                <span style="color: #4CAF50;">${readableInfo.deviceName}</span>
+              </div>
+              
+              <div style="margin: 10px 0;">
+                <strong>📱 Device Type:</strong><br>
+                <span style="color: #FF9800;">${readableInfo.deviceType}</span>
+              </div>
+              
+              <div style="margin: 10px 0;">
+                <strong>🌐 Browser:</strong><br>
+                <span style="color: #9C27B0;">${readableInfo.browser}</span>
+              </div>
+              
+              <div style="margin: 10px 0;">
+                <strong>💻 Operating System:</strong><br>
+                <span style="color: #FF5722;">${readableInfo.os}</span>
+              </div>
+              
+              <div style="margin: 10px 0;">
+                <strong>📺 Screen:</strong><br>
+                <span style="color: #607D8B;">${readableInfo.screenResolution}</span>
+              </div>
+              
+              <div style="margin: 10px 0;">
+                <strong>🌍 Location:</strong><br>
+                <span style="color: #795548;">${readableInfo.timezone}</span>
+              </div>
+              
+              <div style="margin: 15px 0; padding: 10px; background: rgba(33,150,243,0.1); border-radius: 8px; border: 1px solid rgba(33,150,243,0.3);">
+                <small style="color: #2196F3;">
+                  🔐 This information is used for security purposes to ensure only your registered device can access the system.
+                </small>
+              </div>
+              
+              <button onclick="this.parentElement.parentElement.remove()" style="width: 100%; padding: 10px; background: linear-gradient(45deg, #4CAF50, #45a049); color: white; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px;">
+                ✅ Got it!
+              </button>
+            </div>
+          </div>
+        `;
+        
+        document.body.insertAdjacentHTML('beforeend', deviceInfoHTML);
+        
+      } catch (error) {
+        console.error('Error showing device info:', error);
+        showMessage('❌ Could not retrieve device information', 'error');
+      }
+    }
+
     // Make functions global
     window.handleLogin = handleLogin;
     window.handleRegister = handleRegister;
@@ -992,6 +1373,7 @@ Thank you.`;
     window.handleForgotPassword = handleForgotPassword;
     window.increaseFontSize = increaseFontSize;
     window.decreaseFontSize = decreaseFontSize;
+    window.showDeviceInfo = showDeviceInfo;
 
     // Initialize when page loads
     window.addEventListener('load', () => {

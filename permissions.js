@@ -5,22 +5,15 @@
  * Last Updated: 2025-09-27
  */
 
-// Global error handler to prevent app crashes
-window.addEventListener('error', (event) => {
-  console.error('Global error caught:', event.error);
-  if (event.error && event.error.message && event.error.message.includes('auth/network-request-failed')) {
-    console.warn('Firebase network error detected, continuing with local data...');
-    event.preventDefault();
-  }
-});
-
-window.addEventListener('unhandledrejection', (event) => {
-  console.error('Unhandled promise rejection:', event.reason);
-  if (event.reason && event.reason.message && event.reason.message.includes('auth/network-request-failed')) {
-    console.warn('Firebase promise rejection handled, continuing...');
-    event.preventDefault();
-  }
-});
+// تعريف السلم الوظيفي للعرض (منفصل عن التخصص)
+const JOB_TITLES = {
+  'section_head': { name: 'Section Head', nameAr: 'رئيس قسم' },
+  'planning': { name: 'Planning', nameAr: 'تخطيط' },
+  'supervisor': { name: 'Supervisor', nameAr: 'مشرف' },
+  'panel_operator': { name: 'Panel Operator', nameAr: 'مشغل لوحة تحكم' },
+  'senior': { name: 'Senior', nameAr: 'أقدم' },
+  'field_operator': { name: 'Field Operator', nameAr: 'مشغل ميداني' }
+};
 
 // تعريف التخصصات والصلاحيات الافتراضية
 const SPECIALIZATIONS = {
@@ -34,6 +27,12 @@ const SPECIALIZATIONS = {
       canAddToLiveTanks: false, // لا يقدر يضيف للـ Live Tanks
       canDeleteFromLiveTanks: false,
       canManageUsers: false
+    },
+    defaultButtonAccess: {
+      addToLiveTanks: {
+        index: false,  // زر مخفي في Index
+        plcr: false    // زر مخفي في PLCR  
+      }
     }
   },
   planning: {
@@ -46,6 +45,12 @@ const SPECIALIZATIONS = {
       canAddToLiveTanks: false, // لا يقدر يضيف للـ Live Tanks
       canDeleteFromLiveTanks: false,
       canManageUsers: false
+    },
+    defaultButtonAccess: {
+      addToLiveTanks: {
+        index: false,  // زر مخفي في Index
+        plcr: false    // زر مخفي في PLCR  
+      }
     }
   },
   control_panel: {
@@ -58,6 +63,12 @@ const SPECIALIZATIONS = {
       canAddToLiveTanks: true,  // يقدر يضيف للـ Live Tanks
       canDeleteFromLiveTanks: true,
       canManageUsers: false
+    },
+    defaultButtonAccess: {
+      addToLiveTanks: {
+        index: true,  // زر يظهر في Index
+        plcr: true    // زر يظهر في PLCR  
+      }
     }
   },
   field_operator: {
@@ -70,6 +81,31 @@ const SPECIALIZATIONS = {
       canAddToLiveTanks: false,
       canDeleteFromLiveTanks: false,
       canManageUsers: false
+    },
+    defaultButtonAccess: {
+      addToLiveTanks: {
+        index: false,  // زر مخفي في Index
+        plcr: false    // زر مخفي في PLCR  
+      }
+    }
+  },
+  // إضافة تخصص جديد للصلاحيات الافتراضية
+  default_user: {
+    name: 'Default User',
+    nameAr: 'مستخدم افتراضي',
+    defaultPages: ['index.html', 'plcr.html', 'dashboard.html'],
+    defaultPermissions: {
+      canViewLiveTanks: true,
+      canEditLiveTanks: false,  // قراءة فقط
+      canAddToLiveTanks: false, // لا يقدر يضيف
+      canDeleteFromLiveTanks: false,
+      canManageUsers: false
+    },
+    defaultButtonAccess: {
+      addToLiveTanks: {
+        index: false,  // زر مخفي افتراضياً
+        plcr: false    // زر مخفي افتراضياً  
+      }
     }
   },
   admin: {
@@ -82,6 +118,12 @@ const SPECIALIZATIONS = {
       canAddToLiveTanks: true,
       canDeleteFromLiveTanks: true,
       canManageUsers: true
+    },
+    defaultButtonAccess: {
+      addToLiveTanks: {
+        index: true,  // الأدمن يشوف كل شيء
+        plcr: true    // الأدمن يشوف كل شيء  
+      }
     }
   }
 };
@@ -656,5 +698,86 @@ window.redirectToLogin = redirectToLogin;
 window.showAccessDenied = showAccessDenied;
 window.hideAccessDenied = hideAccessDenied;
 window.hasPermission = hasPermission;
+
+// ✅ دالة التحكم في أزرار Add to Live Tanks
+async function checkAddToLiveTanksButtonAccess(pageName) {
+  console.log('checkAddToLiveTanksButtonAccess: Checking button access for page:', pageName);
+  
+  const currentUser = await getCurrentUser();
+  if (!currentUser) {
+    console.log('checkAddToLiveTanksButtonAccess: No user logged in, hiding button');
+    return false;
+  }
+
+  // للأدمن: يظهر الزر دائماً
+  if (currentUser.username === 'fam030' || currentUser.role === 'admin') {
+    console.log('checkAddToLiveTanksButtonAccess: Admin user, showing button');
+    return true;
+  }
+
+  // 1. فحص الصلاحيات المخصصة أولاً (أعلى أولوية)
+  if (currentUser.customButtonAccess && currentUser.customButtonAccess.addToLiveTanks) {
+    const buttonAccess = currentUser.customButtonAccess.addToLiveTanks;
+    const pageKey = pageName === 'index.html' ? 'index' : pageName === 'plcr.html' ? 'plcr' : null;
+    
+    if (pageKey && typeof buttonAccess[pageKey] === 'boolean') {
+      console.log('checkAddToLiveTanksButtonAccess: Using custom button access:', buttonAccess[pageKey]);
+      return buttonAccess[pageKey];
+    }
+  }
+
+  // 2. استخدام الصلاحيات الافتراضية للتخصص
+  const specialization = SPECIALIZATIONS[currentUser.specialization || 'default_user'];
+  if (specialization && specialization.defaultButtonAccess) {
+    const buttonAccess = specialization.defaultButtonAccess.addToLiveTanks;
+    const pageKey = pageName === 'index.html' ? 'index' : pageName === 'plcr.html' ? 'plcr' : null;
+    
+    if (pageKey && typeof buttonAccess[pageKey] === 'boolean') {
+      console.log('checkAddToLiveTanksButtonAccess: Using specialization default:', buttonAccess[pageKey]);
+      return buttonAccess[pageKey];
+    }
+  }
+
+  // 3. الافتراضي: مخفي للجميع
+  console.log('checkAddToLiveTanksButtonAccess: No specific permission found, hiding button by default');
+  return false;
+}
+
+// ✅ دالة الحصول على السلم الوظيفي للعرض
+function getUserJobTitle(user) {
+  // إذا كان السلم الوظيفي محدد مخصصاً
+  if (user.jobTitle && JOB_TITLES[user.jobTitle]) {
+    return JOB_TITLES[user.jobTitle].nameAr;
+  }
+  
+  // استخدام التخصص كسلم وظيفي افتراضي
+  if (user.specialization && SPECIALIZATIONS[user.specialization]) {
+    return SPECIALIZATIONS[user.specialization].nameAr;
+  }
+  
+  // إذا كان يستخدم النظام القديم
+  if (user.role) {
+    const roleMapping = {
+      'admin': 'مدير النظام',
+      'supervisor': 'مشرف',
+      'panel_operator': 'مشغل لوحة',
+      'field_operator': 'مشغل ميداني'
+    };
+    return roleMapping[user.role] || user.role;
+  }
+  
+  return 'غير محدد';
+}
+
+// تصدير الدوال الجديدة
+window.checkAddToLiveTanksButtonAccess = checkAddToLiveTanksButtonAccess;
+window.getUserJobTitle = getUserJobTitle;
+window.JOB_TITLES = JOB_TITLES;
+
+// تصدير كل شيء كـ TankToolsPermissions للاستخدام في الداشبورد
+window.TankToolsPermissions = {
+  SPECIALIZATIONS: SPECIALIZATIONS,
+  JOB_TITLES: JOB_TITLES
+};
 
 

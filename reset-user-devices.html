@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset User Devices - Emergency Tool</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+            color: white;
+        }
+        .container { 
+            background: rgba(255,255,255,0.1); 
+            padding: 30px; 
+            border-radius: 15px; 
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            max-width: 500px;
+            width: 100%;
+        }
+        .title { 
+            text-align: center; 
+            margin-bottom: 20px; 
+            font-size: 24px;
+        }
+        .warning {
+            background: rgba(255,193,7,0.2);
+            border: 1px solid rgba(255,193,7,0.5);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: #ffc107;
+        }
+        input { 
+            width: 100%; 
+            padding: 12px; 
+            margin: 10px 0; 
+            border: none; 
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+        button { 
+            width: 100%; 
+            padding: 12px; 
+            background: #f44336; 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 16px;
+            margin: 10px 0;
+        }
+        button:hover { background: #d32f2f; }
+        .success { color: #4CAF50; font-weight: bold; }
+        .error { color: #f44336; font-weight: bold; }
+        #result { margin-top: 20px; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title">🔧 Reset User Devices</div>
+        
+        <div class="warning">
+            ⚠️ <strong>Emergency Tool</strong><br>
+            This tool will remove ALL registered devices for a specific user, 
+            allowing them to register a new device on next login.
+        </div>
+        
+        <input type="text" id="username" placeholder="Enter username (e.g., abc123)" maxlength="6">
+        
+        <button onclick="resetUserDevices()">🗑️ Reset All Devices for User</button>
+        
+        <div id="result"></div>
+        
+        <div style="text-align: center; margin-top: 20px; font-size: 12px; opacity: 0.7;">
+            For emergency use only - Contact Fahad 17877
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, query, where, getDocs, deleteDoc, doc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD7lJcoY33FEC9d6eWy67QIO9SV4lS24pg",
+            authDomain: "tank-tools-knpc-c2d95.firebaseapp.com",
+            projectId: "tank-tools-knpc-c2d95",
+            storageBucket: "tank-tools-knpc-c2d95.firebasestorage.app",
+            messagingSenderId: "510062594324",
+            appId: "1:510062594324:web:b892fd02007a5ca2f0da01"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.db = db;
+        window.collection = collection;
+        window.query = query;
+        window.where = where;
+        window.getDocs = getDocs;
+        window.deleteDoc = deleteDoc;
+        window.doc = doc;
+
+        console.log('🔥 Firebase initialized for device reset tool');
+    </script>
+
+    <script>
+        async function resetUserDevices() {
+            const username = document.getElementById('username').value.trim().toLowerCase();
+            const resultDiv = document.getElementById('result');
+            
+            if (!username) {
+                resultDiv.innerHTML = '<div class="error">❌ Please enter a username</div>';
+                return;
+            }
+            
+            if (!/^[a-zA-Z]{3}[0-9]{3}$/.test(username)) {
+                resultDiv.innerHTML = '<div class="error">❌ Username must be format: abc123</div>';
+                return;
+            }
+            
+            const confirmMessage = `Are you sure you want to RESET ALL DEVICES for user "${username}"?\n\nThis will:\n- Remove all registered devices\n- Allow user to register new device on next login\n\nType "RESET" to confirm:`;
+            const confirmation = prompt(confirmMessage);
+            
+            if (confirmation !== 'RESET') {
+                resultDiv.innerHTML = '<div class="error">❌ Reset cancelled</div>';
+                return;
+            }
+            
+            try {
+                resultDiv.innerHTML = '<div>🔄 Resetting devices for ' + username + '...</div>';
+                
+                // Query user devices
+                const userDevicesQuery = query(
+                    collection(db, 'userDevices'),
+                    where('username', '==', username)
+                );
+                
+                const deviceDocs = await getDocs(userDevicesQuery);
+                
+                if (deviceDocs.empty) {
+                    resultDiv.innerHTML = '<div class="error">❌ No devices found for user: ' + username + '</div>';
+                    return;
+                }
+                
+                let deletedCount = 0;
+                
+                // Delete all devices
+                for (const deviceDoc of deviceDocs.docs) {
+                    await deleteDoc(doc(db, 'userDevices', deviceDoc.id));
+                    deletedCount++;
+                }
+                
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        ✅ Successfully reset ${deletedCount} device(s) for user: ${username}
+                        <br><br>
+                        👤 User can now register a new device on next login
+                    </div>
+                `;
+                
+                // Clear the input
+                document.getElementById('username').value = '';
+                
+            } catch (error) {
+                console.error('Reset error:', error);
+                resultDiv.innerHTML = '<div class="error">❌ Error: ' + error.message + '</div>';
+            }
+        }
+        
+        // Allow Enter key to submit
+        document.getElementById('username').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                resetUserDevices();
+            }
+        });
+    </script>
+</body>
+</html>
