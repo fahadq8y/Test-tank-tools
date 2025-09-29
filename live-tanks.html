@@ -772,7 +772,7 @@
               collectionRef = collection(window.db, pathArray[0], pathArray[1], pathArray[2]);
             }
             
-            const snapshot = await getDocs(collectionRef);
+            const snapshot = await getDocs(collectionRef, { source: 'server' });
             
             if (snapshot.size > 0) {
               console.log(`✅ Found ${snapshot.size} documents at path: ${pathArray.join('/')}`);
@@ -1081,7 +1081,18 @@
               }
             }
           });
-        }, 60000); // Update every minute
+        }, 5000); // Update every 5 seconds (faster but not too aggressive)
+        
+        // 🔄 Auto-refresh Firebase data every 5 minutes
+        setInterval(async () => {
+          console.log('🔄 Auto-refreshing Firebase tank data...');
+          try {
+            await loadTanksFromFirebase();
+            console.log('✅ Firebase data auto-refreshed successfully');
+          } catch (error) {
+            console.error('❌ Auto-refresh failed:', error);
+          }
+        }, 300000); // Refresh every 5 minutes
         
       } catch (error) {
         console.error('Error loading live tanks:', error);
