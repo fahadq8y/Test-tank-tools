@@ -485,6 +485,16 @@
             showMessage('✅ Admin login successful! Redirecting... (Session Fix v5.1)', 'success');
             console.log('🔥 SESSION FIX v5.1 - Extended timing and verification active');
             
+            // 🚫 UNREGISTER SERVICE WORKER TO PREVENT REDIRECT ISSUES
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.getRegistrations().then(registrations => {
+                registrations.forEach(registration => {
+                  console.log('🚫 Unregistering Service Worker to fix redirects');
+                  registration.unregister();
+                });
+              });
+            }
+            
             // 🔧 EXTENDED DELAY + SESSION VERIFICATION
             setTimeout(() => {
               // Double-check session is saved

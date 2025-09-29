@@ -1,10 +1,31 @@
-// 🔒 Tank Tools Service Worker - Enhanced PWA
+// 🚫 Tank Tools Service Worker - DISABLED FOR SESSION FIX
 // Developer: Fahad - 17877 
-// Version: 3.1.1 - Fixed integrity issues
-// Last Updated: 2025-09-27
+// Version: 3.1.4 - Temporarily disabled to fix redirect issues
+// Last Updated: 2025-09-29
 
-const CACHE_NAME = 'tanktools-v3.1.3';
-const CACHE_VERSION = '3.1.3';
+// DISABLE SERVICE WORKER TO FIX REDIRECT ISSUES
+console.log('🚫 Service Worker disabled to fix login redirect issues');
+
+// Unregister any existing service worker
+self.addEventListener('install', event => {
+  console.log('🚫 SW: Skipping installation (disabled)');
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', event => {
+  console.log('🚫 SW: Clearing all caches and unregistering');
+  event.waitUntil(
+    caches.keys().then(names => {
+      return Promise.all(names.map(name => caches.delete(name)));
+    }).then(() => {
+      return self.registration.unregister();
+    })
+  );
+});
+
+// Do not intercept any fetch requests
+// Let all requests go through normally
+console.log('🚫 Service Worker fetch interception disabled');
 
 // Files to cache for offline functionality
 const CORE_ASSETS = [
