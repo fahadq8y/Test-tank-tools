@@ -710,6 +710,64 @@
       return tankData;
     }
     
+    // 🔥 NEW: Get tank data based on Rate Unit (smart path selection)
+    async function getTankDataByRateUnit(tankNumber, rateUnit) {
+      console.log(`🎯 Getting tank ${tankNumber} data for rate unit: ${rateUnit}`);
+      
+      let department, pathToTry;
+      
+      // 🔧 Determine correct Firebase path based on Rate Unit
+      if (rateUnit === 'MT/hr') {
+        // MT/hr (Metric Ton per hour) → PLCR department
+        department = 'plcr';
+        pathToTry = ['tankData', 'plcr', 'tanks'];
+        console.log('📍 MT/hr unit detected → Using PLCR path');
+      } else {
+        // bbl, m³/hr, meter/hr → PBCR department  
+        department = 'pbcr';
+        pathToTry = ['tankData', 'pbcr', 'tanks'];
+        console.log('📍 Other units (bbl/m³/hr/meter/hr) detected → Using PBCR path');
+      }
+      
+      try {
+        console.log(`🔍 Fetching fresh data from: ${pathToTry.join('/')}`);
+        
+        // Get fresh data from the correct path
+        const collectionRef = collection(window.db, pathToTry[0], pathToTry[1], pathToTry[2]);
+        const snapshot = await getDocs(collectionRef, { source: 'server' });
+        
+        console.log(`📊 Found ${snapshot.size} documents in ${department.toUpperCase()} path`);
+        
+        // Look for specific tank
+        let foundTankData = null;
+        snapshot.forEach(doc => {
+          if (doc.id === tankNumber) {
+            const data = doc.data();
+            foundTankData = {
+              comment: data.comment || data.bmp || data.capacity || 0,
+              min: data.min || data.minLevel || data.low || 0,
+              max: data.max || data.maxLevel || data.high || 0,
+              department: department.toUpperCase(),
+              path: pathToTry.join('/'),
+              rawData: data
+            };
+            console.log(`✅ Tank ${tankNumber} found in ${department.toUpperCase()}:`, foundTankData);
+          }
+        });
+        
+        if (!foundTankData) {
+          console.log(`❌ Tank ${tankNumber} not found in ${department.toUpperCase()} path`);
+          return null;
+        }
+        
+        return foundTankData;
+        
+      } catch (error) {
+        console.error(`❌ Error fetching tank ${tankNumber} from ${department.toUpperCase()}:`, error);
+        return null;
+      }
+    }
+    
     // Firebase configuration - UNIFIED for consistent access
     const firebaseConfig = {
       apiKey: "AIzaSyBCdv37V6vOFMe42rGlPyl9lVq-9JldEPg",
@@ -1801,8 +1859,8 @@
     window.addReminder = window.showReminderOptions;
 
 
-    // Calculate actual rate based on level difference and time - FIXED VERSION
-    function calculateActualRate() {
+    // Calculate actual rate based on level difference and time - SMART RATE UNIT VERSION
+    async function calculateActualRate() {
       const currentLevel = parseFloat(document.getElementById('editCurrentLevel').value);
       const previousLevel = parseFloat(document.getElementById('editPreviousLevel').value);
       const rateUnit = document.getElementById('editRateUnit').value;
@@ -1818,11 +1876,11 @@
           window.firebaseLoadingInProgress = true;
           loadTanksFromFirebase().then(() => {
             window.firebaseLoadingInProgress = false;
-            setTimeout(calculateActualRate, 500); // Retry after loading
+            setTimeout(() => calculateActualRate(), 500); // Retry after loading
           }).catch(() => {
             window.firebaseLoadingInProgress = false;
             console.log('⚠️ Firebase loading failed, using fallback calculation');
-            setTimeout(calculateActualRate, 1000);
+            setTimeout(() => calculateActualRate(), 1000);
           });
         }
         return;
@@ -1857,7 +1915,9 @@
       if (rateUnit === 'MT/hr') {
         // For MT/hr (typically from PLCR) - Using real KNPC data
         const tankNumber = document.getElementById('editTankNumber').value;
-        const tankData = getTankData(tankNumber);
+        
+        // 🔥 SMART: Get data from correct path based on rate unit
+        const tankData = await getTankDataByRateUnit(tankNumber, rateUnit);
         
         if (tankData) {
           const c = tankData.comment; // BPM from real KNPC system
@@ -1889,7 +1949,9 @@
       } else if (rateUnit === "m3/hr" || rateUnit === "m3" || rateUnit === "m³/hr" || rateUnit === "m³") {
         // For cubic meter units (typically from PBCR) - Using real KNPC data
         const tankNumber = document.getElementById('editTankNumber').value;
-        const tankData = getTankData(tankNumber);
+        
+        // 🔥 SMART: Get data from correct path based on rate unit
+        const tankData = await getTankDataByRateUnit(tankNumber, rateUnit);
         
         if (tankData) {
           const c = tankData.comment; // BPM from real KNPC system
@@ -1914,7 +1976,9 @@
       } else {
         // For barrel units (typically from PBCR) - bbl/hr - Using real KNPC data
         const tankNumber = document.getElementById('editTankNumber').value;
-        const tankData = getTankData(tankNumber);
+        
+        // 🔥 SMART: Get data from correct path based on rate unit  
+        const tankData = await getTankDataByRateUnit(tankNumber, rateUnit);
         
         if (tankData) {
           const c = tankData.comment; // BPM from real KNPC system
