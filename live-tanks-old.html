@@ -94,27 +94,6 @@
     .btn-view{background:#2196F3}
     .btn-reminder{background:#ff9800}
     .action-btn:hover{transform:scale(1.05)}
-    .tank-bell{
-      display:inline-block;
-      margin-left:5px;
-      padding:4px 6px;
-      background:linear-gradient(45deg,#ff9800,#f57c00);
-      color:white;
-      border-radius:50%;
-      font-size:12px;
-      cursor:pointer;
-      transition:all 0.3s ease;
-      animation:ring 2s ease-in-out infinite;
-    }
-    .tank-bell:hover{
-      transform:scale(1.2);
-      box-shadow:0 0 10px rgba(255,152,0,0.5);
-    }
-    @keyframes ring{
-      0%,100%{transform:rotate(0deg)}
-      25%{transform:rotate(-10deg)}
-      75%{transform:rotate(10deg)}
-    }
     .empty-state{text-align:center;padding:40px;color:#666}
     .empty-icon{font-size:3rem;margin-bottom:15px;opacity:0.5}
     .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:1000;backdrop-filter:blur(5px)}
@@ -225,7 +204,6 @@
         <a class="nav-link" href="index.html">PBCR</a>
         <a class="nav-link" href="plcr.html">PLCR</a>
         <a class="nav-link" href="NMOGASBL.html">NMOGAS</a>
-        <a class="nav-link" href="tank-management.html" id="tank-management-btn" style="display:none">🛢️ Tanks</a>
         <a class="nav-link active" href="live-tanks.html">🔴 Live Tanks</a>
         <a class="nav-admin" href="dashboard.html" id="adminLink" style="display:none">🔐 Dashboard</a>
       </div>
@@ -324,82 +302,6 @@
       </div>
       <div id="tankDetailsBody">
         <!-- Tank details will be populated here -->
-      </div>
-    </div>
-  </div>
-
-  <!-- Reminder Options Modal -->
-  <div id="reminderOptionsModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 class="modal-title">📅 Choose Reminder Type</h3>
-        <button class="close-btn" onclick="closeReminderOptions()">&times;</button>
-      </div>
-      <div style="margin-bottom: 20px;">
-        <div id="reminderTankInfo" style="background: rgba(33, 150, 243, 0.1); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-          <!-- Tank info will be populated here -->
-        </div>
-        
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-          <button class="btn btn-primary" onclick="chooseGoogleReminder()" style="padding: 20px; flex-direction: column; gap: 10px;">
-            <span style="font-size: 2rem;">📅</span>
-            <span style="font-weight: bold;">Google Calendar</span>
-            <span style="font-size: 0.9rem; opacity: 0.8;">Add to your calendar</span>
-          </button>
-          
-          <button class="btn btn-warning" onclick="chooseBuiltInReminder()" style="padding: 20px; flex-direction: column; gap: 10px;">
-            <span style="font-size: 2rem;">🔔</span>
-            <span style="font-weight: bold;">Built-in Alarm</span>
-            <span style="font-size: 0.9rem; opacity: 0.8;">Persistent notification</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Bell Settings Modal -->
-  <div id="bellSettingsModal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 class="modal-title">🔔 Alarm Settings</h3>
-        <button class="close-btn" onclick="closeBellSettings()">&times;</button>
-      </div>
-      <div id="bellTankInfo" style="background: rgba(33, 150, 243, 0.1); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-        <!-- Tank info will be populated here -->
-      </div>
-      
-      <div class="form-group">
-        <label class="form-label">⏰ Alert Timing:</label>
-        <select class="form-select" id="alertTiming">
-          <option value="10">10 minutes before finish</option>
-          <option value="15" selected>15 minutes before finish</option>
-          <option value="20">20 minutes before finish</option>
-          <option value="30">30 minutes before finish</option>
-        </select>
-      </div>
-      
-      <div class="form-group">
-        <label class="form-label">🔊 Alert Type:</label>
-        <div style="display: grid; gap: 10px;">
-          <label style="display: flex; align-items: center; gap: 10px; padding: 10px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; cursor: pointer;">
-            <input type="radio" name="alertType" value="persistent" checked>
-            <span>🔔 Persistent Alarm + Vibration (Keeps ringing until stopped)</span>
-          </label>
-          <label style="display: flex; align-items: center; gap: 10px; padding: 10px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; cursor: pointer;">
-            <input type="radio" name="alertType" value="regular">
-            <span>📢 Regular Notification (Shows for 10 seconds)</span>
-          </label>
-          <label style="display: flex; align-items: center; gap: 10px; padding: 10px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; cursor: pointer;">
-            <input type="radio" name="alertType" value="sound">
-            <span>🔊 Sound Only (No persistent notification)</span>
-          </label>
-        </div>
-      </div>
-      
-      <div class="modal-buttons">
-        <button class="btn btn-secondary" onclick="closeBellSettings()">Cancel</button>
-        <button class="btn btn-danger" onclick="removeBuiltInReminder()" id="removeReminderBtn" style="display: none;">Remove Reminder</button>
-        <button class="btn btn-primary" onclick="saveBellSettings()">Save Settings</button>
       </div>
     </div>
   </div>
@@ -651,12 +553,12 @@
     import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
     const firebaseConfig = {
-      apiKey: "AIzaSyBCdv37V6vOFMe42rGlPyl9lVq-9JldEPg",
+      apiKey: "AIzaSyD7lJcoY33FEC9d6eWy67QIO9SV4lS24pg",
       authDomain: "tank-tools-knpc-c2d95.firebaseapp.com",
       projectId: "tank-tools-knpc-c2d95",
-      storageBucket: "tank-tools-knpc-c2d95.appspot.com",
-      messagingSenderId: "678793823159",
-      appId: "1:678793823159:web:7a7b1398aefdb7f24462b9"
+      storageBucket: "tank-tools-knpc-c2d95.firebasestorage.app",
+      messagingSenderId: "510062594324",
+      appId: "1:510062594324:web:b892fd02007a5ca2f0da01"
     };
 
     const app = initializeApp(firebaseConfig);
@@ -685,215 +587,8 @@
     let currentEditingTank = null;
     let unsubscribe = null;
 
-    // ✅ FIXED: Tank specifications loaded from Firebase with real KNPC data
-    let tanks = {};
-    let tanksLoaded = false;
-    
-    // Helper function to check if Firebase tank data is available
-    function isFirebaseTankDataReady() {
-      return tanksLoaded && tanks && Object.keys(tanks).length > 0;
-    }
-    
-    // Helper function to get tank data with fallback
-    function getTankData(tankNumber) {
-      if (!isFirebaseTankDataReady()) {
-        console.log('⚠️ Firebase tank data not ready for tank', tankNumber);
-        return null;
-      }
-      
-      const tankData = tanks[tankNumber];
-      if (!tankData || !tankData.comment) {
-        console.log('⚠️ No Firebase data found for tank', tankNumber);
-        return null;
-      }
-      
-      return tankData;
-    }
-    
-    // 🔥 NEW: Get tank data based on Rate Unit (smart path selection)
-    async function getTankDataByRateUnit(tankNumber, rateUnit) {
-      console.log(`🎯 Getting tank ${tankNumber} data for rate unit: ${rateUnit}`);
-      
-      let department, pathToTry;
-      
-      // 🔧 Determine correct Firebase path based on Rate Unit
-      if (rateUnit === 'MT/hr') {
-        // MT/hr (Metric Ton per hour) → PLCR department
-        department = 'plcr';
-        pathToTry = ['tankData', 'plcr', 'tanks'];
-        console.log('📍 MT/hr unit detected → Using PLCR path');
-      } else {
-        // bbl, m³/hr, meter/hr → PBCR department  
-        department = 'pbcr';
-        pathToTry = ['tankData', 'pbcr', 'tanks'];
-        console.log('📍 Other units (bbl/m³/hr/meter/hr) detected → Using PBCR path');
-      }
-      
-      try {
-        console.log(`🔍 Fetching fresh data from: ${pathToTry.join('/')}`);
-        
-        // Get fresh data from the correct path
-        const collectionRef = collection(window.db, pathToTry[0], pathToTry[1], pathToTry[2]);
-        const snapshot = await getDocs(collectionRef, { source: 'server' });
-        
-        console.log(`📊 Found ${snapshot.size} documents in ${department.toUpperCase()} path`);
-        
-        // Look for specific tank
-        let foundTankData = null;
-        snapshot.forEach(doc => {
-          if (doc.id === tankNumber) {
-            const data = doc.data();
-            foundTankData = {
-              comment: data.comment || data.bmp || data.capacity || 0,
-              min: data.min || data.minLevel || data.low || 0,
-              max: data.max || data.maxLevel || data.high || 0,
-              department: department.toUpperCase(),
-              path: pathToTry.join('/'),
-              rawData: data
-            };
-            console.log(`✅ Tank ${tankNumber} found in ${department.toUpperCase()}:`, foundTankData);
-          }
-        });
-        
-        if (!foundTankData) {
-          console.log(`❌ Tank ${tankNumber} not found in ${department.toUpperCase()} path`);
-          return null;
-        }
-        
-        return foundTankData;
-        
-      } catch (error) {
-        console.error(`❌ Error fetching tank ${tankNumber} from ${department.toUpperCase()}:`, error);
-        return null;
-      }
-    }
-    
-    // Firebase configuration - UNIFIED for consistent access
-    const firebaseConfig = {
-      apiKey: "AIzaSyBCdv37V6vOFMe42rGlPyl9lVq-9JldEPg",
-      authDomain: "tank-tools-knpc-c2d95.firebaseapp.com",
-      projectId: "tank-tools-knpc-c2d95",
-      storageBucket: "tank-tools-knpc-c2d95.appspot.com",
-      messagingSenderId: "678793823159",
-      appId: "1:678793823159:web:7a7b1398aefdb7f24462b9"
-    };
-    
-    // Load tanks from Firebase with real KNPC data - ALL DEPARTMENTS with enhanced debugging
-    async function loadTanksFromFirebase() {
-      try {
-        console.log('🔄 Loading tanks from Firebase - ALL DEPARTMENTS...');
-        
-        // Use the already initialized Firebase instance from the main SDK
-        if (!window.db) {
-          console.error('❌ Firebase not initialized! Initializing now...');
-          const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js');
-          const { getFirestore } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
-          
-          const app = initializeApp(firebaseConfig);
-          window.db = getFirestore(app);
-        }
-        
-        tanks = {}; // Reset tanks object
-        let totalTanks = 0;
-        
-        // Enhanced collection path debugging - try multiple possible paths
-        const possiblePaths = [
-          // Standard department-based paths
-          ['tankData', 'pbcr', 'tanks'],
-          ['tankData', 'plcr', 'tanks'],
-          ['tankData', 'washery', 'tanks'],
-          // Alternative collection names
-          ['tanks', 'pbcr'],
-          ['tanks', 'plcr'], 
-          ['tanks', 'washery'],
-          // Direct collection approach
-          ['pbcr_tanks'],
-          ['plcr_tanks'],
-          ['washery_tanks'],
-          // Legacy paths
-          ['tankSpecifications'],
-          ['tankData']
-        ];
-        
-        console.log('🔍 Trying multiple collection paths to find tank data...');
-        
-        for (const pathArray of possiblePaths) {
-          try {
-            console.log(`🔍 Checking path: ${pathArray.join('/')}`);
-            
-            let collectionRef;
-            if (pathArray.length === 1) {
-              collectionRef = collection(window.db, pathArray[0]);
-            } else if (pathArray.length === 2) {
-              collectionRef = collection(window.db, pathArray[0], pathArray[1]);
-            } else if (pathArray.length === 3) {
-              collectionRef = collection(window.db, pathArray[0], pathArray[1], pathArray[2]);
-            }
-            
-            const snapshot = await getDocs(collectionRef, { source: 'server' });
-            
-            if (snapshot.size > 0) {
-              console.log(`✅ Found ${snapshot.size} documents at path: ${pathArray.join('/')}`);
-              
-              snapshot.forEach(doc => {
-                const data = doc.data();
-                console.log(`📋 Document ${doc.id}:`, data);
-                
-                // Determine department from path or data
-                let department = 'UNKNOWN';
-                if (pathArray.includes('pbcr')) department = 'PBCR';
-                else if (pathArray.includes('plcr')) department = 'PLCR';
-                else if (pathArray.includes('washery')) department = 'WASHERY';
-                else if (data.department) department = data.department.toUpperCase();
-                
-                tanks[doc.id] = {
-                  comment: data.comment || data.bpm || data.capacity || 0,  // BPM from real KNPC system
-                  min: data.min || data.minLevel || data.low || 0,          // Lo Level from real KNPC system
-                  max: data.max || data.maxLevel || data.high || 0,         // Hi Level from real KNPC system
-                  department: department // Track department
-                };
-                totalTanks++;
-              });
-              
-              console.log(`✅ Successfully loaded ${snapshot.size} tanks from ${pathArray.join('/')}`);
-            } else {
-              console.log(`⚠️ No documents found at path: ${pathArray.join('/')}`);
-            }
-          } catch (pathError) {
-            console.log(`❌ Error checking path ${pathArray.join('/')}:`, pathError.message);
-          }
-        }
-        
-        tanksLoaded = true;
-        console.log(`🎯 TOTAL: Loaded ${totalTanks} tanks from Firebase`);
-        
-        if (totalTanks > 0) {
-          console.log('📊 Sample tank data loaded:', {
-            'First 3 tanks': Object.keys(tanks).slice(0, 3).map(key => ({
-              id: key,
-              data: tanks[key]
-            }))
-          });
-          console.log('🔥 Firebase integration successful - tanks loaded with real KNPC data!');
-          
-          // Display success message
-          showMessage(`✅ Loaded ${totalTanks} tanks from Firebase successfully!`, 'success');
-        } else {
-          console.log('⚠️ No tanks found in any Firebase collection');
-          showMessage('⚠️ No tanks found in Firebase collections. Check collection structure.', 'warning');
-        }
-        
-        return tanks;
-        
-      } catch (error) {
-        console.error('❌ Error loading tanks from Firebase:', error);
-        showMessage('❌ Error loading tanks from Firebase: ' + error.message, 'error');
-        tanksLoaded = true;
-        return tanks;
-      }
-    }
-    
-    // Removed waitForTanks wrapper - Firebase data loaded during initialization
+    // Tank specifications data
+    const tanks = {"225":{comment:12879,min:3.353,max:15.24},"226":{comment:12879,min:3.353,max:15.24},"227":{comment:11327,min:2,max:17.95},"253":{comment:10781,min:2,max:17.093},"254":{comment:12288,min:2,max:14.96},"255":{comment:12287,min:2,max:14.96},"256":{comment:12287,min:2,max:14.96},"260":{comment:2249,min:2,max:13},"272":{comment:7217,min:2,max:15.309},"273":{comment:4198,min:2,max:13.468},"274":{comment:4198,min:2,max:13.458},"275":{comment:9563,min:2,max:17.897},"276":{comment:7236,min:2,max:15.442},"277":{comment:4188,min:2,max:13.714},"278":{comment:9506,min:1.98,max:17.89},"279":{comment:4118,min:1.98,max:15.977},"301":{comment:7756,min:3.048,max:18.54},"302":{comment:7756,min:3.048,max:18.54},"303":{comment:6070,min:2.59,max:14.173},"304":{comment:6070,min:2.59,max:14.173},"305":{comment:7171,min:0.533,max:18.797},"450":{comment:3155,min:2,max:14.2},"451":{comment:930,min:2,max:13},"452":{comment:4587,min:2,max:13},"453":{comment:5067,min:2,max:17.8},"454":{comment:1653,min:2,max:11.36},"455":{comment:1654,min:2,max:11.36},"456":{comment:11574,min:2.68,max:13.41},"457":{comment:9697,min:5.4,max:16.45},"458":{comment:9697,min:5.4,max:16.45},"459":{comment:9466,min:2,max:14.35},"460":{comment:14213,min:2,max:17.65},"461":{comment:14213,min:2,max:17.653},"462":{comment:12354,min:2,max:16.46},"463":{comment:9578,min:2,max:17.89},"464":{comment:9578,min:2,max:17.889},"465":{comment:9572,min:2,max:17.89},"467":{comment:12375,min:2,max:17.771},"468":{comment:12375,min:2,max:17.771},"469":{comment:12375,min:2,max:17.771},"470":{comment:12375,min:2,max:17.77},"503":{comment:2888,min:2.13,max:10.97},"504":{comment:2888,min:2.13,max:10.97},"506":{comment:930,min:0.92,max:14.33},"507":{comment:413,min:2,max:6.5},"508":{comment:1130,min:1.67,max:12.65},"509":{comment:1130,min:1.67,max:12.65},"510":{comment:529,min:2,max:10.363},"511":{comment:4531,min:0.198,max:9},"512":{comment:2939,min:0.92,max:11.6},"514":{comment:2942,min:0.92,max:12},"515":{comment:2942,min:0.92,max:12},"520":{comment:4142,min:1.88,max:14.29},"521":{comment:4142,min:1.88,max:14.29},"522":{comment:11990,min:1.61,max:15.6},"531":{comment:12377,min:2,max:17.77},"532":{comment:12377,min:2,max:17.772},"533":{comment:12377,min:2,max:17.772},"534":{comment:12377,min:2,max:17.772},"600":{comment:9490,min:2,max:13.3},"601":{comment:9490,min:2,max:13.3},"602":{comment:9512,min:2,max:13.73},"603":{comment:11695,min:2,max:13.325},"605":{comment:12964,min:2,max:14.325},"608":{comment:1060,min:2,max:11.887},"620":{comment:11981,min:1.65,max:16.5},"621":{comment:11981,min:1.65,max:16.5},"622":{comment:5019,min:2,max:15.76},"623":{comment:5050,min:1.6,max:15.76},"633":{comment:412,min:2,max:6},"634":{comment:412,min:2,max:6},"651":{comment:6543,min:2,max:13.325},"652":{comment:6543,min:2,max:13.32},"661":{comment:12354,min:2,max:17.759},"662":{comment:5074,min:2,max:14.802},"663":{comment:1507,min:2,max:10.23},"664":{comment:7250,min:2,max:15.22},"665":{comment:7250,min:2,max:15.22},"667":{comment:12278,min:2,max:17.922},"668":{comment:16858,min:2,max:18.165},"669":{comment:16858,min:2,max:18.17},"670":{comment:16856,min:2,max:18.165},"671":{comment:12863,min:2,max:16.45},"672":{comment:13046,min:2,max:16.45},"703":{comment:12931,min:2,max:14.88},"705":{comment:12931,min:2,max:14.88},"725":{comment:1080,min:0.914,max:11.887},"751":{comment:12834,min:2,max:15.1},"752":{comment:12834,min:2,max:15.1},"753":{comment:12834,min:2,max:15.1},"754":{comment:12834,min:2,max:15.1},"755":{comment:12834,min:2,max:15.1},"756":{comment:12962,min:2,max:15.1},"757":{comment:10989,min:2,max:17.8},"761":{comment:20546,min:2,max:14.2},"762":{comment:20546,min:2,max:18.798},"820":{comment:16656,min:1.6,max:18.48},"821":{comment:16656,min:1.6,max:18.48},"822":{comment:16856,min:1.6,max:18.48},"831":{comment:11297,min:2,max:18.41},"832":{comment:11297,min:2,max:18.409},"833":{comment:7279,min:3.25,max:18.012},"834":{comment:7279,min:3.25,max:18.012},"835":{comment:7305,min:2,max:15.226},"836":{comment:7305,min:2,max:15.226},"900":{comment:2644,min:1.6,max:11.9},"901":{comment:2692,min:2,max:12.02},"760":{comment:20546,min:2,max:18.798},"702":{comment:12931,min:2,max:16.15},"758":{comment:20546,min:2,max:14.5},"759":{comment:20546,min:2,max:14.5}};
 
     // Updated Product types by department
     const productsByDepartment = {
@@ -1019,18 +714,12 @@
       window.location.href = 'login.html';
     }
 
-    async function initializeApp() {
+    function initializeApp() {
       document.getElementById('mainContent').style.display = 'block';
       document.getElementById('accessDenied').style.display = 'none';
       
       loadUserInfo();
       setupPermissions();
-      
-      // 🔥 CRITICAL: Load Firebase tank data FIRST before loading live tanks
-      console.log('🔄 Initializing app - Loading Firebase tank data first...');
-      await loadTanksFromFirebase();
-      
-      // Then load live tanks
       loadLiveTanks();
       
       // Set default date to today
@@ -1139,18 +828,7 @@
               }
             }
           });
-        }, 5000); // Update every 5 seconds (faster but not too aggressive)
-        
-        // 🔄 Auto-refresh Firebase data every 5 minutes
-        setInterval(async () => {
-          console.log('🔄 Auto-refreshing Firebase tank data...');
-          try {
-            await loadTanksFromFirebase();
-            console.log('✅ Firebase data auto-refreshed successfully');
-          } catch (error) {
-            console.error('❌ Auto-refresh failed:', error);
-          }
-        }, 300000); // Refresh every 5 minutes
+        }, 60000); // Update every minute
         
       } catch (error) {
         console.error('Error loading live tanks:', error);
@@ -1328,7 +1006,7 @@
         
         html += `
           <tr class="${rowClass}">
-            <td class="tank-number">${tank.tankNumber}${hasBuiltInReminder(tank.id) ? `<span class="tank-bell" onclick="showBellSettings('${tank.id}')" title="Built-in Alarm Active">🔔</span>` : ''}</td>
+            <td class="tank-number">${tank.tankNumber}</td>
             <td><span class="product-badge ${getProductClass(tank.product)}">${tank.product}</span></td>
             <td>${targetText}</td>
             <td>${rateText}</td>
@@ -1551,55 +1229,17 @@
         <div class="tank-actions">
           ${permissions.canEdit ? `<button class="btn btn-primary" onclick="editTank('${tank.id}')">✏️ Edit Tank</button>` : ''}
           ${permissions.canDelete ? `<button class="btn btn-danger" onclick="deleteTank('${tank.id}')">🗑️ Delete Tank</button>` : ''}
-          <button class="btn btn-warning" onclick="showReminderOptions('${tank.id}')">📅 Add Reminder</button>
+          <button class="btn btn-warning" onclick="addReminder('${tank.id}')">📅 Add Reminder</button>
         </div>
       `;
       document.getElementById('tankDetailsBody').innerHTML = detailsHTML;
       document.getElementById('tankDetailsModal').classList.add('show');
     }
 
-    // Global variable to store built-in reminders
-    window.builtInReminders = JSON.parse(localStorage.getItem('tanktools_builtin_reminders') || '{}');
-    let currentReminderTank = null;
-
-    // Check if tank has built-in reminder
-    function hasBuiltInReminder(tankId) {
-      return window.builtInReminders[tankId] && window.builtInReminders[tankId].active;
-    }
-
-    // Show reminder options modal
-    window.showReminderOptions = function(tankId) {
+    // Add Reminder Function
+    window.addReminder = function(tankId) {
       const tank = window.currentTanks?.find(t => t.id === tankId);
       if (!tank) return;
-      
-      currentReminderTank = tank;
-      
-      // Populate tank info
-      const finishDateTime = tank.finishDateTime ? 
-        (tank.finishDateTime.toDate ? tank.finishDateTime.toDate() : new Date(tank.finishDateTime)) :
-        new Date(tank.finishDate + ' ' + tank.finishTime);
-      
-      document.getElementById('reminderTankInfo').innerHTML = `
-        <h4><strong>Tank ${tank.tankNumber}</strong> - ${tank.product} (${tank.department})</h4>
-        <p><strong>Target:</strong> ${tank.targetValue || 'N/A'} ${tank.targetType || ''}</p>
-        <p><strong>Rate:</strong> ${tank.rate || 'N/A'} ${tank.rateUnit || ''}</p>
-        <p><strong>Finish Time:</strong> ${finishDateTime.toLocaleString()}</p>
-      `;
-      
-      document.getElementById('reminderOptionsModal').classList.add('show');
-    }
-
-    // Close reminder options modal
-    function closeReminderOptions() {
-      document.getElementById('reminderOptionsModal').classList.remove('show');
-      currentReminderTank = null;
-    }
-
-    // Choose Google Calendar reminder
-    function chooseGoogleReminder() {
-      if (!currentReminderTank) return;
-      
-      const tank = currentReminderTank;
       
       // Create reminder data
       const finishDateTime = tank.finishDateTime ? 
@@ -1618,273 +1258,18 @@
       // Open in new window
       window.open(calendarUrl, '_blank');
       
-      closeReminderOptions();
-      showMessage('📅 Google Calendar reminder created!', 'success');
+      showMessage('📅 Reminder created! Check your Google Calendar.', 'success');
     }
 
-    // Choose built-in reminder
-    function chooseBuiltInReminder() {
-      if (!currentReminderTank) return;
-      
-      // Set default built-in reminder
-      const tankId = currentReminderTank.id;
-      const finishDateTime = currentReminderTank.finishDateTime ? 
-        (currentReminderTank.finishDateTime.toDate ? currentReminderTank.finishDateTime.toDate() : new Date(currentReminderTank.finishDateTime)) :
-        new Date(currentReminderTank.finishDate + ' ' + currentReminderTank.finishTime);
-      
-      // Default settings: 15 minutes before, persistent alarm
-      const reminderSettings = {
-        tankId: tankId,
-        tankNumber: currentReminderTank.tankNumber,
-        product: currentReminderTank.product,
-        department: currentReminderTank.department,
-        finishDateTime: finishDateTime,
-        alertMinutes: 15,
-        alertType: 'persistent',
-        active: true,
-        created: new Date()
-      };
-      
-      // Save to localStorage
-      window.builtInReminders[tankId] = reminderSettings;
-      localStorage.setItem('tanktools_builtin_reminders', JSON.stringify(window.builtInReminders));
-      
-      // Schedule the alarm
-      scheduleBuiltInAlarm(reminderSettings);
-      
-      closeReminderOptions();
-      
-      // Refresh table to show bell icon
-      displayTanks(window.currentTanks);
-      
-      showMessage('🔔 Built-in alarm set! Bell icon added to tank.', 'success');
-    }
 
-    // Show bell settings modal
-    window.showBellSettings = function(tankId) {
-      const tank = window.currentTanks?.find(t => t.id === tankId);
-      const reminder = window.builtInReminders[tankId];
-      
-      if (!tank || !reminder) return;
-      
-      currentReminderTank = tank;
-      
-      // Populate tank info
-      const finishDateTime = tank.finishDateTime ? 
-        (tank.finishDateTime.toDate ? tank.finishDateTime.toDate() : new Date(tank.finishDateTime)) :
-        new Date(tank.finishDate + ' ' + tank.finishTime);
-      
-      document.getElementById('bellTankInfo').innerHTML = `
-        <h4><strong>Tank ${tank.tankNumber}</strong> - ${tank.product} (${tank.department})</h4>
-        <p><strong>Target:</strong> ${tank.targetValue || 'N/A'} ${tank.targetType || ''}</p>
-        <p><strong>Rate:</strong> ${tank.rate || 'N/A'} ${tank.rateUnit || ''}</p>
-        <p><strong>Finish Time:</strong> ${finishDateTime.toLocaleString()}</p>
-        <p><strong>Alert Time:</strong> ${new Date(finishDateTime.getTime() - (reminder.alertMinutes * 60000)).toLocaleString()}</p>
-      `;
-      
-      // Set current settings
-      document.getElementById('alertTiming').value = reminder.alertMinutes;
-      document.querySelector(`input[name="alertType"][value="${reminder.alertType}"]`).checked = true;
-      
-      // Show remove button if reminder exists
-      document.getElementById('removeReminderBtn').style.display = 'block';
-      
-      document.getElementById('bellSettingsModal').classList.add('show');
-    }
-
-    // Close bell settings modal
-    function closeBellSettings() {
-      document.getElementById('bellSettingsModal').classList.remove('show');
-      currentReminderTank = null;
-    }
-
-    // Save bell settings
-    function saveBellSettings() {
-      if (!currentReminderTank) return;
-      
-      const tankId = currentReminderTank.id;
-      const alertMinutes = parseInt(document.getElementById('alertTiming').value);
-      const alertType = document.querySelector('input[name="alertType"]:checked').value;
-      
-      // Update reminder settings
-      if (window.builtInReminders[tankId]) {
-        window.builtInReminders[tankId].alertMinutes = alertMinutes;
-        window.builtInReminders[tankId].alertType = alertType;
-        window.builtInReminders[tankId].updated = new Date();
-        
-        // Save to localStorage
-        localStorage.setItem('tanktools_builtin_reminders', JSON.stringify(window.builtInReminders));
-        
-        // Reschedule alarm with new settings
-        scheduleBuiltInAlarm(window.builtInReminders[tankId]);
-        
-        closeBellSettings();
-        showMessage('🔔 Alarm settings updated!', 'success');
-      }
-    }
-
-    // Remove built-in reminder
-    function removeBuiltInReminder() {
-      if (!currentReminderTank) return;
-      
-      const tankId = currentReminderTank.id;
-      
-      if (confirm('Are you sure you want to remove this built-in alarm?')) {
-        // Remove from storage
-        delete window.builtInReminders[tankId];
-        localStorage.setItem('tanktools_builtin_reminders', JSON.stringify(window.builtInReminders));
-        
-        // Clear any scheduled timeouts
-        clearBuiltInAlarm(tankId);
-        
-        closeBellSettings();
-        
-        // Refresh table to remove bell icon
-        displayTanks(window.currentTanks);
-        
-        showMessage('🔔 Built-in alarm removed!', 'success');
-      }
-    }
-
-    // Schedule built-in alarm
-    function scheduleBuiltInAlarm(reminderSettings) {
-      const { tankId, alertMinutes, finishDateTime, alertType } = reminderSettings;
-      
-      // Calculate alert time
-      const alertTime = new Date(finishDateTime.getTime() - (alertMinutes * 60000));
-      const now = new Date();
-      const timeUntilAlert = alertTime.getTime() - now.getTime();
-      
-      console.log('🔔 Scheduling alarm:', {
-        tankId,
-        finishDateTime,
-        alertTime,
-        timeUntilAlert: Math.round(timeUntilAlert / 1000 / 60) + ' minutes'
-      });
-      
-      if (timeUntilAlert > 0) {
-        // Clear any existing timeout for this tank
-        clearBuiltInAlarm(tankId);
-        
-        // Set new timeout
-        const timeoutId = setTimeout(() => {
-          triggerBuiltInAlarm(reminderSettings);
-        }, timeUntilAlert);
-        
-        // Store timeout ID
-        if (!window.alarmTimeouts) window.alarmTimeouts = {};
-        window.alarmTimeouts[tankId] = timeoutId;
-      } else {
-        console.log('⚠️ Alert time has already passed for tank', reminderSettings.tankNumber);
-      }
-    }
-
-    // Trigger built-in alarm
-    function triggerBuiltInAlarm(reminderSettings) {
-      const { tankNumber, product, department, alertType } = reminderSettings;
-      
-      const title = `🔔 Tank ${tankNumber} Alert`;
-      const message = `Tank ${tankNumber} (${product} - ${department}) is finishing soon!`;
-      
-      console.log('🚨 Triggering alarm:', title, message);
-      
-      // Show notification based on type
-      if (alertType === 'persistent') {
-        // Show persistent notification directly in browser
-        // Note: notifications.html page removed - using browser notification API directly
-        
-        // Send message to notifications page after it loads
-        setTimeout(() => {
-          if (notifyWindow && !notifyWindow.closed) {
-            notifyWindow.postMessage({
-              type: 'TRIGGER_PERSISTENT_ALARM',
-              title: title,
-              message: message,
-              tankNumber: tankNumber
-            }, '*');
-          }
-        }, 1000);
-        
-      } else if (alertType === 'regular') {
-        // Regular browser notification
-        if ('Notification' in window && Notification.permission === 'granted') {
-          const notification = new Notification(title, {
-            body: message,
-            icon: '/icon.png',
-            requireInteraction: false
-          });
-          
-          setTimeout(() => notification.close(), 10000);
-        } else {
-          alert(title + '\n\n' + message);
-        }
-        
-      } else if (alertType === 'sound') {
-        // Sound only - play notification sound
-        playAlarmSound();
-      }
-      
-      // Show in-page message
-      showMessage(`🚨 ${title}: ${message}`, 'warning');
-    }
-
-    // Clear built-in alarm timeout
-    function clearBuiltInAlarm(tankId) {
-      if (window.alarmTimeouts && window.alarmTimeouts[tankId]) {
-        clearTimeout(window.alarmTimeouts[tankId]);
-        delete window.alarmTimeouts[tankId];
-      }
-    }
-
-    // Play alarm sound
-    function playAlarmSound() {
-      // Create audio element if not exists
-      if (!window.alarmAudio) {
-        window.alarmAudio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwYAzyA0OzdiwQAZFl1FQ==');
-      }
-      
-      window.alarmAudio.play().catch(e => console.log('Could not play alarm sound:', e));
-    }
-
-    // Initialize built-in alarms on page load
-    function initializeBuiltInAlarms() {
-      Object.values(window.builtInReminders).forEach(reminder => {
-        if (reminder.active) {
-          scheduleBuiltInAlarm(reminder);
-        }
-      });
-    }
-
-    // Legacy function for backward compatibility
-    window.addReminder = window.showReminderOptions;
-
-
-    // Calculate actual rate based on level difference and time - SMART RATE UNIT VERSION
-    async function calculateActualRate() {
+    // Calculate actual rate based on level difference and time - FIXED VERSION
+    function calculateActualRate() {
       const currentLevel = parseFloat(document.getElementById('editCurrentLevel').value);
       const previousLevel = parseFloat(document.getElementById('editPreviousLevel').value);
       const rateUnit = document.getElementById('editRateUnit').value;
       const department = document.getElementById('editDepartment').value;
       
       if (!currentLevel || !previousLevel || !currentEditingTank) return;
-      
-      // Ensure tank data is loaded from Firebase
-      if (!tanksLoaded || !tanks || Object.keys(tanks).length === 0) {
-        console.log('⏳ Firebase tank data not loaded yet, waiting...');
-        // Try to reload from Firebase if needed
-        if (!window.firebaseLoadingInProgress) {
-          window.firebaseLoadingInProgress = true;
-          loadTanksFromFirebase().then(() => {
-            window.firebaseLoadingInProgress = false;
-            setTimeout(() => calculateActualRate(), 500); // Retry after loading
-          }).catch(() => {
-            window.firebaseLoadingInProgress = false;
-            console.log('⚠️ Firebase loading failed, using fallback calculation');
-            setTimeout(() => calculateActualRate(), 1000);
-          });
-        }
-        return;
-      }
       
       console.log('📊 Calculating actual rate:', {
         currentLevel,
@@ -1913,31 +1298,20 @@
       
       // ✅ FIXED: Proper calculation based on Rate Unit and source
       if (rateUnit === 'MT/hr') {
-        // For MT/hr (typically from PLCR) - Using real KNPC data
+        // For MT/hr (typically from PLCR)
         const tankNumber = document.getElementById('editTankNumber').value;
-        
-        // 🔥 SMART: Get data from correct path based on rate unit
-        const tankData = await getTankDataByRateUnit(tankNumber, rateUnit);
+        const tankData = tanks[tankNumber];
         
         if (tankData) {
-          const c = tankData.comment; // BPM from real KNPC system
-          console.log('🔥 PLCR MT/hr - Using Firebase BPM:', c, 'for tank', tankNumber, `(${tankData.department || 'Unknown dept'})`);
+          const c = tankData.comment; // capacity factor
           // Convert level to volume in barrels, then to metric tons
           const volumeDiffBarrels = levelDiff * c;
           // Assuming 1 barrel ≈ 0.159 m³ and density varies by product (using average 0.85 MT/m³)
           const volumeM3 = volumeDiffBarrels * 0.159;
           const massMT = volumeM3 * 0.85; // Average density for petroleum products
           actualRate = massMT / timeDiffHours;
-          console.log('🏭 PLCR MT/hr calculation with real data:', { 
-            bpm: c, 
-            levelDiff, 
-            volumeDiffBarrels, 
-            volumeM3, 
-            massMT, 
-            actualRate 
-          });
+          console.log('⚖️ Calculated rate (MT/hr):', actualRate);
         } else {
-          console.log('❌ No tank data found for PLCR tank', tankNumber, '- using fallback');
           // Fallback calculation for PLCR
           actualRate = levelDiff / timeDiffHours * 10; // Rough estimate
         }
@@ -1947,55 +1321,29 @@
         actualRate = levelDiff / timeDiffHours;
         console.log('📏 Calculated rate (meter/hr):', actualRate);
       } else if (rateUnit === "m3/hr" || rateUnit === "m3" || rateUnit === "m³/hr" || rateUnit === "m³") {
-        // For cubic meter units (typically from PBCR) - Using real KNPC data
+        // For cubic meter units (typically from PBCR)
         const tankNumber = document.getElementById('editTankNumber').value;
-        
-        // 🔥 SMART: Get data from correct path based on rate unit
-        const tankData = await getTankDataByRateUnit(tankNumber, rateUnit);
+        const tankData = tanks[tankNumber];
         
         if (tankData) {
-          const c = tankData.comment; // BPM from real KNPC system
-          console.log('🔥 PBCR m³/hr - Using Firebase BPM:', c, 'for tank', tankNumber, `(${tankData.department || 'Unknown dept'})`);
+          const c = tankData.comment; // capacity factor
           // Rate in cubic meters per hour
           const volumeDiffBarrels = levelDiff * c;
           const rateBarrels = volumeDiffBarrels / timeDiffHours;
           // Convert from barrels to m³ (1 barrel = 0.159 m³ approximately)
           actualRate = rateBarrels * 0.159;
-          console.log('📦 PBCR m³/hr calculation with real data:', { 
-            bpm: c, 
-            levelDiff, 
-            volumeDiffBarrels, 
-            rateBarrels, 
-            actualRate 
-          });
-        } else {
-          console.log('❌ No tank data found for m³/hr tank', tankNumber, '- using fallback');
-          // Fallback: direct level/time calculation
-          actualRate = levelDiff / timeDiffHours; 
+          console.log('🧊 Calculated rate (m³/hr):', actualRate);
         }
       } else {
-        // For barrel units (typically from PBCR) - bbl/hr - Using real KNPC data
+        // For barrel units (typically from PBCR) - bbl/hr
         const tankNumber = document.getElementById('editTankNumber').value;
-        
-        // 🔥 SMART: Get data from correct path based on rate unit  
-        const tankData = await getTankDataByRateUnit(tankNumber, rateUnit);
+        const tankData = tanks[tankNumber];
         
         if (tankData) {
-          const c = tankData.comment; // BPM from real KNPC system
-          console.log('🔥 PBCR bbl/hr - Using Firebase BPM:', c, 'for tank', tankNumber, `(${tankData.department || 'Unknown dept'})`);
+          const c = tankData.comment; // capacity factor
           const volumeDiff = levelDiff * c;
           actualRate = volumeDiff / timeDiffHours;
-          console.log('🛢️ PBCR bbl/hr calculation with real data:', { 
-            bpm: c, 
-            levelDiff, 
-            volumeDiff, 
-            timeDiffHours, 
-            actualRate 
-          });
-        } else {
-          console.log('❌ No tank data found for bbl/hr tank', tankNumber, '- using fallback');
-          // Fallback: direct level/time calculation  
-          actualRate = levelDiff / timeDiffHours;
+          console.log('🛢️ Calculated rate (bbl/hr):', actualRate);
         }
       }
       
@@ -2008,37 +1356,20 @@
       calculateEditTime();
     }
 
-    // Calculate edit time function - IMPROVED VERSION WITH FIREBASE
+    // Calculate edit time function - IMPROVED VERSION
     function calculateEditTime() {
-      // Ensure tank data is loaded from Firebase
-      if (!tanksLoaded || !tanks || Object.keys(tanks).length === 0) {
-        console.log('⏳ Firebase tank data not loaded for time calculation, waiting...');
-        setTimeout(calculateEditTime, 1000);
-        return;
-      }
+      const targetType = document.getElementById('editTargetType').value;
+      const targetValue = parseFloat(document.getElementById('editTargetValue').value);
+      const rate = parseFloat(document.getElementById('editRate').value);
+      const rateUnit = document.getElementById('editRateUnit').value;
+      const tankNumber = document.getElementById('editTankNumber').value;
+      const department = document.getElementById('editDepartment').value;
       
-        const targetType = document.getElementById('editTargetType').value;
-        const targetValue = parseFloat(document.getElementById('editTargetValue').value);
-        const rate = parseFloat(document.getElementById('editRate').value);
-        const rateUnit = document.getElementById('editRateUnit').value;
-        const tankNumber = document.getElementById('editTankNumber').value;
-        const department = document.getElementById('editDepartment').value;
-        
-        if (!targetType || !targetValue || !rate || !tankNumber) return;
-        
-        // Get tank data from Firebase with real KNPC values
-        const tankData = tanks[tankNumber];
-        if (!tankData || !tankData.comment) {
-          console.log('❌ No Firebase data for tank', tankNumber, '- using fallback');
-          return;
-        }
-        
-        console.log('🔥 Using Firebase tank data for calculations:', {
-          tankNumber,
-          bpm: tankData.comment,
-          minLevel: tankData.min,
-          maxLevel: tankData.max
-        });
+      if (!targetType || !targetValue || !rate || !tankNumber) return;
+      
+      // Get tank data from tanks object (same as PBCR)
+      const tankData = tanks[tankNumber];
+      if (!tankData) return;
       
       const c = tankData.comment; // capacity factor
       const m = tankData.min;     // minimum level
@@ -2124,21 +1455,21 @@
         }
       }
       
-        console.log('⏰ Time calculated (hours):', timeHours);
+      console.log('⏰ Time calculated (hours):', timeHours);
+      
+      if (timeHours > 0) {
+        const now = new Date();
+        const finishTime = new Date(now.getTime() + timeHours * 3600000);
         
-        if (timeHours > 0) {
-          const now = new Date();
-          const finishTime = new Date(now.getTime() + timeHours * 3600000);
-          
-          // Update date and time fields
-          const finishDate = `${finishTime.getFullYear()}-${String(finishTime.getMonth()+1).padStart(2,'0')}-${String(finishTime.getDate()).padStart(2,'0')}`;
-          const finishTimeStr = `${String(finishTime.getHours()).padStart(2,'0')}:${String(finishTime.getMinutes()).padStart(2,'0')}`;
-          
-          document.getElementById('editFinishDate').value = finishDate;
-          document.getElementById('editFinishTime').value = finishTimeStr;
-          
-          console.log('✅ Finish time updated:', finishDate, finishTimeStr);
-        }
+        // Update date and time fields
+        const finishDate = `${finishTime.getFullYear()}-${String(finishTime.getMonth()+1).padStart(2,'0')}-${String(finishTime.getDate()).padStart(2,'0')}`;
+        const finishTimeStr = `${String(finishTime.getHours()).padStart(2,'0')}:${String(finishTime.getMinutes()).padStart(2,'0')}`;
+        
+        document.getElementById('editFinishDate').value = finishDate;
+        document.getElementById('editFinishTime').value = finishTimeStr;
+        
+        console.log('✅ Finish time updated:', finishDate, finishTimeStr);
+      }
     }
 
 
@@ -2244,13 +1575,8 @@
           historyRecord.changes = changes;
         }
         
-        // Calculate actual rate if level was updated - Using Firebase data
+        // Calculate actual rate if level was updated
         if (currentLevel && previousLevel) {
-          // ✅ Ensure tanks data is loaded before calculations
-          if (!tanksLoaded || Object.keys(tanks).length === 0) {
-            console.log('⏳ Waiting for tank data to load before calculating rates...');
-          }
-          
           const timeDiff = (new Date() - new Date(currentEditingTank.lastLevelUpdate?.seconds * 1000 || currentEditingTank.addedAt?.seconds * 1000)) / (1000 * 60 * 60);
           const levelDiff = Math.abs(parseFloat(currentLevel) - parseFloat(previousLevel));
           
@@ -2259,44 +1585,28 @@
             const department = currentEditingTank.department;
             
             if (department === 'PLCR') {
-              // PLCR: MT/hr calculation - Using real KNPC data
+              // PLCR: MT/hr calculation
               const tankData = tanks[tankNumber];
               if (tankData) {
-                const bpm = tankData.comment; // Real KNPC BPM
-                console.log('🔥 PLCR Form Submission - Using real KNPC BPM:', bpm, 'for tank', tankNumber);
-                const volumeDiffBarrels = levelDiff * bpm;
+                const volumeDiffBarrels = levelDiff * tankData.comment;
                 const volumeM3 = volumeDiffBarrels * 0.159;
                 const massMT = volumeM3 * 0.85;
                 actualRate = massMT / timeDiff;
-                console.log('🏭 PLCR MT/hr in form submission:', { bpm, levelDiff, volumeDiffBarrels, volumeM3, massMT, actualRate });
-              } else {
-                console.error('❌ No tank data found for PLCR tank', tankNumber);
               }
             } else {
-              // PBCR/WASHERY: Based on rate unit - Using real KNPC data
+              // PBCR/WASHERY: Based on rate unit
               if (rateUnit === "mtr/hr" || rateUnit === "meter/hr") {
                 actualRate = levelDiff / timeDiff;
-                console.log('📏 PBCR meter/hr in form submission:', { levelDiff, timeDiff, actualRate });
               } else if (rateUnit === "m3/hr" || rateUnit === "m³/hr") {
                 const tankData = tanks[tankNumber];
                 if (tankData) {
-                  const bpm = tankData.comment; // Real KNPC BPM
-                  console.log('🔥 PBCR m³/hr Form Submission - Using real KNPC BPM:', bpm, 'for tank', tankNumber);
-                  const volumeDiffBarrels = levelDiff * bpm;
+                  const volumeDiffBarrels = levelDiff * tankData.comment;
                   actualRate = (volumeDiffBarrels * 0.159) / timeDiff;
-                  console.log('📦 PBCR m³/hr in form submission:', { bpm, levelDiff, volumeDiffBarrels, actualRate });
-                } else {
-                  console.error('❌ No tank data found for PBCR m³/hr tank', tankNumber);
                 }
               } else {
                 const tankData = tanks[tankNumber];
                 if (tankData) {
-                  const bpm = tankData.comment; // Real KNPC BPM
-                  console.log('🔥 PBCR bbl/hr Form Submission - Using real KNPC BPM:', bpm, 'for tank', tankNumber);
-                  actualRate = (levelDiff * bpm) / timeDiff;
-                  console.log('🛢️ PBCR bbl/hr in form submission:', { bpm, levelDiff, timeDiff, actualRate });
-                } else {
-                  console.error('❌ No tank data found for PBCR bbl/hr tank', tankNumber);
+                  actualRate = (levelDiff * tankData.comment) / timeDiff;
                 }
               }
             }
@@ -2304,8 +1614,7 @@
             historyRecord.actualRate = {
               value: Math.round(actualRate * 100) / 100,
               unit: rateUnit,
-              timePeriod: Math.round(timeDiff * 100) / 100 + ' hours',
-              calculatedWithRealKNPCData: true
+              timePeriod: Math.round(timeDiff * 100) / 100 + ' hours'
             };
           }
         }
@@ -2357,22 +1666,29 @@
         // Auto-fill current level from saved data
         if (tank.currentLevel) {
           document.getElementById('editPreviousLevelDisplay').value = tank.currentLevel;
-          document.getElementById('editPreviousLevel').value = tank.currentLevel; // For hidden field
           document.getElementById('editCurrentLevel').value = ''; // Always leave empty for new input
           console.log('✅ Auto-filled previous level:', tank.currentLevel);
         } else if (tank.initialLevel) {
           // If no currentLevel, use initialLevel as fallback
           document.getElementById('editPreviousLevelDisplay').value = tank.initialLevel;
-          document.getElementById('editPreviousLevel').value = tank.initialLevel; // For hidden field
           document.getElementById('editCurrentLevel').value = '';
           console.log('✅ Auto-filled previous level from initial:', tank.initialLevel);
         } else {
           document.getElementById('editPreviousLevelDisplay').value = '';
-          document.getElementById('editPreviousLevel').value = '';
           document.getElementById('editCurrentLevel').value = '';
           console.log('⚠️ No level found in tank data');
         }
-
+        
+        // ✅ FIXED: Proper Previous Level handling for all departments
+        if (tank.department === 'PLCR') {
+          // For PLCR, use saved previousLevel or currentLevel as fallback
+          const previousLevel = tank.previousLevel || tank.currentLevel || '';
+          document.getElementById('editPreviousLevel').value = previousLevel;
+          console.log('✅ PLCR Previous Level set to:', previousLevel);
+        } else {
+          // For PBCR/WASHERY, use currentLevel as previous
+          document.getElementById('editPreviousLevel').value = tank.currentLevel || '';
+        }
         
         document.getElementById('editRate').value = tank.rate || '';
         
@@ -3087,58 +2403,34 @@
     // Apply saved font size on page load
     applyFontSize();
 
-    // Add Tank calculation functions - Firebase Enabled
+    // Add Tank calculation functions
     function updateAddRateUnit() {
-      // ✅ Wait for tanks data from Firebase before checking tank data
-      waitForTanks(() => {
-        const tankNumber = document.getElementById('addTankNumber').value;
-        const department = document.getElementById('addDepartment').value;
-        const rateUnitField = document.getElementById('addRateUnit');
-        
-        if (department === 'PLCR') {
-          rateUnitField.value = 'MT/hr';
-          console.log('🏭 PLCR department - Set rate unit to MT/hr');
-        } else if (tankNumber && tanks[tankNumber]) {
-          // Set default rate unit based on real KNPC tank data
-          rateUnitField.value = 'bbl/hr';
-          console.log('🔥 PBCR tank found in Firebase - Set rate unit to bbl/hr for tank', tankNumber);
-        } else if (tankNumber) {
-          console.log('⚠️ Tank', tankNumber, 'not found in Firebase data');
-        }
-      });
+      const tankNumber = document.getElementById('addTankNumber').value;
+      const department = document.getElementById('addDepartment').value;
+      const rateUnitField = document.getElementById('addRateUnit');
+      
+      if (department === 'PLCR') {
+        rateUnitField.value = 'MT/hr';
+      } else if (tankNumber && tanks[tankNumber]) {
+        // Set default rate unit based on tank data (same as PBCR logic)
+        rateUnitField.value = 'bbl/hr';
+      }
     }
 
     function calculateAddTime() {
-      // Ensure tank data is loaded from Firebase  
-      if (!tanksLoaded || !tanks || Object.keys(tanks).length === 0) {
-        console.log('⏳ Firebase tank data not loaded for add time calculation, waiting...');
-        setTimeout(calculateAddTime, 1000);
-        return;
-      }
+      const targetType = document.getElementById('addTargetType').value;
+      const targetValue = parseFloat(document.getElementById('addTargetValue').value);
+      const currentLevel = parseFloat(document.getElementById('addCurrentLevel').value);
+      const rate = parseFloat(document.getElementById('addRate').value);
+      const rateUnit = document.getElementById('addRateUnit').value;
+      const tankNumber = document.getElementById('addTankNumber').value;
+      const department = document.getElementById('addDepartment').value;
       
-        const targetType = document.getElementById('addTargetType').value;
-        const targetValue = parseFloat(document.getElementById('addTargetValue').value);
-        const currentLevel = parseFloat(document.getElementById('addCurrentLevel').value);
-        const rate = parseFloat(document.getElementById('addRate').value);
-        const rateUnit = document.getElementById('addRateUnit').value;
-        const tankNumber = document.getElementById('addTankNumber').value;
-        const department = document.getElementById('addDepartment').value;
-        
-        if (!targetType || !targetValue || !currentLevel || !rate || !tankNumber) return;
-        
-        // Get tank data from Firebase with real KNPC values
-        const tankData = tanks[tankNumber];
-        if (!tankData || !tankData.comment) {
-          console.log('❌ No Firebase data for add tank', tankNumber, '- using fallback');
-          return;
-        }
-        
-        console.log('🔥 Add Tank - Using Firebase tank data:', {
-          tankNumber,
-          bpm: tankData.comment,
-          minLevel: tankData.min,
-          maxLevel: tankData.max
-        });
+      if (!targetType || !targetValue || !currentLevel || !rate || !tankNumber) return;
+      
+      // Get tank data from tanks object
+      const tankData = tanks[tankNumber];
+      if (!tankData) return;
       
       const c = tankData.comment; // capacity factor
       const m = tankData.min;     // minimum level
@@ -3184,19 +2476,17 @@
         }
       }
       
-        if (timeHours > 0) {
-          const now = new Date();
-          const finishTime = new Date(now.getTime() + timeHours * 3600000);
-          
-          // Update date and time fields
-          const finishDate = `${finishTime.getFullYear()}-${String(finishTime.getMonth()+1).padStart(2,'0')}-${String(finishTime.getDate()).padStart(2,'0')}`;
-          const finishTimeStr = `${String(finishTime.getHours()).padStart(2,'0')}:${String(finishTime.getMinutes()).padStart(2,'0')}`;
-          
-          document.getElementById('addFinishDate').value = finishDate;
-          document.getElementById('addFinishTime').value = finishTimeStr;
-          
-          console.log('✅ Add Tank - Calculated finish time:', finishDate, finishTimeStr);
-        }
+      if (timeHours > 0) {
+        const now = new Date();
+        const finishTime = new Date(now.getTime() + timeHours * 3600000);
+        
+        // Update date and time fields
+        const finishDate = `${finishTime.getFullYear()}-${String(finishTime.getMonth()+1).padStart(2,'0')}-${String(finishTime.getDate()).padStart(2,'0')}`;
+        const finishTimeStr = `${String(finishTime.getHours()).padStart(2,'0')}:${String(finishTime.getMinutes()).padStart(2,'0')}`;
+        
+        document.getElementById('addFinishDate').value = finishDate;
+        document.getElementById('addFinishTime').value = finishTimeStr;
+      }
     }
 
     // إضافة function تأكيد الحذف
@@ -3273,39 +2563,6 @@
         navigator.clipboard.writeText(whatsappURL).then(()=>alert(`تم نسخ رابط الواتساب:\n${whatsappURL}`)).catch(()=>alert(`رابط الواتساب:\n${whatsappURL}`))
       }
     };
-    
-    // ✅ Initialize tanks data from Firebase on page load
-    document.addEventListener('DOMContentLoaded', async () => {
-      console.log('🚀 Initializing Live Tanks with Firebase data...');
-      
-      // Show loading message
-      showMessage('🔄 Loading tank data from Firebase...', 'info');
-      
-      try {
-        await loadTanksFromFirebase();
-        console.log('✅ Tanks data loaded, ready for calculations with real KNPC values');
-        showMessage(`✅ Loaded ${Object.keys(tanks).length} tanks from Firebase successfully!`, 'success');
-        
-        // Initialize built-in alarms
-        initializeBuiltInAlarms();
-        console.log('🔔 Built-in alarms initialized');
-        
-      } catch (error) {
-        console.error('❌ Failed to load tank data from Firebase:', error);
-        showMessage('⚠️ Warning: Tank data loading failed. Some calculations may not work properly.', 'error');
-      }
-    });
-
-    // Listen for messages from notifications page
-    window.addEventListener('message', function(event) {
-      if (event.origin !== window.location.origin) return;
-      
-      if (event.data.type === 'ALARM_STOPPED') {
-        console.log('🔔 Alarm stopped from notifications page');
-        // Handle alarm stop if needed
-      }
-    });
-    
   </script>
 
   <footer style="text-align:center;padding:20px;background:rgba(0,0,0,0.3);color:white;margin-top:30px">

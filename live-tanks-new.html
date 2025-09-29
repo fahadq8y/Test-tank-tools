@@ -689,211 +689,72 @@
     let tanks = {};
     let tanksLoaded = false;
     
-    // Helper function to check if Firebase tank data is available
-    function isFirebaseTankDataReady() {
-      return tanksLoaded && tanks && Object.keys(tanks).length > 0;
-    }
-    
-    // Helper function to get tank data with fallback
-    function getTankData(tankNumber) {
-      if (!isFirebaseTankDataReady()) {
-        console.log('⚠️ Firebase tank data not ready for tank', tankNumber);
-        return null;
-      }
-      
-      const tankData = tanks[tankNumber];
-      if (!tankData || !tankData.comment) {
-        console.log('⚠️ No Firebase data found for tank', tankNumber);
-        return null;
-      }
-      
-      return tankData;
-    }
-    
-    // 🔥 NEW: Get tank data based on Rate Unit (smart path selection)
-    async function getTankDataByRateUnit(tankNumber, rateUnit) {
-      console.log(`🎯 Getting tank ${tankNumber} data for rate unit: ${rateUnit}`);
-      
-      let department, pathToTry;
-      
-      // 🔧 Determine correct Firebase path based on Rate Unit
-      if (rateUnit === 'MT/hr') {
-        // MT/hr (Metric Ton per hour) → PLCR department
-        department = 'plcr';
-        pathToTry = ['tankData', 'plcr', 'tanks'];
-        console.log('📍 MT/hr unit detected → Using PLCR path');
-      } else {
-        // bbl, m³/hr, meter/hr → PBCR department  
-        department = 'pbcr';
-        pathToTry = ['tankData', 'pbcr', 'tanks'];
-        console.log('📍 Other units (bbl/m³/hr/meter/hr) detected → Using PBCR path');
-      }
-      
-      try {
-        console.log(`🔍 Fetching fresh data from: ${pathToTry.join('/')}`);
-        
-        // Get fresh data from the correct path
-        const collectionRef = collection(window.db, pathToTry[0], pathToTry[1], pathToTry[2]);
-        const snapshot = await getDocs(collectionRef, { source: 'server' });
-        
-        console.log(`📊 Found ${snapshot.size} documents in ${department.toUpperCase()} path`);
-        
-        // Look for specific tank
-        let foundTankData = null;
-        snapshot.forEach(doc => {
-          if (doc.id === tankNumber) {
-            const data = doc.data();
-            foundTankData = {
-              comment: data.comment || data.bmp || data.capacity || 0,
-              min: data.min || data.minLevel || data.low || 0,
-              max: data.max || data.maxLevel || data.high || 0,
-              department: department.toUpperCase(),
-              path: pathToTry.join('/'),
-              rawData: data
-            };
-            console.log(`✅ Tank ${tankNumber} found in ${department.toUpperCase()}:`, foundTankData);
-          }
-        });
-        
-        if (!foundTankData) {
-          console.log(`❌ Tank ${tankNumber} not found in ${department.toUpperCase()} path`);
-          return null;
-        }
-        
-        return foundTankData;
-        
-      } catch (error) {
-        console.error(`❌ Error fetching tank ${tankNumber} from ${department.toUpperCase()}:`, error);
-        return null;
-      }
-    }
-    
-    // Firebase configuration - UNIFIED for consistent access
+    // Firebase configuration
     const firebaseConfig = {
-      apiKey: "AIzaSyBCdv37V6vOFMe42rGlPyl9lVq-9JldEPg",
-      authDomain: "tank-tools-knpc-c2d95.firebaseapp.com",
+      apiKey: "AIzaSyD7lJcoY33FEC9d6eWy67QIO9SV4lS24pg",
+      authDomain: "tank-tools-knpc-c2d95.firebaseapp.com", 
       projectId: "tank-tools-knpc-c2d95",
-      storageBucket: "tank-tools-knpc-c2d95.appspot.com",
-      messagingSenderId: "678793823159",
-      appId: "1:678793823159:web:7a7b1398aefdb7f24462b9"
+      storageBucket: "tank-tools-knpc-c2d95.firebasestorage.app",
+      messagingSenderId: "510062594324",
+      appId: "1:510062594324:web:b892fd02007a5ca2f0da01"
     };
     
-    // Load tanks from Firebase with real KNPC data - ALL DEPARTMENTS with enhanced debugging
+    // Load tanks from Firebase with real KNPC data
     async function loadTanksFromFirebase() {
       try {
-        console.log('🔄 Loading tanks from Firebase - ALL DEPARTMENTS...');
+        console.log('🔄 Loading tanks from Firebase with real KNPC data...');
         
-        // Use the already initialized Firebase instance from the main SDK
-        if (!window.db) {
-          console.error('❌ Firebase not initialized! Initializing now...');
-          const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js');
-          const { getFirestore } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
-          
-          const app = initializeApp(firebaseConfig);
-          window.db = getFirestore(app);
-        }
+        const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js');
+        const { getFirestore, collection, getDocs } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+        
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        const tanksRef = collection(db, 'tankData', 'pbcr', 'tanks');
+        const snapshot = await getDocs(tanksRef);
         
         tanks = {}; // Reset tanks object
-        let totalTanks = 0;
         
-        // Enhanced collection path debugging - try multiple possible paths
-        const possiblePaths = [
-          // Standard department-based paths
-          ['tankData', 'pbcr', 'tanks'],
-          ['tankData', 'plcr', 'tanks'],
-          ['tankData', 'washery', 'tanks'],
-          // Alternative collection names
-          ['tanks', 'pbcr'],
-          ['tanks', 'plcr'], 
-          ['tanks', 'washery'],
-          // Direct collection approach
-          ['pbcr_tanks'],
-          ['plcr_tanks'],
-          ['washery_tanks'],
-          // Legacy paths
-          ['tankSpecifications'],
-          ['tankData']
-        ];
-        
-        console.log('🔍 Trying multiple collection paths to find tank data...');
-        
-        for (const pathArray of possiblePaths) {
-          try {
-            console.log(`🔍 Checking path: ${pathArray.join('/')}`);
-            
-            let collectionRef;
-            if (pathArray.length === 1) {
-              collectionRef = collection(window.db, pathArray[0]);
-            } else if (pathArray.length === 2) {
-              collectionRef = collection(window.db, pathArray[0], pathArray[1]);
-            } else if (pathArray.length === 3) {
-              collectionRef = collection(window.db, pathArray[0], pathArray[1], pathArray[2]);
-            }
-            
-            const snapshot = await getDocs(collectionRef, { source: 'server' });
-            
-            if (snapshot.size > 0) {
-              console.log(`✅ Found ${snapshot.size} documents at path: ${pathArray.join('/')}`);
-              
-              snapshot.forEach(doc => {
-                const data = doc.data();
-                console.log(`📋 Document ${doc.id}:`, data);
-                
-                // Determine department from path or data
-                let department = 'UNKNOWN';
-                if (pathArray.includes('pbcr')) department = 'PBCR';
-                else if (pathArray.includes('plcr')) department = 'PLCR';
-                else if (pathArray.includes('washery')) department = 'WASHERY';
-                else if (data.department) department = data.department.toUpperCase();
-                
-                tanks[doc.id] = {
-                  comment: data.comment || data.bpm || data.capacity || 0,  // BPM from real KNPC system
-                  min: data.min || data.minLevel || data.low || 0,          // Lo Level from real KNPC system
-                  max: data.max || data.maxLevel || data.high || 0,         // Hi Level from real KNPC system
-                  department: department // Track department
-                };
-                totalTanks++;
-              });
-              
-              console.log(`✅ Successfully loaded ${snapshot.size} tanks from ${pathArray.join('/')}`);
-            } else {
-              console.log(`⚠️ No documents found at path: ${pathArray.join('/')}`);
-            }
-          } catch (pathError) {
-            console.log(`❌ Error checking path ${pathArray.join('/')}:`, pathError.message);
-          }
-        }
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          tanks[doc.id] = {
+            comment: data.comment || 0,  // BPM from real KNPC system
+            min: data.min || 0,          // Lo Level from real KNPC system
+            max: data.max || 0           // Hi Level from real KNPC system
+          };
+        });
         
         tanksLoaded = true;
-        console.log(`🎯 TOTAL: Loaded ${totalTanks} tanks from Firebase`);
-        
-        if (totalTanks > 0) {
-          console.log('📊 Sample tank data loaded:', {
-            'First 3 tanks': Object.keys(tanks).slice(0, 3).map(key => ({
-              id: key,
-              data: tanks[key]
-            }))
-          });
-          console.log('🔥 Firebase integration successful - tanks loaded with real KNPC data!');
-          
-          // Display success message
-          showMessage(`✅ Loaded ${totalTanks} tanks from Firebase successfully!`, 'success');
-        } else {
-          console.log('⚠️ No tanks found in any Firebase collection');
-          showMessage('⚠️ No tanks found in Firebase collections. Check collection structure.', 'warning');
-        }
+        console.log(`✅ Loaded ${Object.keys(tanks).length} tanks from Firebase`);
+        console.log('📊 Sample tank data (TK-225):', tanks['225']);
+        console.log('🎯 All tanks now use real KNPC BPM values for accurate calculations');
         
         return tanks;
         
       } catch (error) {
         console.error('❌ Error loading tanks from Firebase:', error);
-        showMessage('❌ Error loading tanks from Firebase: ' + error.message, 'error');
         tanksLoaded = true;
         return tanks;
       }
     }
     
-    // Removed waitForTanks wrapper - Firebase data loaded during initialization
+    // Wait for tanks data to load before proceeding
+    function waitForTanks(callback, maxWait = 10000) {
+      const startTime = Date.now();
+      
+      function check() {
+        if (tanksLoaded && Object.keys(tanks).length > 0) {
+          callback();
+        } else if (Date.now() - startTime < maxWait) {
+          setTimeout(check, 100);
+        } else {
+          console.error('❌ Timeout waiting for tanks data');
+          callback(); // Proceed anyway
+        }
+      }
+      
+      check();
+    }
 
     // Updated Product types by department
     const productsByDepartment = {
@@ -1019,18 +880,12 @@
       window.location.href = 'login.html';
     }
 
-    async function initializeApp() {
+    function initializeApp() {
       document.getElementById('mainContent').style.display = 'block';
       document.getElementById('accessDenied').style.display = 'none';
       
       loadUserInfo();
       setupPermissions();
-      
-      // 🔥 CRITICAL: Load Firebase tank data FIRST before loading live tanks
-      console.log('🔄 Initializing app - Loading Firebase tank data first...');
-      await loadTanksFromFirebase();
-      
-      // Then load live tanks
       loadLiveTanks();
       
       // Set default date to today
@@ -1139,18 +994,7 @@
               }
             }
           });
-        }, 5000); // Update every 5 seconds (faster but not too aggressive)
-        
-        // 🔄 Auto-refresh Firebase data every 5 minutes
-        setInterval(async () => {
-          console.log('🔄 Auto-refreshing Firebase tank data...');
-          try {
-            await loadTanksFromFirebase();
-            console.log('✅ Firebase data auto-refreshed successfully');
-          } catch (error) {
-            console.error('❌ Auto-refresh failed:', error);
-          }
-        }, 300000); // Refresh every 5 minutes
+        }, 60000); // Update every minute
         
       } catch (error) {
         console.error('Error loading live tanks:', error);
@@ -1859,39 +1703,25 @@
     window.addReminder = window.showReminderOptions;
 
 
-    // Calculate actual rate based on level difference and time - SMART RATE UNIT VERSION
-    async function calculateActualRate() {
-      const currentLevel = parseFloat(document.getElementById('editCurrentLevel').value);
-      const previousLevel = parseFloat(document.getElementById('editPreviousLevel').value);
-      const rateUnit = document.getElementById('editRateUnit').value;
-      const department = document.getElementById('editDepartment').value;
-      
-      if (!currentLevel || !previousLevel || !currentEditingTank) return;
-      
-      // Ensure tank data is loaded from Firebase
-      if (!tanksLoaded || !tanks || Object.keys(tanks).length === 0) {
-        console.log('⏳ Firebase tank data not loaded yet, waiting...');
-        // Try to reload from Firebase if needed
-        if (!window.firebaseLoadingInProgress) {
-          window.firebaseLoadingInProgress = true;
-          loadTanksFromFirebase().then(() => {
-            window.firebaseLoadingInProgress = false;
-            setTimeout(() => calculateActualRate(), 500); // Retry after loading
-          }).catch(() => {
-            window.firebaseLoadingInProgress = false;
-            console.log('⚠️ Firebase loading failed, using fallback calculation');
-            setTimeout(() => calculateActualRate(), 1000);
-          });
-        }
-        return;
-      }
-      
-      console.log('📊 Calculating actual rate:', {
-        currentLevel,
-        previousLevel,
-        rateUnit,
-        department
-      });
+    // Calculate actual rate based on level difference and time - FIREBASE ENABLED VERSION
+    function calculateActualRate() {
+      // ✅ Wait for tanks data from Firebase before calculating
+      waitForTanks(() => {
+        const currentLevel = parseFloat(document.getElementById('editCurrentLevel').value);
+        const previousLevel = parseFloat(document.getElementById('editPreviousLevel').value);
+        const rateUnit = document.getElementById('editRateUnit').value;
+        const department = document.getElementById('editDepartment').value;
+        
+        if (!currentLevel || !previousLevel || !currentEditingTank) return;
+        
+        console.log('📊 Calculating actual rate with real KNPC data:', {
+          currentLevel,
+          previousLevel,
+          rateUnit,
+          department,
+          tanksLoaded: tanksLoaded,
+          tanksCount: Object.keys(tanks).length
+        });
       
       // Get time difference
       const now = new Date();
@@ -1915,13 +1745,11 @@
       if (rateUnit === 'MT/hr') {
         // For MT/hr (typically from PLCR) - Using real KNPC data
         const tankNumber = document.getElementById('editTankNumber').value;
-        
-        // 🔥 SMART: Get data from correct path based on rate unit
-        const tankData = await getTankDataByRateUnit(tankNumber, rateUnit);
+        const tankData = tanks[tankNumber];
         
         if (tankData) {
           const c = tankData.comment; // BPM from real KNPC system
-          console.log('🔥 PLCR MT/hr - Using Firebase BPM:', c, 'for tank', tankNumber, `(${tankData.department || 'Unknown dept'})`);
+          console.log('🔥 PLCR MT/hr - Using real KNPC BPM:', c, 'for tank', tankNumber);
           // Convert level to volume in barrels, then to metric tons
           const volumeDiffBarrels = levelDiff * c;
           // Assuming 1 barrel ≈ 0.159 m³ and density varies by product (using average 0.85 MT/m³)
@@ -1937,7 +1765,7 @@
             actualRate 
           });
         } else {
-          console.log('❌ No tank data found for PLCR tank', tankNumber, '- using fallback');
+          console.error('❌ No tank data found for tank', tankNumber);
           // Fallback calculation for PLCR
           actualRate = levelDiff / timeDiffHours * 10; // Rough estimate
         }
@@ -1949,13 +1777,11 @@
       } else if (rateUnit === "m3/hr" || rateUnit === "m3" || rateUnit === "m³/hr" || rateUnit === "m³") {
         // For cubic meter units (typically from PBCR) - Using real KNPC data
         const tankNumber = document.getElementById('editTankNumber').value;
-        
-        // 🔥 SMART: Get data from correct path based on rate unit
-        const tankData = await getTankDataByRateUnit(tankNumber, rateUnit);
+        const tankData = tanks[tankNumber];
         
         if (tankData) {
           const c = tankData.comment; // BPM from real KNPC system
-          console.log('🔥 PBCR m³/hr - Using Firebase BPM:', c, 'for tank', tankNumber, `(${tankData.department || 'Unknown dept'})`);
+          console.log('🔥 PBCR m³/hr - Using real KNPC BPM:', c, 'for tank', tankNumber);
           // Rate in cubic meters per hour
           const volumeDiffBarrels = levelDiff * c;
           const rateBarrels = volumeDiffBarrels / timeDiffHours;
@@ -1969,20 +1795,16 @@
             actualRate 
           });
         } else {
-          console.log('❌ No tank data found for m³/hr tank', tankNumber, '- using fallback');
-          // Fallback: direct level/time calculation
-          actualRate = levelDiff / timeDiffHours; 
+          console.error('❌ No tank data found for tank', tankNumber);
         }
       } else {
         // For barrel units (typically from PBCR) - bbl/hr - Using real KNPC data
         const tankNumber = document.getElementById('editTankNumber').value;
-        
-        // 🔥 SMART: Get data from correct path based on rate unit  
-        const tankData = await getTankDataByRateUnit(tankNumber, rateUnit);
+        const tankData = tanks[tankNumber];
         
         if (tankData) {
           const c = tankData.comment; // BPM from real KNPC system
-          console.log('🔥 PBCR bbl/hr - Using Firebase BPM:', c, 'for tank', tankNumber, `(${tankData.department || 'Unknown dept'})`);
+          console.log('🔥 PBCR bbl/hr - Using real KNPC BPM:', c, 'for tank', tankNumber);
           const volumeDiff = levelDiff * c;
           actualRate = volumeDiff / timeDiffHours;
           console.log('🛢️ PBCR bbl/hr calculation with real data:', { 
@@ -1993,30 +1815,24 @@
             actualRate 
           });
         } else {
-          console.log('❌ No tank data found for bbl/hr tank', tankNumber, '- using fallback');
-          // Fallback: direct level/time calculation  
-          actualRate = levelDiff / timeDiffHours;
+          console.error('❌ No tank data found for tank', tankNumber);
         }
       }
       
       // Update rate field with decimal precision
-      document.getElementById('editRate').value = actualRate.toFixed(2);
-      
-      console.log('✅ Rate updated to:', actualRate.toFixed(2), rateUnit);
-      
-      // Recalculate finish time
-      calculateEditTime();
+        document.getElementById('editRate').value = actualRate.toFixed(2);
+        
+        console.log('✅ Rate updated to:', actualRate.toFixed(2), rateUnit, 'using real KNPC data');
+        
+        // Recalculate finish time
+        calculateEditTime();
+      }); // End of waitForTanks callback
     }
 
-    // Calculate edit time function - IMPROVED VERSION WITH FIREBASE
+    // Calculate edit time function - FIREBASE ENABLED VERSION
     function calculateEditTime() {
-      // Ensure tank data is loaded from Firebase
-      if (!tanksLoaded || !tanks || Object.keys(tanks).length === 0) {
-        console.log('⏳ Firebase tank data not loaded for time calculation, waiting...');
-        setTimeout(calculateEditTime, 1000);
-        return;
-      }
-      
+      // ✅ Wait for tanks data from Firebase before calculating
+      waitForTanks(() => {
         const targetType = document.getElementById('editTargetType').value;
         const targetValue = parseFloat(document.getElementById('editTargetValue').value);
         const rate = parseFloat(document.getElementById('editRate').value);
@@ -2028,12 +1844,12 @@
         
         // Get tank data from Firebase with real KNPC values
         const tankData = tanks[tankNumber];
-        if (!tankData || !tankData.comment) {
-          console.log('❌ No Firebase data for tank', tankNumber, '- using fallback');
+        if (!tankData) {
+          console.error('❌ No tank data found for tank', tankNumber);
           return;
         }
         
-        console.log('🔥 Using Firebase tank data for calculations:', {
+        console.log('🔥 Using real KNPC tank data for calculations:', {
           tankNumber,
           bpm: tankData.comment,
           minLevel: tankData.min,
@@ -2137,8 +1953,9 @@
           document.getElementById('editFinishDate').value = finishDate;
           document.getElementById('editFinishTime').value = finishTimeStr;
           
-          console.log('✅ Finish time updated:', finishDate, finishTimeStr);
+          console.log('✅ Finish time updated with real KNPC data:', finishDate, finishTimeStr);
         }
+      }); // End of waitForTanks callback
     }
 
 
@@ -2357,22 +2174,29 @@
         // Auto-fill current level from saved data
         if (tank.currentLevel) {
           document.getElementById('editPreviousLevelDisplay').value = tank.currentLevel;
-          document.getElementById('editPreviousLevel').value = tank.currentLevel; // For hidden field
           document.getElementById('editCurrentLevel').value = ''; // Always leave empty for new input
           console.log('✅ Auto-filled previous level:', tank.currentLevel);
         } else if (tank.initialLevel) {
           // If no currentLevel, use initialLevel as fallback
           document.getElementById('editPreviousLevelDisplay').value = tank.initialLevel;
-          document.getElementById('editPreviousLevel').value = tank.initialLevel; // For hidden field
           document.getElementById('editCurrentLevel').value = '';
           console.log('✅ Auto-filled previous level from initial:', tank.initialLevel);
         } else {
           document.getElementById('editPreviousLevelDisplay').value = '';
-          document.getElementById('editPreviousLevel').value = '';
           document.getElementById('editCurrentLevel').value = '';
           console.log('⚠️ No level found in tank data');
         }
-
+        
+        // ✅ FIXED: Proper Previous Level handling for all departments
+        if (tank.department === 'PLCR') {
+          // For PLCR, use saved previousLevel or currentLevel as fallback
+          const previousLevel = tank.previousLevel || tank.currentLevel || '';
+          document.getElementById('editPreviousLevel').value = previousLevel;
+          console.log('✅ PLCR Previous Level set to:', previousLevel);
+        } else {
+          // For PBCR/WASHERY, use currentLevel as previous
+          document.getElementById('editPreviousLevel').value = tank.currentLevel || '';
+        }
         
         document.getElementById('editRate').value = tank.rate || '';
         
@@ -3109,13 +2933,8 @@
     }
 
     function calculateAddTime() {
-      // Ensure tank data is loaded from Firebase  
-      if (!tanksLoaded || !tanks || Object.keys(tanks).length === 0) {
-        console.log('⏳ Firebase tank data not loaded for add time calculation, waiting...');
-        setTimeout(calculateAddTime, 1000);
-        return;
-      }
-      
+      // ✅ Wait for tanks data from Firebase before calculating
+      waitForTanks(() => {
         const targetType = document.getElementById('addTargetType').value;
         const targetValue = parseFloat(document.getElementById('addTargetValue').value);
         const currentLevel = parseFloat(document.getElementById('addCurrentLevel').value);
@@ -3128,12 +2947,12 @@
         
         // Get tank data from Firebase with real KNPC values
         const tankData = tanks[tankNumber];
-        if (!tankData || !tankData.comment) {
-          console.log('❌ No Firebase data for add tank', tankNumber, '- using fallback');
+        if (!tankData) {
+          console.error('❌ No tank data found for tank', tankNumber);
           return;
         }
         
-        console.log('🔥 Add Tank - Using Firebase tank data:', {
+        console.log('🔥 Add Tank - Using real KNPC tank data:', {
           tankNumber,
           bpm: tankData.comment,
           minLevel: tankData.min,
@@ -3195,8 +3014,9 @@
           document.getElementById('addFinishDate').value = finishDate;
           document.getElementById('addFinishTime').value = finishTimeStr;
           
-          console.log('✅ Add Tank - Calculated finish time:', finishDate, finishTimeStr);
+          console.log('✅ Add Tank - Calculated finish time with real KNPC data:', finishDate, finishTimeStr);
         }
+      }); // End of waitForTanks callback
     }
 
     // إضافة function تأكيد الحذف
@@ -3277,23 +3097,12 @@
     // ✅ Initialize tanks data from Firebase on page load
     document.addEventListener('DOMContentLoaded', async () => {
       console.log('🚀 Initializing Live Tanks with Firebase data...');
+      await loadTanksFromFirebase();
+      console.log('✅ Tanks data loaded, ready for calculations with real KNPC values');
       
-      // Show loading message
-      showMessage('🔄 Loading tank data from Firebase...', 'info');
-      
-      try {
-        await loadTanksFromFirebase();
-        console.log('✅ Tanks data loaded, ready for calculations with real KNPC values');
-        showMessage(`✅ Loaded ${Object.keys(tanks).length} tanks from Firebase successfully!`, 'success');
-        
-        // Initialize built-in alarms
-        initializeBuiltInAlarms();
-        console.log('🔔 Built-in alarms initialized');
-        
-      } catch (error) {
-        console.error('❌ Failed to load tank data from Firebase:', error);
-        showMessage('⚠️ Warning: Tank data loading failed. Some calculations may not work properly.', 'error');
-      }
+      // Initialize built-in alarms
+      initializeBuiltInAlarms();
+      console.log('🔔 Built-in alarms initialized');
     });
 
     // Listen for messages from notifications page
