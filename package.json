@@ -1,0 +1,34 @@
+{
+  "name": "tank-tools-knpc",
+  "version": "5.0.0",
+  "description": "KNPC Tank Management Tools - PBCR, PLCR, Live Tanks, NMOGAS Blender, and Admin Dashboard",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'Static build complete'",
+    "start": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "keywords": [
+    "knpc",
+    "tanks",
+    "pbcr",
+    "plcr",
+    "live-tanks",
+    "nmogas",
+    "firebase",
+    "dashboard"
+  ],
+  "author": "Fahad - 17877",
+  "license": "MIT",
+  "dependencies": {
+    "firebase": "^10.7.1"
+  },
+  "devDependencies": {
+    "@vercel/node": "^3.0.0",
+    "vercel": "^32.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
