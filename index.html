@@ -243,9 +243,20 @@ input,select{background:rgba(255,255,255,0.9);border-radius:12px;border:none;col
 </div>
 </div>
 <script type="module">
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
 import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, serverTimestamp, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-const app = initializeApp({apiKey:"AIzaSyD7lJcoY33FEC9d6eWy67QIO9SV4lS24pg",authDomain:"tank-tools-knpc-c2d95.firebaseapp.com",projectId:"tank-tools-knpc-c2d95",storageBucket:"tank-tools-knpc-c2d95.firebasestorage.app",messagingSenderId:"510062594324",appId:"1:510062594324:web:b892fd02007a5ca2f0da01"});
+
+// ✅ PREVENT DUPLICATE APP INITIALIZATION
+let app;
+const existingApps = getApps();
+if (existingApps.length === 0) {
+    app = initializeApp({apiKey:"AIzaSyD7lJcoY33FEC9d6eWy67QIO9SV4lS24pg",authDomain:"tank-tools-knpc-c2d95.firebaseapp.com",projectId:"tank-tools-knpc-c2d95",storageBucket:"tank-tools-knpc-c2d95.firebasestorage.app",messagingSenderId:"510062594324",appId:"1:510062594324:web:b892fd02007a5ca2f0da01"});
+    console.log('🔥 Firebase initialized for Index Calculator!');
+} else {
+    app = getApp();
+    console.log('🔄 Using existing Firebase app for Index Calculator');
+}
+
 window.db = getFirestore(app);
 window.doc = doc;
 window.getDoc = getDoc;
