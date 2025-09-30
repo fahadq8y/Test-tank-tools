@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار Firebase Paths - Rate Calculation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            color: white;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #FFD700;
+            font-size: 2rem;
+        }
+        .test-section {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #007AFF;
+        }
+        .section-title {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #007AFF;
+            margin-bottom: 15px;
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #FFD700;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px 0;
+            transition: all 0.3s ease;
+        }
+        .btn-test {
+            background: linear-gradient(45deg, #007AFF, #5856D6);
+            color: white;
+        }
+        .btn-test:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        .results {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+        }
+        .result-item {
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+        }
+        .success {
+            border-left: 4px solid #34C759;
+        }
+        .error {
+            border-left: 4px solid #FF3B30;
+        }
+        .warning {
+            border-left: 4px solid #FF9500;
+        }
+        .info {
+            border-left: 4px solid #007AFF;
+        }
+        .path-info {
+            background: rgba(255, 152, 0, 0.1);
+            border: 1px solid rgba(255, 152, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        .data-preview {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 اختبار Firebase Paths للـ Rate Calculation</h1>
+        
+        <div class="path-info">
+            <h3>📋 المطلوب اختباره:</h3>
+            <p><strong>🟦 PBCR Path:</strong> للـ Rate Units: meter/hr, bbl/hr, m³/hr</p>
+            <p><strong>🟪 PLCR Path:</strong> للـ Rate Unit: MT/hr</p>
+        </div>
+
+        <div class="test-section">
+            <div class="section-title">🔍 اختبار Tank Number و Rate Unit</div>
+            
+            <div class="form-group">
+                <label>🏷️ رقم الخزان:</label>
+                <select id="testTankNumber">
+                    <option value="221">Tank 221</option>
+                    <option value="460">Tank 460</option>
+                    <option value="462">Tank 462</option>
+                    <option value="834">Tank 834</option>
+                    <option value="833">Tank 833</option>
+                    <option value="520">Tank 520</option>
+                    <option value="521">Tank 521</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>📊 Rate Unit:</label>
+                <select id="testRateUnit">
+                    <option value="meter/hr">meter/hr (PBCR)</option>
+                    <option value="bbl/hr">bbl/hr (PBCR)</option>
+                    <option value="m³/hr">m³/hr (PBCR)</option>
+                    <option value="MT/hr">MT/hr (PLCR)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>📏 Current Level (للاختبار):</label>
+                <input type="number" id="testCurrentLevel" value="10.5" step="0.1">
+            </div>
+
+            <div class="form-group">
+                <label>📏 Previous Level (للاختبار):</label>
+                <input type="number" id="testPreviousLevel" value="8.2" step="0.1">
+            </div>
+
+            <button class="btn btn-test" onclick="testFirebasePaths()">
+                🧪 اختبر Firebase Paths
+            </button>
+        </div>
+
+        <div class="test-section">
+            <div class="section-title">📊 نتائج الاختبار</div>
+            <div id="testResults" class="results">
+                <p>اضغط "اختبر Firebase Paths" لبدء الاختبار...</p>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <div class="section-title">📁 بيانات Firebase الفعلية</div>
+            <div id="firebaseData" class="data-preview">
+                سيتم عرض البيانات هنا...
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js';
+        import { getFirestore, collection, getDocs, doc, getDoc } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js';
+
+        // Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCBdaH6j5meX5w_m8dxOCdYFyRU3SYe7Y4",
+            authDomain: "livetanks-d4dc2.firebaseapp.com",
+            projectId: "livetanks-d4dc2",
+            storageBucket: "livetanks-d4dc2.appspot.com",
+            messagingSenderId: "677395694442",
+            appId: "1:677395694442:web:0110bb743ceef889bab077"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        // Make available globally
+        window.db = db;
+        window.getDocs = getDocs;
+        window.getDoc = getDoc;
+        window.collection = collection;
+        window.doc = doc;
+
+        console.log('✅ Firebase initialized for testing');
+    </script>
+
+    <script>
+        let currentTestResults = {};
+
+        async function testFirebasePaths() {
+            const tankNumber = document.getElementById('testTankNumber').value;
+            const rateUnit = document.getElementById('testRateUnit').value;
+            const currentLevel = parseFloat(document.getElementById('testCurrentLevel').value);
+            const previousLevel = parseFloat(document.getElementById('testPreviousLevel').value);
+
+            const resultsDiv = document.getElementById('testResults');
+            const firebaseDiv = document.getElementById('firebaseData');
+            
+            resultsDiv.innerHTML = '<p>🔄 جاري الاختبار...</p>';
+            firebaseDiv.innerHTML = 'جاري تحميل البيانات من Firebase...';
+
+            try {
+                // تحديد المسار حسب نوع الـ Rate
+                let collectionPath = '';
+                let expectedPath = '';
+                
+                if (rateUnit === 'MT/hr') {
+                    collectionPath = 'tankData/plcr/tanks';
+                    expectedPath = 'PLCR';
+                } else {
+                    collectionPath = 'tankData/pbcr/tanks'; 
+                    expectedPath = 'PBCR';
+                }
+
+                // اختبار 1: فحص وجود Collection
+                const testResults = [];
+                testResults.push({
+                    test: 'تحديد المسار',
+                    result: `Rate Unit: ${rateUnit} → Path: ${collectionPath}`,
+                    status: 'info'
+                });
+
+                // اختبار 2: محاولة قراءة البيانات من المسار المحدد
+                let tankData = null;
+                let allTanksData = {};
+
+                try {
+                    // Use the same method as live-tanks.html
+                    const pathType = rateUnit === 'MT/hr' ? 'plcr' : 'pbcr';
+                    const tanksCollection = window.collection(window.db, 'tankData', pathType, 'tanks');
+                    const tanksSnapshot = await window.getDocs(tanksCollection);
+                    
+                    tanksSnapshot.forEach((doc) => {
+                        allTanksData[doc.id] = doc.data();
+                    });
+
+                    tankData = allTanksData[tankNumber];
+
+                    testResults.push({
+                        test: 'قراءة Collection',
+                        result: `تم العثور على ${Object.keys(allTanksData).length} خزان في ${collectionPath}`,
+                        status: 'success'
+                    });
+
+                    if (tankData) {
+                        testResults.push({
+                            test: 'وجود الخزان المطلوب',
+                            result: `✅ تم العثور على Tank ${tankNumber} في ${expectedPath}`,
+                            status: 'success'
+                        });
+                    } else {
+                        testResults.push({
+                            test: 'وجود الخزان المطلوب',
+                            result: `❌ لم يتم العثور على Tank ${tankNumber} في ${expectedPath}`,
+                            status: 'error'
+                        });
+                    }
+
+                } catch (error) {
+                    testResults.push({
+                        test: 'قراءة Collection',
+                        result: `❌ خطأ في قراءة ${collectionPath}: ${error.message}`,
+                        status: 'error'
+                    });
+                }
+
+                // اختبار 3: حساب الـ Rate إذا كانت البيانات متاحة
+                if (tankData) {
+                    const levelDiff = Math.abs(currentLevel - previousLevel);
+                    const timeDiffHours = 2; // افتراضي للاختبار
+                    let calculatedRate = 0;
+                    let calculationDetails = '';
+
+                    if (rateUnit === 'meter/hr') {
+                        calculatedRate = levelDiff / timeDiffHours;
+                        calculationDetails = `${levelDiff} m ÷ ${timeDiffHours} hr = ${calculatedRate.toFixed(2)} m/hr`;
+                        
+                        testResults.push({
+                            test: 'حساب Rate (meter/hr)',
+                            result: calculationDetails,
+                            status: 'success'
+                        });
+
+                    } else if (rateUnit === 'bbl/hr' || rateUnit === 'm³/hr' || rateUnit === 'MT/hr') {
+                        const bpm = tankData.comment || 'غير متاح';
+                        
+                        if (typeof bpm === 'number') {
+                            const volumeDiffBarrels = levelDiff * bpm;
+                            let finalRate = volumeDiffBarrels / timeDiffHours;
+                            
+                            if (rateUnit === 'm³/hr') {
+                                finalRate = finalRate * 0.159; // تحويل إلى m³
+                                calculationDetails = `(${levelDiff} m × ${bpm} BPM ÷ ${timeDiffHours} hr) × 0.159 = ${finalRate.toFixed(2)} m³/hr`;
+                            } else if (rateUnit === 'MT/hr') {
+                                finalRate = finalRate * 0.159 * 0.85; // تحويل إلى MT
+                                calculationDetails = `(${levelDiff} m × ${bpm} BPM ÷ ${timeDiffHours} hr) × 0.159 × 0.85 = ${finalRate.toFixed(2)} MT/hr`;
+                            } else {
+                                calculationDetails = `(${levelDiff} m × ${bpm} BPM) ÷ ${timeDiffHours} hr = ${finalRate.toFixed(2)} bbl/hr`;
+                            }
+                            
+                            calculatedRate = finalRate;
+                            
+                            testResults.push({
+                                test: `حساب Rate (${rateUnit})`,
+                                result: `BPM: ${bpm} → ${calculationDetails}`,
+                                status: 'success'
+                            });
+                        } else {
+                            testResults.push({
+                                test: `حساب Rate (${rateUnit})`,
+                                result: `❌ BPM غير متاح في البيانات (comment = ${bpm})`,
+                                status: 'error'
+                            });
+                        }
+                    }
+                }
+
+                // اختبار 4: فحص المسار البديل للمقارنة
+                let alternativeData = {};
+                const alternativePath = rateUnit === 'MT/hr' ? 'tankData/pbcr/tanks' : 'tankData/plcr/tanks';
+                
+                try {
+                    const altPathType = rateUnit === 'MT/hr' ? 'pbcr' : 'plcr';
+                    const altCollection = window.collection(window.db, 'tankData', altPathType, 'tanks');
+                    const altSnapshot = await window.getDocs(altCollection);
+                    
+                    altSnapshot.forEach((doc) => {
+                        alternativeData[doc.id] = doc.data();
+                    });
+
+                    const altTankExists = alternativeData[tankNumber];
+                    
+                    testResults.push({
+                        test: 'فحص المسار البديل',
+                        result: `Tank ${tankNumber} في ${alternativePath}: ${altTankExists ? '✅ موجود' : '❌ غير موجود'}`,
+                        status: altTankExists ? 'warning' : 'info'
+                    });
+
+                } catch (error) {
+                    testResults.push({
+                        test: 'فحص المسار البديل',
+                        result: `خطأ في قراءة ${alternativePath}: ${error.message}`,
+                        status: 'warning'
+                    });
+                }
+
+                // عرض النتائج
+                displayTestResults(testResults);
+                displayFirebaseData(allTanksData, tankNumber, collectionPath, alternativeData, alternativePath);
+
+                currentTestResults = {
+                    tankNumber,
+                    rateUnit,
+                    expectedPath: collectionPath,
+                    tankData,
+                    testResults
+                };
+
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="result-item error">
+                        ❌ خطأ في الاختبار: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        function displayTestResults(results) {
+            const resultsDiv = document.getElementById('testResults');
+            let html = '<h4>📊 نتائج الاختبار:</h4>';
+            
+            results.forEach((result, index) => {
+                html += `
+                    <div class="result-item ${result.status}">
+                        <strong>${index + 1}. ${result.test}:</strong><br>
+                        ${result.result}
+                    </div>
+                `;
+            });
+            
+            resultsDiv.innerHTML = html;
+        }
+
+        function displayFirebaseData(mainData, tankNumber, mainPath, altData, altPath) {
+            const firebaseDiv = document.getElementById('firebaseData');
+            
+            let html = `<h4>📁 بيانات Firebase:</h4>`;
+            
+            // البيانات من المسار الرئيسي
+            html += `<h5>🔍 ${mainPath}:</h5>`;
+            if (Object.keys(mainData).length > 0) {
+                html += `<div>الخزانات المتاحة: ${Object.keys(mainData).join(', ')}</div>`;
+                
+                if (mainData[tankNumber]) {
+                    html += `<div><strong>Tank ${tankNumber} البيانات:</strong></div>`;
+                    html += `<pre>${JSON.stringify(mainData[tankNumber], null, 2)}</pre>`;
+                } else {
+                    html += `<div>❌ Tank ${tankNumber} غير موجود</div>`;
+                }
+            } else {
+                html += `<div>❌ لا توجد بيانات في ${mainPath}</div>`;
+            }
+            
+            // البيانات من المسار البديل
+            html += `<h5>🔄 ${altPath} (للمقارنة):</h5>`;
+            if (Object.keys(altData).length > 0) {
+                html += `<div>الخزانات المتاحة: ${Object.keys(altData).join(', ')}</div>`;
+                
+                if (altData[tankNumber]) {
+                    html += `<div><strong>Tank ${tankNumber} البيانات:</strong></div>`;
+                    html += `<pre>${JSON.stringify(altData[tankNumber], null, 2)}</pre>`;
+                } else {
+                    html += `<div>❌ Tank ${tankNumber} غير موجود</div>`;
+                }
+            } else {
+                html += `<div>❌ لا توجد بيانات في ${altPath}</div>`;
+            }
+            
+            firebaseDiv.innerHTML = html;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🧪 Test page loaded');
+        });
+    </script>
+</body>
+</html>

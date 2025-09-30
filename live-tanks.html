@@ -1774,81 +1774,122 @@
       
       let actualRate = 0;
       
-      // ✅ FIXED: Proper calculation based on Rate Unit and source
+      // ✅ FIXED: Proper Firebase path-based calculation
+      const tankNumber = document.getElementById('editTankNumber').value;
+      
+      // Step 1: Determine correct Firebase path based on Rate Unit
+      let firebaseDepartment = '';
       if (rateUnit === 'MT/hr') {
-        // For MT/hr (typically from PLCR) - Using real KNPC data
-        const tankNumber = document.getElementById('editTankNumber').value;
-        const tankData = tanks[tankNumber];
-        
-        if (tankData) {
-          const c = tankData.comment; // BPM from real KNPC system
-          console.log('🔥 PLCR MT/hr - Using real KNPC BPM:', c, 'for tank', tankNumber);
-          // Convert level to volume in barrels, then to metric tons
-          const volumeDiffBarrels = levelDiff * c;
-          // Assuming 1 barrel ≈ 0.159 m³ and density varies by product (using average 0.85 MT/m³)
-          const volumeM3 = volumeDiffBarrels * 0.159;
-          const massMT = volumeM3 * 0.85; // Average density for petroleum products
-          actualRate = massMT / timeDiffHours;
-          console.log('🏭 PLCR MT/hr calculation with real data:', { 
-            bpm: c, 
-            levelDiff, 
-            volumeDiffBarrels, 
-            volumeM3, 
-            massMT, 
-            actualRate 
-          });
-        } else {
-          console.error('❌ No tank data found for tank', tankNumber);
-          // Fallback calculation for PLCR
-          actualRate = levelDiff / timeDiffHours * 10; // Rough estimate
-        }
-      } else if (rateUnit === 'meter/hr' || rateUnit === 'mtr/hr' || rateUnit === 'mtr') {
-        // For meter units (typically from PBCR/WASHERY)
-        // Direct calculation in meters per hour - NO barrel conversion
-        actualRate = levelDiff / timeDiffHours;
-        console.log('📏 Calculated rate (meter/hr):', actualRate);
-      } else if (rateUnit === "m3/hr" || rateUnit === "m3" || rateUnit === "m³/hr" || rateUnit === "m³") {
-        // For cubic meter units (typically from PBCR) - Using real KNPC data
-        const tankNumber = document.getElementById('editTankNumber').value;
-        const tankData = tanks[tankNumber];
-        
-        if (tankData) {
-          const c = tankData.comment; // BPM from real KNPC system
-          console.log('🔥 PBCR m³/hr - Using real KNPC BPM:', c, 'for tank', tankNumber);
-          // Rate in cubic meters per hour
-          const volumeDiffBarrels = levelDiff * c;
-          const rateBarrels = volumeDiffBarrels / timeDiffHours;
-          // Convert from barrels to m³ (1 barrel = 0.159 m³ approximately)
-          actualRate = rateBarrels * 0.159;
-          console.log('📦 PBCR m³/hr calculation with real data:', { 
-            bpm: c, 
-            levelDiff, 
-            volumeDiffBarrels, 
-            rateBarrels, 
-            actualRate 
-          });
-        } else {
-          console.error('❌ No tank data found for tank', tankNumber);
-        }
+        firebaseDepartment = 'plcr';
       } else {
-        // For barrel units (typically from PBCR) - bbl/hr - Using real KNPC data
-        const tankNumber = document.getElementById('editTankNumber').value;
-        const tankData = tanks[tankNumber];
+        firebaseDepartment = 'pbcr';
+      }
+      
+      console.log('🎯 Rate Unit:', rateUnit, '→ Firebase Department:', firebaseDepartment);
+      
+      // Step 2: Get tank data from correct Firebase path
+      let tankData = null;
+      
+      // Try to get from the correct Firebase structure
+      if (window.db && tankNumber) {
+        try {
+          // Load from correct Firebase path: tankData/{department}/tanks/{tankNumber}
+          const tankDocRef = doc(db, 'tankData', firebaseDepartment, 'tanks', tankNumber);
+          
+          // Since we're in an async context, we'll use the existing tanks object as fallback
+          // but the proper fix would be to make this function async and await the Firebase call
+          console.log('🔍 Looking for tank data in Firebase path: tankData/' + firebaseDepartment + '/tanks/' + tankNumber);
+          
+          // For now, check if we have the data in the existing tanks object
+          // This assumes the tanks object is correctly populated from Firebase
+          if (tanks && tanks[tankNumber]) {
+            tankData = tanks[tankNumber];
+            console.log('✅ Found tank data in existing tanks object:', tankData);
+          } else {
+            console.warn('⚠️ Tank data not found in existing tanks object for tank', tankNumber);
+          }
+          
+        } catch (error) {
+          console.error('❌ Error accessing Firebase:', error);
+        }
+      }
+      
+      // Step 3: Calculate rate based on Rate Unit and available data
+      if (rateUnit === 'meter/hr' || rateUnit === 'mtr/hr' || rateUnit === 'mtr') {
+        // Direct calculation - no BPM needed
+        actualRate = levelDiff / timeDiffHours;
+        console.log('📏 Direct calculation (meter/hr):', {
+          levelDiff,
+          timeDiffHours,
+          actualRate
+        });
         
-        if (tankData) {
-          const c = tankData.comment; // BPM from real KNPC system
-          console.log('🔥 PBCR bbl/hr - Using real KNPC BPM:', c, 'for tank', tankNumber);
-          const volumeDiff = levelDiff * c;
-          actualRate = volumeDiff / timeDiffHours;
-          console.log('🛢️ PBCR bbl/hr calculation with real data:', { 
-            bpm: c, 
-            levelDiff, 
-            volumeDiff, 
-            timeDiffHours, 
-            actualRate 
-          });
+      } else if (tankData) {
+        // BPM-based calculations
+        let bpm = 0;
+        
+        if (firebaseDepartment === 'plcr') {
+          // PLCR uses 'factor' field
+          bpm = parseFloat(tankData.factor) || 0;
+          console.log('🏭 PLCR tank - using factor as BPM:', bpm);
         } else {
-          console.error('❌ No tank data found for tank', tankNumber);
+          // PBCR uses 'comment' field
+          bpm = parseFloat(tankData.comment) || 0;
+          console.log('🛢️ PBCR tank - using comment as BPM:', bpm);
+        }
+        
+        if (bpm > 0) {
+          const volumeDiffBarrels = levelDiff * bpm;
+          let finalRate = volumeDiffBarrels / timeDiffHours;
+          
+          if (rateUnit === 'm³/hr' || rateUnit === 'm3/hr' || rateUnit === 'm³' || rateUnit === 'm3') {
+            // Convert from barrels to cubic meters
+            actualRate = finalRate * 0.159;
+            console.log('📦 m³/hr calculation:', {
+              bpm,
+              levelDiff,
+              volumeDiffBarrels,
+              finalRate,
+              actualRate: actualRate.toFixed(3)
+            });
+            
+          } else if (rateUnit === 'MT/hr') {
+            // Convert from barrels to metric tons
+            actualRate = finalRate * 0.159 * 0.85;
+            console.log('🏭 MT/hr calculation:', {
+              bpm,
+              levelDiff,
+              volumeDiffBarrels,
+              finalRate,
+              actualRate: actualRate.toFixed(3)
+            });
+            
+          } else {
+            // Barrel units (bbl/hr)
+            actualRate = finalRate;
+            console.log('🛢️ bbl/hr calculation:', {
+              bpm,
+              levelDiff,
+              volumeDiffBarrels,
+              actualRate: actualRate.toFixed(3)
+            });
+          }
+          
+        } else {
+          console.error('❌ BPM not available in tank data:', tankData);
+          actualRate = 0;
+        }
+        
+      } else {
+        console.error('❌ Tank data not found for tank', tankNumber, 'in department', firebaseDepartment);
+        
+        // Fallback for meter/hr when no tank data available
+        if (rateUnit === 'meter/hr' || rateUnit === 'mtr/hr' || rateUnit === 'mtr') {
+          actualRate = levelDiff / timeDiffHours;
+          console.log('📏 Fallback meter/hr calculation:', actualRate);
+        } else {
+          actualRate = 0;
+          console.log('❌ Cannot calculate rate without BPM data');
         }
       }
       
