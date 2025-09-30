@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار التسجيل مع تنبيه Telegram - Tank Tools</title>
+    <script src="telegram-notifications.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            color: white;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #FFD700;
+        }
+        .test-section {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-size: 16px;
+        }
+        button {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        .result {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .success {
+            color: #4CAF50;
+        }
+        .error {
+            color: #f44336;
+        }
+        .info {
+            background: rgba(33, 150, 243, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #2196F3;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            margin: 5px;
+        }
+        .status.online {
+            background: #4CAF50;
+            color: white;
+        }
+        .status.offline {
+            background: #f44336;
+            color: white;
+        }
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        @media (max-width: 768px) {
+            .two-column {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 اختبار التسجيل مع تنبيه Telegram</h1>
+        
+        <div class="info">
+            <h3>معلومات الاختبار:</h3>
+            <p>هذه الصفحة تختبر تكامل تنبيهات Telegram مع نظام التسجيل</p>
+            <p>عند تسجيل مستخدم جديد، سيصل تنبيه فوري للآدمن عبر Telegram</p>
+        </div>
+
+        <div class="test-section">
+            <h3>حالة البوت <span id="botStatus" class="status offline">غير متصل</span></h3>
+            <button onclick="checkBotStatus()">فحص حالة البوت</button>
+            <div id="botStatusResult" class="result"></div>
+        </div>
+
+        <div class="two-column">
+            <div class="test-section">
+                <h3>إعداد Chat ID للآدمن</h3>
+                <div class="form-group">
+                    <label>Chat ID الحالي:</label>
+                    <input type="text" id="currentChatId" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Chat ID جديد:</label>
+                    <input type="text" id="newChatId" placeholder="أدخل Chat ID">
+                </div>
+                <button onclick="setChatId()">تحديث Chat ID</button>
+                <button onclick="detectChatId()">كشف Chat ID تلقائياً</button>
+                <div id="chatIdResult" class="result"></div>
+            </div>
+
+            <div class="test-section">
+                <h3>اختبار التنبيه المباشر</h3>
+                <button onclick="sendTestNotification()">إرسال تنبيه اختبار</button>
+                <div id="testNotificationResult" class="result"></div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>محاكاة تسجيل مستخدم جديد</h3>
+            <div class="two-column">
+                <div class="form-group">
+                    <label>الاسم الكامل:</label>
+                    <input type="text" id="fullName" placeholder="أحمد محمد العلي" value="أحمد محمد العلي">
+                </div>
+                <div class="form-group">
+                    <label>اسم المستخدم:</label>
+                    <input type="text" id="username" placeholder="ahm123" value="ahm123">
+                </div>
+                <div class="form-group">
+                    <label>القسم:</label>
+                    <select id="department">
+                        <option value="PBCR">PBCR</option>
+                        <option value="PLCR">PLCR</option>
+                        <option value="WASHERY">WASHERY</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>رقم الهاتف:</label>
+                    <input type="text" id="phone" placeholder="+965 1234 5678" value="+965 1234 5678">
+                </div>
+            </div>
+            <button onclick="simulateRegistration()">محاكاة تسجيل مستخدم جديد</button>
+            <div id="registrationResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>سجل الأحداث</h3>
+            <button onclick="clearEventLog()">مسح السجل</button>
+            <div id="eventLog" class="result" style="max-height: 200px;"></div>
+        </div>
+    </div>
+
+    <script>
+        let eventLogCount = 0;
+
+        // Initialize on page load
+        window.onload = function() {
+            checkBotStatus();
+            loadCurrentChatId();
+            logEvent('📄 تم تحميل صفحة الاختبار');
+        };
+
+        function logEvent(message) {
+            eventLogCount++;
+            const timestamp = new Date().toLocaleString('ar-SA');
+            const logDiv = document.getElementById('eventLog');
+            logDiv.innerHTML = `[${eventLogCount}] ${timestamp}: ${message}\n` + logDiv.innerHTML;
+        }
+
+        function clearEventLog() {
+            document.getElementById('eventLog').innerHTML = '';
+            eventLogCount = 0;
+            logEvent('🗑️ تم مسح سجل الأحداث');
+        }
+
+        async function checkBotStatus() {
+            logEvent('🔍 فحص حالة البوت...');
+            const resultDiv = document.getElementById('botStatusResult');
+            const statusSpan = document.getElementById('botStatus');
+            
+            resultDiv.innerHTML = '🔄 جاري فحص البوت...';
+            
+            try {
+                if (!window.telegramNotifications) {
+                    throw new Error('Telegram notifications not loaded');
+                }
+
+                const isOnline = await window.telegramNotifications.verifyBot();
+                
+                if (isOnline) {
+                    statusSpan.textContent = 'متصل';
+                    statusSpan.className = 'status online';
+                    resultDiv.innerHTML = '<div class="success">✅ البوت يعمل بشكل صحيح</div>';
+                    logEvent('✅ البوت متصل وجاهز');
+                } else {
+                    statusSpan.textContent = 'غير متصل';
+                    statusSpan.className = 'status offline';
+                    resultDiv.innerHTML = '<div class="error">❌ البوت غير متاح</div>';
+                    logEvent('❌ البوت غير متصل');
+                }
+            } catch (error) {
+                statusSpan.textContent = 'خطأ';
+                statusSpan.className = 'status offline';
+                resultDiv.innerHTML = `<div class="error">❌ خطأ: ${error.message}</div>`;
+                logEvent(`❌ خطأ في فحص البوت: ${error.message}`);
+            }
+        }
+
+        function loadCurrentChatId() {
+            if (window.telegramNotifications) {
+                const chatId = localStorage.getItem('telegram_admin_chat_id') || 'غير محدد';
+                document.getElementById('currentChatId').value = chatId;
+                logEvent(`📋 Chat ID المحفوظ: ${chatId}`);
+            }
+        }
+
+        function setChatId() {
+            const newChatId = document.getElementById('newChatId').value.trim();
+            const resultDiv = document.getElementById('chatIdResult');
+            
+            if (!newChatId) {
+                resultDiv.innerHTML = '<div class="error">❌ يرجى إدخال Chat ID</div>';
+                return;
+            }
+
+            if (window.telegramNotifications) {
+                window.telegramNotifications.setAdminChatId(newChatId);
+                document.getElementById('currentChatId').value = newChatId;
+                document.getElementById('newChatId').value = '';
+                resultDiv.innerHTML = '<div class="success">✅ تم تحديث Chat ID بنجاح</div>';
+                logEvent(`✅ تم تحديث Chat ID: ${newChatId}`);
+            }
+        }
+
+        async function detectChatId() {
+            const resultDiv = document.getElementById('chatIdResult');
+            resultDiv.innerHTML = '🔄 جاري كشف Chat ID...';
+            logEvent('🔍 محاولة كشف Chat ID تلقائياً...');
+
+            try {
+                if (window.telegramNotifications) {
+                    await window.telegramNotifications.detectAdminChatId();
+                    loadCurrentChatId();
+                    resultDiv.innerHTML = '<div class="success">✅ تم كشف Chat ID وحفظه تلقائياً</div>';
+                    logEvent('✅ تم كشف وحفظ Chat ID تلقائياً');
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ فشل في كشف Chat ID: ${error.message}</div>`;
+                logEvent(`❌ فشل في كشف Chat ID: ${error.message}`);
+            }
+        }
+
+        async function sendTestNotification() {
+            const resultDiv = document.getElementById('testNotificationResult');
+            resultDiv.innerHTML = '🔄 جاري إرسال تنبيه اختبار...';
+            logEvent('📤 إرسال تنبيه اختبار...');
+
+            try {
+                if (!window.telegramNotifications) {
+                    throw new Error('Telegram notifications not loaded');
+                }
+
+                const success = await window.telegramNotifications.sendTestNotification();
+                
+                if (success) {
+                    resultDiv.innerHTML = '<div class="success">✅ تم إرسال تنبيه الاختبار بنجاح</div>';
+                    logEvent('✅ تم إرسال تنبيه الاختبار بنجاح');
+                } else {
+                    resultDiv.innerHTML = '<div class="error">❌ فشل في إرسال تنبيه الاختبار</div>';
+                    logEvent('❌ فشل في إرسال تنبيه الاختبار');
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ خطأ: ${error.message}</div>`;
+                logEvent(`❌ خطأ في تنبيه الاختبار: ${error.message}`);
+            }
+        }
+
+        async function simulateRegistration() {
+            const resultDiv = document.getElementById('registrationResult');
+            const fullName = document.getElementById('fullName').value.trim();
+            const username = document.getElementById('username').value.trim();
+            const department = document.getElementById('department').value;
+            const phone = document.getElementById('phone').value.trim();
+
+            if (!fullName || !username) {
+                resultDiv.innerHTML = '<div class="error">❌ يرجى ملء الحقول المطلوبة</div>';
+                return;
+            }
+
+            resultDiv.innerHTML = '🔄 جاري محاكاة التسجيل وإرسال التنبيه...';
+            logEvent(`👤 محاكاة تسجيل المستخدم: ${fullName} (${username})`);
+
+            try {
+                if (!window.telegramNotifications) {
+                    throw new Error('Telegram notifications not loaded');
+                }
+
+                // Simulate user registration data
+                const userData = {
+                    displayName: fullName,
+                    username: username,
+                    email: `${username}@knpc.com`,
+                    department: department,
+                    phone: phone
+                };
+
+                const success = await window.telegramNotifications.sendNewUserNotification(userData);
+                
+                if (success) {
+                    resultDiv.innerHTML = `<div class="success">✅ تم إرسال تنبيه التسجيل بنجاح!
+
+تفاصيل المستخدم المرسلة:
+- الاسم: ${fullName}
+- اسم المستخدم: ${username}
+- الإيميل: ${username}@knpc.com
+- القسم: ${department}
+- الهاتف: ${phone}
+- التوقيت: ${new Date().toLocaleString('en-GB')}</div>`;
+                    
+                    logEvent(`✅ تم إرسال تنبيه تسجيل المستخدم: ${fullName}`);
+                } else {
+                    resultDiv.innerHTML = '<div class="error">❌ فشل في إرسال تنبيه التسجيل</div>';
+                    logEvent(`❌ فشل في إرسال تنبيه تسجيل المستخدم: ${fullName}`);
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ خطأ في المحاكاة: ${error.message}</div>`;
+                logEvent(`❌ خطأ في محاكاة التسجيل: ${error.message}`);
+            }
+        }
+    </script>
+</body>
+</html>

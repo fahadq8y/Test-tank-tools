@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Bot Test - Tank Tools</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            color: white;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #FFD700;
+        }
+        .test-section {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        button {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        .result {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .success {
+            color: #4CAF50;
+        }
+        .error {
+            color: #f44336;
+        }
+        .info {
+            background: rgba(33, 150, 243, 0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #2196F3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 اختبار Telegram Bot</h1>
+        
+        <div class="info">
+            <h3>معلومات البوت:</h3>
+            <p><strong>اسم البوت:</strong> Tank Tools Notification</p>
+            <p><strong>Token:</strong> 8029434936:AAH6r1qwOCNXmHOfCaGe0qvMRoI1ZD_0SNk</p>
+        </div>
+
+        <div class="test-section">
+            <h3>الخطوة 1: اختبار البوت</h3>
+            <button onclick="testBot()">اختبر البوت</button>
+            <div id="botTestResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>الخطوة 2: جلب آخر الرسائل</h3>
+            <button onclick="getUpdates()">جلب الرسائل</button>
+            <div id="updatesResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>الخطوة 3: إرسال رسالة اختبار</h3>
+            <input type="text" id="chatId" placeholder="Chat ID" style="padding: 10px; border-radius: 5px; border: none; margin: 5px; color: #333;">
+            <br>
+            <button onclick="sendTestMessage()">إرسال رسالة اختبار</button>
+            <div id="sendResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>الخطوة 4: اختبار تنبيه المستخدم الجديد</h3>
+            <button onclick="testNewUserNotification()">اختبر تنبيه المستخدم الجديد</button>
+            <div id="notificationResult" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        const BOT_TOKEN = '8029434936:AAH6r1qwOCNXmHOfCaGe0qvMRoI1ZD_0SNk';
+        const TELEGRAM_API = `https://api.telegram.org/bot${BOT_TOKEN}`;
+
+        async function testBot() {
+            const resultDiv = document.getElementById('botTestResult');
+            resultDiv.innerHTML = '🔄 جاري الاختبار...';
+            
+            try {
+                const response = await fetch(`${TELEGRAM_API}/getMe`);
+                const data = await response.json();
+                
+                if (data.ok) {
+                    resultDiv.innerHTML = `<div class="success">✅ البوت يعمل بنجاح!\n\n` +
+                        `اسم البوت: ${data.result.first_name}\n` +
+                        `اسم المستخدم: @${data.result.username}\n` +
+                        `ID: ${data.result.id}</div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ خطأ: ${data.description}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ خطأ في الاتصال: ${error.message}</div>`;
+            }
+        }
+
+        async function getUpdates() {
+            const resultDiv = document.getElementById('updatesResult');
+            resultDiv.innerHTML = '🔄 جاري جلب الرسائل...';
+            
+            try {
+                const response = await fetch(`${TELEGRAM_API}/getUpdates`);
+                const data = await response.json();
+                
+                if (data.ok && data.result.length > 0) {
+                    const lastMessage = data.result[data.result.length - 1];
+                    const chatId = lastMessage.message.chat.id;
+                    
+                    // حفظ Chat ID
+                    document.getElementById('chatId').value = chatId;
+                    
+                    resultDiv.innerHTML = `<div class="success">✅ تم العثور على رسائل!\n\n` +
+                        `Chat ID الخاص بك: ${chatId}\n` +
+                        `عدد الرسائل: ${data.result.length}\n\n` +
+                        `آخر رسالة:\n${JSON.stringify(lastMessage.message, null, 2)}</div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ لم يتم العثور على رسائل. تأكد من إرسال رسالة للبوت أولاً.</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ خطأ في جلب الرسائل: ${error.message}</div>`;
+            }
+        }
+
+        async function sendTestMessage() {
+            const chatId = document.getElementById('chatId').value;
+            const resultDiv = document.getElementById('sendResult');
+            
+            if (!chatId) {
+                resultDiv.innerHTML = '<div class="error">❌ يرجى إدخال Chat ID أولاً</div>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '🔄 جاري إرسال الرسالة...';
+            
+            const message = `🎉 مرحباً من Tank Tools!
+
+هذه رسالة اختبار للتأكد من أن البوت يعمل بشكل صحيح.
+
+⏰ الوقت: ${new Date().toLocaleString('ar-SA')}
+🤖 البوت: Tank Tools Notification Bot`;
+
+            try {
+                const response = await fetch(`${TELEGRAM_API}/sendMessage`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        chat_id: chatId,
+                        text: message,
+                        parse_mode: 'HTML'
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.ok) {
+                    resultDiv.innerHTML = `<div class="success">✅ تم إرسال الرسالة بنجاح!</div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ فشل في إرسال الرسالة: ${data.description}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ خطأ في الإرسال: ${error.message}</div>`;
+            }
+        }
+
+        async function testNewUserNotification() {
+            const chatId = document.getElementById('chatId').value;
+            const resultDiv = document.getElementById('notificationResult');
+            
+            if (!chatId) {
+                resultDiv.innerHTML = '<div class="error">❌ يرجى إدخال Chat ID أولاً</div>';
+                return;
+            }
+            
+            resultDiv.innerHTML = '🔄 جاري إرسال تنبيه المستخدم الجديد...';
+            
+            // محاكاة بيانات مستخدم جديد
+            const newUser = {
+                displayName: 'أحمد محمد العلي',
+                department: 'PBCR',
+                registeredAt: new Date().toLocaleString('en-GB', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true
+                })
+            };
+
+            const message = `🔔 <b>مستخدم جديد - Tank Tools</b>
+
+👤 <b>الاسم:</b> ${newUser.displayName}
+🏢 <b>القسم:</b> ${newUser.department}
+📅 <b>تاريخ التسجيل:</b> ${newUser.registeredAt}
+
+⚠️ <b>يحتاج تفعيل الحساب</b>
+
+لتفعيل الحساب، ادخل على:
+👉 <a href="${window.location.origin}/admin-panel.html">لوحة التحكم</a>
+
+#مستخدم_جديد #تفعيل_مطلوب`;
+
+            try {
+                const response = await fetch(`${TELEGRAM_API}/sendMessage`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        chat_id: chatId,
+                        text: message,
+                        parse_mode: 'HTML',
+                        disable_web_page_preview: false
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.ok) {
+                    resultDiv.innerHTML = `<div class="success">✅ تم إرسال تنبيه المستخدم الجديد بنجاح!
+
+الرسالة المرسلة:
+${message.replace(/<[^>]*>/g, '')}</div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ فشل في إرسال التنبيه: ${data.description}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ خطأ في الإرسال: ${error.message}</div>`;
+            }
+        }
+
+        // تشغيل اختبار البوت تلقائياً عند تحميل الصفحة
+        window.onload = function() {
+            testBot();
+        };
+    </script>
+</body>
+</html>
