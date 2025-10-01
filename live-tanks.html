@@ -689,33 +689,26 @@
     let tanks = {};
     let tanksLoaded = false;
     
-    // Firebase configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyD7lJcoY33FEC9d6eWy67QIO9SV4lS24pg",
-      authDomain: "tank-tools-knpc-c2d95.firebaseapp.com", 
-      projectId: "tank-tools-knpc-c2d95",
-      storageBucket: "tank-tools-knpc-c2d95.firebasestorage.app",
-      messagingSenderId: "510062594324",
-      appId: "1:510062594324:web:b892fd02007a5ca2f0da01"
-    };
+    // ✅ FIXED: Using existing firebaseConfig from above (removed duplicate)
     
     // Load tanks from Firebase with real KNPC data - FIXED VERSION
     async function loadTanksFromFirebase() {
       try {
         console.log('🔄 Loading tanks from Firebase with real KNPC data...');
         
-        const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js');
-        const { getFirestore, collection, getDocs } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
-        
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
+        // ✅ FIXED: Use existing Firebase app instead of creating duplicate
+        if (!window.db) {
+          console.error('❌ Firebase not initialized yet, waiting...');
+          setTimeout(loadTanksFromFirebase, 1000);
+          return;
+        }
         
         tanks = {}; // Reset tanks object
         
         // تحميل بيانات PBCR (للـ meter/hr, bbl/hr, m³/hr)
         console.log('📊 Loading PBCR tanks...');
-        const pbcrRef = collection(db, 'tankData', 'pbcr', 'tanks');
-        const pbcrSnapshot = await getDocs(pbcrRef);
+        const pbcrRef = window.collection(window.db, 'tankData', 'pbcr', 'tanks');
+        const pbcrSnapshot = await window.getDocs(pbcrRef);
         
         pbcrSnapshot.forEach(doc => {
           const data = doc.data();
@@ -730,8 +723,8 @@
         
         // تحميل بيانات PLCR (للـ MT/hr)
         console.log('📊 Loading PLCR tanks...');
-        const plcrRef = collection(db, 'tankData', 'plcr', 'tanks');
-        const plcrSnapshot = await getDocs(plcrRef);
+        const plcrRef = window.collection(window.db, 'tankData', 'plcr', 'tanks');
+        const plcrSnapshot = await window.getDocs(plcrRef);
         
         plcrSnapshot.forEach(doc => {
           const data = doc.data();
