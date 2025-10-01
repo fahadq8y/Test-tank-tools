@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 Live Tanks Rate Debugger</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .main-content {
+            padding: 30px;
+        }
+        
+        .input-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border-left: 5px solid #ff6b35;
+        }
+        
+        .input-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group label {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        .form-group input,
+        .form-group select {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #ff6b35;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .debug-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            margin: 20px 0;
+            border-left: 5px solid #007bff;
+        }
+        
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        
+        .debug-output {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 15px 0;
+            white-space: pre-wrap;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .step-indicator {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            border-radius: 4px;
+        }
+        
+        .step-number {
+            background: #007bff;
+            color: white;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #ff6b35;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 Live Tanks Rate Debugger</h1>
+            <p>تشخيص دقيق لمشكلة حساب الريت في Live Tanks</p>
+        </div>
+        
+        <div class="main-content">
+            <!-- Input Section -->
+            <div class="input-section">
+                <h3>🎯 بيانات الاختبار</h3>
+                
+                <div class="input-group">
+                    <div class="form-group">
+                        <label for="tankNumber">رقم الخزان:</label>
+                        <input type="text" id="tankNumber" placeholder="مثال: 834" value="834">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="rateUnit">نوع الريت:</label>
+                        <select id="rateUnit">
+                            <option value="bbl/hr">bbl/hr (برميل/ساعة)</option>
+                            <option value="m³/hr">m³/hr (متر مكعب/ساعة)</option>
+                            <option value="m3/hr">m3/hr (متر مكعب/ساعة)</option>
+                            <option value="meter/hr">meter/hr (متر طولي/ساعة)</option>
+                            <option value="mtr/hr">mtr/hr (متر طولي/ساعة)</option>
+                            <option value="mtr">mtr (متر طولي)</option>
+                            <option value="MT/hr">MT/hr (متريك طن/ساعة)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="currentLevel">المستوى الحالي:</label>
+                        <input type="number" id="currentLevel" step="0.01" placeholder="مثال: 15.5" value="15.5">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="previousLevel">المستوى السابق:</label>
+                        <input type="number" id="previousLevel" step="0.01" placeholder="مثال: 14.2" value="14.2">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="currentTimestamp">التوقيت الحالي:</label>
+                        <input type="datetime-local" id="currentTimestamp">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="previousTimestamp">التوقيت السابق:</label>
+                        <input type="datetime-local" id="previousTimestamp">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="manualTimeDiff">فرق الوقت اليدوي (بالدقائق) - اختياري:</label>
+                        <input type="number" id="manualTimeDiff" step="0.1" placeholder="تجاهل إذا كنت تستخدم التوقيت أعلاه">
+                    </div>
+                </div>
+                
+                <button class="btn" onclick="debugRateCalculation()">
+                    🔬 تشخيص حساب الريت خطوة بخطوة
+                </button>
+            </div>
+            
+            <!-- Debug Output -->
+            <div id="debugResults">
+                <!-- Results will appear here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase Configuration (الإعدادات الصحيحة) -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, doc, getDoc, collection, getDocs, query, orderBy } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // الإعدادات الصحيحة للمشروع
+        const firebaseConfig = {
+            apiKey: "AIzaSyBCdv37V6vOFMe42rGlPyl9lVq-9JldEPg",
+            authDomain: "tank-tools-knpc-c2d95.firebaseapp.com",
+            projectId: "tank-tools-knpc-c2d95",
+            storageBucket: "tank-tools-knpc-c2d95.appspot.com",
+            messagingSenderId: "678793823159",
+            appId: "1:678793823159:web:7a7b1398aefdb7f24462b9"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.db = db;
+        window.doc = doc;
+        window.getDoc = getDoc;
+        window.collection = collection;
+        window.getDocs = getDocs;
+        window.query = query;
+        window.orderBy = orderBy;
+
+        console.log('🔥 Firebase initialized with correct config');
+    </script>
+
+    <script>
+        // محاكاة نفس منطق Live Tanks
+        let tanks = {}; // Global tanks object كما في Live Tanks
+
+        // تحميل البيانات (نفس منطق Live Tanks)
+        async function loadAllTanks() {
+            console.log('📥 Loading tanks from Firebase...');
+            
+            try {
+                tanks = {}; // إعادة تعيين
+
+                const departments = ['pbcr', 'plcr'];
+                
+                for (const dept of departments) {
+                    console.log(`🔍 Loading ${dept} tanks...`);
+                    
+                    try {
+                        const tanksCollectionRef = collection(window.db, "tankData", dept, "tanks");
+                        const querySnapshot = await getDocs(tanksCollectionRef);
+                        
+                        console.log(`📊 ${dept} collection size:`, querySnapshot.size);
+                        
+                        querySnapshot.forEach((doc) => {
+                            const data = doc.data();
+                            const tankData = { 
+                                id: doc.id, 
+                                department: dept,
+                                min: parseFloat(data.min || 0),
+                                max: parseFloat(data.max || 0),
+                                comment: parseFloat(data.comment || 0),
+                                factor: parseFloat(data.factor || 0),
+                                gross: parseFloat(data.gross || 0),
+                                lastModified: data.lastModified || 'Not Set'
+                            };
+                            
+                            tanks[doc.id] = tankData;
+                            console.log(`✅ Loaded tank ${doc.id} from ${dept}:`, tankData);
+                        });
+                        
+                    } catch (deptError) {
+                        console.warn(`⚠️ Could not load ${dept} tanks:`, deptError);
+                    }
+                }
+
+                console.log(`📋 Total tanks loaded: ${Object.keys(tanks).length}`);
+                return tanks;
+                
+            } catch (error) {
+                console.error('❌ Error loading tanks:', error);
+                throw error;
+            }
+        }
+
+        // محاكاة دالة حساب الريت (نفس منطق Live Tanks)
+        function calculateActualRateDebug(rateUnit, currentLevel, previousLevel, tankNumber, timeDifferenceMinutes) {
+            const timeDiffHours = timeDifferenceMinutes / 60;
+            const levelDiff = Math.abs(currentLevel - previousLevel);
+            
+            console.log('📏 Level difference:', levelDiff, 'meters');
+            console.log('⏰ Time difference:', timeDiffHours, 'hours');
+            
+            let actualRate = 0;
+            let debugInfo = {
+                steps: [],
+                errors: [],
+                warnings: [],
+                finalResult: 0
+            };
+            
+            debugInfo.steps.push(`Step 1: Calculate level difference = |${currentLevel} - ${previousLevel}| = ${levelDiff} meters`);
+            debugInfo.steps.push(`Step 2: Time difference = ${timeDifferenceMinutes} minutes = ${timeDiffHours.toFixed(3)} hours`);
+            
+            // تحقق من فرق الوقت
+            if (timeDiffHours <= 0) {
+                debugInfo.errors.push(`❌ CRITICAL ERROR: Time difference is zero or negative! (${timeDiffHours} hours)`);
+                debugInfo.errors.push(`This will cause division by zero in rate calculations!`);
+                return { result: 0, debug: debugInfo };
+            }
+            
+            // Step 1: Determine Firebase department based on Rate Unit
+            let firebaseDepartment = '';
+            if (rateUnit === 'MT/hr') {
+                firebaseDepartment = 'plcr';
+            } else {
+                firebaseDepartment = 'pbcr';
+            }
+            
+            debugInfo.steps.push(`Step 3: Rate unit "${rateUnit}" → Firebase Department: "${firebaseDepartment}"`);
+            
+            // Step 2: Check if tank exists in global tanks object
+            if (!tanks || Object.keys(tanks).length === 0) {
+                debugInfo.errors.push('❌ Global tanks object is empty or not loaded!');
+                return { result: 0, debug: debugInfo };
+            }
+            
+            debugInfo.steps.push(`Step 4: Global tanks object contains ${Object.keys(tanks).length} tanks`);
+            
+            if (!tanks[tankNumber]) {
+                debugInfo.errors.push(`❌ Tank ${tankNumber} not found in global tanks object!`);
+                
+                // Show available tanks
+                const availableTanks = Object.keys(tanks).slice(0, 10);
+                debugInfo.steps.push(`Available tanks: ${availableTanks.join(', ')}${Object.keys(tanks).length > 10 ? '...' : ''}`);
+                
+                return { result: 0, debug: debugInfo };
+            }
+            
+            const tankData = tanks[tankNumber];
+            debugInfo.steps.push(`Step 5: Found tank ${tankNumber} in global object`);
+            debugInfo.steps.push(`Tank data: ${JSON.stringify(tankData, null, 2)}`);
+            
+            // Step 3: Determine BPM field based on department
+            let bmpField = '';
+            let bmpValue = 0;
+            
+            if (firebaseDepartment === 'plcr') {
+                bmpField = 'factor';
+                bmpValue = parseFloat(tankData.factor) || 0;
+                debugInfo.steps.push(`Step 6: PLCR tank - using "factor" field as BPM`);
+            } else {
+                bmpField = 'comment';
+                bmpValue = parseFloat(tankData.comment) || 0;
+                debugInfo.steps.push(`Step 6: PBCR tank - using "comment" field as BPM`);
+            }
+            
+            debugInfo.steps.push(`BPM field: "${bmpField}" = ${bmpValue}`);
+            
+            // Step 4: Calculate rate based on rate unit
+            if (rateUnit === 'meter/hr' || rateUnit === 'mtr/hr' || rateUnit === 'mtr') {
+                // Direct calculation - no BPM needed
+                actualRate = levelDiff / timeDiffHours;
+                debugInfo.steps.push(`Step 7: Direct calculation (${rateUnit})`);
+                debugInfo.steps.push(`Rate = ${levelDiff} / ${timeDiffHours} = ${actualRate.toFixed(3)}`);
+                
+            } else {
+                // BPM-based calculations
+                if (bmpValue <= 0) {
+                    debugInfo.errors.push(`❌ BPM value is zero or invalid: ${bmpValue}`);
+                    return { result: 0, debug: debugInfo };
+                }
+                
+                const volumeDiffBarrels = levelDiff * bmpValue;
+                let finalRate = volumeDiffBarrels / timeDiffHours;
+                
+                debugInfo.steps.push(`Step 7: BPM-based calculation`);
+                debugInfo.steps.push(`Volume difference (barrels) = ${levelDiff} × ${bmpValue} = ${volumeDiffBarrels}`);
+                debugInfo.steps.push(`Base rate (bbl/hr) = ${volumeDiffBarrels} / ${timeDiffHours} = ${finalRate}`);
+                
+                if (rateUnit === 'm³/hr' || rateUnit === 'm3/hr' || rateUnit === 'm³' || rateUnit === 'm3') {
+                    // Convert from barrels to cubic meters
+                    actualRate = finalRate * 0.159;
+                    debugInfo.steps.push(`Step 8: Convert to m³/hr: ${finalRate} × 0.159 = ${actualRate.toFixed(3)}`);
+                    
+                } else if (rateUnit === 'MT/hr') {
+                    // Convert from barrels to metric tons
+                    actualRate = finalRate * 0.159 * 0.85;
+                    debugInfo.steps.push(`Step 8: Convert to MT/hr: ${finalRate} × 0.159 × 0.85 = ${actualRate.toFixed(3)}`);
+                    
+                } else {
+                    // Barrel units (bbl/hr)
+                    actualRate = finalRate;
+                    debugInfo.steps.push(`Step 8: Keep as bbl/hr: ${actualRate.toFixed(3)}`);
+                }
+            }
+            
+            debugInfo.finalResult = actualRate;
+            debugInfo.steps.push(`🎯 Final Result: ${actualRate.toFixed(3)} ${rateUnit}`);
+            
+            return { result: actualRate, debug: debugInfo };
+        }
+
+        // تشخيص شامل
+        async function debugRateCalculation() {
+            const tankNumber = document.getElementById('tankNumber').value.trim();
+            const rateUnit = document.getElementById('rateUnit').value;
+            const currentLevel = parseFloat(document.getElementById('currentLevel').value);
+            const previousLevel = parseFloat(document.getElementById('previousLevel').value);
+            const currentTimestamp = document.getElementById('currentTimestamp').value;
+            const previousTimestamp = document.getElementById('previousTimestamp').value;
+            const manualTimeDiff = parseFloat(document.getElementById('manualTimeDiff').value);
+            
+            if (!tankNumber || isNaN(currentLevel) || isNaN(previousLevel)) {
+                alert('يرجى ملء جميع الحقول بقيم صحيحة');
+                return;
+            }
+            
+            // حساب فرق الوقت
+            let timeDifferenceMinutes = null;
+            let timeCalculationMethod = "";
+            
+            if (!isNaN(manualTimeDiff) && manualTimeDiff > 0) {
+                timeDifferenceMinutes = manualTimeDiff;
+                timeCalculationMethod = "Manual input";
+            } else if (currentTimestamp && previousTimestamp) {
+                const currentTime = new Date(currentTimestamp);
+                const previousTime = new Date(previousTimestamp);
+                const timeDiffMs = currentTime - previousTime;
+                timeDifferenceMinutes = timeDiffMs / (1000 * 60);
+                timeCalculationMethod = "Calculated from timestamps";
+            } else {
+                alert('يرجى إدخال التوقيتات أو فرق الوقت اليدوي');
+                return;
+            }
+            
+            if (timeDifferenceMinutes <= 0) {
+                alert('فرق الوقت يجب أن يكون أكبر من صفر!');
+                return;
+            }
+
+            const debugDiv = document.getElementById('debugResults');
+            debugDiv.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>🔬 جاري تشخيص حساب الريت...</p>
+                </div>
+            `;
+
+            try {
+                let output = `🔬 LIVE TANKS RATE CALCULATION DEBUG 🔬\n`;
+                output += `================================================\n\n`;
+                output += `📋 Input Parameters:\n`;
+                output += `   Tank Number: ${tankNumber}\n`;
+                output += `   Rate Unit: ${rateUnit}\n`;
+                output += `   Current Level: ${currentLevel} meters\n`;
+                output += `   Previous Level: ${previousLevel} meters\n`;
+                output += `   Time Calculation: ${timeCalculationMethod}\n`;
+                output += `   Time Difference: ${timeDifferenceMinutes.toFixed(2)} minutes (${(timeDifferenceMinutes/60).toFixed(3)} hours)\n`;
+                
+                if (currentTimestamp && previousTimestamp) {
+                    output += `   Current Timestamp: ${currentTimestamp}\n`;
+                    output += `   Previous Timestamp: ${previousTimestamp}\n`;
+                }
+                
+                output += `\n`;
+
+                // Step 1: Load tanks data
+                output += `📥 STEP 1: Loading tanks from Firebase...\n`;
+                output += `================================================\n`;
+                
+                const loadStart = Date.now();
+                await loadAllTanks();
+                const loadTime = Date.now() - loadStart;
+                
+                output += `✅ Loading completed in ${loadTime}ms\n`;
+                output += `📊 Total tanks loaded: ${Object.keys(tanks).length}\n`;
+                
+                if (Object.keys(tanks).length === 0) {
+                    output += `❌ CRITICAL ERROR: No tanks loaded from Firebase!\n`;
+                    output += `This explains why rate calculation returns zero.\n\n`;
+                } else {
+                    output += `✅ Tanks loaded successfully\n`;
+                    
+                    // Show some tank examples
+                    const tankKeys = Object.keys(tanks).slice(0, 5);
+                    output += `📋 Sample tanks: ${tankKeys.join(', ')}\n`;
+                    
+                    if (tanks[tankNumber]) {
+                        output += `✅ Target tank ${tankNumber} found in loaded data\n`;
+                        output += `📄 Tank data: ${JSON.stringify(tanks[tankNumber], null, 2)}\n`;
+                    } else {
+                        output += `❌ Target tank ${tankNumber} NOT found in loaded data\n`;
+                        output += `📋 Available tanks: ${Object.keys(tanks).join(', ')}\n`;
+                    }
+                }
+                
+                output += `\n`;
+
+                // Step 2: Calculate rate
+                output += `🧮 STEP 2: Rate calculation simulation...\n`;
+                output += `================================================\n`;
+                
+                const calcResult = calculateActualRateDebug(rateUnit, currentLevel, previousLevel, tankNumber, timeDifferenceMinutes);
+                
+                // Show all debug steps
+                calcResult.debug.steps.forEach((step, index) => {
+                    output += `${index + 1}. ${step}\n`;
+                });
+                
+                if (calcResult.debug.errors.length > 0) {
+                    output += `\n❌ ERRORS FOUND:\n`;
+                    calcResult.debug.errors.forEach(error => {
+                        output += `   ${error}\n`;
+                    });
+                }
+                
+                if (calcResult.debug.warnings.length > 0) {
+                    output += `\n⚠️ WARNINGS:\n`;
+                    calcResult.debug.warnings.forEach(warning => {
+                        output += `   ${warning}\n`;
+                    });
+                }
+                
+                output += `\n🎯 FINAL CALCULATION RESULT: ${calcResult.result.toFixed(3)} ${rateUnit}\n\n`;
+
+                // Step 3: Analysis and recommendations
+                output += `💡 ANALYSIS & RECOMMENDATIONS:\n`;
+                output += `================================================\n`;
+                
+                if (calcResult.result === 0) {
+                    if (Object.keys(tanks).length === 0) {
+                        output += `🔍 ROOT CAUSE: No tanks loaded from Firebase\n`;
+                        output += `💡 SOLUTION: Check Firebase connection and data loading logic\n`;
+                    } else if (!tanks[tankNumber]) {
+                        output += `🔍 ROOT CAUSE: Target tank not found in loaded data\n`;
+                        output += `💡 SOLUTION: Verify tank number or check Firebase structure\n`;
+                    } else if (calcResult.debug.errors.some(e => e.includes('BPM'))) {
+                        output += `🔍 ROOT CAUSE: Invalid BPM value\n`;
+                        output += `💡 SOLUTION: Update tank data with correct comment/factor values\n`;
+                    } else {
+                        output += `🔍 ROOT CAUSE: Unknown calculation error\n`;
+                        output += `💡 SOLUTION: Review calculation logic\n`;
+                    }
+                } else {
+                    output += `✅ SUCCESS: Calculation completed successfully!\n`;
+                    output += `✅ Rate: ${calcResult.result.toFixed(3)} ${rateUnit}\n`;
+                    output += `💡 The Live Tanks logic should work with these inputs.\n`;
+                }
+
+                // Step 4: Department/Path analysis
+                output += `\n🗂️ DEPARTMENT/PATH ANALYSIS:\n`;
+                output += `================================================\n`;
+                
+                const rateUnitDept = rateUnit === 'MT/hr' ? 'plcr' : 'pbcr';
+                output += `Rate unit "${rateUnit}" maps to department: ${rateUnitDept}\n`;
+                
+                if (tanks[tankNumber]) {
+                    const tankDept = tanks[tankNumber].department;
+                    output += `Tank ${tankNumber} loaded from department: ${tankDept}\n`;
+                    
+                    if (rateUnitDept === tankDept) {
+                        output += `✅ PERFECT MATCH: Rate unit matches tank department\n`;
+                    } else {
+                        output += `⚠️ POTENTIAL ISSUE: Rate unit department (${rateUnitDept}) != Tank department (${tankDept})\n`;
+                        output += `This might cause calculation issues in some cases.\n`;
+                    }
+                }
+
+                debugDiv.innerHTML = `
+                    <div class="debug-section">
+                        <h3>🔬 نتائج التشخيص التفصيلي</h3>
+                        <div class="debug-output">${output}</div>
+                        
+                        ${calcResult.result > 0 ? `
+                            <div class="success">
+                                <h4>✅ نجح الحساب!</h4>
+                                <p><strong>النتيجة:</strong> ${calcResult.result.toFixed(3)} ${rateUnit}</p>
+                                <p>منطق Live Tanks يجب أن يعمل مع هذه البيانات.</p>
+                            </div>
+                        ` : `
+                            <div class="error">
+                                <h4>❌ فشل الحساب!</h4>
+                                <p>تم تحديد سبب المشكلة في التشخيص أعلاه.</p>
+                            </div>
+                        `}
+                    </div>
+                `;
+
+            } catch (error) {
+                debugDiv.innerHTML = `
+                    <div class="error">
+                        <h3>❌ خطأ في التشخيص</h3>
+                        <p><strong>رسالة الخطأ:</strong> ${error.message}</p>
+                        <div class="debug-output">Stack trace: ${error.stack}</div>
+                    </div>
+                `;
+                console.error('Debug error:', error);
+            }
+        }
+        
+        // تعيين التوقيت الافتراضي عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            const now = new Date();
+            const currentTimeString = now.toISOString().slice(0, 16);
+            
+            // التوقيت الحالي = الآن
+            document.getElementById('currentTimestamp').value = currentTimeString;
+            
+            // التوقيت السابق = منذ ساعة
+            const oneHourAgo = new Date(now.getTime() - (60 * 60 * 1000));
+            const previousTimeString = oneHourAgo.toISOString().slice(0, 16);
+            document.getElementById('previousTimestamp').value = previousTimeString;
+        });
+    </script>
+</body>
+</html>
