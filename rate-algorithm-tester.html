@@ -302,13 +302,18 @@
 
         <!-- Algorithm Info -->
         <div class="algorithm-info">
-            <h3>📋 الخوارزميات المُطبقة من الملف القديم:</h3>
+            <h3>📋 الخوارزميات المُحدثة مع المسارات الصحيحة:</h3>
             <ul>
-                <li><strong>meter/hr:</strong> حساب مباشر = levelDiff / timeDiffHours</li>
-                <li><strong>bbl/hr:</strong> (levelDiff * comment) / timeDiffHours</li>
-                <li><strong>m³/hr:</strong> (levelDiff * comment / timeDiffHours) * 0.159</li>
-                <li><strong>MT/hr:</strong> (levelDiff * comment * 0.159 * 0.85) / timeDiffHours</li>
+                <li><strong>meter/hr:</strong> حساب مباشر = levelDiff / timeDiffHours (من PBCR)</li>
+                <li><strong>bbl/hr:</strong> (levelDiff * comment) / timeDiffHours (من PBCR)</li>
+                <li><strong>m³/hr:</strong> (levelDiff * comment / timeDiffHours) * 0.159 (من PBCR)</li>
+                <li><strong>MT/hr:</strong> (levelDiff * factor * 0.159 * 0.85) / timeDiffHours (من PLCR)</li>
             </ul>
+            <div style="margin-top: 15px; padding: 10px; background: rgba(255, 255, 255, 0.8); border-radius: 8px;">
+                <strong>🎯 المسارات:</strong><br>
+                • meter/hr, bbl/hr, m³/hr → <code>tankData/pbcr/tanks/{tankNumber}</code><br>
+                • MT/hr → <code>tankData/plcr/tanks/{tankNumber}</code>
+            </div>
         </div>
 
         <!-- Quick Tests -->
@@ -473,26 +478,51 @@
             preloadTankData();
         });
 
-        // Preload tank data from Firebase
+        // Preload tank data from Firebase - FIXED VERSION
         async function preloadTankData() {
             try {
                 console.log('📥 Preloading tank data from Firebase...');
                 
-                const departments = ['pbcr', 'plcr'];
-                for (const dept of departments) {
-                    const tanksRef = window.collection(window.db, 'tankData', dept, 'tanks');
-                    const snapshot = await window.getDocs(tanksRef);
-                    
-                    snapshot.forEach(doc => {
-                        tankDataCache[doc.id] = {
-                            ...doc.data(),
-                            department: dept.toUpperCase()
-                        };
-                    });
-                }
+                // تحميل بيانات PBCR (للـ meter/hr, bbl/hr, m³/hr)
+                console.log('📊 Loading PBCR tanks...');
+                const pbcrRef = window.collection(window.db, 'tankData', 'pbcr', 'tanks');
+                const pbcrSnapshot = await window.getDocs(pbcrRef);
                 
-                console.log('✅ Tank data loaded:', Object.keys(tankDataCache).length, 'tanks');
-                console.log('📊 Available tanks:', Object.keys(tankDataCache));
+                pbcrSnapshot.forEach(doc => {
+                    tankDataCache[`pbcr_${doc.id}`] = {
+                        ...doc.data(),
+                        department: 'PBCR',
+                        tankNumber: doc.id,
+                        path: 'pbcr'
+                    };
+                });
+                
+                // تحميل بيانات PLCR (للـ MT/hr)
+                console.log('📊 Loading PLCR tanks...');
+                const plcrRef = window.collection(window.db, 'tankData', 'plcr', 'tanks');
+                const plcrSnapshot = await window.getDocs(plcrRef);
+                
+                plcrSnapshot.forEach(doc => {
+                    tankDataCache[`plcr_${doc.id}`] = {
+                        ...doc.data(),
+                        department: 'PLCR',
+                        tankNumber: doc.id,
+                        path: 'plcr'
+                    };
+                });
+                
+                console.log('✅ Tank data loaded:');
+                console.log(`   PBCR tanks: ${pbcrSnapshot.size}`);
+                console.log(`   PLCR tanks: ${plcrSnapshot.size}`);
+                console.log(`   Total: ${Object.keys(tankDataCache).length}`);
+                
+                // عرض عينة من البيانات للتحقق
+                const sampleTanks = Object.keys(tankDataCache).slice(0, 5);
+                console.log('📋 Sample tank data:');
+                sampleTanks.forEach(key => {
+                    const tank = tankDataCache[key];
+                    console.log(`   ${key}: dept=${tank.department}, comment=${tank.comment}, factor=${tank.factor}`);
+                });
                 
             } catch (error) {
                 console.error('❌ Error loading tank data:', error);
@@ -519,19 +549,41 @@
                 return { result: 0, steps: stepLog, error: 'Invalid time difference' };
             }
             
-            // Get BMP value
+            // Get BMP value - FIXED: Use correct department and field
             let bmp = manualBmp;
+            let tankData = null;
+            let sourcePath = '';
+            
             if (bmp === null || bmp === undefined) {
-                const tankData = tankDataCache[tankNumber];
+                // تحديد المسار الصحيح بناءً على نوع الريت
+                if (rateUnit === 'MT/hr') {
+                    // MT/hr من PLCR ويستخدم factor
+                    tankData = tankDataCache[`plcr_${tankNumber}`];
+                    sourcePath = 'PLCR';
+                    if (tankData) {
+                        bmp = parseFloat(tankData.factor) || 0;
+                        stepLog.push(`📊 MT/hr: Loading from PLCR path`);
+                        stepLog.push(`   Factor (BMP): ${bmp}`);
+                    }
+                } else {
+                    // باقي الأنواع من PBCR ويستخدم comment
+                    tankData = tankDataCache[`pbcr_${tankNumber}`];
+                    sourcePath = 'PBCR';
+                    if (tankData) {
+                        bmp = parseFloat(tankData.comment) || 0;
+                        stepLog.push(`📊 ${rateUnit}: Loading from PBCR path`);
+                        stepLog.push(`   Comment (BMP): ${bmp}`);
+                    }
+                }
+                
                 if (tankData) {
-                    // NEW: Always use comment field (simplified logic from old file)
-                    bmp = parseFloat(tankData.comment) || 0;
-                    stepLog.push(`📊 Tank data found in Firebase`);
-                    stepLog.push(`   Comment (BMP): ${bmp}`);
+                    stepLog.push(`✅ Tank data found in Firebase`);
+                    stepLog.push(`   Source Path: tankData/${sourcePath.toLowerCase()}/tanks/${tankNumber}`);
                     stepLog.push(`   Department: ${tankData.department}`);
                 } else {
-                    stepLog.push(`❌ Tank data not found in Firebase for tank ${tankNumber}`);
-                    return { result: 0, steps: stepLog, error: 'Tank data not found' };
+                    stepLog.push(`❌ Tank data not found in ${sourcePath} path for tank ${tankNumber}`);
+                    stepLog.push(`   Searched: tankData/${sourcePath.toLowerCase()}/tanks/${tankNumber}`);
+                    return { result: 0, steps: stepLog, error: `Tank not found in ${sourcePath}` };
                 }
             } else {
                 stepLog.push(`🔧 Using manual BMP value: ${bmp}`);
@@ -603,7 +655,8 @@
                 steps: stepLog, 
                 error: null,
                 bmp: bmp,
-                tankData: tankDataCache[tankNumber] || null
+                tankData: tankData,
+                sourcePath: sourcePath
             };
         }
 
@@ -613,28 +666,28 @@
             const timeDiffHours = timeDiffMinutes / 60;
             const levelDiff = Math.abs(currentLevel - previousLevel);
             
-            // Simulate the problematic logic
-            let firebaseDepartment = '';
-            if (rateUnit === 'MT/hr') {
-                firebaseDepartment = 'plcr';
-            } else {
-                firebaseDepartment = 'pbcr';
-            }
-            
-            const tankData = tankDataCache[tankNumber];
+            // Simulate the problematic logic - ALWAYS loads from wrong path
+            // الخطأ الحالي: يحمل جميع الخزانات من PLCR!
+            const tankData = tankDataCache[`plcr_${tankNumber}`];
             if (!tankData) {
-                return { result: 0, error: 'Tank not found', algorithm: 'Current (Problematic)' };
+                return { 
+                    result: 0, 
+                    error: 'Tank not found in PLCR (current bug)', 
+                    algorithm: 'Current (Problematic)',
+                    sourcePath: 'PLCR (always wrong)'
+                };
             }
             
             let bmpField = '';
             let bmpValue = 0;
             
-            // Current problematic logic for BMP field selection
-            if (firebaseDepartment === 'plcr') {
+            // Current problematic logic - always tries comment from PLCR
+            // الخطأ الحالي: دائماً يحاول استخدام comment من PLCR (الذي يكون 0)
+            if (rateUnit === 'MT/hr') {
                 bmpField = 'factor';
                 bmpValue = parseFloat(tankData.factor) || 0;
             } else {
-                bmpField = 'comment';
+                bmpField = 'comment'; // خطأ! comment في PLCR = 0
                 bmpValue = parseFloat(tankData.comment) || 0;
             }
             
@@ -661,7 +714,8 @@
                 error: null, 
                 algorithm: 'Current (Problematic)',
                 bmpField: bmpField,
-                bmpValue: bmpValue
+                bmpValue: bmpValue,
+                sourcePath: 'PLCR (always wrong for non-MT/hr)'
             };
         }
 
@@ -756,6 +810,13 @@
                         <span class="result-value result-info">${result.tankData.department}</span>
                     </div>`;
                 }
+                
+                if (result.sourcePath) {
+                    html += `<div class="result-item">
+                        <span class="result-label">📂 المسار المستخدم:</span>
+                        <span class="result-value result-info">${result.sourcePath}</span>
+                    </div>`;
+                }
             }
             
             resultContent.innerHTML = html;
@@ -777,7 +838,7 @@
                 <td>${newResult.error ? '❌ فشل' : `<strong>${newResult.result.toFixed(3)}</strong>`}</td>
                 <td>${rateUnit}</td>
                 <td>${newResult.error ? '<span style="color: #e53e3e;">خطأ</span>' : '<span style="color: #38a169;">نجح ✅</span>'}</td>
-                <td>${newResult.error || 'حساب صحيح باستخدام comment'}</td>
+                <td>${newResult.error || `مسار ${newResult.sourcePath}: ${rateUnit === 'MT/hr' ? 'factor' : 'comment'}`}</td>
             </tr>`;
             
             // Current algorithm row
