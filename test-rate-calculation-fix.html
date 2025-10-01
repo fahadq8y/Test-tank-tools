@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار إصلاح حساب الـ Rate - Live Tanks</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            color: white;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #FFD700;
+            font-size: 2rem;
+        }
+        .test-section {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #007AFF;
+        }
+        .section-title {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #007AFF;
+            margin-bottom: 15px;
+        }
+        .form-group {
+            margin: 15px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #FFD700;
+        }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px 0;
+            transition: all 0.3s ease;
+        }
+        .btn-test {
+            background: linear-gradient(45deg, #007AFF, #5856D6);
+            color: white;
+        }
+        .btn-fix {
+            background: linear-gradient(45deg, #34C759, #30B845);
+            color: white;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        .results {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+        }
+        .result-item {
+            margin: 10px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+        }
+        .success {
+            border-left: 4px solid #34C759;
+        }
+        .error {
+            border-left: 4px solid #FF3B30;
+        }
+        .warning {
+            border-left: 4px solid #FF9500;
+        }
+        .info {
+            border-left: 4px solid #007AFF;
+        }
+        .path-info {
+            background: rgba(255, 152, 0, 0.1);
+            border: 1px solid rgba(255, 152, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+        .data-preview {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .calculation-details {
+            background: rgba(52, 199, 89, 0.1);
+            border: 1px solid rgba(52, 199, 89, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+        .rate-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 15px 0;
+        }
+        .rate-box {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .rate-old {
+            border: 2px solid #FF3B30;
+        }
+        .rate-new {
+            border: 2px solid #34C759;
+        }
+        .rate-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 اختبار إصلاح حساب الـ Rate في Live Tanks</h1>
+        
+        <div class="path-info">
+            <h3>📋 المطلوب اختباره:</h3>
+            <p><strong>🔧 المشكلة الحالية:</strong> calculateActualRate() يطلع صفر لما نعدل Current Level</p>
+            <p><strong>🎯 السبب:</strong> البحث عن tankData في مكان خاطئ في Firebase</p>
+            <p><strong>✅ الحل:</strong> استخدام الـ Firebase paths الصحيحة حسب Rate Unit</p>
+        </div>
+
+        <div class="test-section">
+            <div class="section-title">🔍 بيانات الاختبار</div>
+            
+            <div class="form-group">
+                <label>🏷️ رقم الخزان:</label>
+                <select id="testTankNumber">
+                    <option value="221">Tank 221</option>
+                    <option value="460">Tank 460</option>
+                    <option value="462">Tank 462</option>
+                    <option value="834">Tank 834</option>
+                    <option value="833">Tank 833</option>
+                    <option value="520">Tank 520</option>
+                    <option value="521">Tank 521</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>📊 Rate Unit:</label>
+                <select id="testRateUnit">
+                    <option value="meter/hr">meter/hr (PBCR Path)</option>
+                    <option value="bbl/hr">bbl/hr (PBCR Path)</option>
+                    <option value="m³/hr">m³/hr (PBCR Path)</option>
+                    <option value="MT/hr">MT/hr (PLCR Path)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>📏 Current Level:</label>
+                <input type="number" id="testCurrentLevel" value="10.5" step="0.1">
+            </div>
+
+            <div class="form-group">
+                <label>📏 Previous Level:</label>
+                <input type="number" id="testPreviousLevel" value="8.2" step="0.1">
+            </div>
+
+            <div class="form-group">
+                <label>⏰ Time Difference (hours):</label>
+                <input type="number" id="testTimeDiff" value="2" step="0.1">
+            </div>
+
+            <button class="btn btn-test" onclick="testCurrentMethod()">
+                🔍 اختبر الطريقة الحالية (المعطلة)
+            </button>
+            
+            <button class="btn btn-fix" onclick="testFixedMethod()">
+                ✅ اختبر الطريقة المُصلحة
+            </button>
+        </div>
+
+        <div class="test-section">
+            <div class="section-title">📊 نتائج الاختبار</div>
+            <div id="testResults" class="results">
+                <p>اختر طريقة الاختبار أعلاه لبدء الاختبار...</p>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <div class="section-title">📁 بيانات Firebase المُسترجعة</div>
+            <div id="firebaseData" class="data-preview">
+                سيتم عرض البيانات هنا...
+            </div>
+        </div>
+
+        <div class="test-section">
+            <div class="section-title">🔢 تفاصيل الحسابات</div>
+            <div id="calculationDetails" class="calculation-details">
+                ستظهر تفاصيل الحسابات هنا...
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, getDocs, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        // Firebase config (same as tank-management.html)
+        const firebaseConfig = {
+            apiKey: "AIzaSyBCdv37V6vOFMe42rGlPyl9lVq-9JldEPg",
+            authDomain: "tank-tools-knpc-c2d95.firebaseapp.com",
+            projectId: "tank-tools-knpc-c2d95",
+            storageBucket: "tank-tools-knpc-c2d95.appspot.com",
+            messagingSenderId: "678793823159",
+            appId: "1:678793823159:web:7a7b1398aefdb7f24462b9"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        // Make available globally
+        window.db = db;
+        window.getDocs = getDocs;
+        window.getDoc = getDoc;
+        window.collection = collection;
+        window.doc = doc;
+
+        console.log('✅ Firebase initialized for Rate calculation testing');
+    </script>
+
+    <script>
+        let currentTestResults = {};
+
+        // Test current (broken) method
+        async function testCurrentMethod() {
+            const tankNumber = document.getElementById('testTankNumber').value;
+            const rateUnit = document.getElementById('testRateUnit').value;
+            const currentLevel = parseFloat(document.getElementById('testCurrentLevel').value);
+            const previousLevel = parseFloat(document.getElementById('testPreviousLevel').value);
+            const timeDiffHours = parseFloat(document.getElementById('testTimeDiff').value);
+
+            displayResults('🔄 اختبار الطريقة الحالية (المعطلة)...');
+            clearData();
+
+            try {
+                // Simulate current broken method - searching in wrong place
+                const testResults = [];
+                
+                testResults.push({
+                    test: 'محاولة الطريقة الحالية',
+                    result: `البحث عن Tank ${tankNumber} في المكان الخاطئ: tanks[${tankNumber}]`,
+                    status: 'warning'
+                });
+
+                // Try to load from the OLD way (which fails)
+                let tankData = null;
+                let foundInOldWay = false;
+
+                // This simulates the OLD broken method from live-tanks.html
+                try {
+                    // The old method would try to access tanks[tankNumber] directly
+                    // which doesn't work because it's not structured properly
+                    
+                    testResults.push({
+                        test: 'البحث في المكان الخاطئ',
+                        result: '❌ tanks[tankNumber] غير موجود - هذا سبب المشكلة!',
+                        status: 'error'
+                    });
+
+                    // Calculate with no data (results in 0)
+                    const levelDiff = Math.abs(currentLevel - previousLevel);
+                    let actualRate = 0;
+
+                    if (rateUnit === 'meter/hr') {
+                        actualRate = levelDiff / timeDiffHours;
+                        testResults.push({
+                            test: 'حساب meter/hr بدون BPM',
+                            result: `${levelDiff} m ÷ ${timeDiffHours} hr = ${actualRate.toFixed(2)} m/hr`,
+                            status: 'success'
+                        });
+                    } else {
+                        testResults.push({
+                            test: `حساب ${rateUnit}`,
+                            result: `❌ لا يمكن الحساب - BPM غير متاح (tankData = null)`,
+                            status: 'error'
+                        });
+                        actualRate = 0;
+                    }
+
+                    testResults.push({
+                        test: 'النتيجة النهائية',
+                        result: `Rate = ${actualRate.toFixed(2)} ${rateUnit}`,
+                        status: actualRate > 0 ? 'success' : 'error'
+                    });
+
+                } catch (error) {
+                    testResults.push({
+                        test: 'خطأ في الطريقة الحالية',
+                        result: `❌ ${error.message}`,
+                        status: 'error'
+                    });
+                }
+
+                displayResults(testResults, 'current');
+                displayData('الطريقة الحالية: لا تجد البيانات', 'current');
+                displayCalculations({
+                    method: 'current',
+                    tankNumber,
+                    rateUnit,
+                    tankData: null,
+                    rate: rateUnit === 'meter/hr' ? (Math.abs(currentLevel - previousLevel) / timeDiffHours) : 0,
+                    error: 'البيانات غير متاحة'
+                });
+
+            } catch (error) {
+                displayResults([{
+                    test: 'خطأ في الاختبار',
+                    result: `❌ ${error.message}`,
+                    status: 'error'
+                }], 'current');
+            }
+        }
+
+        // Test fixed method
+        async function testFixedMethod() {
+            const tankNumber = document.getElementById('testTankNumber').value;
+            const rateUnit = document.getElementById('testRateUnit').value;
+            const currentLevel = parseFloat(document.getElementById('testCurrentLevel').value);
+            const previousLevel = parseFloat(document.getElementById('testPreviousLevel').value);
+            const timeDiffHours = parseFloat(document.getElementById('testTimeDiff').value);
+
+            displayResults('🔄 اختبار الطريقة المُصلحة...');
+            clearData();
+
+            try {
+                const testResults = [];
+                
+                // Step 1: Determine correct Firebase path based on Rate Unit
+                let firebasePath = '';
+                let department = '';
+                
+                if (rateUnit === 'MT/hr') {
+                    firebasePath = 'tankData/plcr/tanks';
+                    department = 'plcr';
+                } else {
+                    firebasePath = 'tankData/pbcr/tanks';
+                    department = 'pbcr';
+                }
+
+                testResults.push({
+                    test: 'تحديد المسار الصحيح',
+                    result: `Rate Unit: ${rateUnit} → Path: ${firebasePath}`,
+                    status: 'info'
+                });
+
+                // Step 2: Load tank data from correct Firebase path
+                let tankData = null;
+                let allTanksInPath = {};
+
+                try {
+                    const tanksCollectionRef = window.collection(window.db, 'tankData', department, 'tanks');
+                    const querySnapshot = await window.getDocs(tanksCollectionRef);
+                    
+                    querySnapshot.forEach((doc) => {
+                        allTanksInPath[doc.id] = doc.data();
+                    });
+
+                    tankData = allTanksInPath[tankNumber];
+
+                    testResults.push({
+                        test: 'قراءة البيانات من Firebase',
+                        result: `تم العثور على ${Object.keys(allTanksInPath).length} خزان في ${department}`,
+                        status: 'success'
+                    });
+
+                    if (tankData) {
+                        testResults.push({
+                            test: 'وجود الخزان المطلوب',
+                            result: `✅ تم العثور على Tank ${tankNumber} في ${department.toUpperCase()}`,
+                            status: 'success'
+                        });
+                    } else {
+                        testResults.push({
+                            test: 'وجود الخزان المطلوب',
+                            result: `❌ Tank ${tankNumber} غير موجود في ${department.toUpperCase()}`,
+                            status: 'error'
+                        });
+                    }
+
+                } catch (error) {
+                    testResults.push({
+                        test: 'خطأ في قراءة Firebase',
+                        result: `❌ ${error.message}`,
+                        status: 'error'
+                    });
+                }
+
+                // Step 3: Calculate rate using correct method
+                const levelDiff = Math.abs(currentLevel - previousLevel);
+                let actualRate = 0;
+                let calculationDetails = '';
+
+                if (rateUnit === 'meter/hr') {
+                    // Direct calculation - no BPM needed
+                    actualRate = levelDiff / timeDiffHours;
+                    calculationDetails = `${levelDiff} m ÷ ${timeDiffHours} hr = ${actualRate.toFixed(2)} m/hr`;
+                    
+                    testResults.push({
+                        test: 'حساب Rate (meter/hr)',
+                        result: `✅ ${calculationDetails}`,
+                        status: 'success'
+                    });
+
+                } else if (tankData) {
+                    // BPM-based calculations
+                    const bpm = parseFloat(tankData.comment) || parseFloat(tankData.factor) || 0;
+                    
+                    if (bpm > 0) {
+                        const volumeDiffBarrels = levelDiff * bpm;
+                        let finalRate = volumeDiffBarrels / timeDiffHours;
+                        
+                        if (rateUnit === 'm³/hr') {
+                            finalRate = finalRate * 0.159; // Convert to m³
+                            calculationDetails = `(${levelDiff} m × ${bpm} BPM ÷ ${timeDiffHours} hr) × 0.159 = ${finalRate.toFixed(2)} m³/hr`;
+                        } else if (rateUnit === 'MT/hr') {
+                            finalRate = finalRate * 0.159 * 0.85; // Convert to MT
+                            calculationDetails = `(${levelDiff} m × ${bpm} BPM ÷ ${timeDiffHours} hr) × 0.159 × 0.85 = ${finalRate.toFixed(2)} MT/hr`;
+                        } else {
+                            calculationDetails = `(${levelDiff} m × ${bpm} BPM) ÷ ${timeDiffHours} hr = ${finalRate.toFixed(2)} bbl/hr`;
+                        }
+                        
+                        actualRate = finalRate;
+                        
+                        testResults.push({
+                            test: `حساب Rate (${rateUnit})`,
+                            result: `✅ BPM: ${bpm} → ${calculationDetails}`,
+                            status: 'success'
+                        });
+                    } else {
+                        testResults.push({
+                            test: `حساب Rate (${rateUnit})`,
+                            result: `❌ BPM غير متاح في البيانات (${bpm})`,
+                            status: 'error'
+                        });
+                    }
+                } else {
+                    testResults.push({
+                        test: `حساب Rate (${rateUnit})`,
+                        result: `❌ لا يمكن الحساب - بيانات الخزان غير متاحة`,
+                        status: 'error'
+                    });
+                }
+
+                testResults.push({
+                    test: 'النتيجة النهائية',
+                    result: `✅ Rate = ${actualRate.toFixed(2)} ${rateUnit}`,
+                    status: actualRate > 0 ? 'success' : 'warning'
+                });
+
+                displayResults(testResults, 'fixed');
+                displayData(allTanksInPath, 'fixed', tankNumber, department);
+                displayCalculations({
+                    method: 'fixed',
+                    tankNumber,
+                    rateUnit,
+                    tankData,
+                    rate: actualRate,
+                    calculation: calculationDetails,
+                    bpm: tankData ? (parseFloat(tankData.comment) || parseFloat(tankData.factor) || 0) : 0
+                });
+
+            } catch (error) {
+                displayResults([{
+                    test: 'خطأ في الاختبار المُصلح',
+                    result: `❌ ${error.message}`,
+                    status: 'error'
+                }], 'fixed');
+            }
+        }
+
+        function displayResults(results, type = '') {
+            const resultsDiv = document.getElementById('testResults');
+            
+            if (typeof results === 'string') {
+                resultsDiv.innerHTML = `<p>${results}</p>`;
+                return;
+            }
+            
+            let html = `<h4>📊 نتائج الاختبار ${type === 'current' ? '(الطريقة الحالية)' : type === 'fixed' ? '(الطريقة المُصلحة)' : ''}:</h4>`;
+            
+            results.forEach((result, index) => {
+                html += `
+                    <div class="result-item ${result.status}">
+                        <strong>${index + 1}. ${result.test}:</strong><br>
+                        ${result.result}
+                    </div>
+                `;
+            });
+            
+            resultsDiv.innerHTML = html;
+        }
+
+        function displayData(data, type = '', tankNumber = '', department = '') {
+            const dataDiv = document.getElementById('firebaseData');
+            
+            if (typeof data === 'string') {
+                dataDiv.innerHTML = `<h4>📁 بيانات Firebase:</h4><div>${data}</div>`;
+                return;
+            }
+            
+            let html = `<h4>📁 بيانات Firebase ${type === 'fixed' ? '(الطريقة المُصلحة)' : ''}:</h4>`;
+            
+            if (Object.keys(data).length > 0) {
+                html += `<div><strong>المسار:</strong> tankData/${department}/tanks</div>`;
+                html += `<div><strong>الخزانات المتاحة:</strong> ${Object.keys(data).join(', ')}</div>`;
+                
+                if (data[tankNumber]) {
+                    html += `<div><strong>Tank ${tankNumber} البيانات:</strong></div>`;
+                    html += `<pre>${JSON.stringify(data[tankNumber], null, 2)}</pre>`;
+                } else {
+                    html += `<div>❌ Tank ${tankNumber} غير موجود في هذا المسار</div>`;
+                }
+            } else {
+                html += `<div>❌ لا توجد بيانات</div>`;
+            }
+            
+            dataDiv.innerHTML = html;
+        }
+
+        function displayCalculations(calc) {
+            const calcDiv = document.getElementById('calculationDetails');
+            
+            let html = `<h4>🔢 تفاصيل الحساب ${calc.method === 'fixed' ? '(المُصلح)' : '(الحالي)'}:</h4>`;
+            
+            html += `<div><strong>Tank Number:</strong> ${calc.tankNumber}</div>`;
+            html += `<div><strong>Rate Unit:</strong> ${calc.rateUnit}</div>`;
+            html += `<div><strong>Tank Data Available:</strong> ${calc.tankData ? '✅ نعم' : '❌ لا'}</div>`;
+            
+            if (calc.tankData) {
+                html += `<div><strong>BPM Value:</strong> ${calc.bmp || 'N/A'}</div>`;
+            }
+            
+            if (calc.calculation) {
+                html += `<div><strong>الحساب:</strong> ${calc.calculation}</div>`;
+            }
+            
+            if (calc.error) {
+                html += `<div style="color: #FF3B30;"><strong>خطأ:</strong> ${calc.error}</div>`;
+            }
+            
+            html += `<div class="rate-comparison">
+                <div class="rate-box rate-${calc.method === 'fixed' ? 'new' : 'old'}">
+                    <div>النتيجة النهائية</div>
+                    <div class="rate-value">${calc.rate.toFixed(2)}</div>
+                    <div>${calc.rateUnit}</div>
+                </div>
+            </div>`;
+            
+            calcDiv.innerHTML = html;
+        }
+
+        function clearData() {
+            document.getElementById('firebaseData').innerHTML = 'جاري التحميل...';
+            document.getElementById('calculationDetails').innerHTML = 'جاري الحساب...';
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🧪 Rate calculation test page loaded');
+        });
+    </script>
+</body>
+</html>

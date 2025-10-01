@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 أداة تشخيص مشكلة الريت الفعلي</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .main-content {
+            padding: 30px;
+        }
+        
+        .test-section {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .test-section h3 {
+            color: #495057;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107, #e0a800);
+            color: #212529;
+        }
+        
+        .btn-info {
+            background: linear-gradient(135deg, #17a2b8, #138496);
+        }
+        
+        .result-box {
+            background: #ffffff;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .success { background: #d4edda; border-color: #c3e6cb; color: #155724; }
+        .error { background: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+        .warning { background: #fff3cd; border-color: #ffeaa7; color: #856404; }
+        .info { background: #d1ecf1; border-color: #bee5eb; color: #0c5460; }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-left: 8px;
+        }
+        
+        .status-ok { background: #28a745; }
+        .status-error { background: #dc3545; }
+        .status-warning { background: #ffc107; }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #495057;
+        }
+        
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 أداة تشخيص مشكلة الريت الفعلي</h1>
+            <p>تشخيص شامل لمشكلة الريت الفعلي يرجع صفر في Live Tanks</p>
+        </div>
+        
+        <div class="main-content">
+            
+            <!-- قسم اختبار الاتصال بـ Firebase -->
+            <div class="test-section">
+                <h3>🔥 1. فحص الاتصال بـ Firebase</h3>
+                <button class="btn" onclick="testFirebaseConnection()">🔍 فحص الاتصال</button>
+                <button class="btn btn-info" onclick="loadFirebaseConfig()">⚙️ تحميل الإعدادات</button>
+                <div id="firebaseResult" class="result-box" style="display:none;"></div>
+            </div>
+            
+            <!-- قسم فحص بيانات الخزانات -->
+            <div class="test-section">
+                <h3>🏗️ 2. فحص بيانات الخزانات</h3>
+                <div class="grid">
+                    <div>
+                        <div class="input-group">
+                            <label>رقم الخزان:</label>
+                            <input type="text" id="testTankNumber" placeholder="مثال: 221" value="221">
+                        </div>
+                        <div class="input-group">
+                            <label>وحدة الريت:</label>
+                            <select id="testRateUnit">
+                                <option value="bbl/hr">bbl/hr</option>
+                                <option value="m³/hr">m³/hr</option>
+                                <option value="MT/hr">MT/hr</option>
+                                <option value="meter/hr">meter/hr</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn" onclick="testTankData()">🔍 فحص بيانات الخزان</button>
+                <button class="btn btn-warning" onclick="testAllDepartments()">📊 فحص جميع الأقسام</button>
+                <div id="tankDataResult" class="result-box" style="display:none;"></div>
+            </div>
+            
+            <!-- قسم محاكاة حساب الريت -->
+            <div class="test-section">
+                <h3>⚡ 3. محاكاة حساب الريت الفعلي</h3>
+                <div class="grid">
+                    <div>
+                        <div class="input-group">
+                            <label>المستوى الحالي:</label>
+                            <input type="number" id="testCurrentLevel" placeholder="5.5" value="5.5" step="0.1">
+                        </div>
+                        <div class="input-group">
+                            <label>المستوى السابق:</label>
+                            <input type="number" id="testPreviousLevel" placeholder="4.2" value="4.2" step="0.1">
+                        </div>
+                    </div>
+                    <div>
+                        <div class="input-group">
+                            <label>فرق الوقت (ساعات):</label>
+                            <input type="number" id="testTimeDiff" placeholder="1" value="1" step="0.1">
+                        </div>
+                    </div>
+                </div>
+                <button class="btn" onclick="simulateRateCalculation()">🧮 محاكاة الحساب</button>
+                <button class="btn btn-info" onclick="testOriginalFunction()">🔄 اختبار الدالة الأصلية</button>
+                <div id="calculationResult" class="result-box" style="display:none;"></div>
+            </div>
+            
+            <!-- قسم فحص المتغيرات العامة -->
+            <div class="test-section">
+                <h3>🌍 4. فحص المتغيرات العامة</h3>
+                <button class="btn" onclick="checkGlobalVariables()">🔍 فحص المتغيرات</button>
+                <button class="btn btn-warning" onclick="inspectTanksObject()">📋 فحص كائن Tanks</button>
+                <button class="btn btn-danger" onclick="testErrorScenarios()">❌ اختبار سيناريوهات الخطأ</button>
+                <div id="globalResult" class="result-box" style="display:none;"></div>
+            </div>
+            
+            <!-- قسم التقرير النهائي -->
+            <div class="test-section">
+                <h3>📊 5. التقرير النهائي والحلول</h3>
+                <button class="btn" onclick="generateFullReport()">📄 إنشاء تقرير شامل</button>
+                <button class="btn btn-info" onclick="suggestSolutions()">💡 اقتراح الحلول</button>
+                <div id="finalReport" class="result-box" style="display:none;"></div>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- تحميل Firebase -->
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js';
+        import { getFirestore, doc, getDoc, collection, getDocs, query, limit } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js';
+        
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDGpAHia_wEmrhnmYjrPf1n1TrAzwEk2lI",
+            authDomain: "livetanks-b6f24.firebaseapp.com", 
+            projectId: "livetanks-b6f24",
+            storageBucket: "livetanks-b6f24.appspot.com",
+            messagingSenderId: "278680662267",
+            appId: "1:278680662267:web:d523362428f168238cdd7f"
+        };
+
+        // Initialize Firebase
+        let app, db;
+        let tanks = {}; // Global tanks object
+        let currentEditingTank = null;
+        let tanksLoaded = false;
+        
+        try {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            console.log('✅ Firebase initialized successfully');
+            window.db = db;
+            window.tanks = tanks;
+            window.currentEditingTank = currentEditingTank;
+            window.tanksLoaded = tanksLoaded;
+        } catch (error) {
+            console.error('❌ Firebase initialization failed:', error);
+        }
+        
+        // Make Firebase functions globally available
+        window.doc = doc;
+        window.getDoc = getDoc;
+        window.collection = collection;
+        window.getDocs = getDocs;
+        window.query = query;
+        window.limit = limit;
+    </script>
+
+    <script>
+        // Global variables for testing
+        let diagnosisResults = {};
+        let testStartTime = new Date();
+        
+        // 1. Test Firebase Connection
+        async function testFirebaseConnection() {
+            const resultDiv = document.getElementById('firebaseResult');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<div class="info">🔄 جاري فحص الاتصال بـ Firebase...</div>';
+            
+            let results = '<h4>🔥 نتائج فحص Firebase:</h4>';
+            
+            try {
+                // Check if Firebase is initialized
+                if (typeof db !== 'undefined' && db) {
+                    results += '<div class="success">✅ Firebase مهيأ بنجاح <span class="status-indicator status-ok"></span></div>';
+                    
+                    // Test basic connection
+                    try {
+                        const testRef = doc(db, 'test', 'connection');
+                        const testDoc = await getDoc(testRef);
+                        results += '<div class="success">✅ الاتصال بـ Firestore يعمل <span class="status-indicator status-ok"></span></div>';
+                    } catch (connError) {
+                        results += '<div class="warning">⚠️ مشكلة في الاتصال: ' + connError.message + ' <span class="status-indicator status-warning"></span></div>';
+                    }
+                    
+                    // Test tankData collections
+                    try {
+                        const pbcrRef = collection(db, 'tankData', 'pbcr', 'tanks');
+                        const pbcrQuery = query(pbcrRef, limit(1));
+                        const pbcrSnapshot = await getDocs(pbcrQuery);
+                        
+                        results += '<div class="success">✅ مجموعة PBCR متاحة (' + pbcrSnapshot.size + ' خزان للاختبار) <span class="status-indicator status-ok"></span></div>';
+                        
+                        const plcrRef = collection(db, 'tankData', 'plcr', 'tanks');
+                        const plcrQuery = query(plcrRef, limit(1));
+                        const plcrSnapshot = await getDocs(plcrQuery);
+                        
+                        results += '<div class="success">✅ مجموعة PLCR متاحة (' + plcrSnapshot.size + ' خزان للاختبار) <span class="status-indicator status-ok"></span></div>';
+                        
+                    } catch (collError) {
+                        results += '<div class="error">❌ خطأ في الوصول للمجموعات: ' + collError.message + ' <span class="status-indicator status-error"></span></div>';
+                    }
+                    
+                } else {
+                    results += '<div class="error">❌ Firebase غير مهيأ <span class="status-indicator status-error"></span></div>';
+                }
+                
+                // Check global variables
+                results += '<h5 style="margin-top:15px;">🌍 المتغيرات العامة:</h5>';
+                results += '<div>• window.db: ' + (typeof window.db !== 'undefined' ? '✅ موجود' : '❌ غير موجود') + '</div>';
+                results += '<div>• window.tanks: ' + (typeof window.tanks !== 'undefined' ? '✅ موجود (' + Object.keys(window.tanks).length + ' خزان)' : '❌ غير موجود') + '</div>';
+                results += '<div>• window.tanksLoaded: ' + (typeof window.tanksLoaded !== 'undefined' ? window.tanksLoaded : 'غير محدد') + '</div>';
+                
+            } catch (error) {
+                results += '<div class="error">❌ خطأ عام: ' + error.message + ' <span class="status-indicator status-error"></span></div>';
+            }
+            
+            diagnosisResults.firebase = results;
+            resultDiv.innerHTML = results;
+        }
+        
+        // Load Firebase Configuration
+        function loadFirebaseConfig() {
+            const resultDiv = document.getElementById('firebaseResult');
+            resultDiv.style.display = 'block';
+            
+            const config = `
+<h4>⚙️ إعدادات Firebase:</h4>
+<div class="info">
+<strong>Project ID:</strong> livetanks-b6f24<br>
+<strong>Auth Domain:</strong> livetanks-b6f24.firebaseapp.com<br>
+<strong>Database Structure:</strong><br>
+&nbsp;&nbsp;• tankData/<br>
+&nbsp;&nbsp;&nbsp;&nbsp;├── pbcr/tanks/ (خزانات PBCR)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;└── plcr/tanks/ (خزانات PLCR)<br>
+</div>
+            `;
+            
+            resultDiv.innerHTML = config;
+        }
+        
+        // 2. Test Tank Data
+        async function testTankData() {
+            const resultDiv = document.getElementById('tankDataResult');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<div class="info">🔄 جاري فحص بيانات الخزان...</div>';
+            
+            const tankNumber = document.getElementById('testTankNumber').value;
+            const rateUnit = document.getElementById('testRateUnit').value;
+            
+            let results = `<h4>🏗️ نتائج فحص الخزان ${tankNumber}:</h4>`;
+            
+            try {
+                // Determine department based on rate unit
+                let department = '';
+                if (rateUnit === 'MT/hr') {
+                    department = 'plcr';
+                } else {
+                    department = 'pbcr';
+                }
+                
+                results += `<div class="info">📊 وحدة الريت: ${rateUnit} → القسم: ${department}</div>`;
+                
+                // Check in global tanks object first
+                if (window.tanks && window.tanks[tankNumber]) {
+                    const tankData = window.tanks[tankNumber];
+                    results += '<div class="success">✅ الخزان موجود في global tanks object <span class="status-indicator status-ok"></span></div>';
+                    results += '<div class="info">البيانات: ' + JSON.stringify(tankData, null, 2) + '</div>';
+                    
+                    // Check BPM field
+                    const bpmField = department === 'plcr' ? 'factor' : 'comment';
+                    const bpmValue = tankData[bpmField];
+                    
+                    if (bpmValue && bpmValue > 0) {
+                        results += `<div class="success">✅ BPM (${bpmField}): ${bpmValue} <span class="status-indicator status-ok"></span></div>`;
+                    } else {
+                        results += `<div class="error">❌ BPM (${bpmField}) غير صالح: ${bmpValue} <span class="status-indicator status-error"></span></div>`;
+                    }
+                    
+                } else {
+                    results += '<div class="warning">⚠️ الخزان غير موجود في global tanks object <span class="status-indicator status-warning"></span></div>';
+                    
+                    // Try to load directly from Firebase
+                    try {
+                        const tankRef = doc(db, 'tankData', department, 'tanks', tankNumber);
+                        const tankDoc = await getDoc(tankRef);
+                        
+                        if (tankDoc.exists()) {
+                            const tankData = tankDoc.data();
+                            results += '<div class="success">✅ تم العثور على الخزان في Firebase <span class="status-indicator status-ok"></span></div>';
+                            results += '<div class="info">البيانات من Firebase: ' + JSON.stringify(tankData, null, 2) + '</div>';
+                            
+                            // Cache it in global object
+                            window.tanks[tankNumber] = tankData;
+                            results += '<div class="info">تم حفظ البيانات في global tanks object</div>';
+                            
+                        } else {
+                            results += '<div class="error">❌ الخزان غير موجود في Firebase: tankData/' + department + '/tanks/' + tankNumber + ' <span class="status-indicator status-error"></span></div>';
+                        }
+                        
+                    } catch (firebaseError) {
+                        results += '<div class="error">❌ خطأ Firebase: ' + firebaseError.message + ' <span class="status-indicator status-error"></span></div>';
+                    }
+                }
+                
+                // Test other department as well
+                const otherDepartment = department === 'plcr' ? 'pbcr' : 'plcr';
+                try {
+                    const otherTankRef = doc(db, 'tankData', otherDepartment, 'tanks', tankNumber);
+                    const otherTankDoc = await getDoc(otherTankRef);
+                    
+                    if (otherTankDoc.exists()) {
+                        results += `<div class="warning">⚠️ تحذير: الخزان موجود أيضاً في قسم ${otherDepartment}! <span class="status-indicator status-warning"></span></div>`;
+                    } else {
+                        results += `<div class="info">ℹ️ الخزان غير موجود في قسم ${otherDepartment} (هذا طبيعي)</div>`;
+                    }
+                } catch (error) {
+                    // Ignore errors for other department check
+                }
+                
+            } catch (error) {
+                results += '<div class="error">❌ خطأ عام: ' + error.message + ' <span class="status-indicator status-error"></span></div>';
+            }
+            
+            diagnosisResults.tankData = results;
+            resultDiv.innerHTML = results;
+        }
+        
+        // Test All Departments
+        async function testAllDepartments() {
+            const resultDiv = document.getElementById('tankDataResult');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<div class="info">🔄 جاري فحص جميع الأقسام...</div>';
+            
+            let results = '<h4>📊 فحص جميع الأقسام:</h4>';
+            
+            try {
+                // Test PBCR department
+                const pbcrRef = collection(db, 'tankData', 'pbcr', 'tanks');
+                const pbcrSnapshot = await getDocs(pbcrRef);
+                
+                results += `<div class="success">✅ قسم PBCR: ${pbcrSnapshot.size} خزان <span class="status-indicator status-ok"></span></div>`;
+                
+                // List some tanks from PBCR
+                let pbcrTanks = [];
+                pbcrSnapshot.forEach((doc) => {
+                    pbcrTanks.push(doc.id);
+                });
+                results += '<div class="info">عينة من خزانات PBCR: ' + pbcrTanks.slice(0, 10).join(', ') + (pbcrTanks.length > 10 ? '...' : '') + '</div>';
+                
+                // Test PLCR department  
+                const plcrRef = collection(db, 'tankData', 'plcr', 'tanks');
+                const plcrSnapshot = await getDocs(plcrRef);
+                
+                results += `<div class="success">✅ قسم PLCR: ${plcrSnapshot.size} خزان <span class="status-indicator status-ok"></span></div>`;
+                
+                // List some tanks from PLCR
+                let plcrTanks = [];
+                plcrSnapshot.forEach((doc) => {
+                    plcrTanks.push(doc.id);
+                });
+                results += '<div class="info">عينة من خزانات PLCR: ' + plcrTanks.slice(0, 10).join(', ') + (plcrTanks.length > 10 ? '...' : '') + '</div>';
+                
+                // Check specific test tank in both departments
+                const testTankNumber = document.getElementById('testTankNumber').value;
+                if (testTankNumber) {
+                    // Check in PBCR
+                    try {
+                        const pbcrTankRef = doc(db, 'tankData', 'pbcr', 'tanks', testTankNumber);
+                        const pbcrTankDoc = await getDoc(pbcrTankRef);
+                        if (pbcrTankDoc.exists()) {
+                            results += `<div class="success">✅ خزان ${testTankNumber} موجود في PBCR <span class="status-indicator status-ok"></span></div>`;
+                        } else {
+                            results += `<div class="warning">⚠️ خزان ${testTankNumber} غير موجود في PBCR <span class="status-indicator status-warning"></span></div>`;
+                        }
+                    } catch (e) {}
+                    
+                    // Check in PLCR
+                    try {
+                        const plcrTankRef = doc(db, 'tankData', 'plcr', 'tanks', testTankNumber);
+                        const plcrTankDoc = await getDoc(plcrTankRef);
+                        if (plcrTankDoc.exists()) {
+                            results += `<div class="success">✅ خزان ${testTankNumber} موجود في PLCR <span class="status-indicator status-ok"></span></div>`;
+                        } else {
+                            results += `<div class="warning">⚠️ خزان ${testTankNumber} غير موجود في PLCR <span class="status-indicator status-warning"></span></div>`;
+                        }
+                    } catch (e) {}
+                }
+                
+            } catch (error) {
+                results += '<div class="error">❌ خطأ في فحص الأقسام: ' + error.message + ' <span class="status-indicator status-error"></span></div>';
+            }
+            
+            resultDiv.innerHTML = results;
+        }
+        
+        // 3. Simulate Rate Calculation
+        async function simulateRateCalculation() {
+            const resultDiv = document.getElementById('calculationResult');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<div class="info">🔄 جاري محاكاة حساب الريت...</div>';
+            
+            const tankNumber = document.getElementById('testTankNumber').value;
+            const rateUnit = document.getElementById('testRateUnit').value;
+            const currentLevel = parseFloat(document.getElementById('testCurrentLevel').value);
+            const previousLevel = parseFloat(document.getElementById('testPreviousLevel').value);
+            const timeDiffHours = parseFloat(document.getElementById('testTimeDiff').value);
+            
+            let results = `<h4>⚡ محاكاة حساب الريت:</h4>`;
+            
+            try {
+                // Step 1: Input validation
+                results += '<h5>📋 التحقق من البيانات المدخلة:</h5>';
+                
+                if (!tankNumber) {
+                    results += '<div class="error">❌ رقم الخزان مطلوب <span class="status-indicator status-error"></span></div>';
+                    resultDiv.innerHTML = results;
+                    return;
+                }
+                
+                if (!currentLevel || isNaN(currentLevel)) {
+                    results += '<div class="error">❌ المستوى الحالي غير صالح <span class="status-indicator status-error"></span></div>';
+                } else {
+                    results += `<div class="success">✅ المستوى الحالي: ${currentLevel} متر <span class="status-indicator status-ok"></span></div>`;
+                }
+                
+                if (!previousLevel || isNaN(previousLevel)) {
+                    results += '<div class="error">❌ المستوى السابق غير صالح <span class="status-indicator status-error"></span></div>';
+                } else {
+                    results += `<div class="success">✅ المستوى السابق: ${previousLevel} متر <span class="status-indicator status-ok"></span></div>`;
+                }
+                
+                if (!timeDiffHours || isNaN(timeDiffHours) || timeDiffHours <= 0) {
+                    results += '<div class="error">❌ فرق الوقت غير صالح <span class="status-indicator status-error"></span></div>';
+                } else {
+                    results += `<div class="success">✅ فرق الوقت: ${timeDiffHours} ساعة <span class="status-indicator status-ok"></span></div>`;
+                }
+                
+                // Step 2: Calculate level difference
+                const levelDiff = Math.abs(currentLevel - previousLevel);
+                results += `<div class="info">📏 فرق المستوى: ${levelDiff.toFixed(3)} متر</div>`;
+                
+                // Step 3: Determine department
+                let department = '';
+                if (rateUnit === 'MT/hr') {
+                    department = 'plcr';
+                } else {
+                    department = 'pbcr';
+                }
+                results += `<div class="info">🏢 القسم المحدد: ${department} (بناءً على وحدة ${rateUnit})</div>`;
+                
+                // Step 4: Get tank data
+                let tankData = null;
+                
+                // Check in global tanks object first
+                if (window.tanks && window.tanks[tankNumber]) {
+                    tankData = window.tanks[tankNumber];
+                    results += '<div class="success">✅ بيانات الخزان متوفرة في global object <span class="status-indicator status-ok"></span></div>';
+                } else {
+                    results += '<div class="warning">⚠️ بيانات الخزان غير متوفرة في global object، محاولة التحميل من Firebase... <span class="status-indicator status-warning"></span></div>';
+                    
+                    // Load from Firebase
+                    const tankRef = doc(db, 'tankData', department, 'tanks', tankNumber);
+                    const tankDoc = await getDoc(tankRef);
+                    
+                    if (tankDoc.exists()) {
+                        tankData = tankDoc.data();
+                        results += '<div class="success">✅ تم تحميل بيانات الخزان من Firebase <span class="status-indicator status-ok"></span></div>';
+                        // Cache it
+                        window.tanks[tankNumber] = tankData;
+                    } else {
+                        results += '<div class="error">❌ بيانات الخزان غير موجودة في Firebase <span class="status-indicator status-error"></span></div>';
+                    }
+                }
+                
+                // Step 5: Calculate rate
+                let actualRate = 0;
+                
+                if (rateUnit === 'meter/hr' || rateUnit === 'mtr/hr' || rateUnit === 'mtr') {
+                    // Direct calculation - no BPM needed
+                    actualRate = levelDiff / timeDiffHours;
+                    results += `<div class="success">✅ حساب مباشر (meter/hr): ${actualRate.toFixed(3)} <span class="status-indicator status-ok"></span></div>`;
+                    
+                } else if (tankData) {
+                    // BPM-based calculations
+                    let bpm = 0;
+                    
+                    if (department === 'plcr') {
+                        bpm = parseFloat(tankData.factor) || 0;
+                        results += `<div class="info">🏭 PLCR - BPM من حقل factor: ${bmp}</div>`;
+                    } else {
+                        bpm = parseFloat(tankData.comment) || 0;
+                        results += `<div class="info">🛢️ PBCR - BPM من حقل comment: ${bmp}</div>`;
+                    }
+                    
+                    if (bmp > 0) {
+                        const volumeDiffBarrels = levelDiff * bmp;
+                        let finalRate = volumeDiffBarrels / timeDiffHours;
+                        
+                        results += `<div class="info">📊 حجم الاختلاف بالبراميل: ${volumeDiffBarrels.toFixed(3)}</div>`;
+                        results += `<div class="info">📊 معدل أولي: ${finalRate.toFixed(3)} bbl/hr</div>`;
+                        
+                        if (rateUnit === 'm³/hr' || rateUnit === 'm3/hr' || rateUnit === 'm³' || rateUnit === 'm3') {
+                            actualRate = finalRate * 0.159;
+                            results += `<div class="success">✅ تحويل لـ m³/hr: ${actualRate.toFixed(3)} <span class="status-indicator status-ok"></span></div>`;
+                            
+                        } else if (rateUnit === 'MT/hr') {
+                            actualRate = finalRate * 0.159 * 0.85;
+                            results += `<div class="success">✅ تحويل لـ MT/hr: ${actualRate.toFixed(3)} <span class="status-indicator status-ok"></span></div>`;
+                            
+                        } else {
+                            actualRate = finalRate;
+                            results += `<div class="success">✅ bbl/hr: ${actualRate.toFixed(3)} <span class="status-indicator status-ok"></span></div>`;
+                        }
+                        
+                    } else {
+                        results += '<div class="error">❌ BPM غير صالح أو يساوي صفر <span class="status-indicator status-error"></span></div>';
+                        actualRate = 0;
+                    }
+                    
+                } else {
+                    results += '<div class="error">❌ لا يمكن حساب الريت بدون بيانات الخزان <span class="status-indicator status-error"></span></div>';
+                    actualRate = 0;
+                }
+                
+                // Final result
+                results += `<h5 style="margin-top:20px; padding:10px; background:#e8f5e8; border-left:4px solid #28a745;">🎯 النتيجة النهائية: ${actualRate.toFixed(2)} ${rateUnit}</h5>`;
+                
+                if (actualRate === 0) {
+                    results += '<div class="error">🚨 تحذير: الريت يساوي صفر! هذا يفسر المشكلة <span class="status-indicator status-error"></span></div>';
+                }
+                
+            } catch (error) {
+                results += '<div class="error">❌ خطأ في المحاكاة: ' + error.message + ' <span class="status-indicator status-error"></span></div>';
+            }
+            
+            diagnosisResults.calculation = results;
+            resultDiv.innerHTML = results;
+        }
+        
+        // Test Original Function (if available)
+        function testOriginalFunction() {
+            const resultDiv = document.getElementById('calculationResult');
+            
+            let results = '<h4>🔄 اختبار الدالة الأصلية:</h4>';
+            
+            // Check if calculateActualRate function exists
+            if (typeof calculateActualRate === 'function') {
+                results += '<div class="success">✅ دالة calculateActualRate موجودة <span class="status-indicator status-ok"></span></div>';
+                
+                try {
+                    // Mock the form inputs
+                    const mockInputs = {
+                        editCurrentLevel: document.getElementById('testCurrentLevel').value,
+                        editPreviousLevelDisplay: document.getElementById('testPreviousLevel').value,
+                        editRateUnit: document.getElementById('testRateUnit').value,
+                        editTankNumber: document.getElementById('testTankNumber').value
+                    };
+                    
+                    results += '<div class="info">محاولة تشغيل الدالة الأصلية...</div>';
+                    
+                    // This would require mocking the DOM elements
+                    results += '<div class="warning">⚠️ يتطلب تشغيل هذا الاختبار وجود نموذج Live Tanks الأصلي <span class="status-indicator status-warning"></span></div>';
+                    
+                } catch (error) {
+                    results += '<div class="error">❌ خطأ في تشغيل الدالة: ' + error.message + ' <span class="status-indicator status-error"></span></div>';
+                }
+                
+            } else {
+                results += '<div class="warning">⚠️ دالة calculateActualRate غير موجودة في هذا السياق <span class="status-indicator status-warning"></span></div>';
+                results += '<div class="info">هذا طبيعي لأننا في صفحة تشخيص منفصلة</div>';
+            }
+            
+            resultDiv.innerHTML = results;
+        }
+        
+        // 4. Check Global Variables
+        function checkGlobalVariables() {
+            const resultDiv = document.getElementById('globalResult');
+            resultDiv.style.display = 'block';
+            
+            let results = '<h4>🌍 فحص المتغيرات العامة:</h4>';
+            
+            // Check window.db
+            if (typeof window.db !== 'undefined' && window.db) {
+                results += '<div class="success">✅ window.db موجود ومهيأ <span class="status-indicator status-ok"></span></div>';
+            } else {
+                results += '<div class="error">❌ window.db غير موجود أو غير مهيأ <span class="status-indicator status-error"></span></div>';
+            }
+            
+            // Check window.tanks
+            if (typeof window.tanks !== 'undefined') {
+                const tanksCount = Object.keys(window.tanks).length;
+                if (tanksCount > 0) {
+                    results += `<div class="success">✅ window.tanks موجود ويحتوي على ${tanksCount} خزان <span class="status-indicator status-ok"></span></div>`;
+                } else {
+                    results += '<div class="warning">⚠️ window.tanks موجود لكنه فارغ <span class="status-indicator status-warning"></span></div>';
+                }
+            } else {
+                results += '<div class="error">❌ window.tanks غير موجود <span class="status-indicator status-error"></span></div>';
+            }
+            
+            // Check window.tanksLoaded
+            if (typeof window.tanksLoaded !== 'undefined') {
+                if (window.tanksLoaded) {
+                    results += '<div class="success">✅ window.tanksLoaded = true <span class="status-indicator status-ok"></span></div>';
+                } else {
+                    results += '<div class="warning">⚠️ window.tanksLoaded = false <span class="status-indicator status-warning"></span></div>';
+                }
+            } else {
+                results += '<div class="warning">⚠️ window.tanksLoaded غير محدد <span class="status-indicator status-warning"></span></div>';
+            }
+            
+            // Check window.currentEditingTank
+            if (typeof window.currentEditingTank !== 'undefined' && window.currentEditingTank) {
+                results += '<div class="success">✅ window.currentEditingTank موجود <span class="status-indicator status-ok"></span></div>';
+                results += '<div class="info">بيانات الخزان قيد التحرير: ' + JSON.stringify(window.currentEditingTank, null, 2) + '</div>';
+            } else {
+                results += '<div class="info">ℹ️ window.currentEditingTank غير موجود (طبيعي إذا لم يكن هناك تحرير جاري)</div>';
+            }
+            
+            // Check other Firebase functions
+            const firebaseFunctions = ['doc', 'getDoc', 'collection', 'getDocs', 'query', 'limit'];
+            results += '<h5 style="margin-top:15px;">🔥 وظائف Firebase:</h5>';
+            
+            firebaseFunctions.forEach(funcName => {
+                if (typeof window[funcName] !== 'undefined') {
+                    results += `<div class="success">✅ ${funcName} متوفر <span class="status-indicator status-ok"></span></div>`;
+                } else {
+                    results += `<div class="error">❌ ${funcName} غير متوفر <span class="status-indicator status-error"></span></div>`;
+                }
+            });
+            
+            diagnosisResults.globals = results;
+            resultDiv.innerHTML = results;
+        }
+        
+        // Inspect Tanks Object
+        function inspectTanksObject() {
+            const resultDiv = document.getElementById('globalResult');
+            resultDiv.style.display = 'block';
+            
+            let results = '<h4>📋 فحص تفصيلي لكائن Tanks:</h4>';
+            
+            if (typeof window.tanks !== 'undefined' && window.tanks) {
+                const tankIds = Object.keys(window.tanks);
+                
+                results += `<div class="info">📊 إجمالي الخزانات: ${tankIds.length}</div>`;
+                
+                if (tankIds.length > 0) {
+                    results += '<h5>🏗️ عينة من الخزانات:</h5>';
+                    
+                    // Show first 5 tanks
+                    tankIds.slice(0, 5).forEach(tankId => {
+                        const tankData = window.tanks[tankId];
+                        results += `<div class="info"><strong>خزان ${tankId}:</strong></div>`;
+                        results += `<div style="margin-right:20px; font-family:monospace; font-size:11px;">${JSON.stringify(tankData, null, 2)}</div>`;
+                    });
+                    
+                    if (tankIds.length > 5) {
+                        results += `<div class="info">... و ${tankIds.length - 5} خزان آخر</div>`;
+                    }
+                    
+                    // Check specific test tank
+                    const testTankNumber = document.getElementById('testTankNumber').value;
+                    if (testTankNumber && window.tanks[testTankNumber]) {
+                        results += `<h5>🎯 الخزان المطلوب (${testTankNumber}):</h5>`;
+                        results += `<div class="success">✅ موجود في كائن tanks <span class="status-indicator status-ok"></span></div>`;
+                        results += `<div style="font-family:monospace; font-size:11px; background:#f8f9fa; padding:10px; border-radius:5px;">${JSON.stringify(window.tanks[testTankNumber], null, 2)}</div>`;
+                    } else if (testTankNumber) {
+                        results += `<h5>🎯 الخزان المطلوب (${testTankNumber}):</h5>`;
+                        results += '<div class="error">❌ غير موجود في كائن tanks <span class="status-indicator status-error"></span></div>';
+                    }
+                    
+                } else {
+                    results += '<div class="warning">⚠️ كائن tanks فارغ <span class="status-indicator status-warning"></span></div>';
+                }
+                
+            } else {
+                results += '<div class="error">❌ كائن tanks غير موجود أو null <span class="status-indicator status-error"></span></div>';
+            }
+            
+            resultDiv.innerHTML = results;
+        }
+        
+        // Test Error Scenarios
+        function testErrorScenarios() {
+            const resultDiv = document.getElementById('globalResult');
+            resultDiv.style.display = 'block';
+            
+            let results = '<h4>❌ اختبار سيناريوهات الخطأ:</h4>';
+            
+            // Scenario 1: Tank not found
+            results += '<h5>سيناريو 1: خزان غير موجود</h5>';
+            const nonExistentTank = '99999';
+            if (window.tanks && !window.tanks[nonExistentTank]) {
+                results += `<div class="success">✅ خزان ${nonExistentTank} غير موجود كما متوقع <span class="status-indicator status-ok"></span></div>`;
+            } else {
+                results += `<div class="warning">⚠️ خزان ${nonExistentTank} موجود بشكل غير متوقع <span class="status-indicator status-warning"></span></div>`;
+            }
+            
+            // Scenario 2: Invalid BPM
+            results += '<h5>سيناريو 2: BPM غير صالح</h5>';
+            const testTankNumber = document.getElementById('testTankNumber').value;
+            if (testTankNumber && window.tanks && window.tanks[testTankNumber]) {
+                const tankData = window.tanks[testTankNumber];
+                const comment = parseFloat(tankData.comment) || 0;
+                const factor = parseFloat(tankData.factor) || 0;
+                
+                if (comment <= 0 && factor <= 0) {
+                    results += '<div class="error">❌ كلا من comment و factor غير صالحين! <span class="status-indicator status-error"></span></div>';
+                } else if (comment > 0 && factor > 0) {
+                    results += '<div class="info">ℹ️ كلا من comment و factor متوفرين</div>';
+                } else if (comment > 0) {
+                    results += '<div class="success">✅ comment صالح للـ PBCR <span class="status-indicator status-ok"></span></div>';
+                } else if (factor > 0) {
+                    results += '<div class="success">✅ factor صالح للـ PLCR <span class="status-indicator status-ok"></span></div>';
+                }
+            }
+            
+            // Scenario 3: Invalid inputs
+            results += '<h5>سيناريو 3: مدخلات غير صالحة</h5>';
+            const currentLevel = document.getElementById('testCurrentLevel').value;
+            const previousLevel = document.getElementById('testPreviousLevel').value;
+            
+            if (!currentLevel || isNaN(parseFloat(currentLevel))) {
+                results += '<div class="error">❌ المستوى الحالي غير صالح <span class="status-indicator status-error"></span></div>';
+            }
+            
+            if (!previousLevel || isNaN(parseFloat(previousLevel))) {
+                results += '<div class="error">❌ المستوى السابق غير صالح <span class="status-indicator status-error"></span></div>';
+            }
+            
+            const levelDiff = Math.abs(parseFloat(currentLevel) - parseFloat(previousLevel));
+            if (levelDiff === 0) {
+                results += '<div class="warning">⚠️ فرق المستوى يساوي صفر - سيؤدي لريت صفري <span class="status-indicator status-warning"></span></div>';
+            }
+            
+            resultDiv.innerHTML = results;
+        }
+        
+        // 5. Generate Full Report
+        function generateFullReport() {
+            const resultDiv = document.getElementById('finalReport');
+            resultDiv.style.display = 'block';
+            
+            let report = '<h4>📊 التقرير الشامل لتشخيص مشكلة الريت الفعلي:</h4>';
+            
+            report += `<div class="info"><strong>⏰ وقت التشخيص:</strong> ${new Date().toLocaleString('ar-SA')}</div>`;
+            report += `<div class="info"><strong>🎯 الخزان المختبر:</strong> ${document.getElementById('testTankNumber').value}</div>`;
+            report += `<div class="info"><strong>⚡ وحدة الريت:</strong> ${document.getElementById('testRateUnit').value}</div>`;
+            
+            report += '<h5 style="margin-top:20px; color:#dc3545;">🚨 المشاكل المكتشفة:</h5>';
+            
+            let criticalIssues = [];
+            let warnings = [];
+            let recommendations = [];
+            
+            // Analyze results
+            if (!window.db) {
+                criticalIssues.push('Firebase غير مهيأ أو غير متصل');
+            }
+            
+            if (!window.tanks || Object.keys(window.tanks).length === 0) {
+                criticalIssues.push('كائن tanks فارغ أو غير محمل');
+                recommendations.push('تحقق من تحميل البيانات من Firebase');
+            }
+            
+            const testTankNumber = document.getElementById('testTankNumber').value;
+            if (testTankNumber && window.tanks && !window.tanks[testTankNumber]) {
+                criticalIssues.push(`بيانات الخزان ${testTankNumber} غير موجودة في كائن tanks`);
+                recommendations.push('تحقق من صحة رقم الخزان أو تحميل البيانات من القسم الصحيح');
+            }
+            
+            if (!window.tanksLoaded) {
+                warnings.push('متغير tanksLoaded يظهر false - قد تكون البيانات غير محملة');
+            }
+            
+            // Display issues
+            if (criticalIssues.length > 0) {
+                criticalIssues.forEach(issue => {
+                    report += `<div class="error">❌ ${issue} <span class="status-indicator status-error"></span></div>`;
+                });
+            } else {
+                report += '<div class="success">✅ لم يتم اكتشاف مشاكل حرجة <span class="status-indicator status-ok"></span></div>';
+            }
+            
+            if (warnings.length > 0) {
+                report += '<h5 style="margin-top:15px; color:#ffc107;">⚠️ تحذيرات:</h5>';
+                warnings.forEach(warning => {
+                    report += `<div class="warning">⚠️ ${warning} <span class="status-indicator status-warning"></span></div>`;
+                });
+            }
+            
+            if (recommendations.length > 0) {
+                report += '<h5 style="margin-top:15px; color:#28a745;">💡 التوصيات:</h5>';
+                recommendations.forEach(rec => {
+                    report += `<div class="success">✅ ${rec}</div>`;
+                });
+            }
+            
+            // Root cause analysis
+            report += '<h5 style="margin-top:20px; color:#6f42c1;">🔍 تحليل السبب الجذري:</h5>';
+            
+            if (criticalIssues.length > 0) {
+                report += '<div class="error">🎯 <strong>السبب الأكثر احتمالاً:</strong> البيانات غير محملة في كائن tanks العام</div>';
+                report += '<div class="error">🔧 <strong>الحل المقترح:</strong> تحسين تحميل البيانات من Firebase وضمان تحميلها في الكائن العام</div>';
+            } else {
+                report += '<div class="success">✅ البيانات محملة بشكل صحيح - المشكلة قد تكون في منطق الحساب</div>';
+            }
+            
+            diagnosisResults.fullReport = report;
+            resultDiv.innerHTML = report;
+        }
+        
+        // Suggest Solutions
+        function suggestSolutions() {
+            const resultDiv = document.getElementById('finalReport');
+            
+            let solutions = '<h4>💡 الحلول المقترحة:</h4>';
+            
+            solutions += '<div class="success"><h5>🔧 الحل الأول: تحسين تحميل البيانات</h5>';
+            solutions += '<div style="margin-right:20px;">'; 
+            solutions += '• التأكد من تحميل البيانات في waitForTanks()<br>';
+            solutions += '• إضافة retry mechanism للتعامل مع البيانات غير المحملة<br>';
+            solutions += '• تحسين error handling وlogging<br>';
+            solutions += '</div></div>';
+            
+            solutions += '<div class="info"><h5>🔄 الحل الثاني: إصلاح منطق القسم</h5>';
+            solutions += '<div style="margin-right:20px;">';
+            solutions += '• التأكد من تحديد القسم الصحيح (PLCR vs PBCR)<br>';
+            solutions += '• التحقق من استخدام الحقل الصحيح (factor vs comment)<br>';
+            solutions += '• إضافة fallback للأقسام الأخرى<br>';
+            solutions += '</div></div>';
+            
+            solutions += '<div class="warning"><h5>⚡ الحل الثالث: تحسين دالة calculateActualRate</h5>';
+            solutions += '<div style="margin-right:20px;">';
+            solutions += '• إضافة validation للمدخلات<br>';
+            solutions += '• تحسين error messages للمستخدم<br>';
+            solutions += '• إضافة visual feedback للحقول<br>';
+            solutions += '</div></div>';
+            
+            solutions += '<div class="error"><h5>🚨 الحل العاجل: Workaround مؤقت</h5>';
+            solutions += '<div style="margin-right:20px;">';
+            solutions += '• إضافة تحميل مباشر من Firebase في calculateActualRate()<br>';
+            solutions += '• إضافة أداة تشخيص مدمجة في Live Tanks<br>';
+            solutions += '• تحسين رسائل الخطأ لمساعدة المستخدم<br>';
+            solutions += '</div></div>';
+            
+            // Add implementation code examples
+            solutions += '<h5 style="margin-top:20px;">📝 مثال على الكود المحسن:</h5>';
+            solutions += `<pre style="background:#f8f9fa; padding:10px; border-radius:5px; font-size:11px; overflow-x:auto;">
+// إضافة هذا في calculateActualRate()
+if (!tanks || !tanks[tankNumber]) {
+    console.log('⚠️ بيانات الخزان غير محملة، محاولة التحميل...');
+    
+    // Determine department
+    const dept = rateUnit === 'MT/hr' ? 'plcr' : 'pbcr';
+    
+    try {
+        const tankRef = doc(db, 'tankData', dept, 'tanks', tankNumber);
+        const tankDoc = await getDoc(tankRef);
+        
+        if (tankDoc.exists()) {
+            tanks[tankNumber] = tankDoc.data();
+            console.log('✅ تم تحميل البيانات بنجاح');
+            // إعادة تشغيل الحساب
+            setTimeout(() => calculateActualRate(), 300);
+            return;
+        }
+    } catch (error) {
+        console.error('❌ فشل تحميل البيانات:', error);
+        actualRate = 0;
+        return;
+    }
+}
+            </pre>`;
+            
+            resultDiv.innerHTML = solutions;
+        }
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔧 أداة التشخيص جاهزة للاستخدام');
+            
+            // Auto-run Firebase connection test
+            setTimeout(() => {
+                testFirebaseConnection();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
