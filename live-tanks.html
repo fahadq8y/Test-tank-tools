@@ -699,7 +699,7 @@
       appId: "1:510062594324:web:b892fd02007a5ca2f0da01"
     };
     
-    // Load tanks from Firebase with real KNPC data
+    // Load tanks from Firebase with real KNPC data - FIXED VERSION
     async function loadTanksFromFirebase() {
       try {
         console.log('🔄 Loading tanks from Firebase with real KNPC data...');
@@ -710,24 +710,61 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         
-        const tanksRef = collection(db, 'tankData', 'pbcr', 'tanks');
-        const snapshot = await getDocs(tanksRef);
-        
         tanks = {}; // Reset tanks object
         
-        snapshot.forEach(doc => {
+        // تحميل بيانات PBCR (للـ meter/hr, bbl/hr, m³/hr)
+        console.log('📊 Loading PBCR tanks...');
+        const pbcrRef = collection(db, 'tankData', 'pbcr', 'tanks');
+        const pbcrSnapshot = await getDocs(pbcrRef);
+        
+        pbcrSnapshot.forEach(doc => {
           const data = doc.data();
           tanks[doc.id] = {
-            comment: data.comment || 0,  // BPM from real KNPC system
-            min: data.min || 0,          // Lo Level from real KNPC system
-            max: data.max || 0           // Hi Level from real KNPC system
+            comment: data.comment || 0,      // BPM value for PBCR calculations
+            min: data.min || 0,             // Lo Level from real KNPC system
+            max: data.max || 0,             // Hi Level from real KNPC system
+            department: 'PBCR',
+            source: 'pbcr'
           };
         });
         
+        // تحميل بيانات PLCR (للـ MT/hr)
+        console.log('📊 Loading PLCR tanks...');
+        const plcrRef = collection(db, 'tankData', 'plcr', 'tanks');
+        const plcrSnapshot = await getDocs(plcrRef);
+        
+        plcrSnapshot.forEach(doc => {
+          const data = doc.data();
+          const tankId = doc.id;
+          
+          // If tank exists in PBCR, extend it, otherwise create new
+          if (tanks[tankId]) {
+            tanks[tankId].factor = data.factor || 0;  // BPM value for MT/hr calculations
+            tanks[tankId].plcrData = {
+              comment: data.comment || 0,
+              factor: data.factor || 0,
+              min: data.min || 0,
+              max: data.max || 0
+            };
+          } else {
+            tanks[tankId] = {
+              comment: data.comment || 0,
+              factor: data.factor || 0,        // BPM value for PLCR calculations  
+              min: data.min || 0,
+              max: data.max || 0,
+              department: 'PLCR',
+              source: 'plcr'
+            };
+          }
+        });
+        
         tanksLoaded = true;
-        console.log(`✅ Loaded ${Object.keys(tanks).length} tanks from Firebase`);
+        console.log(`✅ Loaded tanks from Firebase:`);
+        console.log(`   PBCR tanks: ${pbcrSnapshot.size}`);
+        console.log(`   PLCR tanks: ${plcrSnapshot.size}`);
+        console.log(`   Total unique tanks: ${Object.keys(tanks).length}`);
         console.log('📊 Sample tank data (TK-225):', tanks['225']);
-        console.log('🎯 All tanks now use real KNPC BPM values for accurate calculations');
+        console.log('🎯 All tanks now use correct paths: PBCR for bbl/hr,m³/hr,meter/hr; PLCR for MT/hr');
         
         return tanks;
         
@@ -1828,14 +1865,15 @@
         // BPM-based calculations
         let bpm = 0;
         
-        if (firebaseDepartment === 'plcr') {
-          // PLCR uses 'factor' field
+        // ✅ FIXED: Use correct field based on rate unit and available data
+        if (rateUnit === 'MT/hr') {
+          // MT/hr always uses factor field (should be from PLCR data)
           bpm = parseFloat(tankData.factor) || 0;
-          console.log('🏭 PLCR tank - using factor as BPM:', bpm);
+          console.log('🏭 MT/hr - using factor field as BPM:', bpm);
         } else {
-          // PBCR uses 'comment' field
+          // Other units (bbl/hr, m³/hr) use comment field (should be from PBCR data) 
           bpm = parseFloat(tankData.comment) || 0;
-          console.log('🛢️ PBCR tank - using comment as BPM:', bpm);
+          console.log('🛢️ ' + rateUnit + ' - using comment field as BPM:', bpm);
         }
         
         if (bpm > 0) {
@@ -1928,14 +1966,25 @@
           return;
         }
         
+        // ✅ FIXED: Use correct BPM field based on rate unit
+        let bmp = 0;
+        if (rateUnit === 'MT/hr') {
+          bmp = parseFloat(tankData.factor) || 0;
+          console.log('🏭 MT/hr - using factor field as BPM:', bmp);
+        } else {
+          bmp = parseFloat(tankData.comment) || 0;
+          console.log('🛢️ ' + rateUnit + ' - using comment field as BPM:', bmp);
+        }
+        
         console.log('🔥 Using real KNPC tank data for calculations:', {
           tankNumber,
-          bpm: tankData.comment,
+          rateUnit,
+          bmp: bmp,
           minLevel: tankData.min,
           maxLevel: tankData.max
         });
       
-      const c = tankData.comment; // capacity factor
+      const c = bmp; // capacity factor (BPM)
       const m = tankData.min;     // minimum level
       const x = tankData.max;     // maximum level
       
@@ -2158,7 +2207,7 @@
               // PLCR: MT/hr calculation - Using real KNPC data
               const tankData = tanks[tankNumber];
               if (tankData) {
-                const bpm = tankData.comment; // Real KNPC BPM
+                const bpm = tankData.factor || 0; // ✅ FIXED: PLCR uses factor field
                 console.log('🔥 PLCR Form Submission - Using real KNPC BPM:', bpm, 'for tank', tankNumber);
                 const volumeDiffBarrels = levelDiff * bpm;
                 const volumeM3 = volumeDiffBarrels * 0.159;
@@ -3024,14 +3073,25 @@
           return;
         }
         
+        // ✅ FIXED: Use correct BPM field based on rate unit
+        let bmp = 0;
+        if (rateUnit === 'MT/hr') {
+          bmp = parseFloat(tankData.factor) || 0;
+          console.log('🏭 Add Tank MT/hr - using factor field as BPM:', bmp);
+        } else {
+          bmp = parseFloat(tankData.comment) || 0;
+          console.log('🛢️ Add Tank ' + rateUnit + ' - using comment field as BPM:', bmp);
+        }
+        
         console.log('🔥 Add Tank - Using real KNPC tank data:', {
           tankNumber,
-          bpm: tankData.comment,
+          rateUnit,
+          bmp: bmp,
           minLevel: tankData.min,
           maxLevel: tankData.max
         });
       
-      const c = tankData.comment; // capacity factor
+      const c = bmp; // capacity factor (BPM)
       const m = tankData.min;     // minimum level
       const x = tankData.max;     // maximum level
       
