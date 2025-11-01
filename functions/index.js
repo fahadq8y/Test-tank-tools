@@ -12,6 +12,69 @@ admin.initializeApp();
 const db = admin.firestore();
 const messaging = admin.messaging();
 
+// Pushover configuration
+const PUSHOVER_API_URL = 'https://api.pushover.net/1/messages.json';
+const PUSHOVER_APP_TOKEN = functions.config().pushover?.token || 'YOUR_PUSHOVER_APP_TOKEN';
+
+/**
+ * Send notification via Pushover
+ */
+async function sendPushoverNotification(userKey, notification, notificationId, timeRemaining) {
+  const fetch = require('node-fetch');
+  
+  try {
+    // Map sound files to Pushover sounds
+    const soundMap = {
+      'sound1': 'persistent',
+      'sound2': 'spacealarm',
+      'sound3': 'siren'
+    };
+    
+    const pushoverSound = soundMap[notification.soundFile] || 'persistent';
+    
+    const response = await fetch(PUSHOVER_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token: PUSHOVER_APP_TOKEN,
+        user: userKey,
+        message: `${notification.department} - ${notification.product}\n⏰ ${timeRemaining} minutes remaining until target level`,
+        title: `🔔 Tank ${notification.tankNumber} Alert`,
+        priority: 2,  // Emergency priority (repeats until acknowledged)
+        retry: 30,    // Retry every 30 seconds
+        expire: 3600, // Expire after 1 hour
+        sound: pushoverSound,
+        url: 'https://test-tank-tools.vercel.app/live-tanks.html',
+        url_title: 'View Tank Details'
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (result.status === 1) {
+      console.log(`✅ Pushover notification sent for Tank ${notification.tankNumber}`);
+      
+      // Mark as sent
+      return db.collection('notificationsManager').doc(notificationId).update({
+        sent: true,
+        sentAt: admin.firestore.FieldValue.serverTimestamp(),
+        pushoverResponse: result.request
+      });
+    } else {
+      throw new Error(result.errors ? result.errors.join(', ') : 'Unknown Pushover error');
+    }
+  } catch (error) {
+    console.error(`❌ Error sending Pushover notification for Tank ${notification.tankNumber}:`, error);
+    
+    // Mark as sent with error
+    return db.collection('notificationsManager').doc(notificationId).update({
+      sent: true,
+      sentAt: admin.firestore.FieldValue.serverTimestamp(),
+      error: error.message
+    });
+  }
+}
+
 /**
  * Scheduled function that runs every minute
  * Checks for notifications that need to be sent
@@ -127,9 +190,18 @@ exports.checkAndSendNotifications = functions.pubsub
             }
           };
           
-          // Send notification
-          promises.push(
-            messaging.send(message)
+          // Check notification method and send accordingly
+          const notificationMethod = userData.notificationMethod || 'pwa';
+          
+          if (notificationMethod === 'pushover' && userData.pushoverKey) {
+            // Send via Pushover
+            promises.push(
+              sendPushoverNotification(userData.pushoverKey, notification, notificationId, timeRemaining)
+            );
+          } else {
+            // Send via FCM (default)
+            promises.push(
+              messaging.send(message)
               .then((response) => {
                 console.log(`✅ Notification sent successfully for Tank ${notification.tankNumber}:`, response);
                 
@@ -150,7 +222,8 @@ exports.checkAndSendNotifications = functions.pubsub
                   error: error.message
                 });
               })
-          );
+            );
+          }
         }
       }
       
@@ -254,5 +327,50 @@ exports.sendTestNotification = functions.https.onRequest(async (req, res) => {
       success: false,
       error: error.message
     });
+  }
+});
+
+/**
+ * HTTP function to send Pushover test notification
+ */
+exports.sendPushoverTest = functions.https.onCall(async (data, context) => {
+  const fetch = require('node-fetch');
+  
+  try {
+    const { userKey } = data;
+    
+    if (!userKey) {
+      throw new functions.https.HttpsError('invalid-argument', 'User key is required');
+    }
+    
+    const response = await fetch(PUSHOVER_API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token: PUSHOVER_APP_TOKEN,
+        user: userKey,
+        message: 'This is a test alarm from Tank Tools KNPC!\n🧪 Testing Pushover integration',
+        title: '🧪 Test Alarm',
+        priority: 2,  // Emergency
+        retry: 30,
+        expire: 300,  // 5 minutes for test
+        sound: 'siren'
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (result.status === 1) {
+      console.log('✅ Pushover test sent successfully');
+      return {
+        success: true,
+        message: 'Test alarm sent successfully'
+      };
+    } else {
+      throw new Error(result.errors ? result.errors.join(', ') : 'Unknown error');
+    }
+  } catch (error) {
+    console.error('❌ Error sending Pushover test:', error);
+    throw new functions.https.HttpsError('internal', error.message);
   }
 });
