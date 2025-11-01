@@ -403,11 +403,10 @@
       if (!currentUser) return;
       
       try {
-        // Query notifications for current user
+        // Query notifications for current user (without orderBy to avoid index requirement)
         const q = query(
           collection(db, 'notificationsManager'),
-          where('userId', '==', currentUser.username),
-          orderBy('finishDateTime', 'asc')
+          where('userId', '==', currentUser.username)
         );
         
         // Set up real-time listener
@@ -418,6 +417,13 @@
               id: doc.id,
               ...doc.data()
             });
+          });
+          
+          // Sort notifications by finishDateTime in JavaScript
+          notificationsData.sort((a, b) => {
+            const dateA = a.finishDateTime?.toDate ? a.finishDateTime.toDate() : new Date(a.finishDateTime);
+            const dateB = b.finishDateTime?.toDate ? b.finishDateTime.toDate() : new Date(b.finishDateTime);
+            return dateA - dateB;
           });
           
           displayNotifications();
