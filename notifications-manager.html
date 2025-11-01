@@ -360,7 +360,7 @@
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-    import { getFirestore, doc, getDoc, updateDoc, deleteDoc, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, where } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    import { getFirestore, doc, getDoc, updateDoc, deleteDoc, collection, addDoc, serverTimestamp, Timestamp, query, orderBy, onSnapshot, where } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
     import { getMessaging, getToken, onMessage } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js';
 
     const firebaseConfig = {
@@ -384,6 +384,7 @@
     window.collection = collection;
     window.addDoc = addDoc;
     window.serverTimestamp = serverTimestamp;
+    window.Timestamp = Timestamp;
     window.query = query;
     window.orderBy = orderBy;
     window.onSnapshot = onSnapshot;
