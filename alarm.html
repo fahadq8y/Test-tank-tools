@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🚨 Tank Alarm</title>
+  <link href="icon.png" rel="icon" type="image/png"/>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      background: linear-gradient(135deg, #ff0000, #ff4444, #ff0000);
+      background-size: 400% 400%;
+      animation: gradientShift 3s ease infinite;
+      color: white;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    @keyframes gradientShift {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+    
+    .alarm-container {
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 40px;
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      animation: pulse 1s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    
+    .alarm-icon {
+      font-size: 100px;
+      animation: shake 0.5s ease-in-out infinite;
+    }
+    
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      75% { transform: translateX(10px); }
+    }
+    
+    .alarm-title {
+      font-size: 2rem;
+      font-weight: bold;
+      margin: 20px 0;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    }
+    
+    .alarm-details {
+      font-size: 1.2rem;
+      margin: 20px 0;
+      line-height: 1.6;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 20px;
+      border-radius: 10px;
+    }
+    
+    .alarm-buttons {
+      display: flex;
+      gap: 15px;
+      margin-top: 30px;
+      flex-wrap: wrap;
+    }
+    
+    .alarm-btn {
+      flex: 1;
+      min-width: 150px;
+      padding: 15px 30px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+    
+    .snooze-btn {
+      background: linear-gradient(45deg, #FFA500, #FFD700);
+      color: #003366;
+    }
+    
+    .snooze-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(255, 165, 0, 0.4);
+    }
+    
+    .stop-btn {
+      background: linear-gradient(45deg, #4CAF50, #45a049);
+      color: white;
+    }
+    
+    .stop-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(76, 175, 80, 0.4);
+    }
+    
+    .snooze-info {
+      margin-top: 20px;
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+  <div class="alarm-container">
+    <div class="alarm-icon">🚨</div>
+    <div class="alarm-title" id="alarmTitle">TANK ALARM!</div>
+    <div class="alarm-details" id="alarmDetails">
+      <div>🏭 <strong>Tank:</strong> <span id="tankNumber">Loading...</span></div>
+      <div>🏢 <strong>Department:</strong> <span id="department">Loading...</span></div>
+      <div>⚗️ <strong>Product:</strong> <span id="product">Loading...</span></div>
+      <div>⏰ <strong>Finish Time:</strong> <span id="finishTime">Loading...</span></div>
+    </div>
+    <div class="alarm-buttons">
+      <button class="alarm-btn snooze-btn" id="snoozeBtn">
+        <span>😴</span>
+        <span>Snooze (5 min)</span>
+      </button>
+      <button class="alarm-btn stop-btn" id="stopBtn">
+        <span>🛑</span>
+        <span>Stop Alarm</span>
+      </button>
+    </div>
+    <div class="snooze-info">
+      Snooze will remind you again in 5 minutes
+    </div>
+  </div>
+
+  <!-- Audio element for alarm sound -->
+  <audio id="alarmSound" loop>
+    <!-- Using a data URL for a simple beep sound -->
+    <source src="data:audio/wav;base64,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" type="audio/wav">
+  </audio>
+
+  <script>
+    // Get alarm data from URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const tankId = urlParams.get('tankId');
+    const tankNumber = urlParams.get('tankNumber');
+    const department = urlParams.get('department');
+    const product = urlParams.get('product');
+    const finishTime = urlParams.get('finishTime');
+
+    // Update UI
+    document.getElementById('tankNumber').textContent = tankNumber || 'N/A';
+    document.getElementById('department').textContent = department || 'N/A';
+    document.getElementById('product').textContent = product || 'N/A';
+    document.getElementById('finishTime').textContent = finishTime || 'N/A';
+
+    // Get audio element
+    const alarmSound = document.getElementById('alarmSound');
+
+    // Play alarm sound on load
+    window.addEventListener('load', () => {
+      alarmSound.play().catch(error => {
+        console.error('Failed to play alarm sound:', error);
+      });
+      
+      // Vibrate if supported
+      if ('vibrate' in navigator) {
+        // Continuous vibration pattern
+        setInterval(() => {
+          navigator.vibrate([500, 200, 500, 200, 500]);
+        }, 2000);
+      }
+    });
+
+    // Snooze button
+    document.getElementById('snoozeBtn').addEventListener('click', () => {
+      console.log('Snooze clicked');
+      
+      // Stop sound and vibration
+      alarmSound.pause();
+      alarmSound.currentTime = 0;
+      if ('vibrate' in navigator) {
+        navigator.vibrate(0);
+      }
+      
+      // Send message to service worker
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({
+          type: 'SNOOZE_ALARM',
+          tankId: tankId
+        });
+      }
+      
+      // Close window
+      window.close();
+      
+      // If window.close() doesn't work (some browsers), redirect
+      setTimeout(() => {
+        window.location.href = '/live-tanks.html';
+      }, 100);
+    });
+
+    // Stop button
+    document.getElementById('stopBtn').addEventListener('click', () => {
+      console.log('Stop clicked');
+      
+      // Stop sound and vibration
+      alarmSound.pause();
+      alarmSound.currentTime = 0;
+      if ('vibrate' in navigator) {
+        navigator.vibrate(0);
+      }
+      
+      // Send message to service worker
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({
+          type: 'STOP_ALARM',
+          tankId: tankId
+        });
+      }
+      
+      // Close window
+      window.close();
+      
+      // If window.close() doesn't work, redirect
+      setTimeout(() => {
+        window.location.href = '/live-tanks.html';
+      }, 100);
+    });
+
+    // Prevent accidental close
+    window.addEventListener('beforeunload', (event) => {
+      if (alarmSound && !alarmSound.paused) {
+        event.preventDefault();
+        event.returnValue = 'Alarm is still active. Are you sure you want to close?';
+        return event.returnValue;
+      }
+    });
+  </script>
+</body>
+</html>

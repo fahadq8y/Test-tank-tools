@@ -3354,6 +3354,72 @@
     
     // ===== END NOTIFICATIONS MANAGER INTEGRATION =====
     
+    // ===== PERSISTENT NOTIFICATION SERVICE WORKER =====
+    
+    let persistentSW = null;
+    
+    // Register persistent notification service worker
+    async function registerPersistentSW() {
+      if ('serviceWorker' in navigator) {
+        try {
+          const registration = await navigator.serviceWorker.register('/sw-persistent.js');
+          console.log('✅ Persistent SW registered:', registration);
+          
+          persistentSW = registration;
+          
+          // Wait for service worker to be ready
+          await navigator.serviceWorker.ready;
+          
+          // Start persistent notifications
+          if (currentUser && currentUser.username) {
+            startPersistentNotifications(currentUser.username);
+          }
+          
+          // Listen for messages from service worker
+          navigator.serviceWorker.addEventListener('message', handleSWMessage);
+          
+        } catch (error) {
+          console.error('❌ Failed to register persistent SW:', error);
+        }
+      }
+    }
+    
+    // Start persistent notifications
+    function startPersistentNotifications(username) {
+      if (navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({
+          type: 'START_PERSISTENT_NOTIFICATIONS',
+          username: username
+        });
+        console.log('🔔 Started persistent notifications for:', username);
+      }
+    }
+    
+    // Stop persistent notifications
+    function stopPersistentNotifications() {
+      if (navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({
+          type: 'STOP_PERSISTENT_NOTIFICATIONS'
+        });
+        console.log('🔕 Stopped persistent notifications');
+      }
+    }
+    
+    // Handle messages from service worker
+    function handleSWMessage(event) {
+      console.log('📨 Message from SW:', event.data);
+      
+      if (event.data.type === 'SNOOZE_ALARM') {
+        console.log('😴 Alarm snoozed for tank:', event.data.tankId);
+        // Optionally update UI
+      } else if (event.data.type === 'STOP_ALARM') {
+        console.log('🛑 Alarm stopped for tank:', event.data.tankId);
+        // Optionally update UI
+      }
+    }
+    
+    // ===== END PERSISTENT NOTIFICATION SERVICE WORKER =====
+    
     // ✅ Initialize tanks data from Firebase on page load
     document.addEventListener('DOMContentLoaded', async () => {
       console.log('🚀 Initializing Live Tanks with Firebase data...');
@@ -3363,6 +3429,9 @@
       // Initialize built-in alarms
       initializeBuiltInAlarms();
       console.log('🔔 Built-in alarms initialized');
+      
+      // Register persistent notification service worker
+      await registerPersistentSW();
     });
 
 
