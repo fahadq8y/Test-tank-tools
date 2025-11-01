@@ -2474,6 +2474,11 @@
       document.getElementById('pendingDeviceRequestsCount').textContent = pendingRequests;
     }
     
+    // Alias function for compatibility
+    function updateUsersDeviceStatistics() {
+      updateUserDeviceStatistics();
+    }
+    
     // Render Users Device Table
     function renderUsersDeviceTable() {
       const container = document.getElementById('usersDeviceContainer');
