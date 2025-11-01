@@ -8,6 +8,7 @@
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#003366">
   <script src="permissions.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     body{background:linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.5)),url('background.jpg');background-size:cover;background-position:center;background-attachment:fixed;color:white;font-family:Arial,sans-serif;padding:20px;min-height:100vh}
@@ -248,29 +249,16 @@
       
       <div style="max-width:800px;margin:0 auto">
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:20px;margin-bottom:25px">
-          <!-- PWA Option -->
-          <div class="notification-option" data-method="pwa" onclick="selectNotificationMethod('pwa')" style="background:rgba(76,175,80,0.15);border:3px solid rgba(76,175,80,0.5);border-radius:15px;padding:20px;cursor:pointer;transition:all 0.3s ease">
-            <div style="text-align:center;margin-bottom:15px;font-size:2.5rem">🆓</div>
-            <h3 style="text-align:center;font-size:1.3rem;margin-bottom:10px;color:#81C784">PWA Only</h3>
-            <p style="font-size:0.95rem;opacity:0.85;margin-bottom:15px;text-align:center">Free - No setup required</p>
-            <ul style="font-size:0.9rem;opacity:0.8;list-style:none;padding:0">
-              <li style="margin-bottom:8px">✅ Alert notifications</li>
-              <li style="margin-bottom:8px">✅ Custom sounds</li>
-              <li style="margin-bottom:8px">⚠️ App must be open</li>
-              <li style="margin-bottom:8px">✅ No cost</li>
-            </ul>
-          </div>
-          
           <!-- Pushover Option -->
           <div class="notification-option" data-method="pushover" onclick="selectNotificationMethod('pushover')" style="background:rgba(244,67,54,0.15);border:3px solid rgba(244,67,54,0.5);border-radius:15px;padding:20px;cursor:pointer;transition:all 0.3s ease">
             <div style="text-align:center;margin-bottom:15px;font-size:2.5rem">🔔</div>
             <h3 style="text-align:center;font-size:1.3rem;margin-bottom:10px;color:#E57373">Pushover</h3>
-            <p style="font-size:0.95rem;opacity:0.85;margin-bottom:15px;text-align:center">$5 one-time - Real alarm</p>
+            <p style="font-size:0.95rem;opacity:0.85;margin-bottom:15px;text-align:center">Real alarm-like notifications</p>
             <ul style="font-size:0.9rem;opacity:0.8;list-style:none;padding:0">
               <li style="margin-bottom:8px">✅ Repeats until dismissed</li>
               <li style="margin-bottom:8px">✅ Works in background</li>
               <li style="margin-bottom:8px">✅ Loud alarm sounds</li>
-              <li style="margin-bottom:8px">💰 $5 per user</li>
+              <li style="margin-bottom:8px">✅ Android + iOS</li>
             </ul>
           </div>
           
@@ -294,19 +282,18 @@
           <p style="text-align:center;margin-bottom:20px;opacity:0.9">Get real alarm-like notifications that repeat until you dismiss them!</p>
           
           <div style="max-width:600px;margin:0 auto">
-            <div style="text-align:center;margin-bottom:25px">
-              <button 
-                class="btn btn-primary" 
-                onclick="downloadPushover()" 
-                style="font-size:1.1rem;padding:15px 30px;background:linear-gradient(135deg,#E57373,#F44336);border:none">
-                📥 Download Pushover App ($5)
-              </button>
-              <p style="font-size:0.85rem;margin-top:10px;opacity:0.7">One-time purchase</p>
-            </div>
-            
             <ol style="font-size:0.95rem;margin-bottom:25px;padding-left:20px;line-height:1.8">
-              <li>Create account and copy your <strong>User Key</strong></li>
-              <li>Paste your User Key below:</li>
+              <li style="margin-bottom:15px">
+                <strong>Download Pushover app:</strong><br/>
+                <button 
+                  class="btn btn-primary" 
+                  onclick="downloadPushover()" 
+                  style="font-size:1rem;padding:12px 25px;background:linear-gradient(135deg,#E57373,#F44336);border:none;margin-top:10px">
+                  📥 Download Pushover
+                </button>
+              </li>
+              <li style="margin-bottom:15px"><strong>Create account</strong> and copy your <strong>User Key</strong></li>
+              <li><strong>Paste your User Key below:</strong></li>
             </ol>
             
             <div style="margin-bottom:20px">
@@ -338,11 +325,18 @@
           <p style="text-align:center;margin-bottom:20px;opacity:0.9">Sync tank alerts with your Google Calendar</p>
           
           <div style="max-width:600px;margin:0 auto;text-align:center">
-            <button class="btn btn-primary" onclick="connectGoogleCalendar()" style="font-size:1.1rem;padding:15px 30px">
+            <button class="btn btn-primary" onclick="connectGoogleCalendar()" style="font-size:1.1rem;padding:15px 30px;background:linear-gradient(135deg,#64B5F6,#2196F3);border:none">
               🔗 Connect Google Calendar
             </button>
             
             <div id="calendarStatus" style="margin-top:20px;padding:12px;border-radius:8px;font-size:0.95rem"></div>
+            
+            <div id="calendarConnected" style="display:none;margin-top:20px;padding:15px;background:rgba(76,175,80,0.2);border-radius:8px">
+              <p style="margin:0;color:#81C784;font-weight:600">✅ Connected to Google Calendar</p>
+              <button class="btn btn-secondary" onclick="disconnectGoogleCalendar()" style="margin-top:10px;font-size:0.9rem;padding:8px 20px">
+                🔗 Disconnect
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1357,18 +1351,65 @@
       status.innerHTML = '🔄 Connecting to Google Calendar...';
       
       try {
-        // TODO: Implement Google Calendar OAuth
-        // For now, show coming soon message
-        status.style.background = 'rgba(255,152,0,0.2)';
-        status.style.color = '#FFB74D';
-        status.innerHTML = '⚠️ Google Calendar integration coming soon!';
+        // Initialize Google OAuth
+        const client = google.accounts.oauth2.initTokenClient({
+          client_id: '510062594324-ujs1dn0a7a80hb1vb7ut4vphehld8l76.apps.googleusercontent.com',
+          scope: 'https://www.googleapis.com/auth/calendar.events',
+          callback: async (response) => {
+            if (response.access_token) {
+              // Save token to Firestore
+              const user = window.auth.currentUser;
+              if (user) {
+                await window.db.collection('users').doc(user.uid).set({
+                  googleCalendarToken: response.access_token,
+                  googleCalendarConnected: true,
+                  googleCalendarConnectedAt: new Date()
+                }, { merge: true });
+                
+                status.style.background = 'rgba(76,175,80,0.2)';
+                status.style.color = '#81C784';
+                status.innerHTML = '✅ Connected to Google Calendar!';
+                
+                document.getElementById('calendarConnected').style.display = 'block';
+                
+                showMessage('📅 Google Calendar connected successfully!', 'success');
+              }
+            }
+          }
+        });
         
-        showMessage('📅 Google Calendar integration coming soon!', 'info');
+        // Request access token
+        client.requestAccessToken();
       } catch (error) {
         console.error('Error connecting calendar:', error);
         status.style.background = 'rgba(244,67,54,0.2)';
         status.style.color = '#E57373';
         status.innerHTML = '❌ Error: ' + error.message;
+      }
+    }
+    
+    // Disconnect Google Calendar
+    async function disconnectGoogleCalendar() {
+      const status = document.getElementById('calendarStatus');
+      
+      try {
+        const user = window.auth.currentUser;
+        if (user) {
+          await window.db.collection('users').doc(user.uid).set({
+            googleCalendarToken: null,
+            googleCalendarConnected: false
+          }, { merge: true });
+          
+          document.getElementById('calendarConnected').style.display = 'none';
+          status.style.background = 'rgba(255,152,0,0.2)';
+          status.style.color = '#FFB74D';
+          status.innerHTML = '⚠️ Disconnected from Google Calendar';
+          
+          showMessage('📅 Google Calendar disconnected', 'info');
+        }
+      } catch (error) {
+        console.error('Error disconnecting calendar:', error);
+        showMessage('❌ Error disconnecting calendar', 'error');
       }
     }
     
