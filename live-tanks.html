@@ -2260,6 +2260,16 @@
         
         await updateDoc(doc(db, 'liveTanks', currentEditingTank.id), updateData);
         
+        // 🔔 Update notification if exists
+        await updateNotificationForTank(currentEditingTank.id, {
+          tankNumber: tankNumber,
+          department: currentEditingTank.department,
+          product: updateData.product,
+          finishDateTime: finishDateTime,
+          finishDate: finishDate,
+          finishTime: finishTime
+        });
+        
         await addActivity('live_tank_updated', currentUser.username, currentEditingTank, changes);
         showMessage('✅ Tank updated successfully!', 'success');
         
@@ -3303,6 +3313,42 @@
       } catch (error) {
         console.error('❌ Error checking notification:', error);
         return false;
+      }
+    };
+    
+    // Update notification when tank is edited
+    window.updateNotificationForTank = async function(tankId, tankData) {
+      if (!currentUser) return;
+      
+      try {
+        // Find notification for this tank
+        const q = query(
+          collection(db, 'notificationsManager'),
+          where('userId', '==', currentUser.username),
+          where('tankId', '==', tankId)
+        );
+        
+        const snapshot = await getDocs(q);
+        
+        if (snapshot.empty) {
+          console.log('🔔 No notification found for tank', tankId);
+          return;
+        }
+        
+        // Update notification with new tank data
+        snapshot.forEach(async (docSnapshot) => {
+          await updateDoc(doc(db, 'notificationsManager', docSnapshot.id), {
+            tankNumber: tankData.tankNumber,
+            department: tankData.department,
+            product: tankData.product,
+            finishDateTime: tankData.finishDateTime,
+            updatedAt: serverTimestamp()
+          });
+          console.log('✅ Notification updated for tank', tankId);
+        });
+        
+      } catch (error) {
+        console.error('❌ Error updating notification:', error);
       }
     };
     
