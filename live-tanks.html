@@ -227,6 +227,7 @@
         <a class="nav-link" href="NMOGASBL.html">NMOGAS</a>
         <a class="nav-link" href="tank-management.html" id="tank-management-btn" style="display:none">🛢️ Tanks</a>
         <a class="nav-link active" href="live-tanks.html">🔴 Live Tanks</a>
+        <a class="nav-link" href="notifications-manager.html">🔔 Notifications</a>
         <a class="nav-admin" href="dashboard.html" id="adminLink" style="display:none">🔐 Dashboard</a>
       </div>
       <div class="nav-user" id="navUser">
@@ -1425,7 +1426,8 @@
         <div class="tank-actions">
           ${permissions.canEdit ? `<button class="btn btn-primary" onclick="editTank('${tank.id}')">✏️ Edit Tank</button>` : ''}
           ${permissions.canDelete ? `<button class="btn btn-danger" onclick="deleteTank('${tank.id}')">🗑️ Delete Tank</button>` : ''}
-          <button class="btn btn-warning" onclick="showReminderOptions('${tank.id}')">📅 Add Reminder</button>
+          <button class="btn btn-warning" onclick="showReminderOptions('${tank.id}')">📅 Calendar</button>
+          <button class="btn btn-success" onclick="addToNotificationsManager('${tank.id}')" style="background:linear-gradient(45deg,#FFD700,#FFA500);color:#003366">🔔 Add Alert</button>
         </div>
       `;
       document.getElementById('tankDetailsBody').innerHTML = detailsHTML;
@@ -3230,6 +3232,92 @@
       console.log('🔔 Built-in alarms initialized');
     });
 
+    // ===== NOTIFICATIONS MANAGER INTEGRATION =====
+    
+    // Add tank to Notifications Manager
+    window.addToNotificationsManager = async function(tankId) {
+      const tank = window.currentTanks?.find(t => t.id === tankId);
+      if (!tank) {
+        showMessage('❌ Tank not found!', 'error');
+        return;
+      }
+      
+      // Get default settings
+      const defaultSettings = JSON.parse(localStorage.getItem('tanktools_notification_defaults') || '{}');
+      
+      // Calculate finish date time
+      const finishDateTime = tank.finishDateTime ? 
+        (tank.finishDateTime.toDate ? tank.finishDateTime.toDate() : new Date(tank.finishDateTime)) :
+        new Date(tank.finishDate + ' ' + tank.finishTime);
+      
+      // Prepare notification data
+      const notificationData = {
+        userId: currentUser.username,
+        tankId: tank.id,
+        tankNumber: tank.tankNumber,
+        department: tank.department,
+        product: tank.product,
+        finishDateTime: finishDateTime,
+        alertMinutes: defaultSettings.alertTime || 30,
+        soundFile: defaultSettings.sound || 'sound1',
+        vibration: defaultSettings.vibration !== false,
+        active: true,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      };
+      
+      try {
+        // Check if notification already exists
+        const q = query(
+          collection(db, 'notificationsManager'),
+          where('userId', '==', currentUser.username),
+          where('tankId', '==', tank.id)
+        );
+        
+        const snapshot = await getDocs(q);
+        
+        if (!snapshot.empty) {
+          showMessage('⚠️ Notification already exists for this tank!', 'warning');
+          return;
+        }
+        
+        // Add to Firebase
+        await addDoc(collection(db, 'notificationsManager'), notificationData);
+        
+        showMessage(`✅ Alert added for Tank ${tank.tankNumber}! Check Notifications Manager.`, 'success');
+        
+        // Close tank details modal
+        closeTankDetails();
+        
+      } catch (error) {
+        console.error('❌ Error adding notification:', error);
+        showMessage('❌ Error adding notification: ' + error.message, 'error');
+      }
+    };
+    
+    // Check if tank has notification alert
+    window.hasNotificationAlert = async function(tankId) {
+      if (!currentUser) return false;
+      
+      try {
+        const q = query(
+          collection(db, 'notificationsManager'),
+          where('userId', '==', currentUser.username),
+          where('tankId', '==', tankId),
+          where('active', '==', true)
+        );
+        
+        const snapshot = await getDocs(q);
+        return !snapshot.empty;
+        
+      } catch (error) {
+        console.error('❌ Error checking notification:', error);
+        return false;
+      }
+    };
+    
+    // ===== END NOTIFICATIONS MANAGER INTEGRATION =====
+    
     // Listen for messages from notifications page
     window.addEventListener('message', function(event) {
       if (event.origin !== window.location.origin) return;
