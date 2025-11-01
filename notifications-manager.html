@@ -8,7 +8,7 @@
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#003366">
   <script src="permissions.js"></script>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     body{background:linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.5)),url('background.jpg');background-size:cover;background-position:center;background-attachment:fixed;color:white;font-family:Arial,sans-serif;padding:20px;min-height:100vh}
@@ -261,19 +261,7 @@
               <li style="margin-bottom:8px">✅ Android + iOS</li>
             </ul>
           </div>
-          
-          <!-- Google Calendar Option -->
-          <div class="notification-option" data-method="calendar" onclick="selectNotificationMethod('calendar')" style="background:rgba(33,150,243,0.15);border:3px solid rgba(33,150,243,0.5);border-radius:15px;padding:20px;cursor:pointer;transition:all 0.3s ease">
-            <div style="text-align:center;margin-bottom:15px;font-size:2.5rem">📅</div>
-            <h3 style="text-align:center;font-size:1.3rem;margin-bottom:10px;color:#64B5F6">Google Calendar</h3>
-            <p style="font-size:0.95rem;opacity:0.85;margin-bottom:15px;text-align:center">Free - Calendar reminders</p>
-            <ul style="font-size:0.9rem;opacity:0.8;list-style:none;padding:0">
-              <li style="margin-bottom:8px">✅ Calendar integration</li>
-              <li style="margin-bottom:8px">✅ Works in background</li>
-              <li style="margin-bottom:8px">⚠️ Standard reminders</li>
-              <li style="margin-bottom:8px">✅ No cost</li>
-            </ul>
-          </div>
+
         </div>
         
         <!-- Pushover Setup -->
@@ -318,27 +306,7 @@
             <div id="pushoverStatus" style="margin-top:15px;padding:12px;border-radius:8px;text-align:center;font-size:0.95rem"></div>
           </div>
         </div>
-        
-        <!-- Google Calendar Setup -->
-        <div id="calendarSetup" style="display:none;background:rgba(255,255,255,0.05);padding:25px;border-radius:15px;margin-top:20px">
-          <h3 style="font-size:1.3rem;margin-bottom:20px;text-align:center;color:#64B5F6">📅 Google Calendar Setup</h3>
-          <p style="text-align:center;margin-bottom:20px;opacity:0.9">Sync tank alerts with your Google Calendar</p>
-          
-          <div style="max-width:600px;margin:0 auto;text-align:center">
-            <button class="btn btn-primary" onclick="connectGoogleCalendar()" style="font-size:1.1rem;padding:15px 30px;background:linear-gradient(135deg,#64B5F6,#2196F3);border:none">
-              🔗 Connect Google Calendar
-            </button>
-            
-            <div id="calendarStatus" style="margin-top:20px;padding:12px;border-radius:8px;font-size:0.95rem"></div>
-            
-            <div id="calendarConnected" style="display:none;margin-top:20px;padding:15px;background:rgba(76,175,80,0.2);border-radius:8px">
-              <p style="margin:0;color:#81C784;font-weight:600">✅ Connected to Google Calendar</p>
-              <button class="btn btn-secondary" onclick="disconnectGoogleCalendar()" style="margin-top:10px;font-size:0.9rem;padding:8px 20px">
-                🔗 Disconnect
-              </button>
-            </div>
-          </div>
-        </div>
+
       </div>
     </div>
     
@@ -1183,15 +1151,11 @@
       
       // Hide all setups
       document.getElementById('pushoverSetup').style.display = 'none';
-      document.getElementById('calendarSetup').style.display = 'none';
       
       // Show selected setup
       if (method === 'pushover') {
         document.getElementById('pushoverSetup').style.display = 'block';
         loadPushoverKey();
-      } else if (method === 'calendar') {
-        document.getElementById('calendarSetup').style.display = 'block';
-        checkCalendarConnection();
       }
       
       // Save preference
@@ -1339,99 +1303,7 @@
         status.innerHTML = '❌ Error: ' + error.message;
       }
     }
-    
-    // ==================== Google Calendar Functions ====================
-    
-    // Connect Google Calendar
-    async function connectGoogleCalendar() {
-      const status = document.getElementById('calendarStatus');
-      
-      status.style.background = 'rgba(33,150,243,0.2)';
-      status.style.color = '#64B5F6';
-      status.innerHTML = '🔄 Connecting to Google Calendar...';
-      
-      try {
-        // Initialize Google OAuth
-        const client = google.accounts.oauth2.initTokenClient({
-          client_id: '510062594324-ujs1dn0a7a80hb1vb7ut4vphehld8l76.apps.googleusercontent.com',
-          scope: 'https://www.googleapis.com/auth/calendar.events',
-          callback: async (response) => {
-            if (response.access_token) {
-              // Save token to Firestore
-              const user = window.auth.currentUser;
-              if (user) {
-                await window.db.collection('users').doc(user.uid).set({
-                  googleCalendarToken: response.access_token,
-                  googleCalendarConnected: true,
-                  googleCalendarConnectedAt: new Date()
-                }, { merge: true });
-                
-                status.style.background = 'rgba(76,175,80,0.2)';
-                status.style.color = '#81C784';
-                status.innerHTML = '✅ Connected to Google Calendar!';
-                
-                document.getElementById('calendarConnected').style.display = 'block';
-                
-                showMessage('📅 Google Calendar connected successfully!', 'success');
-              }
-            }
-          }
-        });
-        
-        // Request access token
-        client.requestAccessToken();
-      } catch (error) {
-        console.error('Error connecting calendar:', error);
-        status.style.background = 'rgba(244,67,54,0.2)';
-        status.style.color = '#E57373';
-        status.innerHTML = '❌ Error: ' + error.message;
-      }
-    }
-    
-    // Disconnect Google Calendar
-    async function disconnectGoogleCalendar() {
-      const status = document.getElementById('calendarStatus');
-      
-      try {
-        const user = window.auth.currentUser;
-        if (user) {
-          await window.db.collection('users').doc(user.uid).set({
-            googleCalendarToken: null,
-            googleCalendarConnected: false
-          }, { merge: true });
-          
-          document.getElementById('calendarConnected').style.display = 'none';
-          status.style.background = 'rgba(255,152,0,0.2)';
-          status.style.color = '#FFB74D';
-          status.innerHTML = '⚠️ Disconnected from Google Calendar';
-          
-          showMessage('📅 Google Calendar disconnected', 'info');
-        }
-      } catch (error) {
-        console.error('Error disconnecting calendar:', error);
-        showMessage('❌ Error disconnecting calendar', 'error');
-      }
-    }
-    
-    // Check calendar connection
-    async function checkCalendarConnection() {
-      const status = document.getElementById('calendarStatus');
-      
-      try {
-        if (!currentUser) return;
-        
-        const userDoc = await window.getDoc(window.doc(window.db, 'users', currentUser.username));
-        const data = userDoc.data();
-        
-        if (data?.calendarConnected) {
-          status.style.background = 'rgba(76,175,80,0.2)';
-          status.style.color = '#81C784';
-          status.innerHTML = '✅ Google Calendar connected';
-        }
-      } catch (error) {
-        console.error('Error checking calendar:', error);
-      }
-    }
+
     
     // Initialize on page load
     window.addEventListener('DOMContentLoaded', () => {
