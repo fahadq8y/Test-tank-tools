@@ -955,10 +955,17 @@
           };
         }
         
-        // Check if user has reached device limit (1 device per user)
+        // Get user's device limit from users collection
+        const userDocRef = doc(db, 'users', username);
+        const userDocSnap = await getDoc(userDocRef);
+        const userDeviceLimit = userDocSnap.exists() ? (userDocSnap.data().deviceLimit || 1) : 1;
+        
+        console.log(`📊 User device limit: ${userDeviceLimit}`);
+        
+        // Check if user has reached device limit
         const activeDevices = userDevices.filter(device => device.isActive);
         
-        if (activeDevices.length >= 1) {
+        if (activeDevices.length >= userDeviceLimit) {
           // User has reached limit, need admin approval for new device
           console.log('🚫 Device limit reached');
           
@@ -979,7 +986,7 @@
           return { 
             allowed: false, 
             isNewDevice: true, 
-            message: 'Device limit reached: Only 1 device allowed per user. This device is not authorized. Contact admin for approval: +965 55222550' 
+            message: `Device limit reached: Only ${userDeviceLimit} device(s) allowed per user. This device is not authorized. Contact admin for approval: +965 55222550` 
           };
         }
         
