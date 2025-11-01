@@ -31,7 +31,7 @@ exports.checkAndSendNotifications = functions.pubsub
       // 2. Haven't been sent yet
       // 3. Alert time has passed
       const notificationsSnapshot = await db.collection('notificationsManager')
-        .where('enabled', '==', true)
+        .where('active', '==', true)
         .where('sent', '==', false)
         .get();
       
@@ -50,7 +50,7 @@ exports.checkAndSendNotifications = functions.pubsub
         
         // Calculate alert time
         const finishTime = notification.finishDateTime.toDate();
-        const alertMinutes = notification.alertTime || 30;
+        const alertMinutes = notification.alertMinutes || 30;
         const alertTime = new Date(finishTime.getTime() - (alertMinutes * 60 * 1000));
         
         // Check if it's time to send
@@ -87,14 +87,15 @@ exports.checkAndSendNotifications = functions.pubsub
             token: fcmToken,
             notification: {
               title: `🔔 Tank ${notification.tankNumber} Alert`,
-              body: `${notification.department} - ${notification.product}\n⏰ ${timeRemaining} minutes remaining until target level`,
-              icon: '/icon.png'
+              body: `${notification.department} - ${notification.product}\n⏰ ${timeRemaining} minutes remaining until target level`
             },
             data: {
               tankId: notification.tankId || '',
               tankNumber: notification.tankNumber || '',
               department: notification.department || '',
               notificationId: notificationId,
+              soundFile: notification.soundFile || 'sound1',
+              product: notification.product || '',
               type: 'tank_alert',
               url: '/live-tanks.html'
             },
@@ -229,8 +230,7 @@ exports.sendTestNotification = functions.https.onRequest(async (req, res) => {
       token: fcmToken,
       notification: {
         title: '🧪 Test Notification',
-        body: 'This is a test notification from Tank Tools KNPC',
-        icon: '/icon.png'
+        body: 'This is a test notification from Tank Tools KNPC'
       },
       data: {
         type: 'test',

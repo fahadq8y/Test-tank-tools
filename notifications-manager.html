@@ -8,6 +8,7 @@
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#003366">
   <script src="permissions.js"></script>
+  <script src="alert-dialog.js"></script>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     body{background:linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.5)),url('background.jpg');background-size:cover;background-position:center;background-attachment:fixed;color:white;font-family:Arial,sans-serif;padding:20px;min-height:100vh}
@@ -447,37 +448,8 @@
         window.onMessage(window.messaging, (payload) => {
           console.log('🔔 Foreground message received:', payload);
           
-          const notificationTitle = payload.notification?.title || 'Tank Tools KNPC';
-          const notificationBody = payload.notification?.body || 'You have a new notification';
-          
-          // Show system notification (Android/iOS)
-          if ('Notification' in window && Notification.permission === 'granted') {
-            const notification = new Notification(notificationTitle, {
-              body: notificationBody,
-              icon: payload.notification?.icon || '/icon.png',
-              badge: '/badge.png',
-              tag: payload.data?.tankId || 'tank-notification',
-              requireInteraction: true,
-              vibrate: [200, 100, 200],
-              data: payload.data || {}
-            });
-            
-            // Handle notification click
-            notification.onclick = function(event) {
-              event.preventDefault();
-              window.focus();
-              notification.close();
-            };
-          }
-          
-          // Also show in-app message
-          showMessage(`🔔 ${notificationTitle}: ${notificationBody}`, 'info');
-          
-          // Play sound
-          playNotificationSound();
-          
-          // Reload notifications
-          loadNotifications();
+          // Show custom alert dialog with sound loop
+          showTankAlert(payload);
         });
         
         console.log('✅ FCM initialized!');
