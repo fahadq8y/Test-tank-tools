@@ -1069,9 +1069,10 @@
           department: 'TEST',
           product: 'Test Notification',
           finishDateTime: window.Timestamp.fromDate(finishTime),
-          alertTime: 0, // Send immediately when time comes
-          alertSound: localStorage.getItem('tanktools_default_alert_sound') || 'sound1',
-          vibrate: localStorage.getItem('tanktools_default_vibrate') === 'true',
+          alertMinutes: 0, // Send immediately when time comes
+          soundFile: localStorage.getItem('tanktools_default_alert_sound') || 'sound1',
+          vibration: localStorage.getItem('tanktools_default_vibrate') === 'true',
+          active: true, // Active by default
           sent: false,
           isTest: true,
           createdAt: window.Timestamp.now()
