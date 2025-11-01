@@ -3474,12 +3474,22 @@ Report End
       try {
         showMessage('🔄 Updating device limit...', 'info');
         
-        // Update in Firebase
+        // Update in Firebase users collection
         await updateDoc(doc(db, 'users', username), {
           deviceLimit: newLimit,
           lastModified: serverTimestamp(),
           modifiedBy: currentUser.username
         });
+        
+        // Update in config/deviceLimits for persistence
+        const limitsRef = doc(db, 'config', 'deviceLimits');
+        const limitsDoc = await getDoc(limitsRef);
+        let limitsData = limitsDoc.exists() ? limitsDoc.data() : { default: 1 };
+        limitsData[username] = newLimit;
+        await setDoc(limitsRef, limitsData);
+        
+        // Update local deviceLimitsConfig
+        deviceLimitsConfig[username] = newLimit;
         
         // Update local data
         const user = allUsersWithDevices.find(u => u.username === username);
