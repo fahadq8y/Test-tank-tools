@@ -285,6 +285,7 @@
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
     import { getFirestore, doc, getDoc, updateDoc, deleteDoc, collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, where } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    import { getMessaging, getToken, onMessage } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js';
 
     const firebaseConfig = {
       apiKey: "AIzaSyBCdv37V6vOFMe42rGlPyl9lVq-9JldEPg",
@@ -297,6 +298,7 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const messaging = getMessaging(app);
 
     window.db = db;
     window.doc = doc;
@@ -310,8 +312,14 @@
     window.orderBy = orderBy;
     window.onSnapshot = onSnapshot;
     window.where = where;
+    window.messaging = messaging;
+    window.getToken = getToken;
+    window.onMessage = onMessage;
 
     console.log('🔥 Firebase initialized for Notifications Manager!');
+    
+    // Initialize FCM
+    initializeFCM();
   </script>
 
   <script>
@@ -344,8 +352,98 @@
       await setupPermissions();
       loadDefaultSettings();
       loadNotifications();
+      await requestNotificationPermission();
       
       console.log('✅ Notifications Manager initialized!');
+    }
+
+    // Initialize FCM
+    async function initializeFCM() {
+      try {
+        // Register service worker
+        if ('serviceWorker' in navigator) {
+          const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+          console.log('✅ Service Worker registered:', registration);
+        }
+        
+        // Handle foreground messages
+        window.onMessage(window.messaging, (payload) => {
+          console.log('🔔 Foreground message received:', payload);
+          
+          const notificationTitle = payload.notification?.title || 'Tank Tools KNPC';
+          const notificationBody = payload.notification?.body || 'You have a new notification';
+          
+          showMessage(`🔔 ${notificationTitle}: ${notificationBody}`, 'info');
+          
+          // Play sound
+          playNotificationSound();
+          
+          // Reload notifications
+          loadNotifications();
+        });
+        
+        console.log('✅ FCM initialized!');
+      } catch (error) {
+        console.error('❌ Error initializing FCM:', error);
+      }
+    }
+
+    // Request notification permission and get FCM token
+    async function requestNotificationPermission() {
+      try {
+        const permission = await Notification.requestPermission();
+        
+        if (permission === 'granted') {
+          console.log('✅ Notification permission granted');
+          
+          // Get FCM token
+          const token = await window.getToken(window.messaging, {
+            vapidKey: 'BCHLN8qDfvyc30MCnoQr9YlCn9wbjO11seNkqVkkdVOyCSHdOF4kQH-Oy9pqFiDz_ng4WUiwUplem86lAi6bDS8'
+          });
+          
+          if (token) {
+            console.log('🔑 FCM Token:', token);
+            
+            // Save token to Firebase
+            await saveFCMToken(token);
+            
+            showMessage('✅ Push notifications enabled!', 'success');
+          } else {
+            console.log('❌ No registration token available');
+          }
+        } else {
+          console.log('❌ Notification permission denied');
+          showMessage('⚠️ Notification permission denied. You won\'t receive push notifications.', 'error');
+        }
+      } catch (error) {
+        console.error('❌ Error requesting notification permission:', error);
+      }
+    }
+
+    // Save FCM token to Firebase
+    async function saveFCMToken(token) {
+      if (!currentUser) return;
+      
+      try {
+        const userRef = window.doc(window.db, 'users', currentUser.username);
+        await window.updateDoc(userRef, {
+          fcmToken: token,
+          fcmTokenUpdatedAt: window.serverTimestamp()
+        });
+        
+        console.log('✅ FCM token saved to Firebase');
+      } catch (error) {
+        console.error('❌ Error saving FCM token:', error);
+      }
+    }
+
+    // Play notification sound
+    function playNotificationSound() {
+      const settings = JSON.parse(localStorage.getItem('tanktools_notification_defaults') || '{}');
+      const sound = settings.sound || 'sound1';
+      
+      const audio = new Audio(`/sounds/${sound}.mp3`);
+      audio.play().catch(err => console.error('Error playing sound:', err));
     }
 
     // Load user info
