@@ -3221,17 +3221,6 @@
       }
     };
     
-    // ✅ Initialize tanks data from Firebase on page load
-    document.addEventListener('DOMContentLoaded', async () => {
-      console.log('🚀 Initializing Live Tanks with Firebase data...');
-      await loadTanksFromFirebase();
-      console.log('✅ Tanks data loaded, ready for calculations with real KNPC values');
-      
-      // Initialize built-in alarms
-      initializeBuiltInAlarms();
-      console.log('🔔 Built-in alarms initialized');
-    });
-
     // ===== NOTIFICATIONS MANAGER INTEGRATION =====
     
     // Add tank to Notifications Manager
@@ -3317,6 +3306,19 @@
     };
     
     // ===== END NOTIFICATIONS MANAGER INTEGRATION =====
+    
+    // ✅ Initialize tanks data from Firebase on page load
+    document.addEventListener('DOMContentLoaded', async () => {
+      console.log('🚀 Initializing Live Tanks with Firebase data...');
+      await loadTanksFromFirebase();
+      console.log('✅ Tanks data loaded, ready for calculations with real KNPC values');
+      
+      // Initialize built-in alarms
+      initializeBuiltInAlarms();
+      console.log('🔔 Built-in alarms initialized');
+    });
+
+
     
     // Listen for messages from notifications page
     window.addEventListener('message', function(event) {
