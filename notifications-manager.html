@@ -294,8 +294,17 @@
           <p style="text-align:center;margin-bottom:20px;opacity:0.9">Get real alarm-like notifications that repeat until you dismiss them!</p>
           
           <div style="max-width:600px;margin:0 auto">
+            <div style="text-align:center;margin-bottom:25px">
+              <button 
+                class="btn btn-primary" 
+                onclick="downloadPushover()" 
+                style="font-size:1.1rem;padding:15px 30px;background:linear-gradient(135deg,#E57373,#F44336);border:none">
+                📥 Download Pushover App ($5)
+              </button>
+              <p style="font-size:0.85rem;margin-top:10px;opacity:0.7">One-time purchase</p>
+            </div>
+            
             <ol style="font-size:0.95rem;margin-bottom:25px;padding-left:20px;line-height:1.8">
-              <li>Download Pushover app ($5 one-time): <a href="https://pushover.net" target="_blank" style="color:#64B5F6;text-decoration:underline">pushover.net</a></li>
               <li>Create account and copy your <strong>User Key</strong></li>
               <li>Paste your User Key below:</li>
             </ol>
@@ -1215,6 +1224,29 @@
     }
     
     // ==================== Pushover Functions ====================
+    
+    // Download Pushover App
+    function downloadPushover() {
+      // Detect device
+      const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+      
+      let url = 'https://pushover.net'; // Default
+      
+      // iOS detection
+      if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+        url = 'https://apps.apple.com/app/pushover-notifications/id506088175';
+      }
+      // Android detection
+      else if (/android/i.test(userAgent)) {
+        url = 'https://play.google.com/store/apps/details?id=net.superblock.pushover';
+      }
+      
+      // Open in new tab
+      window.open(url, '_blank');
+      
+      // Show message
+      showMessage('📥 Opening Pushover download page...', 'info');
+    }
     
     // Save Pushover Key
     async function savePushoverKey() {
