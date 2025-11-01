@@ -24,14 +24,8 @@ async function sendPushoverNotification(userKey, notification, notificationId, t
   const fetch = require('node-fetch');
   
   try {
-    // Map sound files to Pushover sounds
-    const soundMap = {
-      'sound1': 'persistent',
-      'sound2': 'spacealarm',
-      'sound3': 'siren'
-    };
-    
-    const pushoverSound = soundMap[notification.soundFile] || 'persistent';
+    // Use persistent sound for all notifications (emergency alarm)
+    const pushoverSound = 'persistent';
     
     const response = await fetch(PUSHOVER_API_URL, {
       method: 'POST',
