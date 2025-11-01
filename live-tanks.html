@@ -3336,7 +3336,7 @@
         }
         
         // Update notification with new tank data
-        snapshot.forEach(async (docSnapshot) => {
+        for (const docSnapshot of snapshot.docs) {
           await updateDoc(doc(db, 'notificationsManager', docSnapshot.id), {
             tankNumber: tankData.tankNumber,
             department: tankData.department,
@@ -3345,7 +3345,7 @@
             updatedAt: serverTimestamp()
           });
           console.log('✅ Notification updated for tank', tankId);
-        });
+        }
         
       } catch (error) {
         console.error('❌ Error updating notification:', error);
