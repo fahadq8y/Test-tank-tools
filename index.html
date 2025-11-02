@@ -48,11 +48,11 @@
 .nav-link:hover{background:var(--secondary);transform:translateY(-1px)}
 .nav-link.active{background:var(--accent);font-weight:bold;border:1px solid var(--text)}
 .nav-admin{background:var(--text);color:#003366;font-weight:bold;border-radius:8px;padding:8px 16px;text-decoration:none;transition:all 0.3s ease;border:2px solid var(--accent);font-size:inherit;box-shadow:0 2px 8px rgba(0,0,0,0.3)}
-.nav-user{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.1);padding:5px 15px;border-radius:20px}
-.user-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(45deg,#4CAF50,#45a049);display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:14px}
+.nav-user{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.1);padding:4px 10px;border-radius:20px;font-size:13px}
+.user-avatar{width:26px;height:26px;border-radius:50%;background:linear-gradient(45deg,#4CAF50,#45a049);display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:12px}
 .logout-btn{background:rgba(255,0,0,0.2);border:1px solid rgba(255,0,0,0.5);color:white;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:13px;min-height:36px;display:flex;align-items:center;justify-content:center;white-space:nowrap}
 .font-controls{display:flex;gap:5px;margin-right:10px}
-.font-btn{background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.3);color:white;padding:10px 15px;border-radius:8px;cursor:pointer;font-size:18px;font-weight:bold;transition:all 0.3s ease;min-width:48px;min-height:48px;display:flex;align-items:center;justify-content:center}
+.font-btn{background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.3);color:white;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:16px;font-weight:bold;transition:all 0.3s ease;min-width:36px;min-height:36px;display:flex;align-items:center;justify-content:center}
 .font-btn:hover{background:rgba(255,255,255,0.3);transform:translateY(-1px)}
 input,select{background:rgba(255,255,255,0.9);border-radius:12px;border:none;color:#003366;box-shadow:0 2px 5px rgba(0,0,0,0.3);font-size:16px;margin:10px;padding:12px;width:250px;text-align:center;min-height:44px}
 .row{display:flex;justify-content:center;align-items:center;gap:8px;margin:10px 0;max-width:400px;margin-left:auto;margin-right:auto}
@@ -98,7 +98,7 @@ input,select{background:rgba(255,255,255,0.9);border-radius:12px;border:none;col
 .form-label{display:block;margin-bottom:8px;font-weight:600;color:var(--text);font-size:14px;text-shadow:0 0 5px var(--text)}
 .form-input,.form-select{width:100%;padding:12px;border:2px solid var(--accent);border-radius:10px;font-size:14px;background:rgba(255,255,255,0.1);color:white;transition:all 0.3s ease}.form-input:focus,.form-select:focus{outline:none;border-color:var(--text);background:rgba(255,255,255,0.15);box-shadow:0 0 10px var(--accent)}
 .form-select option{background:#1a1a1a;color:white;padding:10px}
-.form-input[readonly]{background:rgba(255,255,255,0.05);cursor:not-allowed;opacity:0.7}
+.form-input[readonly]{background:rgba(255,255,255,0.2);cursor:not-allowed;opacity:1;color:white;font-weight:600;text-shadow:0 0 5px rgba(255,255,255,0.5)}
 .form-textarea{width:100%;padding:12px;border:2px solid var(--accent);border-radius:10px;font-size:14px;min-height:70px;background:rgba(255,255,255,0.1);color:white;transition:all 0.3s ease;resize:vertical}.form-textarea:focus{outline:none;border-color:var(--text);background:rgba(255,255,255,0.15);box-shadow:0 0 10px var(--accent)}
 .btn{padding:12px 24px;border:none;border-radius:10px;cursor:pointer;font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:8px;transition:all 0.3s ease;min-height:44px}
 .btn-primary{background:var(--primary);color:white;border:2px solid var(--accent);box-shadow:0 4px 12px rgba(0,0,0,0.3)}.btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,0.4);background:var(--secondary)}
@@ -609,8 +609,8 @@ function showCalendarHelp(){const userAgent=navigator.userAgent.toLowerCase();le
 const message=`📅 How to use Calendar Reminder:\n\n1. Calculate your tank finish time\n2. Click "📅 Add Reminder" button\n\nFor ${platform} users, if you don't have Google Calendar, you can download it.`;if(confirm(message+'\n\nClick OK to go to the store.')){window.open(storeUrl,'_blank');}}
 window.showCalendarHelp=showCalendarHelp;
 async function logPBCRCalculation(tankNumber,hours,minutes,finishTime,finishDate){if(!currentUser)return;try{const userIP=await fetch('https://api.ipify.org?format=json').then(r=>r.json()).then(data=>data.ip).catch(()=>'Unknown');const timestamp=new Date();const detailedAction=`Calculated Tank ${tankNumber} in PBCR - Result: ${hours}h ${minutes}m (Finish: ${finishTime} - ${finishDate}) by ${currentUser.username}`;await addDoc(collection(db,'activities'),{action:detailedAction,originalAction:'pbcr_calculation',username:currentUser.username,tankNumber:tankNumber,calculationResult:`${hours}h ${minutes}m`,finishTime:finishTime,finishDate:finishDate,timestamp:serverTimestamp(),ip:userIP,userAgent:navigator.userAgent.substring(0,100),page:'pbcr-calculator'});}catch(error){console.error('Error logging PBCR calculation:',error);}}
-function showLiveTanksHelp(){alert('🔴 Add to Live Tanks:\n\nAdds your tank to the live monitoring system for all users to see. Requires panel operator or admin access.')}
-function showTableHelp(){alert('📊 Add to Table:\n\nAdds tank to your personal table below. Only you can see this table.');}
+function showLiveTanksHelp(){showCustomAlert('🔴 Add to Live Tanks:','Adds your tank to the live monitoring system for all users to see. Requires panel operator or admin access.')}
+function showTableHelp(){showCustomAlert('📊 Add to Table:','Adds tank to your personal table below. Only you can see this table.')}
 
 // ✅ FIXED: Add Live Tanks permission check function
 async function checkAddToLiveTanksPermission() {
@@ -833,6 +833,22 @@ document.addEventListener('click', function(event) {
 
 // Load theme on page load
 window.addEventListener('load', loadSavedTheme);
+
+// Custom Alert Modal
+function showCustomAlert(title, message) {
+  const modal = document.createElement('div');
+  modal.className = 'lt-modal show';
+  modal.innerHTML = `
+    <div class="lt-modal-content" style="max-width:400px;text-align:center">
+      <button class="close-btn" onclick="this.closest('.lt-modal').remove()">&times;</button>
+      <h3>${title}</h3>
+      <p style="color:white;line-height:1.6;margin:20px 0">${message}</p>
+      <button class="btn btn-primary" onclick="this.closest('.lt-modal').remove()">OK</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+window.showCustomAlert = showCustomAlert;
 
 </script>
 <footer>
