@@ -3262,6 +3262,7 @@
         soundFile: defaultSettings.sound || 'sound1',
         vibration: defaultSettings.vibration !== false,
         active: true,
+        sent: false,  // Important: Cloud Function checks for this!
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       };
