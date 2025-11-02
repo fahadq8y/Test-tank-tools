@@ -22,7 +22,7 @@
 [data-theme="sunset"]{--primary:#ff6b35;--secondary:#f7931e;--accent:#ffd700;--text:#ffd700}
 [data-theme="forest"]{--primary:#2d5016;--secondary:#4a7c59;--accent:#6b9b37;--text:#90EE90}
 .theme-switcher{position:relative;display:inline-block}
-.theme-btn{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.3);color:white;padding:10px 15px;border-radius:8px;cursor:pointer;font-size:18px;transition:all 0.3s ease;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center}
+.theme-btn{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.3);color:white;padding:10px 15px;border-radius:8px;cursor:pointer;font-size:20px;transition:all 0.3s ease;min-width:48px;min-height:48px;display:flex;align-items:center;justify-content:center}
 .theme-btn:hover{background:rgba(255,255,255,0.2);transform:translateY(-1px)}
 .theme-dropdown{display:none;position:absolute;top:100%;right:0;margin-top:5px;background:rgba(0,0,0,0.9);border-radius:8px;min-width:180px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:1000}
 .theme-dropdown.show{display:block;animation:slideDown 0.3s ease}
@@ -46,12 +46,12 @@
 .nav-link{color:white;text-decoration:none;padding:8px 16px;border-radius:8px;transition:all 0.3s ease;background:var(--primary);font-weight:500;border:1px solid var(--accent)}
 .nav-link:hover{background:var(--secondary);transform:translateY(-1px)}
 .nav-link.active{background:var(--accent);font-weight:bold;border:1px solid var(--text)}
-.nav-admin{background:linear-gradient(45deg,#FFD700,#FFA500);color:#003366;font-weight:bold;border-radius:8px;padding:8px 16px;text-decoration:none;transition:all 0.3s ease;border:1px solid #FFA500;font-size:inherit}
+.nav-admin{background:var(--text);color:#003366;font-weight:bold;border-radius:8px;padding:8px 16px;text-decoration:none;transition:all 0.3s ease;border:2px solid var(--accent);font-size:inherit;box-shadow:0 2px 8px rgba(0,0,0,0.3)}
 .nav-user{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.1);padding:5px 15px;border-radius:20px}
 .user-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(45deg,#4CAF50,#45a049);display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:14px}
 .logout-btn{background:rgba(255,0,0,0.2);border:1px solid rgba(255,0,0,0.5);color:white;padding:10px 15px;border-radius:8px;cursor:pointer;font-size:14px;min-height:44px;display:flex;align-items:center;justify-content:center}
 .font-controls{display:flex;gap:5px;margin-right:10px}
-.font-btn{background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.3);color:white;padding:10px 15px;border-radius:8px;cursor:pointer;font-size:16px;font-weight:bold;transition:all 0.3s ease;min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center}
+.font-btn{background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.3);color:white;padding:10px 15px;border-radius:8px;cursor:pointer;font-size:18px;font-weight:bold;transition:all 0.3s ease;min-width:48px;min-height:48px;display:flex;align-items:center;justify-content:center}
 .font-btn:hover{background:rgba(255,255,255,0.3);transform:translateY(-1px)}
 input,select{background:rgba(255,255,255,0.9);border-radius:12px;border:none;color:#003366;box-shadow:0 2px 5px rgba(0,0,0,0.3);font-size:16px;margin:10px;padding:12px;width:250px;text-align:center;min-height:44px}
 .row{display:flex;justify-content:center;align-items:center;gap:8px;margin:10px 0;max-width:400px;margin-left:auto;margin-right:auto}
@@ -66,8 +66,7 @@ input,select{background:rgba(255,255,255,0.9);border-radius:12px;border:none;col
 #tankTable tr.next-shift{background:rgba(76,175,80,0.1)!important;color:#388e3c}
 #tankTable .delete-btn{background:linear-gradient(45deg,#f44336,#d32f2f);color:white;border:none;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600;font-size:12px;transition:all 0.3s ease}
 #tankTable .delete-btn:hover{transform:translateY(-1px);box-shadow:0 4px 8px rgba(244,67,54,0.3)}
-.reminder-btn,.add-btn,.live-tanks-btn{padding:12px 20px;font-size:14px;border-radius:12px;background:white;color:#003366;border:none;cursor:pointer;margin:5px;transition:all 0.3s ease;font-weight:600}
-.live-tanks-btn{background:linear-gradient(45deg,#ff4444,#ff6666);color:white;display:inline-flex;align-items:center;gap:8px}
+
 .main-container{max-width:600px;margin:20px auto;padding:30px;background:rgba(0,0,0,0.3);border-radius:20px;backdrop-filter:blur(10px);border:2px solid var(--accent);box-shadow:0 8px 32px rgba(0,0,0,0.5);animation:fadeIn 0.5s ease}
 .buttons-section{margin:20px 0;padding:0;background:transparent;border-radius:0;backdrop-filter:none}
 .button-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0;max-width:400px;margin-left:auto;margin-right:auto}
