@@ -2,7 +2,7 @@
   "name": "Tank Tools - KNPC System",
   "short_name": "Tank Tools",
   "description": "Kuwait National Petroleum Company - Tank Management System by Fahad 17877 مع دعم التنبيهات المستمرة",
-  "version": "6.0.0",
+  "version": "6.1.0",
   "start_url": "/login.html",
   "scope": "/",
   "display": "standalone",
