@@ -134,10 +134,10 @@
       ]
     },
     {
-      "name": "Notifications & Alarms",
-      "short_name": "Alarms",
-      "description": "Setup notifications and persistent alarms", 
-      "url": "/notifications.html",
+      "name": "Live Tanks Monitor",
+      "short_name": "Live Tanks",
+      "description": "Monitor active tanks in real-time", 
+      "url": "/live-tanks.html",
       "icons": [
         {
           "src": "icon.png",
@@ -206,8 +206,5 @@
   
   "display_override": ["standalone", "minimal-ui"],
   
-  "permissions": [
-    "notifications",
-    "persistent-notification"
-  ]
+  "permissions": []
 }
