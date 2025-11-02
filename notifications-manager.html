@@ -381,7 +381,7 @@
       
       loadUserInfo();
       await setupPermissions();
-      loadDefaultSettings();
+      // loadDefaultSettings(); // Disabled - settings removed
       loadNotifications();
       await requestNotificationPermission();
       
@@ -490,26 +490,16 @@
       }
     }
 
-    // Load default settings
+    // Load default settings (disabled - no longer needed)
     function loadDefaultSettings() {
-      const settings = JSON.parse(localStorage.getItem('tanktools_notification_defaults') || '{}');
-      
-      document.getElementById('defaultSound').value = settings.sound || 'sound1';
-      document.getElementById('defaultAlertTime').value = settings.alertTime || '30';
-      document.getElementById('defaultVibration').checked = settings.vibration !== false;
+      // Settings removed from UI
+      return;
     }
 
-    // Save default settings
+    // Save default settings (disabled - no longer needed)
     function saveDefaultSettings() {
-      const settings = {
-        sound: document.getElementById('defaultSound').value,
-        alertTime: parseInt(document.getElementById('defaultAlertTime').value),
-        vibration: document.getElementById('defaultVibration').checked,
-        updatedAt: new Date().toISOString()
-      };
-      
-      localStorage.setItem('tanktools_notification_defaults', JSON.stringify(settings));
-      showMessage('✅ Default settings saved successfully!', 'success');
+      // Settings removed from UI
+      return;
     }
 
     // Load notifications from Firebase
@@ -938,21 +928,13 @@
       }
     }
     
-    // Test Notification Functions
+    // Test Notification Functions (disabled - section removed)
     let selectedTestTime = 15; // Default 15 minutes
     
     function selectTestTime(minutes) {
+      // Test section removed from UI
       selectedTestTime = minutes;
-      
-      // Update UI - highlight selected option
-      document.querySelectorAll('.test-option').forEach(option => {
-        option.style.background = 'rgba(255,255,255,0.05)';
-        option.style.borderColor = 'transparent';
-      });
-      
-      const selectedOption = document.querySelector(`input[name="testTime"][value="${minutes}"]`).parentElement;
-      selectedOption.style.background = 'rgba(255,215,0,0.2)';
-      selectedOption.style.borderColor = '#FFD700';
+      return;
     }
     
     async function sendTestNotification() {
