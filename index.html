@@ -49,7 +49,7 @@
 .nav-admin{background:var(--text);color:#003366;font-weight:bold;border-radius:8px;padding:8px 16px;text-decoration:none;transition:all 0.3s ease;border:2px solid var(--accent);font-size:inherit;box-shadow:0 2px 8px rgba(0,0,0,0.3)}
 .nav-user{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.1);padding:5px 15px;border-radius:20px}
 .user-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(45deg,#4CAF50,#45a049);display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:14px}
-.logout-btn{background:rgba(255,0,0,0.2);border:1px solid rgba(255,0,0,0.5);color:white;padding:10px 15px;border-radius:8px;cursor:pointer;font-size:14px;min-height:44px;display:flex;align-items:center;justify-content:center}
+.logout-btn{background:rgba(255,0,0,0.2);border:1px solid rgba(255,0,0,0.5);color:white;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:13px;min-height:36px;display:flex;align-items:center;justify-content:center;white-space:nowrap}
 .font-controls{display:flex;gap:5px;margin-right:10px}
 .font-btn{background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.3);color:white;padding:10px 15px;border-radius:8px;cursor:pointer;font-size:18px;font-weight:bold;transition:all 0.3s ease;min-width:48px;min-height:48px;display:flex;align-items:center;justify-content:center}
 .font-btn:hover{background:rgba(255,255,255,0.3);transform:translateY(-1px)}
@@ -69,15 +69,15 @@ input,select{background:rgba(255,255,255,0.9);border-radius:12px;border:none;col
 
 .main-container{max-width:600px;margin:20px auto;padding:30px;background:rgba(0,0,0,0.3);border-radius:20px;backdrop-filter:blur(10px);border:2px solid var(--accent);box-shadow:0 8px 32px rgba(0,0,0,0.5);animation:fadeIn 0.5s ease}
 .buttons-section{margin:20px 0;padding:0;background:transparent;border-radius:0;backdrop-filter:none}
-.button-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0;max-width:400px;margin-left:auto;margin-right:auto}
+.button-row{display:flex;align-items:center;justify-content:center;gap:10px;margin:8px 0;max-width:450px;margin-left:auto;margin-right:auto}
 .action-btn{padding:12px 24px;font-size:16px;font-weight:600;border:none;border-radius:12px;cursor:pointer;transition:all 0.3s ease;display:inline-flex;align-items:center;gap:8px;flex:1;min-height:48px;justify-content:center;margin:0}
-.live-tanks-btn{background:var(--primary);color:white;box-shadow:0 2px 8px rgba(0,0,0,0.3);border:2px solid var(--accent)}
-.reminder-btn{background:var(--secondary);color:white;box-shadow:0 2px 8px rgba(0,0,0,0.3);border:2px solid var(--accent)}
-.table-btn{background:var(--accent);color:white;box-shadow:0 2px 8px rgba(0,0,0,0.3);border:2px solid var(--text)}
+.live-tanks-btn{background:var(--primary);color:white;box-shadow:0 2px 8px rgba(0,0,0,0.3);border:2px solid var(--accent);flex:1}
+.reminder-btn{background:var(--secondary);color:white;box-shadow:0 2px 8px rgba(0,0,0,0.3);border:2px solid var(--accent);flex:1}
+.table-btn{background:var(--accent);color:white;box-shadow:0 2px 8px rgba(0,0,0,0.3);border:2px solid var(--text);flex:1}
 .action-btn:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.2)}
-.button-row a{flex:1;text-decoration:none}
+.button-row a{flex:1;text-decoration:none;max-width:calc(100% - 50px)}
 .button-row a .action-btn{width:100%}
-.help-btn{background:var(--accent);color:white;border:2px solid var(--text);padding:10px;border-radius:50%;cursor:pointer;font-size:14px;transition:all 0.3s ease;display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;box-shadow:0 2px 6px rgba(0,0,0,0.3)}
+.help-btn{background:var(--accent);color:white;border:2px solid var(--text);padding:0;border-radius:50%;cursor:pointer;font-size:16px;transition:all 0.3s ease;display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;min-width:44px;min-height:44px;box-shadow:0 2px 6px rgba(0,0,0,0.3);flex-shrink:0}
 .help-btn:hover{transform:translateY(-2px) scale(1.1);box-shadow:0 4px 10px rgba(255,152,0,0.4)}
 .buttons-container{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;align-items:center;margin-top:15px}
 .action-button{position:fixed;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.3);border:none;font-size:20px;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;top:10px;right:10px}
