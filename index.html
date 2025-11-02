@@ -2,16 +2,79 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-<meta name="theme-color" content="#B8860B">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Tank Tools">
-<link rel="manifest" href="/manifest.json">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PBCR & WASHERY</title>
 <link href="icon.png" rel="icon" type="image/png"/>
 <script src="permissions.js"></script>
 <style>
+*{margin:0;padding:0;box-sizing:border-box}body{background:linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.5)),url('background.jpg');background-size:cover;background-position:center;background-attachment:fixed;color:white;font-family:Arial,sans-serif;padding:20px;min-height:100vh}
+.nav-bar{display:flex;justify-content:space-between;align-items:center;padding:10px 20px;background:rgba(0,0,0,0.5);border-radius:10px;margin-bottom:20px;flex-wrap:wrap}
+.nav-logo{font-size:24px;font-weight:bold;color:white}
+.nav-links{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.nav-link{color:white;text-decoration:none;padding:8px 16px;border-radius:8px;transition:all 0.3s ease;background:rgba(255,255,255,0.1);font-weight:500;border:1px solid rgba(255,255,255,0.2)}
+.nav-link:hover{background:rgba(255,255,255,0.2);transform:translateY(-1px)}
+.nav-link.active{background:rgba(255,255,255,0.3);font-weight:bold;border:1px solid rgba(255,255,255,0.4)}
+.nav-admin{background:linear-gradient(45deg,#FFD700,#FFA500);color:#003366;font-weight:bold;border-radius:8px;padding:8px 16px;text-decoration:none;transition:all 0.3s ease;border:1px solid #FFA500;font-size:inherit}
+.nav-user{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.1);padding:5px 15px;border-radius:20px}
+.user-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(45deg,#4CAF50,#45a049);display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:14px}
+.logout-btn{background:rgba(255,0,0,0.2);border:1px solid rgba(255,0,0,0.5);color:white;padding:5px 10px;border-radius:5px;cursor:pointer;font-size:12px}
+.font-controls{display:flex;gap:5px;margin-right:10px}
+.font-btn{background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.3);color:white;padding:5px 10px;border-radius:5px;cursor:pointer;font-size:14px;font-weight:bold;transition:all 0.3s ease;min-width:30px}
+.font-btn:hover{background:rgba(255,255,255,0.3);transform:translateY(-1px)}
+input,select{background:rgba(255,255,255,0.9);border-radius:12px;border:none;color:#003366;box-shadow:0 2px 5px rgba(0,0,0,0.3);font-size:16px;margin:10px;padding:10px;width:250px;text-align:center}
+.row{display:flex;justify-content:center;align-items:center;gap:8px;margin:10px 0;max-width:400px;margin-left:auto;margin-right:auto}
+.row input,.row select{margin:0;flex:1;width:50%}
+.result{margin-top:10px;font-weight:bold;color:#00ffff;text-align:center}
+#tankTable{margin:20px auto;background:rgba(255,255,255,0.95);color:#003366;border-collapse:separate;border-spacing:0;border-radius:15px;overflow:hidden;min-width:90%;max-width:600px;box-shadow:0 8px 25px rgba(0,0,0,0.3);backdrop-filter:blur(10px)}
+#tankTable th{padding:15px 10px;background:linear-gradient(45deg,#2196F3,#1976D2);color:white;font-weight:600;text-align:center;border-bottom:none;font-size:14px}
+#tankTable td{padding:12px 10px;text-align:center;border-bottom:1px solid rgba(0,0,0,0.1);font-weight:500}
+#tankTable tr:last-child td{border-bottom:none}
+#tankTable tr:nth-child(even){background:rgba(0,0,0,0.05)}
+#tankTable tr.same-shift{background:rgba(255,0,0,0.1)!important;color:#d32f2f}
+#tankTable tr.next-shift{background:rgba(76,175,80,0.1)!important;color:#388e3c}
+#tankTable .delete-btn{background:linear-gradient(45deg,#f44336,#d32f2f);color:white;border:none;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600;font-size:12px;transition:all 0.3s ease}
+#tankTable .delete-btn:hover{transform:translateY(-1px);box-shadow:0 4px 8px rgba(244,67,54,0.3)}
+.reminder-btn,.add-btn,.live-tanks-btn{padding:12px 20px;font-size:14px;border-radius:12px;background:white;color:#003366;border:none;cursor:pointer;margin:5px;transition:all 0.3s ease;font-weight:600}
+.live-tanks-btn{background:linear-gradient(45deg,#ff4444,#ff6666);color:white;display:inline-flex;align-items:center;gap:8px}
+.main-container{max-width:600px;margin:20px auto;padding:30px;background:rgba(255,255,255,0.1);border-radius:20px;backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.2);box-shadow:0 8px 32px rgba(0,0,0,0.3)}
+.buttons-section{margin:20px 0;padding:0;background:transparent;border-radius:0;backdrop-filter:none}
+.button-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0;max-width:400px;margin-left:auto;margin-right:auto}
+.action-btn{padding:12px 24px;font-size:14px;font-weight:600;border:none;border-radius:10px;cursor:pointer;transition:all 0.3s ease;display:inline-flex;align-items:center;gap:8px;flex:1;height:45px;justify-content:center;margin:0}
+.live-tanks-btn{background:linear-gradient(45deg,#f44336,#d32f2f);color:white;box-shadow:0 2px 8px rgba(244,67,54,0.3)}
+.reminder-btn{background:linear-gradient(45deg,#2196F3,#1976D2);color:white;box-shadow:0 2px 8px rgba(33,150,243,0.3)}
+.table-btn{background:linear-gradient(45deg,#4CAF50,#388E3C);color:white;box-shadow:0 2px 8px rgba(76,175,80,0.3)}
+.action-btn:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.2)}
+.button-row a{flex:1;text-decoration:none}
+.button-row a .action-btn{width:100%}
+.help-btn{background:linear-gradient(45deg,#FF9800,#F57C00);color:white;border:none;padding:10px;border-radius:50%;cursor:pointer;font-size:14px;transition:all 0.3s ease;display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;box-shadow:0 2px 6px rgba(255,152,0,0.3)}
+.help-btn:hover{transform:translateY(-2px) scale(1.1);box-shadow:0 4px 10px rgba(255,152,0,0.4)}
+.buttons-container{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;align-items:center;margin-top:15px}
+.action-button{position:fixed;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.3);border:none;font-size:20px;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;top:10px;right:10px}
+.access-denied{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.8)),url('background.jpg');background-size:cover;background-position:center;display:flex;justify-content:center;align-items:center;z-index:9999}
+.access-denied-content{text-align:center;background:rgba(255,255,255,0.1);padding:40px;border-radius:20px;backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.2)}
+.access-denied-icon{font-size:5rem;color:#f44336;margin-bottom:20px}
+.access-denied-title{font-size:2rem;color:#f44336;margin-bottom:15px}
+.access-denied-text{font-size:1.2rem;margin-bottom:20px;opacity:0.8}
+.login-btn{padding:12px 25px;background:linear-gradient(45deg,#4CAF50,#45a049);color:white;border:none;border-radius:10px;cursor:pointer;font-size:16px}
+.lt-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:1000;backdrop-filter:blur(5px)}
+.lt-modal.show{display:flex;justify-content:center;align-items:center}
+.lt-modal-content{background:rgba(255,255,255,0.95);padding:30px;border-radius:15px;max-width:500px;width:90%;color:#003366}
+.close-btn{background:none;border:none;font-size:28px;cursor:pointer;color:#666;font-weight:bold;float:right}
+.form-group{margin-bottom:15px}
+.form-row{margin-bottom:15px}
+.form-label{display:block;margin-bottom:6px;font-weight:600;color:#003366;font-size:13px}
+.form-input,.form-select{width:100%;padding:10px;border:2px solid #ddd;border-radius:8px;font-size:13px}
+.form-textarea{width:100%;padding:10px;border:2px solid #ddd;border-radius:8px;font-size:13px;min-height:60px}
+.btn{padding:10px 20px;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:linear-gradient(45deg,#4CAF50,#45a049);color:white}
+.btn-secondary{background:linear-gradient(45deg,#6c757d,#5a6268);color:white}
+.modal-buttons{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+.other-product-field{display:none;margin-top:10px}
+.other-product-field.show{display:block}
+.loading-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:flex;justify-content:center;align-items:center;z-index:10000;flex-direction:column;gap:15px}
+.loading-spinner{width:50px;height:50px;border:5px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (max-width:600px){input,select{width:90%!important}.row{max-width:350px}.nav-bar{flex-direction:column;gap:15px;padding:15px}.buttons-container{flex-direction:column}.live-tanks-btn{width:90%}.lt-modal-content{padding:15px;max-width:350px}.form-group{margin-bottom:12px}.form-row{margin-bottom:12px}.form-label{font-size:12px}.form-input,.form-select{padding:8px;font-size:12px}.btn{padding:8px 16px;font-size:12px}.modal-buttons{gap:8px;margin-top:15px}}
 </style>
 </head>
 <body>
@@ -39,31 +102,6 @@
 <a class="nav-admin" href="dashboard.html" id="adminLink" style="display:none">🔐 Dashboard</a>
 </div>
 <div class="nav-user">
-<div class="theme-switcher">
-<button class="theme-btn" onclick="toggleThemeDropdown()" title="Change Theme">🎨</button>
-<div class="theme-dropdown" id="themeDropdown">
-<div class="theme-option active" onclick="setTheme('industrial')" data-theme="industrial">
-<span class="theme-icon">🏭</span>
-<span>Industrial Bronze</span>
-</div>
-<div class="theme-option" onclick="setTheme('ocean')" data-theme="ocean">
-<span class="theme-icon">🌊</span>
-<span>Ocean Blue</span>
-</div>
-<div class="theme-option" onclick="setTheme('carbon')" data-theme="carbon">
-<span class="theme-icon">⚫</span>
-<span>Dark Carbon</span>
-</div>
-<div class="theme-option" onclick="setTheme('amber')" data-theme="amber">
-<span class="theme-icon">🌅</span>
-<span>Sunset Amber</span>
-</div>
-<div class="theme-option" onclick="setTheme('forest')" data-theme="forest">
-<span class="theme-icon">🌲</span>
-<span>Forest Green</span>
-</div>
-</div>
-</div>
 <div class="font-controls">
 <button class="font-btn" onclick="decreaseFontSize()" title="تصغير الخط">-</button>
 <button class="font-btn" onclick="increaseFontSize()" title="تكبير الخط">+</button>
@@ -723,60 +761,3 @@ footer{margin-top:40px;color:#ccc;text-align:center}
 </style>
 </body>
 </html>
-
-<script>
-// ===== THEME SWITCHING =====
-function toggleThemeDropdown() {
-  const dropdown = document.getElementById('themeDropdown');
-  dropdown.classList.toggle('show');
-}
-
-// Close dropdown when clicking outside
-document.addEventListener('click', function(event) {
-  const themeSwitcher = document.querySelector('.theme-switcher');
-  const dropdown = document.getElementById('themeDropdown');
-  if (dropdown && themeSwitcher && !themeSwitcher.contains(event.target)) {
-    dropdown.classList.remove('show');
-  }
-});
-
-function setTheme(themeName) {
-  // Set data-theme attribute on html element
-  document.documentElement.setAttribute('data-theme', themeName);
-  
-  // Save to localStorage
-  localStorage.setItem('selectedTheme', themeName);
-  
-  // Update active state in dropdown
-  const options = document.querySelectorAll('.theme-option');
-  options.forEach(option => {
-    if (option.getAttribute('data-theme') === themeName) {
-      option.classList.add('active');
-    } else {
-      option.classList.remove('active');
-    }
-  });
-  
-  // Close dropdown
-  const dropdown = document.getElementById('themeDropdown');
-  if (dropdown) {
-    dropdown.classList.remove('show');
-  }
-  
-  console.log('🎨 Theme changed to:', themeName);
-}
-
-// Load saved theme on page load
-function loadSavedTheme() {
-  const savedTheme = localStorage.getItem('selectedTheme') || 'industrial';
-  setTheme(savedTheme);
-  console.log('🎨 Loaded saved theme:', savedTheme);
-}
-
-// Initialize theme on page load
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', loadSavedTheme);
-} else {
-  loadSavedTheme();
-}
-</script>
