@@ -768,7 +768,7 @@ function setTheme(themeName) {
 
 // Load saved theme on page load
 function loadSavedTheme() {
-  const savedTheme = localStorage.setItem('selectedTheme') || 'industrial';
+  const savedTheme = localStorage.getItem('selectedTheme') || 'industrial';
   setTheme(savedTheme);
   console.log('🎨 Loaded saved theme:', savedTheme);
 }
