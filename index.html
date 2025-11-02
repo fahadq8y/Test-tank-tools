@@ -224,7 +224,7 @@ input,select{background:rgba(255,255,255,0.9);border-radius:12px;border:none;col
 <div class="form-row" style="display:flex;gap:10px">
 <div class="form-group" style="flex:1">
 <label class="form-label">🏷️ Tank Number:</label>
-<input type="text" class="form-input" id="ltTank" readonly style="background:#f5f5f5">
+<input type="text" class="form-input" id="ltTank" readonly>
 </div>
 <div class="form-group" style="flex:1">
 <label class="form-label">🛢️ Product Type:</label>
@@ -269,11 +269,11 @@ input,select{background:rgba(255,255,255,0.9);border-radius:12px;border:none;col
 <div class="form-row" style="display:flex;gap:10px">
 <div class="form-group" style="flex:1">
 <label class="form-label">📅 Finish Date:</label>
-<input type="text" class="form-input" id="ltDate" readonly style="background:#f5f5f5">
+<input type="text" class="form-input" id="ltDate" readonly>
 </div>
 <div class="form-group" style="flex:1">
 <label class="form-label">⏰ Finish Time:</label>
-<input type="text" class="form-input" id="ltTime" readonly style="background:#f5f5f5">
+<input type="text" class="form-input" id="ltTime" readonly>
 </div>
 </div>
 <div class="form-group">
@@ -606,7 +606,7 @@ function showFontMessage(message){const msgDiv=document.createElement('div');msg
 applyFontSize();
 window.increaseFontSize=increaseFontSize;window.decreaseFontSize=decreaseFontSize;
 function showCalendarHelp(){const userAgent=navigator.userAgent.toLowerCase();let platform='';let storeUrl='';if(/android/.test(userAgent)){platform='Android';storeUrl='https://play.google.com/store/apps/details?id=com.google.android.calendar';}else if(/iphone|ipad|ipod/.test(userAgent)){platform='iOS';storeUrl='https://apps.apple.com/app/google-calendar/id909319292';}else{platform='Web Browser';storeUrl='https://calendar.google.com/';}
-const message=`📅 How to use Calendar Reminder:\n\n1. Calculate your tank finish time\n2. Click "📅 Add Reminder" button\n\nFor ${platform} users, if you don't have Google Calendar, you can download it.`;if(confirm(message+'\n\nClick OK to go to the store.')){window.open(storeUrl,'_blank');}}
+const message=`1. Calculate your tank finish time<br>2. Click "📅 Add Reminder" button<br><br>For ${platform} users, if you don't have Google Calendar, you can download it.`;showCustomConfirm('📅 How to use Calendar Reminder:',message,storeUrl);}
 window.showCalendarHelp=showCalendarHelp;
 async function logPBCRCalculation(tankNumber,hours,minutes,finishTime,finishDate){if(!currentUser)return;try{const userIP=await fetch('https://api.ipify.org?format=json').then(r=>r.json()).then(data=>data.ip).catch(()=>'Unknown');const timestamp=new Date();const detailedAction=`Calculated Tank ${tankNumber} in PBCR - Result: ${hours}h ${minutes}m (Finish: ${finishTime} - ${finishDate}) by ${currentUser.username}`;await addDoc(collection(db,'activities'),{action:detailedAction,originalAction:'pbcr_calculation',username:currentUser.username,tankNumber:tankNumber,calculationResult:`${hours}h ${minutes}m`,finishTime:finishTime,finishDate:finishDate,timestamp:serverTimestamp(),ip:userIP,userAgent:navigator.userAgent.substring(0,100),page:'pbcr-calculator'});}catch(error){console.error('Error logging PBCR calculation:',error);}}
 function showLiveTanksHelp(){showCustomAlert('🔴 Add to Live Tanks:','Adds your tank to the live monitoring system for all users to see. Requires panel operator or admin access.')}
@@ -849,6 +849,25 @@ function showCustomAlert(title, message) {
   document.body.appendChild(modal);
 }
 window.showCustomAlert = showCustomAlert;
+
+// Custom Confirm Modal
+function showCustomConfirm(title, message, url) {
+  const modal = document.createElement('div');
+  modal.className = 'lt-modal show';
+  modal.innerHTML = `
+    <div class="lt-modal-content" style="max-width:450px;text-align:center">
+      <button class="close-btn" onclick="this.closest('.lt-modal').remove()">&times;</button>
+      <h3>${title}</h3>
+      <p style="color:white;line-height:1.8;margin:20px 0;text-align:left">${message}</p>
+      <div style="display:flex;gap:10px;justify-content:center;margin-top:25px">
+        <button class="btn btn-secondary" onclick="this.closest('.lt-modal').remove()">Cancel</button>
+        <button class="btn btn-primary" onclick="window.open('${url}','_blank');this.closest('.lt-modal').remove()">OK - Go to Store</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+window.showCustomConfirm = showCustomConfirm;
 
 </script>
 <footer>
