@@ -698,9 +698,45 @@
     // ✅ AUTH STATE MANAGEMENT
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        console.log('❌ No user logged in, redirecting to login...');
-        alert('يرجى تسجيل الدخول أولاً');
-        window.location.href = 'login.html';
+        console.log('❌ No Firebase Auth user, checking localStorage...');
+        
+        // Fallback to localStorage for non-migrated users
+        const savedUser = localStorage.getItem('tanktools_current_user');
+        const savedSession = sessionStorage.getItem('tanktools_session');
+        
+        if (!savedUser || !savedSession) {
+          console.log('❌ No session found, redirecting to login...');
+          alert('يرجى تسجيل الدخول أولاً');
+          window.location.href = 'login.html';
+          return;
+        }
+        
+        // Use localStorage data for non-migrated users
+        const userData = JSON.parse(savedUser);
+        console.log('✅ Using localStorage session for:', userData.username);
+        window.currentUser = userData;
+        
+        // Check page permissions
+        if (typeof hasPageAccess === 'function') {
+          if (!hasPageAccess(userData, 'live-tanks.html')) {
+            alert('ليس لديك صلاحية للدخول إلى هذه الصفحة');
+            window.location.href = 'dashboard.html';
+            return;
+          }
+        }
+        
+        // Apply UI permissions
+        if (typeof applyUIPermissions === 'function') {
+          applyUIPermissions(userData);
+        }
+        
+        // Display user name
+        const userNameEl = document.getElementById('userName');
+        if (userNameEl) {
+          userNameEl.textContent = userData.name || userData.username;
+        }
+        
+        console.log('✅ Permissions applied for:', userData.name || userData.username);
         return;
       }
       
