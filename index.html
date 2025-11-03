@@ -318,26 +318,56 @@ window.auth = auth;
 // ✅ AUTH STATE MANAGEMENT
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
-    console.log('❌ No user logged in, redirecting to login...');
-    alert('يرجى تسجيل الدخول أولاً');
-    window.location.href = 'login.html';
-    return;
-  }
-  
-  console.log('✅ User logged in:', user.email);
-  
-  // Get user data from Firestore
-  try {
-    // Get username from localStorage (set during login)
-    const username = localStorage.getItem('username');
-    if (!username) {
-      console.error('❌ No username in localStorage');
-      alert('خطأ في تسجيل الدخول');
-      await signOut(auth);
+    console.log('❌ No Firebase Auth user, checking localStorage...');
+    
+    // Fallback to localStorage for non-migrated users
+    const savedUser = localStorage.getItem('tanktools_current_user');
+    const savedSession = sessionStorage.getItem('tanktools_session');
+    
+    if (!savedUser || !savedSession) {
+      console.log('❌ No session found, redirecting to login...');
+      alert('يرجى تسجيل الدخول أولاً');
       window.location.href = 'login.html';
       return;
     }
     
+    // Use localStorage data for non-migrated users
+    const userData = JSON.parse(savedUser);
+    console.log('✅ Using localStorage session for:', userData.username);
+    window.currentUser = userData;
+    
+    // Check page permissions
+    if (typeof hasPageAccess === 'function') {
+      if (!hasPageAccess(userData, 'index.html')) {
+        alert('ليس لديك صلاحية للدخول إلى هذه الصفحة');
+        window.location.href = 'dashboard.html';
+        return;
+      }
+    }
+    
+    // Apply UI permissions
+    if (typeof applyUIPermissions === 'function') {
+      applyUIPermissions(userData);
+    }
+    
+    // Display user name
+    const userNameEl = document.getElementById('userName');
+    if (userNameEl) {
+      userNameEl.textContent = userData.name || userData.username;
+    }
+    
+    console.log('✅ Permissions applied for:', userData.name || userData.username);
+    return;
+  }
+  
+  console.log('✅ Firebase Auth user logged in:', user.email);
+  
+  // Get username from email (format: username@knpc.com)
+  const username = user.email.split('@')[0];
+  console.log('🔍 Looking up user in Firestore:', username);
+  
+  // Get user data from Firestore using username
+  try {
     const userDoc = await getDoc(doc(window.db, 'users', username));
     if (!userDoc.exists()) {
       console.error('❌ User document not found');
