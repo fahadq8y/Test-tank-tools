@@ -392,7 +392,7 @@
     <button id="darkModeButton" class="action-button" title="Dark Mode">🌙</button>
     
     <footer>
-      By <a href="#" class="whatsapp-link" onclick="openWhatsApp(); return false;">Fahad - 17877</a> – Version v6.5 - Theme Position
+      By <a href="#" class="whatsapp-link" onclick="openWhatsApp(); return false;">Fahad - 17877</a> – Version v6.6 - Direction Arrows
       <br><small style="color:#999;font-size:10px;margin-top:5px;display:block">📱 WhatsApp: +965 55222550</small>
     </footer>
   </div>
@@ -1111,7 +1111,9 @@
         amountToWithdraw: calcData.amountToWithdraw,
         finalLevel: calcData.finalLevel,
         finishTime: calcData.finishTimeString,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        targetValue: calcData.targetValue,
+        targetType: calcData.targetType
       };
       
       personalData.unshift(newEntry);
@@ -1172,8 +1174,29 @@
         const finishDate = finishDateTime.toLocaleDateString('en-GB');
         const finishTime = entry.finishTimeString || finishDateTime.toLocaleTimeString('en-GB', {hour: '2-digit', minute: '2-digit', hour12: false});
         
+        // حساب السهم الملون
+        let directionArrow = '';
+        let directionColor = '';
+        
+        if (entry.currentLevel && entry.finalLevel) {
+          const currentLevel = parseFloat(entry.currentLevel);
+          const finalLevel = parseFloat(entry.finalLevel);
+          
+          if (finalLevel > currentLevel) {
+            // Level increased - Receiving
+            directionArrow = '▲';
+            directionColor = '#4CAF50'; // Green
+          } else if (finalLevel < currentLevel) {
+            // Level decreased - Sending
+            directionArrow = '▼';
+            directionColor = '#f44336'; // Red
+          }
+        }
+        
+        const arrowSpan = directionArrow ? `<span style="color:${directionColor};font-size:16px;margin-right:4px;">${directionArrow}</span>` : '';
+        
         row.innerHTML = `
-          <td>${entry.tankNumber}</td>
+          <td>${arrowSpan}${entry.tankNumber}</td>
           <td>${finishDate}</td>
           <td>${finishTime}</td>
           <td><button class="delete-btn" onclick="removeFromPersonalTable(${index})">Delete</button></td>
