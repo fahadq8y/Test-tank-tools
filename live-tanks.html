@@ -708,7 +708,17 @@
       
       // Get user data from Firestore
       try {
-        const userDoc = await getDoc(doc(window.db, 'users', user.uid));
+        // Get username from localStorage (set during login)
+        const username = localStorage.getItem('username');
+        if (!username) {
+          console.error('❌ No username in localStorage');
+          alert('خطأ في تسجيل الدخول');
+          await signOut(auth);
+          window.location.href = 'login.html';
+          return;
+        }
+        
+        const userDoc = await getDoc(doc(window.db, 'users', username));
         if (!userDoc.exists()) {
           console.error('❌ User document not found');
           alert('حساب غير موجود');
