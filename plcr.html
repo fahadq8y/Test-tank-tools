@@ -65,7 +65,7 @@
 .theme-switcher{position:relative;display:inline-block}
 .theme-btn{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.3);color:white;padding:8px 12px;border-radius:8px;cursor:pointer;font-size:18px;transition:all 0.3s ease;min-width:36px;min-height:36px;display:flex;align-items:center;justify-content:center}
 .theme-btn:hover{background:rgba(255,255,255,0.2);transform:translateY(-1px)}
-.theme-dropdown{display:none;position:fixed;background:rgba(0,0,0,0.9);border-radius:8px;min-width:180px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:10000}
+.theme-dropdown{display:none;position:fixed;background:rgba(0,0,0,0.9);border-radius:8px;min-width:180px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:99999}
 .theme-dropdown.show{display:block;animation:slideDown 0.3s ease}
 .theme-option{padding:10px 15px;cursor:pointer;color:white;transition:all 0.2s ease;border-bottom:1px solid rgba(255,255,255,0.1)}
 .theme-option:last-child{border-bottom:none}
@@ -368,7 +368,7 @@
     <button id="darkModeButton" class="action-button" title="Dark Mode">🌙</button>
     
     <footer>
-      By <a href="#" class="whatsapp-link" onclick="openWhatsApp(); return false;">Fahad - 17877</a> – Version v5.5 - Position Fix
+      By <a href="#" class="whatsapp-link" onclick="openWhatsApp(); return false;">Fahad - 17877</a> – Version v5.6 - Z-Index 99999
       <br><small style="color:#999;font-size:10px;margin-top:5px;display:block">📱 WhatsApp: +965 55222550</small>
     </footer>
   </div>
