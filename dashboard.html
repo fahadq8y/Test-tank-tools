@@ -574,19 +574,54 @@
     // ✅ AUTH STATE MANAGEMENT
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        console.log('❌ No user logged in, redirecting to login...');
-        alert('يرجى تسجيل الدخول أولاً');
-        window.location.href = 'login.html';
+        console.log('❌ No Firebase Auth user, checking localStorage...');
+        
+        // Fallback to localStorage for non-migrated users
+        const savedUser = localStorage.getItem('tanktools_current_user');
+        const savedSession = sessionStorage.getItem('tanktools_session');
+        
+        if (!savedUser || !savedSession) {
+          console.log('❌ No session found, redirecting to login...');
+          alert('يرجى تسجيل الدخول أولاً');
+          window.location.href = 'login.html';
+          return;
+        }
+        
+        // Use localStorage data for non-migrated users
+        const userData = JSON.parse(savedUser);
+        console.log('✅ Using localStorage session for:', userData.username);
+        window.currentUser = userData;
+        
+        // Check page permissions
+        if (typeof hasPageAccess === 'function') {
+          if (!hasPageAccess(userData, 'dashboard.html')) {
+            alert('ليس لديك صلاحية للدخول إلى هذه الصفحة');
+            window.location.href = 'index.html';
+            return;
+          }
+        }
+        
+        // Apply UI permissions
+        if (typeof applyUIPermissions === 'function') {
+          applyUIPermissions(userData);
+        }
+        
+        // Load dashboard data
+        await loadDashboardData();
         return;
       }
       
-      console.log('✅ User logged in:', user.email);
+      console.log('✅ Firebase Auth user logged in:', user.email);
       
-      // Get user data from Firestore
+      // Get username from email (format: username@knpc.com)
+      const username = user.email.split('@')[0];
+      console.log('🔍 Looking up user in Firestore:', username);
+      
+      // Get user data from Firestore using username
       try {
-        const userDoc = await getDoc(doc(window.db, 'users', user.uid));
+        const userDoc = await getDoc(doc(window.db, 'users', username));
         if (!userDoc.exists()) {
-          console.error('❌ User document not found');
+          console.error('❌ User document not found for:', username);
           alert('حساب غير موجود');
           await signOut(auth);
           window.location.href = 'login.html';
@@ -2162,7 +2197,7 @@
     window.increaseFontSize = increaseFontSize;
     window.decreaseFontSize = decreaseFontSize;
 
-    console.log('%c🔥 FIREBASE ADMIN DASHBOARD v5', 'color:orange;font-size:20px;font-weight:bold');
+    console.log('%c🔥 FIREBASE ADMIN DASHBOARD v5.1 - Auth Fixed', 'color:orange;font-size:20px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
     console.log('%cLive Tanks Access Control System', 'color:blue;font-size:14px');
 
@@ -3585,7 +3620,7 @@ Report End
   </script>
 
   <footer style="text-align:center;padding:20px;background:rgba(0,0,0,0.3);color:white;margin-top:30px">
-    By <a href="#" class="whatsapp-link" onclick="openWhatsApp(); return false;">Fahad - 17877</a> – Version v5
+    By <a href="#" class="whatsapp-link" onclick="openWhatsApp(); return false;">Fahad - 17877</a> – Version v5.1 - Auth Fixed
     <br><small style="color:#999;font-size:10px;margin-top:5px;display:block">📱 WhatsApp: +965 55222550</small>
   </footer>
 
