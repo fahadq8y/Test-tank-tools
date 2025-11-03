@@ -549,7 +549,10 @@ window.calculate = () => {
       calcData = {
         tankNumber: document.getElementById("tankInput").value,
         finishTime: ft,
-        finishDate: fd
+        finishDate: fd,
+        currentLevel: level,
+        targetValue: target,
+        targetType: mode
       };
       
       // ✅ Check Add to Live Tanks button permission after successful calculation
@@ -871,7 +874,7 @@ window.showCustomConfirm = showCustomConfirm;
 
 </script>
 <footer>
-  By <a href="#" class="whatsapp-link" onclick="window.open('https://wa.me/96555222550','_blank'); return false;">Fahad - 17877</a> – Version v7.4 - Direction Arrows
+  By <a href="#" class="whatsapp-link" onclick="window.open('https://wa.me/96555222550','_blank'); return false;">Fahad - 17877</a> – Version v7.5 - Direction Arrows Fixed
   <br><small style="color:#999;font-size:10px;margin-top:5px;display:block">📱 WhatsApp: +965 55222550</small>
 </footer>
 <style>
