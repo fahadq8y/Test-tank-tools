@@ -694,6 +694,7 @@
         
         // Save session data
         localStorage.setItem('tanktools_current_user', JSON.stringify(sessionUserData));
+        localStorage.setItem('username', userData.username); // ✅ Save username for Firebase Auth pages
         sessionStorage.setItem('tanktools_session', 'active');
         
         if (rememberMe) {
