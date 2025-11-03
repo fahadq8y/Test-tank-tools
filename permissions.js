@@ -1,7 +1,7 @@
 /**
  * 🔐 Tank Tools - Unified Permissions System
  * Developer: Fahad - 17877
- * Version: 2.1 - Added hasPermission() for Firebase Auth + Firestore
+ * Version: 2.2 - Added sessionStorage Cache for Permissions (Performance Boost)
  * Date: 2025-11-03
  */
 
@@ -213,7 +213,7 @@ function getSpecializationBadgeClass(specialization) {
 }
 
 // Log initialization
-console.log('✅ Permissions system v2.1 loaded');
+console.log('✅ Permissions system v2.2 loaded - with sessionStorage Cache');
 
 /**
  * ✅ Check if current user has a specific permission (Firebase Auth + Firestore)
@@ -230,11 +230,35 @@ async function hasPermission(permissionName) {
       return false;
     }
     
-    console.log(`hasPermission: Checking ${permissionName} for user:`, user.username || user.email);
+    const username = user.username || (user.email ? user.email.split('@')[0] : null);
+    console.log(`hasPermission: Checking ${permissionName} for user:`, username);
+    
+    // ⚡ Check cache first (sessionStorage)
+    const cacheKey = `permissions_cache_${username}`;
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached) {
+      try {
+        const cachedPermissions = JSON.parse(cached);
+        if (cachedPermissions[permissionName] !== undefined) {
+          console.log(`⚡ hasPermission: Using cached value for ${permissionName} = ${cachedPermissions[permissionName]}`);
+          return cachedPermissions[permissionName];
+        }
+      } catch (e) {
+        console.error('hasPermission: Cache parse error:', e);
+      }
+    }
     
     // ✅ Admin has all permissions
     if (user.role === 'admin' || user.specialization === 'admin') {
       console.log(`hasPermission: User is admin, granting ${permissionName}`);
+      
+      // ⚡ Save to cache
+      const cacheKey = `permissions_cache_${username}`;
+      const cached = sessionStorage.getItem(cacheKey);
+      const cachedPermissions = cached ? JSON.parse(cached) : {};
+      cachedPermissions[permissionName] = true;
+      sessionStorage.setItem(cacheKey, JSON.stringify(cachedPermissions));
+      
       return true;
     }
     
@@ -258,12 +282,28 @@ async function hasPermission(permissionName) {
           if (userData.permissions && typeof userData.permissions === 'object') {
             const hasIt = userData.permissions[permissionName] === true;
             console.log(`hasPermission: ${permissionName} = ${hasIt}`);
+            
+            // ⚡ Save to cache
+            const cacheKey = `permissions_cache_${username}`;
+            const cached = sessionStorage.getItem(cacheKey);
+            const cachedPermissions = cached ? JSON.parse(cached) : {};
+            cachedPermissions[permissionName] = hasIt;
+            sessionStorage.setItem(cacheKey, JSON.stringify(cachedPermissions));
+            
             return hasIt;
           }
           
           // Fallback: Check if permission exists directly on user object
           if (userData[permissionName] === true) {
             console.log(`hasPermission: ${permissionName} found directly on user = true`);
+            
+            // ⚡ Save to cache
+            const cacheKey = `permissions_cache_${username}`;
+            const cached = sessionStorage.getItem(cacheKey);
+            const cachedPermissions = cached ? JSON.parse(cached) : {};
+            cachedPermissions[permissionName] = true;
+            sessionStorage.setItem(cacheKey, JSON.stringify(cachedPermissions));
+            
             return true;
           }
         }
@@ -294,6 +334,14 @@ async function hasPermission(permissionName) {
       const userRole = user.role || user.specialization;
       const hasIt = allowedRoles.includes(userRole);
       console.log(`hasPermission: Fallback role-based check: ${permissionName} for role ${userRole} = ${hasIt}`);
+      
+      // ⚡ Save to cache
+      const cacheKey = `permissions_cache_${username}`;
+      const cached = sessionStorage.getItem(cacheKey);
+      const cachedPermissions = cached ? JSON.parse(cached) : {};
+      cachedPermissions[permissionName] = hasIt;
+      sessionStorage.setItem(cacheKey, JSON.stringify(cachedPermissions));
+      
       return hasIt;
     }
     
