@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tank Tools - Session Fixed v5.1</title>
+  <title>Tank Tools - Gradual Migration v6.0</title>
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" href="icon.png" type="image/png">
   <meta name="theme-color" content="#003366">
@@ -127,7 +127,7 @@
     </div>
 
     <div id="messageContainer"></div>
-    <div class="footer"><strong>🔥 Firebase Powered</strong><br>By <a href="#" class="whatsapp-link" onclick="openWhatsApp(); return false;">Fahad - 17877</a> | Version v5 Fixed<br><small>Real-time cloud database</small></div>
+    <div class="footer"><strong>🔥 Firebase Powered</strong><br>By <a href="#" class="whatsapp-link" onclick="openWhatsApp(); return false;">Fahad - 17877</a> | Version v6.0 - Gradual Migration<br><small>Real-time cloud database</small></div>
   </div>
 
   <!-- Device Fingerprinting System - Simple & Reliable -->
@@ -137,6 +137,7 @@
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
     import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, serverTimestamp, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
     const firebaseConfig = {
       apiKey: "AIzaSyD7lJcoY33FEC9d6eWy67QIO9SV4lS24pg",
@@ -149,9 +150,11 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+    const auth = getAuth(app);
 
     // Make Firebase functions globally available
     window.db = db;
+    window.auth = auth;
     window.doc = doc;
     window.getDoc = getDoc;
     window.setDoc = setDoc;
@@ -162,6 +165,8 @@
     window.query = query;
     window.where = where;
     window.getDocs = getDocs;
+    window.signInWithEmailAndPassword = signInWithEmailAndPassword;
+    window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
 
     console.log('🔥 Firebase initialized successfully!');
   </script>
@@ -459,106 +464,178 @@
       }
       
       try {
-        // Check if user exists in Firebase
-        const userDocRef = doc(db, 'users', username);
-        const userDoc = await getDoc(userDocRef);
+        // 🔄 GRADUAL MIGRATION SYSTEM - Step 1: Try Firebase Auth first
+        console.log('🔄 [Migration] Step 1: Checking Firebase Auth...');
+        const email = `${username}@knpc.com`;
+        let firebaseAuthUser = null;
+        let isNewMigration = false;
         
-        if (!userDoc.exists()) {
-          // Check if it's admin account
-          if (username === 'fam030' && password === 'Ff9718062') {
-            console.log('✅ Admin login successful');
-            const userData = {
-              id: 1,
-              username: 'fam030',
-              fullName: 'Fahad Admin',
-              email: 'fam030@knpc.com',
-              role: 'admin',
-              isActive: true,
-              loginTime: new Date().toISOString()
-            };
+        try {
+          // Try to sign in with Firebase Auth
+          const authResult = await signInWithEmailAndPassword(auth, email, password);
+          firebaseAuthUser = authResult.user;
+          console.log('✅ [Migration] User exists in Firebase Auth:', firebaseAuthUser.uid);
+        } catch (authError) {
+          console.log('⚠️ [Migration] User not in Firebase Auth yet:', authError.code);
+          
+          // User doesn't exist in Firebase Auth - check Firestore (legacy)
+          if (authError.code === 'auth/user-not-found' || authError.code === 'auth/invalid-credential') {
+            console.log('🔄 [Migration] Step 2: Checking Firestore (legacy)...');
             
-            // Save session data
-            localStorage.setItem('tanktools_current_user', JSON.stringify(userData));
-            sessionStorage.setItem('tanktools_session', 'active');
+            // Check if user exists in Firestore
+            const userDocRef = doc(db, 'users', username);
+            const userDoc = await getDoc(userDocRef);
             
-            // Add login activity to Firebase
-            await addActivity('admin_login', username);
-            
-            showMessage('✅ Admin login successful! Redirecting... (Session Fix v5.1)', 'success');
-            console.log('🔥 SESSION FIX v5.1 - Extended timing and verification active');
-            
-            // 🚫 UNREGISTER SERVICE WORKER TO PREVENT REDIRECT ISSUES
-            if ('serviceWorker' in navigator) {
-              navigator.serviceWorker.getRegistrations().then(registrations => {
-                registrations.forEach(registration => {
-                  console.log('🚫 Unregistering Service Worker to fix redirects');
-                  registration.unregister();
-                });
-              });
-            }
-            
-            // 🔧 EXTENDED DELAY + SESSION VERIFICATION
-            setTimeout(() => {
-              // Double-check session is saved
-              const savedSession = sessionStorage.getItem('tanktools_session');
-              const savedUser = localStorage.getItem('tanktools_current_user');
-              
-              console.log('🔍 Pre-redirect check:', {
-                session: savedSession,
-                user: !!savedUser,
-                userDataLength: savedUser ? savedUser.length : 0
-              });
-              
-              if (!savedSession || !savedUser) {
-                console.error('❌ Session not properly saved, re-saving...');
-                sessionStorage.setItem('tanktools_session', 'active');
-                localStorage.setItem('tanktools_current_user', JSON.stringify({
-                  id: 1,
-                  username: 'fam030',
-                  fullName: 'Fahad Admin',
-                  email: 'fam030@knpc.com',
-                  role: 'admin',
-                  isActive: true,
-                  loginTime: new Date().toISOString()
-                }));
+            if (!userDoc.exists()) {
+              // User doesn't exist anywhere - check if admin hardcoded
+              if (username === 'fam030' && password === 'Ff9718062') {
+                console.log('✅ [Migration] Admin hardcoded login - creating Firebase Auth account...');
                 
-                // Additional delay after re-saving
-                setTimeout(() => {
-                  console.log('🔄 Redirecting after session re-save...');
-                  window.location.href = 'dashboard.html';
-                }, 500);
+                // Create Firebase Auth account for admin
+                try {
+                  const createResult = await createUserWithEmailAndPassword(auth, email, password);
+                  firebaseAuthUser = createResult.user;
+                  console.log('✅ [Migration] Admin Firebase Auth account created:', firebaseAuthUser.uid);
+                  
+                  // Create/update Firestore document with uid
+                  await setDoc(doc(db, 'users', username), {
+                    id: 1,
+                    username: 'fam030',
+                    fullName: 'Fahad Admin',
+                    email: email,
+                    password: password, // Keep for backward compatibility
+                    role: 'admin',
+                    isActive: true,
+                    uid: firebaseAuthUser.uid,
+                    createdAt: serverTimestamp(),
+                    lastLogin: serverTimestamp(),
+                    migratedToAuth: true,
+                    migrationDate: serverTimestamp()
+                  });
+                  
+                  isNewMigration = true;
+                  showMessage('✅ Account migrated to new authentication system!', 'success');
+                  await new Promise(resolve => setTimeout(resolve, 1000));
+                } catch (createError) {
+                  console.error('❌ [Migration] Failed to create admin Firebase Auth account:', createError);
+                  throw createError;
+                }
+              } else {
+                showMessage('❌ User not found. Please register first.', 'error');
+                showLoading("loginBtn", "loginLoading", false);
+                return;
+              }
+            } else {
+              // User exists in Firestore but not in Firebase Auth - MIGRATE!
+              const userData = userDoc.data();
+              
+              // Verify password against Firestore
+              if (userData.password !== password) {
+                showMessage('❌ Invalid password', 'error');
+                await addActivity('failed_login_attempt', username);
+                showLoading("loginBtn", "loginLoading", false);
                 return;
               }
               
-              const redirect = sessionStorage.getItem('tanktools_redirect');
-              if (redirect) {
-                console.log('🔄 Redirecting to saved redirect:', redirect);
-                sessionStorage.removeItem('tanktools_redirect');
-                window.location.href = redirect;
-              } else {
-                console.log('🔄 Redirecting to dashboard.html');
-                window.location.href = 'dashboard.html';
+              // Check if user is active
+              if (!userData.isActive) {
+                showMessage('⏳ Your account is pending admin approval. Please wait for activation.', 'warning');
+                showLoading("loginBtn", "loginLoading", false);
+                return;
               }
-            }, 2000); // Increased delay from 1500ms to 2000ms
-            return;
+              
+              console.log('🔄 [Migration] Step 3: Migrating user to Firebase Auth...');
+              showMessage('🔄 Migrating your account to new authentication system...', 'info');
+              
+              try {
+                // Create Firebase Auth account
+                const createResult = await createUserWithEmailAndPassword(auth, email, password);
+                firebaseAuthUser = createResult.user;
+                console.log('✅ [Migration] Firebase Auth account created:', firebaseAuthUser.uid);
+                
+                // Update Firestore document with uid and migration flag
+                await updateDoc(userDocRef, {
+                  uid: firebaseAuthUser.uid,
+                  migratedToAuth: true,
+                  migrationDate: serverTimestamp(),
+                  lastLogin: serverTimestamp()
+                });
+                
+                isNewMigration = true;
+                showMessage('✅ Account migrated successfully!', 'success');
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Log migration activity
+                await addActivity('user_migrated_to_auth', username);
+                
+              } catch (createError) {
+                console.error('❌ [Migration] Failed to create Firebase Auth account:', createError);
+                
+                // If email already exists (shouldn't happen, but handle it)
+                if (createError.code === 'auth/email-already-in-use') {
+                  console.log('⚠️ [Migration] Email already exists, trying to sign in...');
+                  try {
+                    const signInResult = await signInWithEmailAndPassword(auth, email, password);
+                    firebaseAuthUser = signInResult.user;
+                    
+                    // Update Firestore with uid
+                    await updateDoc(userDocRef, {
+                      uid: firebaseAuthUser.uid,
+                      migratedToAuth: true,
+                      migrationDate: serverTimestamp(),
+                      lastLogin: serverTimestamp()
+                    });
+                  } catch (signInError) {
+                    console.error('❌ [Migration] Sign in after email-exists error failed:', signInError);
+                    showMessage('❌ Migration failed. Please contact admin.', 'error');
+                    showLoading("loginBtn", "loginLoading", false);
+                    return;
+                  }
+                } else {
+                  showMessage('❌ Migration failed. Please contact admin.', 'error');
+                  showLoading("loginBtn", "loginLoading", false);
+                  return;
+                }
+              }
+            }
           } else {
-            showMessage('❌ User not found. Please register first.', 'error');
+            // Other auth errors (wrong password, etc.)
+            console.error('❌ [Migration] Firebase Auth error:', authError);
+            showMessage('❌ Invalid credentials', 'error');
+            showLoading("loginBtn", "loginLoading", false);
             return;
           }
         }
         
-        const userData = userDoc.data();
-        
-        // Check password
-        if (userData.password !== password) {
-          showMessage('❌ Invalid password', 'error');
-          await addActivity('failed_login_attempt', username);
+        // At this point, firebaseAuthUser should be set (either existing or newly created)
+        if (!firebaseAuthUser) {
+          console.error('❌ [Migration] No Firebase Auth user after migration process');
+          showMessage('❌ Authentication failed. Please try again.', 'error');
+          showLoading("loginBtn", "loginLoading", false);
           return;
         }
+        
+        // 🔄 GRADUAL MIGRATION SYSTEM - Step 4: Get user data from Firestore
+        console.log('🔄 [Migration] Step 4: Loading user data from Firestore...');
+        const userDocRef = doc(db, 'users', username);
+        const userDoc = await getDoc(userDocRef);
+        
+        if (!userDoc.exists()) {
+          console.error('❌ [Migration] User document not found in Firestore after auth');
+          showMessage('❌ User data not found. Please contact admin.', 'error');
+          showLoading("loginBtn", "loginLoading", false);
+          return;
+        }
+        
+        const userData = userDoc.data();
+        
+        // Password already verified by Firebase Auth above
+        console.log('✅ [Migration] Password verified by Firebase Auth');
         
         // Check if user is active (approved by admin)
         if (!userData.isActive) {
           showMessage('⏳ Your account is pending admin approval. Please wait for activation.', 'warning');
+          showLoading("loginBtn", "loginLoading", false);
           
           // Show contact admin button for pending users
           setTimeout(() => {
@@ -606,9 +683,15 @@
         }
         
         // Add login activity to Firebase
-        await addActivity('user_login', username);
+        const activityType = isNewMigration ? 'user_migrated_login' : 'user_login';
+        await addActivity(activityType, username);
         
-        showMessage('✅ Login successful! Redirecting...', 'success');
+        const successMsg = isNewMigration 
+          ? '✅ Migration complete! Logging in with new system...' 
+          : '✅ Login successful! Redirecting...';
+        showMessage(successMsg, 'success');
+        
+        console.log('✅ [Migration] Login complete. Firebase Auth UID:', firebaseAuthUser.uid);
         
         // 🔧 EXTENDED DELAY + SESSION VERIFICATION FOR REGULAR USERS
         setTimeout(() => {
