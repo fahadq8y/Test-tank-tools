@@ -484,70 +484,63 @@ window.loadTank = () => {
 async function checkLogin() {
     console.log('🔄 Starting checkLogin process...');
     
-    // Check page access first
-    const hasAccess = await window.checkPageAccess();
+    // ✅ Simplified - Auth is handled by onAuthStateChanged above
+    console.log('✅ User already authenticated by Firebase Auth');
     
-    if (hasAccess) {
-        console.log('✅ Access granted to PBCR Calculator');
-        
-        // Get user data if authenticated
-        currentUser = await window.getCurrentUser();
-        if (currentUser) {
-            console.log('✅ User authenticated:', currentUser.username);
+    // Get user data if available
+    if (window.currentUser) {
+        currentUser = window.currentUser;
+        console.log('✅ User data loaded:', currentUser.username || currentUser.email);
+        if (typeof loadUser === 'function') {
             loadUser();
-        } else {
-            console.log('✅ Public access granted for PBCR Calculator');
-        }
-        
-        // Load basic app functions (if available)
-        if (typeof loadData === 'function') {
-          loadData();
-        }
-        if (typeof setupDark === 'function') {
-          setupDark();
-        }
-        
-        // Load tank specifications with proper error handling
-        console.log('🔄 Starting tank data loading from Firebase...');
-        console.log('Firebase state check:', {
-            db: !!window.db,
-            collection: !!window.collection,
-            getDocs: !!window.getDocs
-        });
-        const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Loading timeout - Firebase took too long')), 15000)
-        );
-        
-        try {
-            // Wait for tank data to load completely
-            await Promise.race([fetchTankSpecifications(), timeoutPromise]);
-            console.log('✅ Tank data loaded successfully, PBCR ready to use!');
-        } catch (error) {
-            console.error('❌ Failed to load tank specifications:', error);
-            const loadingOverlay = document.getElementById('loadingOverlay');
-            if (loadingOverlay) {
-                loadingOverlay.innerHTML = `
-                    <div style="color:red; text-align: center; padding: 20px;">
-                        <h3>❌ Failed to Load Tank Data</h3>
-                        <p>${error.message}</p>
-                        <p style="font-size: 14px;">This usually means a slow internet connection or Firebase issue.</p>
-                        <button onclick="location.reload()" style="
-                            background: linear-gradient(45deg, #4CAF50, #45a049);
-                            color: white; border: none; padding: 12px 24px;
-                            border-radius: 8px; cursor: pointer; margin-top: 15px;
-                            font-size: 16px; font-weight: bold;
-                        ">🔄 Try Again</button>
-                        <br><br>
-                        <small style="opacity: 0.8;">Contact Fahad - 17877 if this persists</small>
-                    </div>
-                `;
-            }
         }
     } else {
-        console.log('❌ Access denied to PBCR Calculator');
-        // Access denied - checkPageAccess handles showing denial UI
-        // Hide loading overlay since we're not loading anything
-        document.getElementById('loadingOverlay').style.display = 'none';
+        console.log('✅ Waiting for user data from Firebase Auth...');
+    }
+    
+    // Load basic app functions (if available)
+    if (typeof loadData === 'function') {
+      loadData();
+    }
+    if (typeof setupDark === 'function') {
+      setupDark();
+    }
+    
+    // Load tank specifications with proper error handling
+    console.log('🔄 Starting tank data loading from Firebase...');
+    console.log('Firebase state check:', {
+        db: !!window.db,
+        collection: !!window.collection,
+        getDocs: !!window.getDocs
+    });
+    const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Loading timeout - Firebase took too long')), 15000)
+    );
+    
+    try {
+        // Wait for tank data to load completely
+        await Promise.race([fetchTankSpecifications(), timeoutPromise]);
+        console.log('✅ Tank data loaded successfully, PBCR ready to use!');
+    } catch (error) {
+        console.error('❌ Failed to load tank specifications:', error);
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        if (loadingOverlay) {
+            loadingOverlay.innerHTML = `
+                <div style="color:red; text-align: center; padding: 20px;">
+                    <h3>❌ Failed to Load Tank Data</h3>
+                    <p>${error.message}</p>
+                    <p style="font-size: 14px;">This usually means a slow internet connection or Firebase issue.</p>
+                    <button onclick="location.reload()" style="
+                        background: linear-gradient(45deg, #4CAF50, #45a049);
+                        color: white; border: none; padding: 12px 24px;
+                        border-radius: 8px; cursor: pointer; margin-top: 15px;
+                        font-size: 16px; font-weight: bold;
+                    ">🔄 Try Again</button>
+                    <br><br>
+                    <small style="opacity: 0.8;">Contact Fahad - 17877 if this persists</small>
+                </div>
+            `;
+        }
     }
 }
 // نستدعي checkLogin عند تحميل الصفحة
