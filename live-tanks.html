@@ -982,8 +982,28 @@
         currentUser = user;
         console.log('checkLoginStatus: Current user:', user);
         
+        // ✅ Wait for permissions.js to load
+        if (typeof hasPermission !== 'function') {
+          console.log('⏳ Waiting for permissions.js to load...');
+          await new Promise(resolve => {
+            const checkInterval = setInterval(() => {
+              if (typeof hasPermission === 'function') {
+                clearInterval(checkInterval);
+                console.log('✅ permissions.js loaded!');
+                resolve();
+              }
+            }, 100);
+            // Timeout after 5 seconds
+            setTimeout(() => {
+              clearInterval(checkInterval);
+              console.error('❌ Timeout waiting for permissions.js');
+              resolve();
+            }, 5000);
+          });
+        }
+        
         // استخدام دالة hasPermission من permissions.js للتحقق من صلاحية الوصول
-        const canViewLiveTanks = await hasPermission('canViewLiveTanks');
+        const canViewLiveTanks = typeof hasPermission === 'function' ? await hasPermission('canViewLiveTanks') : false;
         
         console.log('checkLoginStatus: Can view Live Tanks:', canViewLiveTanks);
         
@@ -1060,10 +1080,29 @@
         
         console.log('setupPermissions: Current user:', user);
         
+        // ✅ Wait for permissions.js to load
+        if (typeof hasPermission !== 'function') {
+          console.log('⏳ Waiting for permissions.js to load in setupPermissions...');
+          await new Promise(resolve => {
+            const checkInterval = setInterval(() => {
+              if (typeof hasPermission === 'function') {
+                clearInterval(checkInterval);
+                console.log('✅ permissions.js loaded in setupPermissions!');
+                resolve();
+              }
+            }, 100);
+            setTimeout(() => {
+              clearInterval(checkInterval);
+              console.error('❌ Timeout waiting for permissions.js in setupPermissions');
+              resolve();
+            }, 5000);
+          });
+        }
+        
         // استخدام دالة hasPermission من permissions.js
-        const canAddToLiveTanks = await hasPermission('canAddToLiveTanks');
-        const canEditLiveTanks = await hasPermission('canEditLiveTanks');
-        const canDeleteFromLiveTanks = await hasPermission('canDeleteFromLiveTanks');
+        const canAddToLiveTanks = typeof hasPermission === 'function' ? await hasPermission('canAddToLiveTanks') : false;
+        const canEditLiveTanks = typeof hasPermission === 'function' ? await hasPermission('canEditLiveTanks') : false;
+        const canDeleteFromLiveTanks = typeof hasPermission === 'function' ? await hasPermission('canDeleteFromLiveTanks') : false;
         
         console.log('🔐 Live Tanks permissions:', {
           canAddToLiveTanks,
@@ -3386,7 +3425,7 @@
       if (unsubscribe) unsubscribe();
     });
 
-    console.log('%c🔴 LIVE TANKS v6.9 - AUTH TIMING FIX', 'color:red;font-size:16px;font-weight:bold');
+    console.log('%c🔴 LIVE TANKS v7.0 - PERMISSIONS.JS WAIT FIX', 'color:red;font-size:16px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:14px');
 
 // === Theme System ===
@@ -3668,7 +3707,7 @@ window.setTheme = setTheme;
   </script>
 
   <footer style="text-align:center;padding:20px;background:rgba(0,0,0,0.3);color:white;margin-top:30px">
-    By <a href="#" class="whatsapp-link" onclick="openWhatsApp(); return false;">Fahad - 17877</a> – Version v6.9 - Auth Timing Fix
+    By <a href="#" class="whatsapp-link" onclick="openWhatsApp(); return false;">Fahad - 17877</a> – Version v7.0 - Permissions.js Wait Fix
     <br><small style="color:#999;font-size:10px;margin-top:5px;display:block">📱 WhatsApp: +965 55222550</small>
   </footer>
 
