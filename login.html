@@ -448,17 +448,17 @@
         
       } catch (deviceError) {
         console.error('❌ Device fingerprint error:', deviceError);
-        showMessage('❌ Device security check failed. Please try again or contact admin.', 'error');
-        showLoading("loginBtn", "loginLoading", false);
         
         // For admin account, allow complete bypass
         if (username === 'fam030') {
           console.log('⚠️ Admin access: Bypassing device check completely');
           showMessage('🔓 Admin access: Device security bypassed', 'warning');
-          // Skip device check entirely for admin
+          await new Promise(resolve => setTimeout(resolve, 500));
+          // Continue with login process for admin
         } else {
           // For regular users, require device check
-          showMessage('🔒 Device verification required. Please try again.', 'error');
+          showMessage('❌ Device security check failed. Please try again or contact admin.', 'error');
+          showLoading("loginBtn", "loginLoading", false);
           return; // Stop login process
         }
       }
