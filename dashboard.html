@@ -199,93 +199,6 @@
       </div>
     </div>
 
-    <!-- Live Tanks Access Control -->
-    <div class="section">
-      <div class="section-title">🔴 Live Tanks Access Control</div>
-      
-      <div class="role-settings-grid">
-        <div class="role-setting">
-          <div class="role-info">
-            <div class="role-name">👑 Admin</div>
-            <div class="role-desc">Full system access</div>
-          </div>
-          <div class="role-control">
-            <span style="color: #4CAF50; font-weight: bold;">✅ Always Active</span>
-          </div>
-        </div>
-        
-        <div class="role-setting">
-          <div class="role-info">
-            <div class="role-name">⚙️ Panel Operator</div>
-            <div class="role-desc">Can add/edit tanks</div>
-          </div>
-          <div class="role-control">
-            <label class="switch">
-              <input type="checkbox" checked id="role_panel_operator" onchange="updateRoleAccess()">
-              <span class="slider"></span>
-            </label>
-          </div>
-        </div>
-        
-        <div class="role-setting">
-          <div class="role-info">
-            <div class="role-name">👥 Supervisor</div>
-            <div class="role-desc">View only access</div>
-          </div>
-          <div class="role-control">
-            <label class="switch">
-              <input type="checkbox" checked id="role_supervisor" onchange="updateRoleAccess()">
-              <span class="slider"></span>
-            </label>
-          </div>
-        </div>
-        
-        <div class="role-setting">
-          <div class="role-info">
-            <div class="role-name">🏢 Section Head</div>
-            <div class="role-desc">View only access</div>
-          </div>
-          <div class="role-control">
-            <label class="switch">
-              <input type="checkbox" id="role_section_head" onchange="updateRoleAccess()">
-              <span class="slider"></span>
-            </label>
-          </div>
-        </div>
-        
-        <div class="role-setting">
-          <div class="role-info">
-            <div class="role-name">🔧 Operator</div>
-            <div class="role-desc">View only access</div>
-          </div>
-          <div class="role-control">
-            <label class="switch">
-              <input type="checkbox" checked id="role_operator" onchange="updateRoleAccess()">
-              <span class="slider"></span>
-            </label>
-          </div>
-        </div>
-        
-        <div class="role-setting">
-          <div class="role-info">
-            <div class="role-name">📋 Planning</div>
-            <div class="role-desc">View only access</div>
-          </div>
-          <div class="role-control">
-            <label class="switch">
-              <input type="checkbox" id="role_planning" onchange="updateRoleAccess()">
-              <span class="slider"></span>
-            </label>
-          </div>
-        </div>
-      </div>
-      
-      <div style="margin-top: 20px; text-align: center;">
-        <button class="btn btn-primary" onclick="saveGlobalSettings()">💾 Save Global Settings</button>
-        <button class="btn btn-secondary" onclick="resetToDefault()">🔄 Reset to Default</button>
-      </div>
-    </div>
-
     <!-- User Management Section -->
     <div class="section">
       <div class="section-title">👥 Advanced User Management</div>
@@ -710,7 +623,7 @@
     let currentEditingUser = null;
     let allUsers = [];
     let allActivities = [];
-    let globalLiveTanksSettings = null;
+
     
     // Pagination variables
     let currentActivitiesPage = 1;
@@ -808,9 +721,6 @@
         
         console.log(`Loaded ${allActivities.length} activities`);
 
-        // Load Live Tanks settings
-        console.log('Loading Live Tanks settings...');
-        await loadLiveTanksSettings();
 
         // Update statistics
         console.log('Updating statistics...');
@@ -852,100 +762,8 @@
       }
     }
 
-    // Load Live Tanks settings
-    async function loadLiveTanksSettings() {
-      try {
-        const settingsDoc = await getDoc(doc(db, 'systemSettings', 'liveTanksAccess'));
-        if (settingsDoc.exists()) {
-          globalLiveTanksSettings = settingsDoc.data();
-          updateSettingsUI();
-        } else {
-          // Create default settings
-          globalLiveTanksSettings = {
-            roleAccess: {
-              "admin": true,
-              "panel_operator": true,
-              "supervisor": true,
-              "section_head": false,
-              "operator": true,
-              "planning": false
-            },
-            lastModified: new Date(),
-            modifiedBy: currentUser.username
-          };
-          await setDoc(doc(db, 'systemSettings', 'liveTanksAccess'), globalLiveTanksSettings);
-          updateSettingsUI();
-        }
-      } catch (error) {
-        console.error('Error loading Live Tanks settings:', error);
-      }
-    }
 
-    // Update settings UI
-    function updateSettingsUI() {
-      if (!globalLiveTanksSettings) return;
-      
-      const roleAccess = globalLiveTanksSettings.roleAccess || {};
-      
-      document.getElementById('role_panel_operator').checked = roleAccess.panel_operator || false;
-      document.getElementById('role_supervisor').checked = roleAccess.supervisor || false;
-      document.getElementById('role_section_head').checked = roleAccess.section_head || false;
-      document.getElementById('role_operator').checked = roleAccess.operator || false;
-      document.getElementById('role_planning').checked = roleAccess.planning || false;
-    }
 
-    // Update role access
-    async function updateRoleAccess() {
-      // Auto-save when toggles change
-      await saveGlobalSettings();
-    }
-
-    // Save global settings
-    async function saveGlobalSettings() {
-      try {
-        const settings = {
-          roleAccess: {
-            "admin": true, // always true
-            "panel_operator": document.getElementById('role_panel_operator').checked,
-            "supervisor": document.getElementById('role_supervisor').checked,
-            "section_head": document.getElementById('role_section_head').checked,
-            "operator": document.getElementById('role_operator').checked,
-            "planning": document.getElementById('role_planning').checked
-          },
-          lastModified: serverTimestamp(),
-          modifiedBy: currentUser.username
-        };
-
-        await setDoc(doc(db, 'systemSettings', 'liveTanksAccess'), settings);
-        globalLiveTanksSettings = settings;
-        
-        showMessage('✅ Live Tanks access settings saved successfully!', 'success');
-        
-        await addActivity('live_tanks_settings_updated', currentUser.username);
-        
-        // Update statistics
-        updateStatistics();
-        
-      } catch (error) {
-        console.error('Error saving settings:', error);
-        showMessage('❌ Error saving settings: ' + error.message, 'error');
-      }
-    }
-
-    // Reset to default
-    async function resetToDefault() {
-      if (!confirm('Reset Live Tanks access to default settings?\n\nDefault: Panel Operator, Supervisor, and Operator will have access.')) {
-        return;
-      }
-      
-      document.getElementById('role_panel_operator').checked = true;
-      document.getElementById('role_supervisor').checked = true;
-      document.getElementById('role_section_head').checked = false;
-      document.getElementById('role_operator').checked = true;
-      document.getElementById('role_planning').checked = false;
-      
-      await saveGlobalSettings();
-    }
 
     // Update statistics
     function updateStatistics() {
@@ -975,17 +793,13 @@
       const activeUsers = allUsers.filter(u => u.isActive).length;
       const pendingUsers = allUsers.filter(u => !u.isActive).length;
       
-      // Calculate users with Live Tanks access
+      // Calculate users with Live Tanks access (using permissions.js)
       let usersWithAccess = 0;
-      if (globalLiveTanksSettings && globalLiveTanksSettings.roleAccess) {
-        const roleAccess = globalLiveTanksSettings.roleAccess;
-        allUsers.forEach(user => {
-          const userRole = user.role || 'operator';
-          if (roleAccess[userRole] || user.accessOverride?.liveTanksAccess) {
-            usersWithAccess++;
-          }
-        });
-      }
+      allUsers.forEach(user => {
+        if (hasPageAccess(user, 'live-tanks.html')) {
+          usersWithAccess++;
+        }
+      });
       
       // Calculate today's logins
       const today = new Date().toDateString();
@@ -1110,17 +924,8 @@
 
     // Check if user has Live Tanks access
     function checkUserLiveTanksAccess(user) {
-      if (!globalLiveTanksSettings) return false;
-      
-      // Check individual override first
-      if (user.accessOverride && user.accessOverride.liveTanksAccess !== undefined) {
-        return user.accessOverride.liveTanksAccess;
-      }
-      
-      // Check global role settings
-      const roleAccess = globalLiveTanksSettings.roleAccess || {};
-      const userRole = user.role || 'operator';
-      return roleAccess[userRole] || false;
+      // Use permissions.js to check access
+      return hasPageAccess(user, 'live-tanks.html');
     }
 
     // Get role badge class
@@ -1173,29 +978,22 @@
       return nameMap[specialization] || 'User';
     }
 
-    // Get user Live Tanks access
+    // Get user Live Tanks access (using permissions.js)
     function getUserLiveTanksAccess(user) {
-      // إذا كان المستخدم يستخدم النظام القديم
-      if (user.role && !user.specialization) {
-        const canView = ['admin', 'panel_operator', 'supervisor'].includes(user.role);
-        const canEdit = ['admin', 'panel_operator'].includes(user.role);
-        
-        if (!canView) return { class: 'badge-inactive', text: 'No Access' };
-        if (canEdit) return { class: 'badge-active', text: 'Full Access' };
+      // Check if user has full access (add, edit, delete)
+      if (hasFeatureAccess(user, 'add_to_live_tanks') && 
+          hasFeatureAccess(user, 'edit_live_tanks') && 
+          hasFeatureAccess(user, 'delete_live_tanks')) {
+        return { class: 'badge-active', text: 'Full Access' };
+      }
+      
+      // Check if user has view access
+      if (hasPageAccess(user, 'live-tanks.html')) {
         return { class: 'badge-warning', text: 'View Only' };
       }
-
-      // للمستخدمين الجدد
-      let permissions = {};
-      if (user.customPermissions) {
-        permissions = user.customPermissions;
-      } else if (window.TankToolsPermissions && window.TankToolsPermissions.SPECIALIZATIONS && window.TankToolsPermissions.SPECIALIZATIONS[user.specialization]) {
-        permissions = window.TankToolsPermissions.SPECIALIZATIONS[user.specialization].defaultPermissions;
-      }
-
-      if (!permissions.canViewLiveTanks) return { class: 'badge-inactive', text: 'No Access' };
-      if (permissions.canEditLiveTanks) return { class: 'badge-active', text: 'Full Access' };
-      return { class: 'badge-warning', text: 'View Only' };
+      
+      // No access
+      return { class: 'badge-inactive', text: 'No Access' };
     }
 
     // Get user pages access
@@ -2300,9 +2098,8 @@
     window.closePendingModal = closePendingModal;
     window.approveUser = approveUser;
     window.approveAllPending = approveAllPending;
-    window.updateRoleAccess = updateRoleAccess;
-    window.saveGlobalSettings = saveGlobalSettings;
-    window.resetToDefault = resetToDefault;
+
+
     window.logout = logout;
     window.loadActivities = loadActivities;
     window.refreshActivities = () => loadActivities();
