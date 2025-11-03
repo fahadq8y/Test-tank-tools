@@ -125,6 +125,16 @@
     .access-denied-title{font-size:2rem;color:#f44336;margin-bottom:15px}
     .access-denied-text{font-size:1.2rem;margin-bottom:20px;opacity:0.8}
     .login-btn{padding:12px 25px;background:linear-gradient(45deg,#4CAF50,#45a049);color:white;border:none;border-radius:10px;cursor:pointer;font-size:16px;transition:all 0.3s ease;margin:5px}
+    /* === Button Styles from PBCR === */
+    .buttons-section{margin:20px 0;padding:0;background:transparent;border-radius:0}
+    .button-row{display:flex;align-items:center;justify-content:center;gap:10px;margin:8px 0;max-width:450px;margin-left:auto;margin-right:auto}
+    .action-btn{padding:12px 24px;font-size:16px;font-weight:600;border:none;border-radius:12px;cursor:pointer;transition:all 0.3s ease;display:inline-flex;align-items:center;gap:8px;flex:1;min-height:48px;justify-content:center;margin:0}
+    .live-tanks-btn{background:var(--primary);color:white;box-shadow:0 2px 8px rgba(0,0,0,0.3);border:2px solid var(--accent);flex:1}
+    .reminder-btn{background:var(--secondary);color:white;box-shadow:0 2px 8px rgba(0,0,0,0.3);border:2px solid var(--accent);flex:1}
+    .table-btn{background:var(--accent);color:white;box-shadow:0 2px 8px rgba(0,0,0,0.3);border:2px solid var(--text);flex:1}
+    .action-btn:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.2)}
+    .help-btn{background:var(--accent);color:white;border:2px solid var(--text);padding:0;border-radius:50%;cursor:pointer;font-size:16px;transition:all 0.3s ease;display:inline-flex;align-items:center;justify-content:center;width:44px;height:44px;min-width:44px;min-height:44px;box-shadow:0 2px 6px rgba(0,0,0,0.3);flex-shrink:0}
+    .help-btn:hover{transform:translateY(-2px) scale(1.1);box-shadow:0 4px 10px rgba(255,152,0,0.4)}
     .security-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:9999;backdrop-filter:blur(5px)}
     .security-modal.show{display:flex;justify-content:center;align-items:center}
     .security-modal-content{background:rgba(255,255,255,0.95);padding:30px;border-radius:15px;max-width:500px;width:90%;color:#003366;text-align:center;animation:modalSlideIn 0.5s ease}
@@ -342,10 +352,19 @@
       </div>
       
       <!-- الأزرار الجديدة -->
-      <div id="buttonsSection" style="display:none;margin-top:20px;">
-        <button id="addToLiveTanksBtn" onclick="showAddToLiveTanksModal()" style="background:linear-gradient(45deg,#f44336,#d32f2f);color:white;border:none;padding:12px 20px;border-radius:8px;cursor:pointer;margin:5px;font-weight:bold;transition:all 0.3s ease;width:100%;display:none;">🔴 Add to Live Tanks</button>
-        <button id="addReminderBtn" onclick="addReminder()" style="background:linear-gradient(45deg,#2196F3,#1976D2);color:white;border:none;padding:12px 20px;border-radius:8px;cursor:pointer;margin:5px;font-weight:bold;transition:all 0.3s ease;width:100%;">📅 Add Reminder</button>
-        <button id="addToTableBtn" onclick="addToPersonalTable()" style="background:linear-gradient(45deg,#4CAF50,#388E3C);color:white;border:none;padding:12px 20px;border-radius:8px;cursor:pointer;margin:5px;font-weight:bold;transition:all 0.3s ease;width:100%;">📊 Add to Table</button>
+      <div id="buttonsSection" class="buttons-section" style="display:none;margin-top:20px;">
+        <div class="button-row" id="liveTanksRow" style="display:none;">
+          <button id="addToLiveTanksBtn" onclick="showAddToLiveTanksModal()" class="action-btn live-tanks-btn">🔴 Add to Live Tanks</button>
+          <button class="help-btn" onclick="showHelp('liveTanks')" title="Help">ℹ️</button>
+        </div>
+        <div class="button-row">
+          <button id="addReminderBtn" onclick="addReminder()" class="action-btn reminder-btn">📅 Add Reminder</button>
+          <button class="help-btn" onclick="showHelp('reminder')" title="Help">ℹ️</button>
+        </div>
+        <div class="button-row">
+          <button id="addToTableBtn" onclick="addToPersonalTable()" class="action-btn table-btn">📊 Add to Table</button>
+          <button class="help-btn" onclick="showHelp('table')" title="Help">ℹ️</button>
+        </div>
       </div>
       
       <!-- الجدول الشخصي -->
@@ -368,7 +387,7 @@
     <button id="darkModeButton" class="action-button" title="Dark Mode">🌙</button>
     
     <footer>
-      By <a href="#" class="whatsapp-link" onclick="openWhatsApp(); return false;">Fahad - 17877</a> – Version v5.9 - Right Align
+      By <a href="#" class="whatsapp-link" onclick="openWhatsApp(); return false;">Fahad - 17877</a> – Version v6.0 - PBCR Buttons
       <br><small style="color:#999;font-size:10px;margin-top:5px;display:block">📱 WhatsApp: +965 55222550</small>
     </footer>
   </div>
@@ -916,6 +935,14 @@
         advancedFields.style.display = 'block';
         buttonsSection.style.display = 'block';
         personalTable.style.display = 'block';
+        
+        // Show Live Tanks button if user has permission
+        const liveTanksRow = document.getElementById('liveTanksRow');
+        if (currentUser && (currentUser.role === 'panel' || currentUser.role === 'admin')) {
+          liveTanksRow.style.display = 'flex';
+        } else {
+          liveTanksRow.style.display = 'none';
+        }
         
         // حساب الوزن الحالي
         const tk = document.getElementById("tk").value.trim();
@@ -1593,6 +1620,41 @@ document.addEventListener('click', function(event) {
 
 // Load theme on page load
 window.addEventListener('load', loadSavedTheme);
+
+// === Help Functions ===
+function showHelp(type) {
+  let title, message;
+  
+  if (type === 'liveTanks') {
+    title = '🔴 Add to Live Tanks:';
+    message = 'Adds your tank to the live monitoring system for all users to see. Requires panel operator or admin access.';
+  } else if (type === 'reminder') {
+    title = '📅 Add Reminder:';
+    message = '1. Calculate your tank finish time<br>2. Click "📅 Add Reminder" button<br><br>Opens Google Calendar to set a reminder for your tank finish time.';
+  } else if (type === 'table') {
+    title = '📊 Add to Table:';
+    message = 'Adds tank to your personal table below. Only you can see this table.';
+  }
+  
+  showCustomAlert(title, message);
+}
+
+function showCustomAlert(title, message) {
+  const modal = document.createElement('div');
+  modal.className = 'lt-modal show';
+  modal.innerHTML = `
+    <div class="lt-modal-content" style="max-width:400px;text-align:center">
+      <button class="close-btn" onclick="this.closest('.lt-modal').remove()">&times;</button>
+      <h3 style="color:var(--text);text-shadow:0 0 10px var(--text)">${title}</h3>
+      <p style="color:white;line-height:1.6;margin:20px 0">${message}</p>
+      <button onclick="this.closest('.lt-modal').remove()" style="padding:10px 20px;background:var(--accent);color:white;border:2px solid var(--text);border-radius:8px;cursor:pointer;font-weight:bold">OK</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+window.showHelp = showHelp;
+window.showCustomAlert = showCustomAlert;
 
   </script>
 </body>
