@@ -737,6 +737,9 @@
         }
         
         console.log('✅ Permissions applied for:', userData.name || userData.username);
+        
+        // ✅ Call checkLoginStatus after user is set
+        checkLoginStatus();
         return;
       }
       
@@ -781,6 +784,9 @@
         }
         
         console.log('✅ Permissions applied for:', userData.name || user.email);
+        
+        // ✅ Call checkLoginStatus after user is set
+        checkLoginStatus();
       } catch (error) {
         console.error('❌ Error loading user data:', error);
         alert('خطأ في تحميل بيانات المستخدم');
@@ -958,10 +964,8 @@
       "planning": { canView: true, canAdd: false, canEdit: false, canDelete: false }
     };
 
-    // Initialize page
-    window.addEventListener('load', () => {
-      checkLoginStatus();
-    });
+    // Initialize page - removed window.load listener
+    // checkLoginStatus is now called from onAuthStateChanged after user is set
 
     async function checkLoginStatus() {
       try {
@@ -3382,7 +3386,7 @@
       if (unsubscribe) unsubscribe();
     });
 
-    console.log('%c🔴 LIVE TANKS v6.0 - THEMES', 'color:red;font-size:16px;font-weight:bold');
+    console.log('%c🔴 LIVE TANKS v6.9 - AUTH TIMING FIX', 'color:red;font-size:16px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:14px');
 
 // === Theme System ===
@@ -3664,7 +3668,7 @@ window.setTheme = setTheme;
   </script>
 
   <footer style="text-align:center;padding:20px;background:rgba(0,0,0,0.3);color:white;margin-top:30px">
-    By <a href="#" class="whatsapp-link" onclick="openWhatsApp(); return false;">Fahad - 17877</a> – Version v6.8 - Username Fix
+    By <a href="#" class="whatsapp-link" onclick="openWhatsApp(); return false;">Fahad - 17877</a> – Version v6.9 - Auth Timing Fix
     <br><small style="color:#999;font-size:10px;margin-top:5px;display:block">📱 WhatsApp: +965 55222550</small>
   </footer>
 
