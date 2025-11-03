@@ -387,7 +387,7 @@
     <button id="darkModeButton" class="action-button" title="Dark Mode">🌙</button>
     
     <footer>
-      By <a href="#" class="whatsapp-link" onclick="openWhatsApp(); return false;">Fahad - 17877</a> – Version v6.0 - PBCR Buttons
+      By <a href="#" class="whatsapp-link" onclick="openWhatsApp(); return false;">Fahad - 17877</a> – Version v6.1 - Help Fix
       <br><small style="color:#999;font-size:10px;margin-top:5px;display:block">📱 WhatsApp: +965 55222550</small>
     </footer>
   </div>
@@ -1643,11 +1643,11 @@ function showCustomAlert(title, message) {
   const modal = document.createElement('div');
   modal.className = 'lt-modal show';
   modal.innerHTML = `
-    <div class="lt-modal-content" style="max-width:400px;text-align:center">
+    <div class="lt-modal-content" style="max-width:400px;text-align:center;background:rgba(30,30,30,0.98);border:2px solid var(--accent)">
       <button class="close-btn" onclick="this.closest('.lt-modal').remove()">&times;</button>
-      <h3 style="color:var(--text);text-shadow:0 0 10px var(--text)">${title}</h3>
-      <p style="color:white;line-height:1.6;margin:20px 0">${message}</p>
-      <button onclick="this.closest('.lt-modal').remove()" style="padding:10px 20px;background:var(--accent);color:white;border:2px solid var(--text);border-radius:8px;cursor:pointer;font-weight:bold">OK</button>
+      <h3 style="color:var(--accent);text-shadow:0 0 10px var(--accent);margin-bottom:15px">${title}</h3>
+      <p style="color:#fff;line-height:1.8;margin:20px 0;font-size:15px">${message}</p>
+      <button onclick="this.closest('.lt-modal').remove()" style="padding:12px 30px;background:var(--accent);color:#000;border:2px solid var(--text);border-radius:10px;cursor:pointer;font-weight:bold;font-size:16px;transition:all 0.3s ease">OK</button>
     </div>
   `;
   document.body.appendChild(modal);
