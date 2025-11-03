@@ -1496,21 +1496,6 @@
       
       showMessage('📅 Google Calendar opened!', 'success');
     }
-      
-      // Populate tank info
-      const finishDateTime = tank.finishDateTime ? 
-        (tank.finishDateTime.toDate ? tank.finishDateTime.toDate() : new Date(tank.finishDateTime)) :
-        new Date(tank.finishDate + ' ' + tank.finishTime);
-      
-      document.getElementById('reminderTankInfo').innerHTML = `
-        <h4><strong>Tank ${tank.tankNumber}</strong> - ${tank.product} (${tank.department})</h4>
-        <p><strong>Target:</strong> ${tank.targetValue || 'N/A'} ${tank.targetType || ''}</p>
-        <p><strong>Rate:</strong> ${tank.rate || 'N/A'} ${tank.rateUnit || ''}</p>
-        <p><strong>Finish Time:</strong> ${finishDateTime.toLocaleString()}</p>
-      `;
-      
-      document.getElementById('reminderOptionsModal').classList.add('show');
-    }
 
     // Close reminder options modal
     function closeReminderOptions() {
