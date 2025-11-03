@@ -611,6 +611,9 @@
         }
         
         console.log('✅ Permissions applied for:', userData.name || user.email);
+        
+        // ✅ Load dashboard data after auth
+        await loadDashboardData();
       } catch (error) {
         console.error('❌ Error loading user data:', error);
         alert('خطأ في تحميل بيانات المستخدم');
@@ -634,36 +637,35 @@
     function checkAdminAccess() {
       console.log('Checking admin access...');
       
-      const session = sessionStorage.getItem('tanktools_session');
-      const userData = localStorage.getItem('tanktools_current_user');
+      // ✅ Use window.currentUser set by onAuthStateChanged
+      const user = window.currentUser;
       
-      console.log('Session:', session);
-      console.log('User data exists:', !!userData);
-      
-      if (session !== 'active' || !userData) {
-        console.log('No active session or user data');
-        showMessage('❌ No active session. Redirecting to login...', 'error');
+      if (!user) {
+        console.log('No user data available');
+        showMessage('❌ Please login first', 'error');
         setTimeout(() => window.location.href = 'login.html', 3000);
         return false;
       }
       
       try {
-        currentUser = JSON.parse(userData);
-        console.log('Current user:', currentUser);
+        console.log('Current user:', user);
         
-        // More flexible admin check - allow fam030 or admin role
-        if (currentUser.username === 'fam030' || currentUser.role === 'admin') {
+        // Set currentUser globally
+        window.currentUser = user;
+        currentUser = user;
+        
+        // Check admin access - allow admin specialization or role
+        if (user.specialization === 'admin' || user.role === 'admin') {
           console.log('Admin access granted');
           
           // Update UI with admin info
-          document.getElementById('userName').textContent = currentUser.fullName || currentUser.username;
-          document.getElementById('userEmail').textContent = currentUser.email || `${currentUser.username}@knpc.com`;
-          const firstLetter = (currentUser.fullName || currentUser.username).charAt(0).toUpperCase();
+          document.getElementById('userName').textContent = user.fullName || user.username;
+          document.getElementById('userEmail').textContent = user.email || `${user.username}@knpc.com`;
+          const firstLetter = (user.fullName || user.username).charAt(0).toUpperCase();
           document.getElementById('userAvatar').textContent = firstLetter;
           
           // Show admin links
           document.getElementById('tank-management-link').style.display = 'inline-block';
-
           document.getElementById('device-management-link').style.display = 'inline-block';
           
           return true;
@@ -2079,11 +2081,8 @@
       document.getElementById('statusFilter').addEventListener('change', filterUsers);
       document.getElementById('roleFilter').addEventListener('change', filterUsers);
       
-      // Load data after Firebase initialization
-      setTimeout(() => {
-        console.log('🚀 Starting dashboard initialization...');
-        loadDashboardData();
-      }, 1000);
+      // ✅ Dashboard data will be loaded by onAuthStateChanged
+      console.log('🚀 Dashboard initialization ready, waiting for auth...');
     });
 
     // Make functions globally available
