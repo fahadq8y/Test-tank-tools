@@ -967,15 +967,14 @@
       try {
         console.log('🔐 Checking login status for Live Tanks...');
         
-        // استخدام دالة getCurrentUser من permissions.js
-        const user = await getCurrentUser();
-        
-        if (!user) {
+        // Use window.currentUser set by onAuthStateChanged
+        if (!window.currentUser) {
           console.log('checkLoginStatus: No current user, showing access denied');
           showAccessDenied();
           return;
         }
         
+        const user = window.currentUser;
         currentUser = user;
         console.log('checkLoginStatus: Current user:', user);
         
@@ -1047,12 +1046,13 @@
       try {
         console.log('🔐 Setting up Live Tanks permissions...');
         
-        // الحصول على بيانات المستخدم الحالي
-        const user = await getCurrentUser();
-        if (!user) {
+        // Use window.currentUser set by onAuthStateChanged
+        if (!window.currentUser) {
           console.error('setupPermissions: No current user found');
           return;
         }
+        
+        const user = window.currentUser;
         
         console.log('setupPermissions: Current user:', user);
         
