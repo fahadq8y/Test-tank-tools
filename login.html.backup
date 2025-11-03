@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tank Tools - Gradual Migration v6.4</title>
+  <title>Tank Tools - Session Fixed v5.1</title>
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" href="icon.png" type="image/png">
   <meta name="theme-color" content="#003366">
@@ -127,7 +127,7 @@
     </div>
 
     <div id="messageContainer"></div>
-    <div class="footer"><strong>🔥 Firebase Powered</strong><br>By <a href="#" class="whatsapp-link" onclick="openWhatsApp(); return false;">Fahad - 17877</a> | Version v6.4 - Gradual Migration (Clean)<br><small>Real-time cloud database</small></div>
+    <div class="footer"><strong>🔥 Firebase Powered</strong><br>By <a href="#" class="whatsapp-link" onclick="openWhatsApp(); return false;">Fahad - 17877</a> | Version v5 Fixed<br><small>Real-time cloud database</small></div>
   </div>
 
   <!-- Device Fingerprinting System - Simple & Reliable -->
@@ -137,7 +137,6 @@
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
     import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, serverTimestamp, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
     const firebaseConfig = {
       apiKey: "AIzaSyD7lJcoY33FEC9d6eWy67QIO9SV4lS24pg",
@@ -150,11 +149,9 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const auth = getAuth(app);
 
     // Make Firebase functions globally available
     window.db = db;
-    window.auth = auth;
     window.doc = doc;
     window.getDoc = getDoc;
     window.setDoc = setDoc;
@@ -162,8 +159,6 @@
     window.collection = collection;
     window.addDoc = addDoc;
     window.serverTimestamp = serverTimestamp;
-    window.signInWithEmailAndPassword = signInWithEmailAndPassword;
-    window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
     window.query = query;
     window.where = where;
     window.getDocs = getDocs;
@@ -554,101 +549,8 @@
         
         const userData = userDoc.data();
         
-        // 🔄 GRADUAL MIGRATION: Try Firebase Auth
-        const email = `${username}@knpc.com`;
-        let firebaseAuthUser = null;
-        
-        try {
-          // Try to sign in with Firebase Auth
-          const authResult = await signInWithEmailAndPassword(auth, email, password);
-          firebaseAuthUser = authResult.user;
-          console.log('✅ [Migration] User already in Firebase Auth:', firebaseAuthUser.uid);
-        } catch (authError) {
-          console.log('⚠️ [Migration] User not in Firebase Auth:', authError.code);
-          
-          // Handle too-many-requests
-          if (authError.code === 'auth/too-many-requests') {
-            showMessage('⏳ تم تجاوز عدد المحاولات المسموح بها. يرجى الانتظار 5-10 دقائق ثم المحاولة مرة أخرى.', 'error');
-            showLoading("loginBtn", "loginLoading", false);
-            return;
-          }
-          
-          // User not in Firebase Auth - need to migrate
-          if (authError.code === 'auth/user-not-found' || authError.code === 'auth/invalid-credential' || authError.code === 'auth/wrong-password') {
-            // First verify password against Firestore
-            if (userData.password !== password) {
-              showMessage('❌ Invalid password', 'error');
-              await addActivity('failed_login_attempt', username);
-              showLoading("loginBtn", "loginLoading", false);
-              return;
-            }
-            
-            // Password correct - migrate to Firebase Auth
-            console.log('🔄 [Migration] Creating Firebase Auth account...');
-            showMessage('🔄 Migrating to new authentication system...', 'info');
-            
-            try {
-              const createResult = await createUserWithEmailAndPassword(auth, email, password);
-              firebaseAuthUser = createResult.user;
-              console.log('✅ [Migration] Firebase Auth account created:', firebaseAuthUser.uid);
-              
-              // Update Firestore with uid
-              await updateDoc(userDocRef, {
-                uid: firebaseAuthUser.uid,
-                migratedToAuth: true,
-                migrationDate: serverTimestamp()
-              });
-              
-              showMessage('✅ Account migrated successfully!', 'success');
-              await new Promise(resolve => setTimeout(resolve, 1000));
-              
-            } catch (createError) {
-              console.error('❌ [Migration] Failed to create Firebase Auth:', createError);
-              
-              if (createError.code === 'auth/too-many-requests') {
-                showMessage('⏳ تم تجاوز عدد المحاولات المسموح بها. يرجى الانتظار 5-10 دقائق ثم المحاولة مرة أخرى.', 'error');
-                showLoading("loginBtn", "loginLoading", false);
-                return;
-              }
-              
-              // Email already exists - sign in instead
-              if (createError.code === 'auth/email-already-in-use') {
-                console.log('✅ [Migration] Account exists, signing in...');
-                try {
-                  const signInResult = await signInWithEmailAndPassword(auth, email, password);
-                  firebaseAuthUser = signInResult.user;
-                  
-                  // Update Firestore with uid if missing
-                  if (!userData.uid) {
-                    await updateDoc(userDocRef, {
-                      uid: firebaseAuthUser.uid,
-                      migratedToAuth: true,
-                      migrationDate: serverTimestamp()
-                    });
-                  }
-                } catch (signInError) {
-                  console.error('❌ [Migration] Sign in failed:', signInError);
-                  showMessage('❌ Migration failed. Please contact admin.', 'error');
-                  showLoading("loginBtn", "loginLoading", false);
-                  return;
-                }
-              } else {
-                showMessage('❌ Migration failed. Please contact admin.', 'error');
-                showLoading("loginBtn", "loginLoading", false);
-                return;
-              }
-            }
-          } else {
-            // Other auth errors
-            console.error('❌ [Migration] Auth error:', authError);
-            showMessage('❌ Authentication error. Please try again.', 'error');
-            showLoading("loginBtn", "loginLoading", false);
-            return;
-          }
-        }
-        
-        // Check password (if not already verified by Firebase Auth migration)
-        if (!firebaseAuthUser && userData.password !== password) {
+        // Check password
+        if (userData.password !== password) {
           showMessage('❌ Invalid password', 'error');
           await addActivity('failed_login_attempt', username);
           return;
