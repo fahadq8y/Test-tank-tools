@@ -1456,8 +1456,7 @@
         <div class="tank-actions">
           ${permissions.canEdit ? `<button class="btn btn-primary" onclick="editTank('${tank.id}')">✏️ Edit Tank</button>` : ''}
           ${permissions.canDelete ? `<button class="btn btn-danger" onclick="deleteTank('${tank.id}')">🗑️ Delete Tank</button>` : ''}
-          <button class="btn btn-warning" onclick="showReminderOptions('${tank.id}')">📅 Calendar</button>
-          <button class="btn btn-success" onclick="addToNotificationsManager('${tank.id}')" style="background:linear-gradient(45deg,#FFD700,#FFA500);color:#003366">🔔 Add Alert</button>
+          <button class="btn btn-warning" onclick="addToGoogleCalendar('${tank.id}')">📅 Add to Google Calendar</button>
         </div>
       `;
       document.getElementById('tankDetailsBody').innerHTML = detailsHTML;
@@ -1473,12 +1472,30 @@
       return window.builtInReminders[tankId] && window.builtInReminders[tankId].active;
     }
 
-    // Show reminder options modal
-    window.showReminderOptions = function(tankId) {
+    // Add to Google Calendar directly (no modal)
+    window.addToGoogleCalendar = function(tankId) {
       const tank = window.currentTanks?.find(t => t.id === tankId);
       if (!tank) return;
       
-      currentReminderTank = tank;
+      // Create reminder data
+      const finishDateTime = tank.finishDateTime ? 
+        (tank.finishDateTime.toDate ? tank.finishDateTime.toDate() : new Date(tank.finishDateTime)) :
+        new Date(tank.finishDate + ' ' + tank.finishTime);
+      
+      const reminderDate = finishDateTime.toISOString().split('T')[0].replace(/-/g, '');
+      const reminderTime = finishDateTime.toTimeString().slice(0, 5).replace(':', '') + '00';
+      
+      const eventTitle = `Tank ${tank.tankNumber} - ${tank.product} (${tank.department})`;
+      const eventDetails = `Target: ${tank.targetValue || 'N/A'} ${tank.targetType || ''}\\nRate: ${tank.rate || 'N/A'} ${tank.rateUnit || ''}\\nNotes: ${tank.notes || 'No notes'}`;
+      
+      // Create Google Calendar URL
+      const calendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(eventTitle)}&dates=${reminderDate}T${reminderTime}/${reminderDate}T${reminderTime}&details=${encodeURIComponent(eventDetails)}&location=KNPC&sf=true&output=xml`;
+      
+      // Open in new window
+      window.open(calendarUrl, '_blank');
+      
+      showMessage('📅 Google Calendar opened!', 'success');
+    }
       
       // Populate tank info
       const finishDateTime = tank.finishDateTime ? 
