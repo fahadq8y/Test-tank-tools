@@ -1,7 +1,7 @@
 /**
  * 🔐 Tank Tools - Unified Permissions System
  * Developer: Fahad - 17877
- * Version: 2.0 - Simplified and Unified (Backward Compatible)
+ * Version: 2.1 - Added hasPermission() for Firebase Auth + Firestore
  * Date: 2025-11-03
  */
 
@@ -213,4 +213,97 @@ function getSpecializationBadgeClass(specialization) {
 }
 
 // Log initialization
-console.log('✅ Permissions system v2.0 loaded');
+console.log('✅ Permissions system v2.1 loaded');
+
+/**
+ * ✅ Check if current user has a specific permission (Firebase Auth + Firestore)
+ * @param {string} permissionName - Permission name (e.g., 'canViewLiveTanks')
+ * @returns {Promise<boolean>}
+ */
+async function hasPermission(permissionName) {
+  try {
+    // Get current user from window.currentUser (set by onAuthStateChanged)
+    const user = window.currentUser;
+    
+    if (!user) {
+      console.log('hasPermission: No current user');
+      return false;
+    }
+    
+    console.log(`hasPermission: Checking ${permissionName} for user:`, user.username || user.email);
+    
+    // ✅ Admin has all permissions
+    if (user.role === 'admin' || user.specialization === 'admin') {
+      console.log(`hasPermission: User is admin, granting ${permissionName}`);
+      return true;
+    }
+    
+    // ✅ Check custom permissions from Firestore
+    if (window.db && window.getDoc && window.doc) {
+      try {
+        const username = user.username || (user.email ? user.email.split('@')[0] : null);
+        if (!username) {
+          console.error('hasPermission: No username found');
+          return false;
+        }
+        
+        const userDocRef = window.doc(window.db, 'users', username);
+        const userDoc = await window.getDoc(userDocRef);
+        
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          console.log(`hasPermission: User data from Firestore:`, userData);
+          
+          // Check if user has custom permissions object
+          if (userData.permissions && typeof userData.permissions === 'object') {
+            const hasIt = userData.permissions[permissionName] === true;
+            console.log(`hasPermission: ${permissionName} = ${hasIt}`);
+            return hasIt;
+          }
+          
+          // Fallback: Check if permission exists directly on user object
+          if (userData[permissionName] === true) {
+            console.log(`hasPermission: ${permissionName} found directly on user = true`);
+            return true;
+          }
+        }
+      } catch (firestoreError) {
+        console.error('hasPermission: Firestore error:', firestoreError);
+      }
+    }
+    
+    // ✅ Fallback: Map permission names to role-based permissions
+    const permissionMapping = {
+      'canViewLiveTanks': ['admin', 'supervisor', 'control_panel', 'panel_operator'],
+      'canAddToLiveTanks': ['admin', 'control_panel', 'panel_operator'],
+      'canEditLiveTanks': ['admin', 'control_panel', 'panel_operator'],
+      'canDeleteFromLiveTanks': ['admin', 'control_panel', 'panel_operator'],
+      'canViewPBCR': ['admin', 'supervisor', 'planning', 'control_panel', 'panel_operator', 'field_operator', 'operator'],
+      'canAddToPBCR': ['admin', 'planning', 'control_panel', 'panel_operator'],
+      'canEditPBCR': ['admin', 'planning', 'control_panel', 'panel_operator'],
+      'canDeleteFromPBCR': ['admin', 'control_panel', 'panel_operator'],
+      'canViewPLCR': ['admin', 'supervisor', 'planning', 'control_panel', 'panel_operator', 'field_operator', 'operator'],
+      'canAddToPLCR': ['admin', 'planning', 'control_panel', 'panel_operator'],
+      'canEditPLCR': ['admin', 'planning', 'control_panel', 'panel_operator'],
+      'canDeleteFromPLCR': ['admin', 'control_panel', 'panel_operator'],
+      'canViewDashboard': ['admin', 'supervisor', 'planning', 'control_panel', 'panel_operator']
+    };
+    
+    const allowedRoles = permissionMapping[permissionName];
+    if (allowedRoles) {
+      const userRole = user.role || user.specialization;
+      const hasIt = allowedRoles.includes(userRole);
+      console.log(`hasPermission: Fallback role-based check: ${permissionName} for role ${userRole} = ${hasIt}`);
+      return hasIt;
+    }
+    
+    console.log(`hasPermission: No permission found for ${permissionName}, returning false`);
+    return false;
+    
+  } catch (error) {
+    console.error('hasPermission: Error:', error);
+    return false;
+  }
+}
+
+console.log('✅ hasPermission() function added to permissions system');
