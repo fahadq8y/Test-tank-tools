@@ -109,7 +109,7 @@
     .font-btn:hover{background:rgba(255,255,255,0.2);transform:translateY(-1px)}
     .container{background:rgba(255,255,255,0.15);padding:20px;border-radius:10px;max-width:600px;margin:auto;box-shadow:0 0 10px rgba(0,0,0,0.3)}
     label,input,select{display:block;width:100%;margin:10px 0;text-align:left}
-    input,select{padding:10px;border-radius:8px;border:none;background:rgba(255,255,255,0.9);color:#003366;box-shadow:0 2px 5px rgba(0,0,0,0.3)}
+    input,select{padding:10px;border-radius:8px;border:2px solid var(--accent);background:rgba(0,0,0,0.5);color:var(--text);box-shadow:0 2px 5px rgba(0,0,0,0.3);font-weight:500}
     .result{margin-top:20px;font-weight:bold;text-align:center;color:#00ffff;padding:15px;background:rgba(0,0,0,0.3);border-radius:8px}
     footer{margin-top:40px;color:#ccc;text-align:center}
     .whatsapp-link{color:#25D366;text-decoration:none;font-weight:bold;transition:all 0.3s ease;cursor:pointer}
@@ -117,7 +117,7 @@
     .action-button{position:fixed;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.3);border:none;font-size:20px;color:white;box-shadow:0 2px 5px rgba(0,0,0,0.3);cursor:pointer;display:flex;align-items:center;justify-content:center;top:10px;right:10px}
     .dark-mode{background:linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.8)),url('background.jpg')!important}
     .dark-mode .result{color:#ffcc00!important}
-    .dark-mode input,.dark-mode select{background:rgba(50,50,70,0.9)!important;color:#eee!important}
+    /* Removed - using theme colors now */
     .dark-mode .container{background:rgba(40,40,60,0.3)!important}
     .access-denied{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(rgba(0,0,0,0.8),rgba(0,0,0,0.8)),url('background.jpg');background-size:cover;background-position:center;display:flex;justify-content:center;align-items:center;z-index:9999}
     .access-denied-content{text-align:center;background:rgba(255,255,255,0.1);padding:40px;border-radius:20px;backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.2)}
@@ -153,11 +153,11 @@
     /* إضافة CSS للنافذة المنبثقة مثل PBCR */
     .lt-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:1000;backdrop-filter:blur(5px)}
     .lt-modal.show{display:flex;justify-content:center;align-items:center}
-    .lt-modal-content{background:rgba(255,255,255,0.95);padding:30px;border-radius:15px;max-width:500px;width:90%;color:#003366}
+    .lt-modal-content{background:linear-gradient(135deg,rgba(30,30,30,0.98),rgba(20,20,20,0.98));padding:30px;border-radius:15px;max-width:500px;width:90%;color:var(--text);border:2px solid var(--accent);box-shadow:0 10px 40px rgba(0,0,0,0.5)}
     .close-btn{background:none;border:none;font-size:28px;cursor:pointer;color:#666;font-weight:bold;float:right}
     .form-group{margin-bottom:15px}
     .form-row{margin-bottom:15px}
-    .form-label{display:block;margin-bottom:6px;font-weight:600;color:#003366;font-size:13px}
+     .form-label{display:block;margin-bottom:6px;font-weight:600;color:var(--text);font-size:13px}x}
     
     /* تحسين تنسيق الجدول مثل PBCR */
     #tankTable{
@@ -219,8 +219,8 @@
       transform: translateY(-1px);
       box-shadow: 0 4px 8px rgba(244,67,54,0.3);
     }
-    .form-input,.form-select{width:100%;padding:10px;border:2px solid #ddd;border-radius:8px;font-size:13px}
-    .form-textarea{width:100%;padding:10px;border:2px solid #ddd;border-radius:8px;font-size:13px;min-height:60px}
+    .form-input,.form-select{width:100%;padding:10px;border:2px solid var(--accent);border-radius:8px;font-size:13px;background:rgba(0,0,0,0.3);color:var(--text)}
+    .form-textarea{width:100%;padding:10px;border:2px solid var(--accent);border-radius:8px;font-size:13px;min-height:60px;background:rgba(0,0,0,0.3);color:var(--text)}
     .btn{padding:10px 20px;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;display:inline-flex;align-items:center;gap:6px}
     .btn-primary{background:linear-gradient(45deg,#4CAF50,#45a049);color:white}
     .btn-secondary{background:linear-gradient(45deg,#6c757d,#5a6268);color:white}
@@ -387,7 +387,7 @@
     <button id="darkModeButton" class="action-button" title="Dark Mode">🌙</button>
     
     <footer>
-      By <a href="#" class="whatsapp-link" onclick="openWhatsApp(); return false;">Fahad - 17877</a> – Version v6.1 - Help Fix
+      By <a href="#" class="whatsapp-link" onclick="openWhatsApp(); return false;">Fahad - 17877</a> – Version v6.2 - Theme Modal
       <br><small style="color:#999;font-size:10px;margin-top:5px;display:block">📱 WhatsApp: +965 55222550</small>
     </footer>
   </div>
