@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tank Tools - Gradual Migration v6.4</title>
+  <title>Tank Tools - PWA Persistence v6.5</title>
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" href="icon.png" type="image/png">
   <meta name="theme-color" content="#003366">
@@ -127,7 +127,7 @@
     </div>
 
     <div id="messageContainer"></div>
-    <div class="footer"><strong>🔥 Firebase Powered</strong><br>By <a href="#" class="whatsapp-link" onclick="openWhatsApp(); return false;">Fahad - 17877</a> | Version v6.4 - Gradual Migration (Clean)<br><small>Real-time cloud database</small></div>
+    <div class="footer"><strong>🔥 Firebase Powered</strong><br>By <a href="#" class="whatsapp-link" onclick="openWhatsApp(); return false;">Fahad - 17877</a> | Version v6.5 - PWA Persistence + 7-Day Auto-Logout<br><small>Real-time cloud database</small></div>
   </div>
 
   <!-- Device Fingerprinting System - Simple & Reliable -->
@@ -137,7 +137,7 @@
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
     import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, addDoc, serverTimestamp, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, setPersistence, browserLocalPersistence, browserSessionPersistence } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
     const firebaseConfig = {
       apiKey: "AIzaSyD7lJcoY33FEC9d6eWy67QIO9SV4lS24pg",
@@ -394,6 +394,20 @@
       }
       
       try {
+        // Step 0: Set Firebase Auth Persistence based on PWA or Browser
+        const isPWA = window.matchMedia('(display-mode: standalone)').matches;
+        console.log('📱 Running as:', isPWA ? 'PWA (Standalone App)' : 'Browser');
+        
+        if (isPWA) {
+          // PWA: Stay logged in permanently (with 7-day auto-logout)
+          await setPersistence(auth, browserLocalPersistence);
+          console.log('✅ Auth Persistence: LOCAL (stay logged in)');
+        } else {
+          // Browser: Session only (logout when browser closes)
+          await setPersistence(auth, browserSessionPersistence);
+          console.log('✅ Auth Persistence: SESSION (logout on close)');
+        }
+        
         // Step 1: Generate device fingerprint
         console.log('🔍 Generating device fingerprint...');
         showMessage('🔍 Checking device security...', 'info');
@@ -485,6 +499,13 @@
             // Save session data
             localStorage.setItem('tanktools_current_user', JSON.stringify(userData));
             sessionStorage.setItem('tanktools_session', 'active');
+            
+            // ✅ Save login timestamp for Auto-Logout (7 days)
+            if (isPWA) {
+              const loginTimestamp = Date.now();
+              localStorage.setItem('tanktools_login_timestamp', loginTimestamp.toString());
+              console.log('✅ Login timestamp saved for PWA auto-logout (7 days)');
+            }
             
             // Add login activity to Firebase
             await addActivity('admin_login', username);
@@ -696,6 +717,13 @@
         localStorage.setItem('tanktools_current_user', JSON.stringify(sessionUserData));
         localStorage.setItem('username', userData.username); // ✅ Save username for Firebase Auth pages
         sessionStorage.setItem('tanktools_session', 'active');
+        
+        // ✅ Save login timestamp for Auto-Logout (7 days)
+        if (isPWA) {
+          const loginTimestamp = Date.now();
+          localStorage.setItem('tanktools_login_timestamp', loginTimestamp.toString());
+          console.log('✅ Login timestamp saved for PWA auto-logout (7 days)');
+        }
         
         if (rememberMe) {
           localStorage.setItem('tanktools_remember', JSON.stringify({
@@ -1564,6 +1592,51 @@ Thank you.`;
       }
     }
 
+    // ✅ Auto-Logout after 7 days (PWA only)
+    function checkAutoLogout() {
+      const isPWA = window.matchMedia('(display-mode: standalone)').matches;
+      
+      if (!isPWA) {
+        // Not PWA, no auto-logout needed
+        return;
+      }
+      
+      const loginTimestamp = localStorage.getItem('tanktools_login_timestamp');
+      if (!loginTimestamp) {
+        // No timestamp saved, skip
+        return;
+      }
+      
+      const now = Date.now();
+      const loginTime = parseInt(loginTimestamp);
+      const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000; // 7 days
+      
+      if (now - loginTime > sevenDaysInMs) {
+        console.log('⏰ Auto-Logout: 7 days passed, logging out...');
+        
+        // Clear all session data
+        localStorage.removeItem('tanktools_current_user');
+        localStorage.removeItem('tanktools_login_timestamp');
+        localStorage.removeItem('username');
+        sessionStorage.removeItem('tanktools_session');
+        
+        // Sign out from Firebase Auth
+        if (window.auth) {
+          window.auth.signOut().then(() => {
+            console.log('✅ Firebase Auth signed out');
+          }).catch(error => {
+            console.error('❌ Error signing out:', error);
+          });
+        }
+        
+        alert('⏰ تم تسجيل خروجك تلقائياً بعد 7 أيام. يرجى تسجيل الدخول مرة أخرى.');
+        window.location.href = 'login.html';
+      } else {
+        const daysLeft = Math.ceil((sevenDaysInMs - (now - loginTime)) / (24 * 60 * 60 * 1000));
+        console.log(`✅ Auto-Logout: ${daysLeft} days left until auto-logout`);
+      }
+    }
+    
     // Make functions global
     window.handleLogin = handleLogin;
     window.handleRegister = handleRegister;
@@ -1580,6 +1653,9 @@ Thank you.`;
     // Initialize when page loads
     window.addEventListener('load', () => {
       loadSavedCredentials();
+      
+      // ✅ Check auto-logout (7 days for PWA)
+      checkAutoLogout();
       
       // Wait for Firebase to initialize before checking session
       setTimeout(() => {
