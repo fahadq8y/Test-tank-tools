@@ -1215,18 +1215,62 @@
         let directionArrow = '';
         let directionColor = '';
         
-        if (tank.currentLevel && tank.targetValue) {
+        if (tank.currentLevel) {
           const currentLevel = parseFloat(tank.currentLevel);
-          const targetValue = parseFloat(tank.targetValue);
           
-          if (currentLevel < targetValue) {
-            // Receiving - Level is rising
-            directionArrow = '▲';
-            directionColor = '#4CAF50'; // Green
-          } else if (currentLevel > targetValue) {
-            // Sending - Level is falling
-            directionArrow = '▼';
-            directionColor = '#f44336'; // Red
+          // Priority 1: Compare with previousLevel if available (edited tanks)
+          if (tank.previousLevel) {
+            const previousLevel = parseFloat(tank.previousLevel);
+            
+            if (currentLevel > previousLevel) {
+              // Level increased - Receiving
+              directionArrow = '▲';
+              directionColor = '#4CAF50'; // Green
+            } else if (currentLevel < previousLevel) {
+              // Level decreased - Sending
+              directionArrow = '▼';
+              directionColor = '#f44336'; // Red
+            }
+          }
+          // Priority 2: For new tanks, calculate based on target type
+          else if (tank.targetValue && tank.targetType) {
+            const targetValue = parseFloat(tank.targetValue);
+            const targetType = tank.targetType.toLowerCase();
+            
+            // Get tank data for calculations
+            const tankNumber = tank.tankNumber;
+            const tankData = tanks[tankNumber];
+            
+            if (tankData) {
+              let currentValue = 0;
+              
+              // Calculate current value based on target type
+              if (targetType === 'pumpable') {
+                // Calculate pumpable from current level
+                const maxLevel = tankData.max || 0;
+                const pumpableLevel = currentLevel - 0.5; // Assuming 0.5m minimum
+                currentValue = pumpableLevel * (tankData.comment || tankData.factor || 1);
+              } else if (targetType === 'ullage') {
+                // Calculate ullage from current level
+                const maxLevel = tankData.max || 0;
+                const ullageLevel = maxLevel - currentLevel;
+                currentValue = ullageLevel * (tankData.comment || tankData.factor || 1);
+              } else if (targetType === 'level') {
+                // Direct level comparison
+                currentValue = currentLevel;
+              }
+              
+              // Compare current value with target
+              if (currentValue < targetValue) {
+                // Need to increase - Receiving
+                directionArrow = '▲';
+                directionColor = '#4CAF50'; // Green
+              } else if (currentValue > targetValue) {
+                // Need to decrease - Sending
+                directionArrow = '▼';
+                directionColor = '#f44336'; // Red
+              }
+            }
           }
         }
         
@@ -3524,7 +3568,7 @@ window.setTheme = setTheme;
   </script>
 
   <footer style="text-align:center;padding:20px;background:rgba(0,0,0,0.3);color:white;margin-top:30px">
-    By <a href="#" class="whatsapp-link" onclick="openWhatsApp(); return false;">Fahad - 17877</a> – Version v6.5 - Colored Direction Arrows
+    By <a href="#" class="whatsapp-link" onclick="openWhatsApp(); return false;">Fahad - 17877</a> – Version v6.6 - Smart Direction Arrows
     <br><small style="color:#999;font-size:10px;margin-top:5px;display:block">📱 WhatsApp: +965 55222550</small>
   </footer>
 
