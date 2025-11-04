@@ -581,7 +581,7 @@
           shiftCell.className = 'shift-cell';
           
           // Calculate day number: row * 4 + col + 1
-          const day = row * 4 + col + 1;
+          const day = (3 - col) * 8 + row + 1;
           if (day <= daysInMonth) {
             const date = new Date(currentYear, currentMonth, day);
             const shiftType = getShiftForDay(date, shift);
@@ -599,7 +599,7 @@
           const dayCell = document.createElement('div');
           dayCell.className = 'day-cell';
           
-          const day = row * 4 + col + 1;
+          const day = (3 - col) * 8 + row + 1;
           if (day <= daysInMonth) {
             const date = new Date(currentYear, currentMonth, day);
             dayCell.textContent = String(day).padStart(2, '0');
