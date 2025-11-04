@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Vacation Planner v1.7 - Fixed delete button, improved conflict display, full mobile support -->
+<!-- Vacation Planner v1.8 - Fixed mobile leave cards layout and delete button -->
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
@@ -491,17 +491,41 @@
         padding: 8px;
       }
       
-      .leave-card {
-        padding: 10px;
-      }
-      
-      .leave-dates {
-        font-size: 12px;
-      }
-      
-      .leave-shift {
-        font-size: 10px;
-      }
+    .leave-card {
+      padding: 10px;
+    }
+    
+    .leave-item {
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 12px;
+    }
+    
+    .leave-info {
+      width: 100%;
+      margin-bottom: 10px;
+    }
+    
+    .leave-dates {
+      font-size: 13px;
+      word-wrap: break-word;
+    }
+    
+    .leave-shift-type {
+      font-size: 11px;
+      white-space: normal;
+      word-wrap: break-word;
+    }
+    
+    .leave-shift {
+      font-size: 10px;
+    }
+    
+    .btn-danger {
+      width: 100%;
+      padding: 10px;
+      font-size: 14px;
+    }
       
       .alert {
         padding: 10px;
@@ -763,7 +787,7 @@
 <body>
   <!-- Navigation Bar -->
   <div class="nav-bar">
-    <div class="nav-logo">🏖️ مخطط الإجازات - Vacation Planner v1.7</div>
+    <div class="nav-logo">🏖️ مخطط الإجازات - Vacation Planner v1.8</div>
     <div class="nav-links">
       <a href="pbcr-calculator.html" class="nav-link">🛢️ PBCR</a>
       <a href="plcr.html" class="nav-link">⚗️ PLCR</a>
@@ -1501,11 +1525,19 @@
               ${leave.shift} Shift: ${leave.startShiftType} → ${leave.endShiftType}
             </div>
           </div>
-          <button class="btn btn-danger" onclick="deleteLeave(${leave.id})" style="padding: 8px 16px; font-size: 14px;">
+          <button class="btn btn-danger delete-leave-btn" data-id="${leave.id}" style="padding: 8px 16px; font-size: 14px;">
             🗑️ حذف
           </button>
         </div>
       `).join('');
+      
+      // Add event listeners to delete buttons
+      document.querySelectorAll('.delete-leave-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const leaveId = btn.getAttribute('data-id');
+          deleteLeave(leaveId);
+        });
+      });
     }
     
     function resetForm() {
@@ -1787,7 +1819,7 @@
     }
     
     // ========== INITIALIZE ==========
-    console.log('%c🏖️ VACATION PLANNER v1.7', 'color:#4CAF50;font-size:20px;font-weight:bold');
+    console.log('%c🏖️ VACATION PLANNER v1.8', 'color:#4CAF50;font-size:20px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
   </script>
   
