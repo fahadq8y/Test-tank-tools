@@ -81,7 +81,8 @@
       border-radius: 8px;
       min-width: 180px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      z-index: 99999;
+      z-index: 10000;
+      border: 1px solid rgba(255,255,255,0.2);
     }
     
     .theme-dropdown.show {
@@ -149,6 +150,8 @@
       margin-bottom: 20px;
       flex-wrap: wrap;
       gap: 15px;
+      position: relative;
+      z-index: 1000;
     }
     
     .nav-logo {
@@ -1181,6 +1184,58 @@
   </div>
   
   <script>
+    // ========== FONT SIZE FUNCTIONS ==========
+    window.currentFontSize = 100; // percentage
+    
+    window.increaseFontSize = function() {
+      console.log('Increasing font size from:', window.currentFontSize);
+      if (window.currentFontSize < 150) {
+        window.currentFontSize += 10;
+        window.applyFontSize();
+        window.saveFontSize();
+        console.log('Font size increased to:', window.currentFontSize);
+      } else {
+        console.log('Maximum font size reached (150%)');
+      }
+    }
+    
+    window.decreaseFontSize = function() {
+      console.log('Decreasing font size from:', window.currentFontSize);
+      if (window.currentFontSize > 70) {
+        window.currentFontSize -= 10;
+        window.applyFontSize();
+        window.saveFontSize();
+        console.log('Font size decreased to:', window.currentFontSize);
+      } else {
+        console.log('Minimum font size reached (70%)');
+      }
+    }
+    
+    window.applyFontSize = function() {
+      document.documentElement.style.fontSize = window.currentFontSize + '%';
+      console.log('Applied font size:', window.currentFontSize + '%');
+    }
+    
+    window.saveFontSize = function() {
+      localStorage.setItem('fontSize', window.currentFontSize);
+      console.log('Saved font size to localStorage:', window.currentFontSize);
+    }
+    
+    window.loadFontSize = function() {
+      const savedSize = localStorage.getItem('fontSize');
+      if (savedSize) {
+        window.currentFontSize = parseInt(savedSize);
+        window.applyFontSize();
+        console.log('Loaded font size from localStorage:', window.currentFontSize);
+      } else {
+        console.log('No saved font size, using default: 100%');
+      }
+    }
+    
+    // Load saved font size on page load
+    window.loadFontSize();
+    console.log('✅ Font Controls initialized');
+    
     // ========== CONSTANTS ==========
     // EXACT SAME LOGIC AS shift-roster.html v8.4
     const START_DATE = new Date(2025, 9, 31); // Oct 31, 2025
@@ -2088,44 +2143,6 @@
         `;
       }
     }
-    
-    // ========== FONT SIZE FUNCTIONS ==========
-    window.currentFontSize = 100; // percentage
-    
-    window.increaseFontSize = function() {
-      if (window.currentFontSize < 150) {
-        window.currentFontSize += 10;
-        window.applyFontSize();
-        window.saveFontSize();
-      }
-    }
-    
-    window.decreaseFontSize = function() {
-      if (window.currentFontSize > 70) {
-        window.currentFontSize -= 10;
-        window.applyFontSize();
-        window.saveFontSize();
-      }
-    }
-    
-    window.applyFontSize = function() {
-      document.documentElement.style.fontSize = window.currentFontSize + '%';
-    }
-    
-    window.saveFontSize = function() {
-      localStorage.setItem('fontSize', window.currentFontSize);
-    }
-    
-    window.loadFontSize = function() {
-      const savedSize = localStorage.getItem('fontSize');
-      if (savedSize) {
-        window.currentFontSize = parseInt(savedSize);
-        window.applyFontSize();
-      }
-    }
-    
-    // Load saved font size on page load
-    window.loadFontSize();
     
     // ========== THEME FUNCTIONS ==========
     function toggleThemeDropdown() {
