@@ -1,122 +1,12 @@
 <!DOCTYPE html>
-<!-- Shift Roster v4.2 - Clean Layout -->
+<!-- Shift Roster v5.0 - Exact Match Design -->
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>الورديات - Shift Roster</title>
   <link href="icon.png" rel="icon" type="image/png"/>
-  <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#C41E3A">
-  <script src="permissions.js"></script>
   <style>
-    /* === CSS Variables & Themes === */
-    :root {
-      --primary: #B8860B;
-      --secondary: #8B4513;
-      --accent: #CD853F;
-      --text: #FFD700;
-    }
-    
-    [data-theme="ocean"] {
-      --primary: #1e3a5f;
-      --secondary: #2c5f8d;
-      --accent: #4a90c4;
-      --text: #87CEEB;
-    }
-    
-    [data-theme="dark"] {
-      --primary: #2c2c2c;
-      --secondary: #1a1a1a;
-      --accent: #ff6b35;
-      --text: #ff6b35;
-    }
-    
-    [data-theme="sunset"] {
-      --primary: #ff6b35;
-      --secondary: #f7931e;
-      --accent: #ffd700;
-      --text: #ffd700;
-    }
-    
-    [data-theme="forest"] {
-      --primary: #2d5016;
-      --secondary: #4a7c59;
-      --accent: #6b9b37;
-      --text: #90EE90;
-    }
-    
-    /* Theme Switcher */
-    .theme-switcher {
-      position: relative;
-      display: inline-block;
-    }
-    
-    .theme-btn {
-      background: rgba(255,255,255,0.1);
-      border: 1px solid rgba(255,255,255,0.3);
-      color: white;
-      padding: 10px 15px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 20px;
-      transition: all 0.3s ease;
-      min-width: 48px;
-      min-height: 48px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    
-    .theme-btn:hover {
-      background: rgba(255,255,255,0.2);
-      transform: translateY(-1px);
-    }
-    
-    .theme-dropdown {
-      display: none;
-      position: absolute;
-      top: 100%;
-      right: 0;
-      margin-top: 5px;
-      background: rgba(0,0,0,0.9);
-      border-radius: 8px;
-      min-width: 180px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      z-index: 1000;
-    }
-    
-    .theme-dropdown.show {
-      display: block;
-      animation: slideDown 0.3s ease;
-    }
-    
-    .theme-option {
-      padding: 10px 15px;
-      cursor: pointer;
-      color: white;
-      transition: all 0.2s ease;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-    }
-    
-    .theme-option:last-child {
-      border-bottom: none;
-    }
-    
-    .theme-option:hover {
-      background: rgba(255,255,255,0.1);
-    }
-    
-    .theme-option.active {
-      background: var(--primary);
-      font-weight: bold;
-    }
-    
-    @keyframes slideDown {
-      from { opacity: 0; transform: translateY(-10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    
     * {
       margin: 0;
       padding: 0;
@@ -125,367 +15,200 @@
     
     body {
       font-family: Arial, sans-serif;
-      background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('background.jpg');
-      background-size: cover;
-      background-position: center;
-      background-attachment: fixed;
-      color: white;
-      direction: rtl;
-      min-height: 100vh;
-      padding: 20px;
+      background: #f5f5f5;
+      overflow: hidden;
     }
     
-    /* Navigation Bar */
-    .nav-bar {
+    /* Header */
+    .header {
+      background: #C41E3A;
+      color: white;
+      padding: 15px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 10px 20px;
-      background: rgba(0,0,0,0.5);
-      border-radius: 10px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
     }
     
-    .nav-logo {
+    .header-title {
       font-size: 24px;
       font-weight: bold;
-      color: white;
     }
     
-    .nav-links {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-    
-    .nav-link {
-      color: white;
-      text-decoration: none;
-      padding: 8px 16px;
-      border-radius: 8px;
-      transition: all 0.3s ease;
-      background: rgba(255,255,255,0.1);
-      font-weight: 500;
-      border: 1px solid rgba(255,255,255,0.2);
-    }
-    
-    .nav-link:hover {
-      background: rgba(255,255,255,0.2);
-      transform: translateY(-1px);
-    }
-    
-    /* Container */
-    .container {
-      max-width: 900px;
-      margin: 0 auto;
-      background: rgba(255,255,255,0.1);
-      border-radius: 20px;
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255,255,255,0.2);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-      padding: 20px;
+    .notification-icon {
+      font-size: 24px;
+      cursor: pointer;
     }
     
     /* Month Navigation */
     .month-nav {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      background: white;
       padding: 20px;
-      background: rgba(255,255,255,0.05);
-      border-radius: 10px;
-      margin-bottom: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 40px;
     }
     
     .month-nav button {
-      background: rgba(255,255,255,0.1);
-      border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 8px;
+      background: none;
+      border: none;
       font-size: 32px;
-      color: white;
+      color: #999;
       cursor: pointer;
-      padding: 5px 15px;
-      transition: all 0.3s;
+      padding: 10px 20px;
     }
     
     .month-nav button:hover {
-      background: rgba(255,255,255,0.2);
-      transform: scale(1.05);
+      color: #C41E3A;
     }
     
     .month-display {
+      font-size: 28px;
+      color: #C41E3A;
+      font-weight: bold;
+    }
+    
+    /* Main Container */
+    .main-container {
+      display: flex;
+      height: calc(100vh - 200px);
+      background: white;
+      overflow: hidden;
+    }
+    
+    /* Left Section - Days */
+    .days-section {
+      flex: 0 0 40%;
+      padding: 20px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(8, 1fr);
+      gap: 10px;
+      align-content: start;
+    }
+    
+    .day-cell {
+      display: flex;
+      align-items: center;
+      justify-content: center;
       font-size: 20px;
+      color: #999;
+      position: relative;
+    }
+    
+    .day-cell.current {
+      background: #C41E3A;
       color: white;
-      font-weight: 600;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      font-weight: bold;
     }
     
-    /* Roster Table */
-    .roster-container {
-      padding: 0 20px 20px 20px;
+    .day-cell.friday::after {
+      content: 'F';
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      font-size: 12px;
+      color: #C41E3A;
+      font-weight: bold;
     }
     
-    .roster-table {
-      width: 100%;
-      border-collapse: collapse;
+    /* Right Section - Shifts */
+    .shifts-section {
+      flex: 0 0 60%;
+      background: #C41E3A;
+      display: flex;
+      flex-direction: column;
     }
     
     /* Shift Headers */
     .shift-headers {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 0;
-      margin-bottom: 0;
+      background: #C41E3A;
+      border-bottom: 2px solid rgba(255,255,255,0.3);
     }
     
     .shift-header {
-      background: rgba(196, 30, 58, 0.8);
-      color: white;
-      text-align: center;
       padding: 15px;
-      font-size: 20px;
+      text-align: center;
+      color: white;
+      font-size: 22px;
       font-weight: bold;
-      border: 1px solid rgba(255,255,255,0.2);
-      backdrop-filter: blur(5px);
     }
     
-    /* Calendar Grid - Horizontal Rows */
-    .calendar-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 0;
+    /* Shift Grid */
+    .shift-grid {
+      flex: 1;
+      display: grid;
+      grid-template-rows: repeat(8, 1fr);
+      overflow: hidden;
     }
     
-    .day-row {
+    .shift-row {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 0;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
     }
     
-    .day-cell {
+    .shift-cell {
+      display: flex;
+      align-items: center;
+      justify-content: center;
       color: white;
+      font-size: 28px;
+      font-weight: bold;
+      border-right: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .shift-cell:last-child {
+      border-right: none;
+    }
+    
+    /* Footer */
+    .footer {
+      background: white;
+      padding: 15px 20px;
       text-align: center;
-      padding: 20px 10px;
-      font-size: 18px;
-      font-weight: 500;
-      border: 1px solid rgba(255,255,255,0.1);
-      min-height: 70px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      transition: all 0.3s ease;
     }
     
-    .day-cell:hover {
-      transform: scale(1.05);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      z-index: 10;
-    }
-    
-    /* Shift Type Colors - Using Theme Variables */
-    .day-cell.shift-morning {
-      background: linear-gradient(135deg, var(--primary), var(--accent));
-    }
-    
-    .day-cell.shift-afternoon {
-      background: linear-gradient(135deg, var(--accent), var(--text));
-    }
-    
-    .day-cell.shift-night {
-      background: linear-gradient(135deg, var(--secondary), var(--primary));
-    }
-    
-    .day-cell.shift-off {
-      background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1));
-    }
-    
-    .day-number {
-      position: absolute;
-      top: 5px;
-      right: 5px;
-      font-size: 11px;
-      color: rgba(255,255,255,0.7);
-      background: rgba(0,0,0,0.2);
-      padding: 2px 6px;
-      border-radius: 4px;
-    }
-    
-    .day-name {
-      font-size: 10px;
-      color: rgba(255,255,255,0.6);
-      margin-top: 2px;
-    }
-    
-    .shift-icon {
-      font-size: 20px;
-      margin-bottom: 5px;
-    }
-    
-    .day-cell.current {
-      font-weight: bold;
-      box-shadow: inset 0 0 0 3px rgba(255,255,255,0.8), 0 0 20px rgba(255,255,255,0.5);
-      animation: pulse 2s infinite;
-    }
-    
-    @keyframes pulse {
-      0%, 100% { box-shadow: inset 0 0 0 3px rgba(255,255,255,0.8), 0 0 20px rgba(255,255,255,0.5); }
-      50% { box-shadow: inset 0 0 0 3px rgba(255,255,255,1), 0 0 30px rgba(255,255,255,0.8); }
-    }
-    
-    .day-cell.friday .day-number::after {
-      content: 'F';
-      margin-right: 3px;
-      color: rgba(255,215,0,0.8);
-      font-weight: bold;
-    }
-    
-    /* Legend */
-    .legend {
-      display: flex;
-      justify-content: center;
-      gap: 15px;
-      padding: 20px;
-      background: rgba(255,255,255,0.05);
-      border-radius: 10px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-    }
-    
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 15px;
-      background: rgba(255,255,255,0.1);
-      border-radius: 8px;
-      border: 1px solid rgba(255,255,255,0.2);
-    }
-    
-    .legend-color {
-      width: 30px;
-      height: 30px;
-      border-radius: 6px;
-      border: 1px solid rgba(255,255,255,0.3);
-    }
-    
-    .legend-color.morning {
-      background: linear-gradient(135deg, var(--primary), var(--accent));
-    }
-    
-    .legend-color.afternoon {
-      background: linear-gradient(135deg, var(--accent), var(--text));
-    }
-    
-    .legend-color.night {
-      background: linear-gradient(135deg, var(--secondary), var(--primary));
-    }
-    
-    .legend-color.off {
-      background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1));
-    }
-    
-    .legend-text {
-      color: white;
-      font-size: 14px;
-      font-weight: 500;
-    }
-    
-    /* Date Display */
     .date-display {
-      text-align: center;
-      padding: 20px;
+      color: #C41E3A;
       font-size: 18px;
-      color: #00ffff;
-      font-weight: 600;
+      font-weight: bold;
+      margin-bottom: 10px;
     }
     
-    /* No Events */
     .no-events {
-      text-align: center;
-      padding: 40px 20px;
-      color: rgba(255,255,255,0.5);
+      color: #999;
       font-size: 16px;
-    }
-    
-    /* Responsive Design */
-    @media (max-width: 768px) {
-      .month-nav button {
-        font-size: 20px;
-      }
-      
-      .month-display {
-        font-size: 18px;
-      }
-      
-      .shift-header {
-        font-size: 16px;
-        padding: 10px;
-      }
-      
-      .day-cell {
-        font-size: 16px;
-        padding: 15px 5px;
-        min-height: 60px;
-      }
-      
-      .day-number {
-        font-size: 10px;
-      }
     }
   </style>
 </head>
 <body>
-  <div class="nav-bar">
-    <div class="nav-logo">📅 الورديات - Shift Roster v4.2</div>
-    <div class="nav-links">
-      <a href="pbcr-calculator.html" class="nav-link">🛢️ PBCR</a>
-      <a href="plcr.html" class="nav-link">⚗️ PLCR</a>
-      <a href="live-tanks.html" class="nav-link">🔴 Live Tanks</a>
-      <a href="dashboard.html" class="nav-link">📊 Dashboard</a>
-      <div class="theme-switcher">
-        <button class="theme-btn" onclick="toggleThemeDropdown()" title="تغيير الثيم">🎨</button>
-        <div class="theme-dropdown" id="themeDropdown">
-          <div class="theme-option" data-theme="industrial" onclick="setTheme('industrial')">🏭 Industrial Bronze</div>
-          <div class="theme-option" data-theme="ocean" onclick="setTheme('ocean')">🌊 Ocean Blue</div>
-          <div class="theme-option" data-theme="dark" onclick="setTheme('dark')">⚫ Dark Carbon</div>
-          <div class="theme-option" data-theme="sunset" onclick="setTheme('sunset')">🌅 Sunset Amber</div>
-          <div class="theme-option" data-theme="forest" onclick="setTheme('forest')">🌲 Forest Green</div>
-        </div>
-      </div>
-    </div>
+  <!-- Header -->
+  <div class="header">
+    <div class="notification-icon">🔔</div>
+    <div class="header-title">الورديات</div>
   </div>
   
-  <div class="container">
-    <div class="month-nav">
-      <button onclick="previousMonth()">❮</button>
-      <div class="month-display" id="monthDisplay">11 / 2025</div>
-      <button onclick="nextMonth()">❯</button>
-    </div>
+  <!-- Month Navigation -->
+  <div class="month-nav">
+    <button onclick="previousMonth()">❮</button>
+    <div class="month-display" id="monthDisplay">2025 / 11</div>
+    <button onclick="nextMonth()">❯</button>
+  </div>
+  
+  <!-- Main Container -->
+  <div class="main-container">
+    <!-- Left Section - Days -->
+    <div class="days-section" id="daysSection"></div>
     
-    <div class="roster-container">
-      <!-- Legend -->
-      <div class="legend">
-        <div class="legend-item">
-          <div class="legend-color morning"></div>
-          <span class="legend-text">🌅 Morning (M)</span>
-        </div>
-        <div class="legend-item">
-          <div class="legend-color afternoon"></div>
-          <span class="legend-text">☀️ Afternoon (A)</span>
-        </div>
-        <div class="legend-item">
-          <div class="legend-color night"></div>
-          <span class="legend-text">🌙 Night (N)</span>
-        </div>
-        <div class="legend-item">
-          <div class="legend-color off"></div>
-          <span class="legend-text">🏖️ Off (O)</span>
-        </div>
-      </div>
-      
+    <!-- Right Section - Shifts -->
+    <div class="shifts-section">
+      <!-- Shift Headers -->
       <div class="shift-headers">
         <div class="shift-header">A</div>
         <div class="shift-header">B</div>
@@ -493,51 +216,43 @@
         <div class="shift-header">D</div>
       </div>
       
-      <div class="calendar-grid" id="calendarGrid">
-        <!-- Will be populated by JavaScript -->
-      </div>
+      <!-- Shift Grid -->
+      <div class="shift-grid" id="shiftGrid"></div>
     </div>
-    
+  </div>
+  
+  <!-- Footer -->
+  <div class="footer">
     <div class="date-display" id="dateDisplay">3 نوفمبر 2025</div>
-    
     <div class="no-events">No Events</div>
   </div>
   
-  
-  <script type="module">
-    // Shift Roster System
-    // Start date: October 31, 2025 (Day 0)
-    const START_DATE = new Date(2025, 9, 31); // Month is 0-indexed
-    
-    // Shift pattern (8-day cycle): A, A, N, N, O, O, M, M
-    const PATTERN = ['A', 'A', 'N', 'N', 'O', 'O', 'M', 'M'];
-    
-    // Shift offsets
-    const SHIFT_OFFSETS = {
-      'A': 0,  // Starts with Afternoon
-      'B': 4,  // Starts with Off
-      'C': 2,  // Starts with Night
-      'D': 6   // Starts with Morning
-    };
-    
-    // Current month/year
+  <script>
+    // Current date
     let currentMonth = 10; // November (0-indexed)
     let currentYear = 2025;
     
-    // Calculate shift for a specific day and shift letter
-    function getShiftForDay(date, shiftLetter) {
-      const daysDiff = Math.floor((date - START_DATE) / (1000 * 60 * 60 * 24));
-      const offset = SHIFT_OFFSETS[shiftLetter];
-      const index = (daysDiff + offset) % 8;
+    // Shift system
+    const START_DATE = new Date(2025, 9, 31); // Oct 31, 2025
+    const PATTERN = ['A', 'A', 'N', 'N', 'O', 'O', 'M', 'M'];
+    const SHIFT_OFFSETS = {
+      'A': 0,
+      'B': 4,
+      'C': 2,
+      'D': 6
+    };
+    
+    function getShiftForDay(date, shift) {
+      const diffTime = date - START_DATE;
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      const index = (diffDays + SHIFT_OFFSETS[shift]) % 8;
       return PATTERN[index];
     }
     
-    // Check if date is Friday
     function isFriday(date) {
-      return date.getDay() === 5; // Friday
+      return date.getDay() === 5;
     }
     
-    // Check if date is today
     function isToday(date) {
       const today = new Date();
       return date.getDate() === today.getDate() &&
@@ -545,80 +260,63 @@
              date.getFullYear() === today.getFullYear();
     }
     
-    // Render calendar
     function renderCalendar() {
-      const grid = document.getElementById('calendarGrid');
-      grid.innerHTML = '';
+      const daysSection = document.getElementById('daysSection');
+      const shiftGrid = document.getElementById('shiftGrid');
       
-      // Get days in month
+      daysSection.innerHTML = '';
+      shiftGrid.innerHTML = '';
+      
       const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
       
-      const shifts = ['A', 'B', 'C', 'D'];
-      
-      // Create a row for each day
-      for (let day = 1; day <= daysInMonth; day++) {
-        const date = new Date(currentYear, currentMonth, day);
-        const row = document.createElement('div');
-        row.className = 'day-row';
+      // Render days (4 columns × 8 rows = 32 cells)
+      for (let i = 1; i <= 32; i++) {
+        const dayCell = document.createElement('div');
+        dayCell.className = 'day-cell';
         
-        // Create 4 cells for each shift (A, B, C, D)
-        shifts.forEach(shift => {
-          const cell = document.createElement('div');
-          cell.className = 'day-cell';
+        if (i <= daysInMonth) {
+          const date = new Date(currentYear, currentMonth, i);
+          dayCell.textContent = String(i).padStart(2, '0');
           
           if (isToday(date)) {
-            cell.classList.add('current');
+            dayCell.classList.add('current');
           }
           
           if (isFriday(date)) {
-            cell.classList.add('friday');
+            dayCell.classList.add('friday');
+          }
+        }
+        
+        daysSection.appendChild(dayCell);
+      }
+      
+      // Render shifts (8 rows)
+      for (let row = 0; row < 8; row++) {
+        const shiftRow = document.createElement('div');
+        shiftRow.className = 'shift-row';
+        
+        const shifts = ['A', 'B', 'C', 'D'];
+        shifts.forEach(shift => {
+          const shiftCell = document.createElement('div');
+          shiftCell.className = 'shift-cell';
+          
+          const day = row + 1;
+          if (day <= daysInMonth) {
+            const date = new Date(currentYear, currentMonth, day);
+            const shiftType = getShiftForDay(date, shift);
+            shiftCell.textContent = shiftType;
           }
           
-          const shiftType = getShiftForDay(date, shift);
-          
-          // Add shift type class for colors
-          if (shiftType === 'M') {
-            cell.classList.add('shift-morning');
-          } else if (shiftType === 'A') {
-            cell.classList.add('shift-afternoon');
-          } else if (shiftType === 'N') {
-            cell.classList.add('shift-night');
-          } else if (shiftType === 'O') {
-            cell.classList.add('shift-off');
-          }
-          
-          // Get day name
-          const dayNames = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-          const dayName = dayNames[date.getDay()];
-          
-          // Get shift icon
-          const shiftIcons = {
-            'M': '🌅',
-            'A': '☀️',
-            'N': '🌙',
-            'O': '🏖️'
-          };
-          const icon = shiftIcons[shiftType];
-          
-          cell.innerHTML = `
-            <span class="day-number">${String(day).padStart(2, '0')}</span>
-            <span class="shift-icon">${icon}</span>
-            <span>${shiftType}</span>
-            <span class="day-name">${dayName}</span>
-          `;
-          
-          row.appendChild(cell);
+          shiftRow.appendChild(shiftCell);
         });
         
-        grid.appendChild(row);
+        shiftGrid.appendChild(shiftRow);
       }
       
       // Update month display
-      const monthNames = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 
-                         'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
-      document.getElementById('monthDisplay').textContent = `${currentMonth + 1} / ${currentYear}`;
+      document.getElementById('monthDisplay').textContent = `${currentYear} / ${currentMonth + 1}`;
       
-      // Update date display (show today's date)
+      // Update date display
       const today = new Date();
       const arabicMonths = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 
                            'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
@@ -626,71 +324,28 @@
         `${today.getDate()} ${arabicMonths[today.getMonth()]} ${today.getFullYear()}`;
     }
     
-    // Navigation functions
-    window.previousMonth = function() {
+    function previousMonth() {
       currentMonth--;
       if (currentMonth < 0) {
         currentMonth = 11;
         currentYear--;
       }
       renderCalendar();
-    };
+    }
     
-    window.nextMonth = function() {
+    function nextMonth() {
       currentMonth++;
       if (currentMonth > 11) {
         currentMonth = 0;
         currentYear++;
       }
       renderCalendar();
-    };
-    
-    window.showNotifications = function() {
-      alert('لا توجد إشعارات جديدة');
-    };
-    
-    // === Theme Switching Functions ===
-    window.setTheme = function(theme) {
-      document.documentElement.setAttribute('data-theme', theme === 'industrial' ? '' : theme);
-      localStorage.setItem('selectedTheme', theme);
-      updateActiveTheme(theme);
-      console.log('🎨 Theme changed to:', theme);
-      // Close dropdown
-      document.getElementById('themeDropdown').classList.remove('show');
-    };
-    
-    window.toggleThemeDropdown = function() {
-      document.getElementById('themeDropdown').classList.toggle('show');
-    };
-    
-    function updateActiveTheme(theme) {
-      document.querySelectorAll('.theme-option').forEach(opt => {
-        opt.classList.remove('active');
-        if (opt.getAttribute('data-theme') === theme) {
-          opt.classList.add('active');
-        }
-      });
     }
-    
-    function loadSavedTheme() {
-      const savedTheme = localStorage.getItem('selectedTheme') || 'industrial';
-      setTheme(savedTheme);
-      console.log('🎨 Loaded saved theme:', savedTheme);
-    }
-    
-    // Close dropdown when clicking outside
-    document.addEventListener('click', function(event) {
-      const themeSwitcher = document.querySelector('.theme-switcher');
-      if (themeSwitcher && !themeSwitcher.contains(event.target)) {
-        document.getElementById('themeDropdown').classList.remove('show');
-      }
-    });
     
     // Initialize
     renderCalendar();
-    loadSavedTheme();
     
-    console.log('%c📅 SHIFT ROSTER v4.2 - Clean Layout', 'color:#FFD700;font-size:20px;font-weight:bold');
+    console.log('%c📅 SHIFT ROSTER v5.0 - Exact Match Design', 'color:#C41E3A;font-size:20px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
   </script>
 </body>
