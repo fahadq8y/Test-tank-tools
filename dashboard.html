@@ -9,6 +9,120 @@
   <meta name="theme-color" content="#003366">
   <script src="permissions.js"></script>
   <style>
+    /* === CSS Variables & Themes === */
+    :root {
+      --primary: #B8860B;
+      --secondary: #8B4513;
+      --accent: #CD853F;
+      --text: #FFD700;
+    }
+    
+    [data-theme="ocean"] {
+      --primary: #1e3a5f;
+      --secondary: #2c5f8d;
+      --accent: #4a90c4;
+      --text: #87CEEB;
+    }
+    
+    [data-theme="dark"] {
+      --primary: #2c2c2c;
+      --secondary: #1a1a1a;
+      --accent: #ff6b35;
+      --text: #ff6b35;
+    }
+    
+    [data-theme="sunset"] {
+      --primary: #ff6b35;
+      --secondary: #f7931e;
+      --accent: #ffd700;
+      --text: #ffd700;
+    }
+    
+    [data-theme="forest"] {
+      --primary: #2d5016;
+      --secondary: #4a7c59;
+      --accent: #6b9b37;
+      --text: #90EE90;
+    }
+    
+    /* Theme Switcher */
+    .theme-switcher {
+      position: relative;
+      display: inline-block;
+    }
+    
+    .theme-btn {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 18px;
+      transition: all 0.3s ease;
+      min-width: 36px;
+      min-height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .theme-btn:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-1px);
+    }
+    
+    .theme-dropdown {
+      display: none;
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 5px;
+      background: rgba(0,0,0,0.9);
+      border-radius: 8px;
+      min-width: 180px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      z-index: 10000;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    .theme-dropdown.show {
+      display: block;
+      animation: slideDown 0.3s ease;
+    }
+    
+    .theme-option {
+      padding: 10px 15px;
+      cursor: pointer;
+      color: white;
+      transition: all 0.2s ease;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .theme-option:last-child {
+      border-bottom: none;
+    }
+    
+    .theme-option:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    
+    .theme-option.active {
+      background: var(--primary);
+      font-weight: bold;
+    }
+    
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
     *{margin:0;padding:0;box-sizing:border-box}body{background:linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.5)),url('background.jpg');background-size:cover;background-position:center;background-attachment:fixed;font-family:Arial,sans-serif;min-height:100vh;color:white}
     .header{background:rgba(0,51,102,0.9);padding:15px 20px;display:flex;justify-content:space-between;align-items:center;backdrop-filter:blur(10px);box-shadow:0 2px 10px rgba(0,0,0,0.3)}
     .logo{font-size:1.8rem;font-weight:bold;background:linear-gradient(45deg,#FFD700,#FFA500);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
@@ -160,6 +274,16 @@
           <div class="font-controls">
             <button class="font-btn" onclick="decreaseFontSize()" title="تصغير الخط">-</button>
             <button class="font-btn" onclick="increaseFontSize()" title="تكبير الخط">+</button>
+          </div>
+          <div class="theme-switcher">
+            <button class="theme-btn" onclick="toggleThemeDropdown()" title="Change Theme">🎨</button>
+            <div class="theme-dropdown" id="themeDropdown">
+              <div class="theme-option active" data-theme="industrial" onclick="setTheme('industrial')">🏭 Industrial Bronze</div>
+              <div class="theme-option" data-theme="ocean" onclick="setTheme('ocean')">🌊 Ocean Blue</div>
+              <div class="theme-option" data-theme="dark" onclick="setTheme('dark')">⚫ Dark Carbon</div>
+              <div class="theme-option" data-theme="sunset" onclick="setTheme('sunset')">🌅 Sunset Amber</div>
+              <div class="theme-option" data-theme="forest" onclick="setTheme('forest')">🌲 Forest Green</div>
+            </div>
           </div>
           <button class="logout-btn" onclick="logout()">🚪 Logout</button>
         </div>
@@ -659,6 +783,52 @@
   </script>
 
   <script>
+    // ========== THEME FUNCTIONS ==========
+    function toggleThemeDropdown() {
+      const dropdown = document.getElementById('themeDropdown');
+      dropdown.classList.toggle('show');
+    }
+    
+    function setTheme(themeName) {
+      // Remove active class from all options
+      document.querySelectorAll('.theme-option').forEach(opt => opt.classList.remove('active'));
+      
+      // Add active class to selected option
+      const selectedOption = document.querySelector(`[data-theme="${themeName}"]`);
+      if (selectedOption) {
+        selectedOption.classList.add('active');
+      }
+      
+      // Apply theme to html element
+      document.documentElement.setAttribute('data-theme', themeName);
+      
+      // Save to localStorage
+      localStorage.setItem('selectedTheme', themeName);
+      
+      // Close dropdown
+      document.getElementById('themeDropdown').classList.remove('show');
+      
+      console.log('Theme changed to:', themeName);
+    }
+    
+    // Load saved theme on page load
+    function loadTheme() {
+      const savedTheme = localStorage.getItem('selectedTheme') || 'industrial';
+      setTheme(savedTheme);
+    }
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(event) {
+      const themeSwitcher = document.querySelector('.theme-switcher');
+      if (themeSwitcher && !themeSwitcher.contains(event.target)) {
+        document.getElementById('themeDropdown').classList.remove('show');
+      }
+    });
+    
+    // Load theme on page load
+    loadTheme();
+    console.log('✅ Theme Switcher initialized');
+    
     let currentUser = null;
     let currentEditingUser = null;
     let allUsers = [];
@@ -3623,7 +3793,7 @@ Report End
   </script>
 
   <footer style="text-align:center;padding:20px;background:rgba(0,0,0,0.3);color:white;margin-top:30px">
-    By <a href="#" class="whatsapp-link" onclick="openWhatsApp(); return false;">Fahad - 17877</a> – Version v5.1 - Auth Fixed
+    By <a href="#" class="whatsapp-link" onclick="openWhatsApp(); return false;">Fahad - 17877</a> – Version v5.2 - Added Theme Switcher
     <br><small style="color:#999;font-size:10px;margin-top:5px;display:block">📱 WhatsApp: +965 55222550</small>
   </footer>
 
