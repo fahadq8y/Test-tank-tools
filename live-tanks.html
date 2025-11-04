@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Live Tanks v7.1 - Unified Header from vacation-planner -->
+<!-- Live Tanks v7.2 - Fixed JavaScript nav-user to user-info -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -212,7 +212,7 @@
     @media (max-width:768px){
       .nav-bar{flex-direction:column;gap:15px;padding:15px}
       .nav-links{order:1;justify-content:center;width:100%}
-      .nav-user{order:2;width:100%;justify-content:space-between}
+      .user-info{order:2;width:100%;justify-content:space-between}
       .page-title{font-size:2rem}
       .tanks-table{font-size:11px}
       .tanks-table th,.tanks-table td{padding:8px 4px}
@@ -257,7 +257,7 @@
   <div id="mainContent">
     <!-- Navigation -->
     <div class="nav-bar">
-      <div class="nav-logo">🔴 Live Tanks v7.1</div>
+      <div class="nav-logo">🔴 Live Tanks v7.2</div>
       <div class="nav-links">
         <a href="index.html" class="nav-link">🛢️ PBCR</a>
         <a href="plcr.html" class="nav-link">⛗️ PLCR</a>
@@ -707,7 +707,7 @@
     window.getDocs = getDocs;
 
     console.log('🔥 Firebase initialized for Live Tanks!');
-    console.log('%c🔴 LIVE TANKS v7.1 - Unified Header', 'color:#ff4444;font-size:20px;font-weight:bold');
+    console.log('%c🔴 LIVE TANKS v7.2 - Fixed JavaScript', 'color:#ff4444;font-size:20px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
     
     const auth = getAuth(app);
