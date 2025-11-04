@@ -124,21 +124,136 @@
     }
     
     *{margin:0;padding:0;box-sizing:border-box}body{background:linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.5)),url('background.jpg');background-size:cover;background-position:center;background-attachment:fixed;font-family:Arial,sans-serif;min-height:100vh;color:white}
-    .header{background:rgba(0,51,102,0.9);padding:15px 20px;display:flex;justify-content:space-between;align-items:center;backdrop-filter:blur(10px);box-shadow:0 2px 10px rgba(0,0,0,0.3)}
-    .logo{font-size:1.8rem;font-weight:bold;background:linear-gradient(45deg,#FFD700,#FFA500);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-    .user-info{display:flex;align-items:center;gap:15px}
-    .user-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(45deg,#FFD700,#FFA500);display:flex;align-items:center;justify-content:center;font-weight:bold;color:#003366}
-    .nav-links{display:flex;gap:10px}
-    .nav-btn,.logout-btn{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.3);color:white;padding:8px 15px;border-radius:8px;cursor:pointer;transition:all 0.3s ease;text-decoration:none;font-size:14px}
-    .nav-btn:hover{background:rgba(255,255,255,0.2);transform:translateY(-2px)}
-    .logout-btn{background:rgba(255,0,0,0.2);border-color:rgba(255,0,0,0.5)}
-    .logout-btn:hover{background:rgba(255,0,0,0.4)}
-    .user-section{display:flex;flex-direction:column;gap:8px}
-    .user-top{display:flex;align-items:center;gap:10px}
-    .user-controls{display:flex;align-items:center;gap:10px;justify-content:space-between}
-    .font-controls{display:flex;gap:5px}
-    .font-btn{background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.3);color:white;padding:5px 10px;border-radius:5px;cursor:pointer;font-size:14px;font-weight:bold;transition:all 0.3s ease;min-width:30px}
-    .font-btn:hover{background:rgba(255,255,255,0.3);transform:translateY(-1px)}
+    /* Navigation Bar */
+    .nav-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 30px;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(10px);
+      border-bottom: 2px solid var(--primary);
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 15px;
+      position: relative;
+      z-index: 1000;
+    }
+    
+    .nav-logo {
+      font-size: 24px;
+      font-weight: bold;
+      color: var(--primary);
+    }
+    
+    .nav-links {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    
+    .nav-link {
+      color: white;
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      background: rgba(255,255,255,0.1);
+      font-weight: 500;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    .nav-link:hover {
+      background: var(--primary);
+      transform: translateY(-1px);
+    }
+    
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    /* Font Controls */
+    .font-controls {
+      display: flex;
+      gap: 5px;
+    }
+    
+    .font-btn {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: white;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      min-width: 32px;
+      min-height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .font-btn:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-1px);
+    }
+    
+    /* User Avatar */
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, var(--primary), var(--secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 14px;
+      color: white;
+      border: 2px solid var(--accent);
+    }
+    
+    .user-details {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    
+    .user-name {
+      background: rgba(255,255,255,0.1);
+      padding: 4px 10px;
+      border-radius: 5px;
+      border: 1px solid rgba(255,255,255,0.2);
+      font-size: 13px;
+      font-weight: bold;
+    }
+    
+    .user-email {
+      font-size: 11px;
+      opacity: 0.8;
+      padding: 2px 10px;
+    }
+    
+    .logout-btn {
+      background: rgba(255,0,0,0.3);
+      color: white;
+      border: 1px solid rgba(255,0,0,0.5);
+      padding: 6px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 14px;
+    }
+    
+    .logout-btn:hover {
+      background: rgba(255,0,0,0.5);
+      transform: translateY(-2px);
+    }
     .container{max-width:100%;margin:20px auto;padding:0 20px}
     .admin-banner{text-align:center;margin-bottom:30px;background:rgba(255,255,255,0.1);padding:20px;border-radius:15px;backdrop-filter:blur(10px)}
     .admin-badge{display:inline-block;background:linear-gradient(45deg,#FFD700,#FFA500);color:#003366;padding:8px 20px;border-radius:25px;font-weight:bold;margin-bottom:15px;font-size:1.1rem}
@@ -244,49 +359,97 @@
     .page-btn:not(.active){background:rgba(255,255,255,0.2);color:white;border:1px solid rgba(255,255,255,0.3)}
     .page-btn:hover:not(.active){background:rgba(255,255,255,0.3);transform:translateY(-1px)}
     .page-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+    
+    /* Mobile Responsive */
+    @media (max-width: 480px) {
+      .nav-bar {
+        padding: 8px 10px;
+      }
+      
+      .nav-logo {
+        font-size: 14px;
+        width: 100%;
+        text-align: center;
+        margin-bottom: 5px;
+      }
+      
+      .nav-link {
+        padding: 4px 6px;
+        font-size: 10px;
+      }
+      
+      .font-controls {
+        gap: 3px;
+      }
+      
+      .font-btn {
+        min-width: 28px;
+        min-height: 28px;
+        padding: 4px 8px;
+        font-size: 14px;
+      }
+      
+      .user-avatar {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+      }
+      
+      .user-name {
+        font-size: 11px;
+        padding: 3px 6px;
+      }
+      
+      .user-email {
+        font-size: 9px;
+      }
+      
+      .logout-btn {
+        padding: 4px 8px;
+        font-size: 11px;
+      }
+      
+      .theme-btn {
+        min-width: 28px;
+        min-height: 28px;
+        font-size: 14px;
+      }
+    }
   </style>
 </head>
 <body>
-  <div class="header">
-    <div class="logo">🔥 Firebase Admin Dashboard</div>
-    <div class="user-info">
-      <div class="nav-links">
-        <a href="index.html" class="nav-btn">📊 PBCR</a>
-        <a href="plcr.html" class="nav-btn">⚗️ PLCR</a>
-        <a href="NMOGASBL.html" class="nav-btn">🔧 NMOGAS</a>
-        <a href="live-tanks.html" class="nav-btn">🔴 Live Tanks</a>
-        <a href="shift-roster.html" class="nav-btn">📅 Shift Roster</a>
-        <a href="vacation-planner.html" class="nav-btn">🏖️ Vacation Planner</a>
-
-        <a href="tank-management.html" class="nav-btn" id="tank-management-link" style="display:none">🛢️ Tank Management</a>
-
-        <a href="#device-management" onclick="showDeviceManagement()" class="nav-btn" id="device-management-link" style="display:none">📱 Device Management</a>
-      </div>
-      <div class="user-section">
-        <div class="user-top">
-          <div class="user-avatar" id="userAvatar">F</div>
-          <div>
-            <div id="userName" style="font-weight:bold">Loading...</div>
-            <div id="userEmail" style="font-size:0.8rem;opacity:0.7">Loading...</div>
+  <!-- Navigation Bar -->
+  <div class="nav-bar">
+    <div class="nav-logo">🔥 Firebase Admin Dashboard v5.3</div>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">🛢️ PBCR</a>
+      <a href="plcr.html" class="nav-link">⚗️ PLCR</a>
+      <a href="live-tanks.html" class="nav-link">🔴 Live Tanks</a>
+      <a href="shift-roster.html" class="nav-link">📅 Shift Roster</a>
+      <a href="vacation-planner.html" class="nav-link">🏖️ Vacation Planner</a>
+      <a href="tank-management.html" class="nav-link" id="tank-management-link" style="display:none">🛢️ Tank Management</a>
+      <a href="#device-management" onclick="showDeviceManagement()" class="nav-link" id="device-management-link" style="display:none">📱 Device Management</a>
+      <div class="user-info">
+        <div class="font-controls">
+          <button class="font-btn" onclick="decreaseFontSize()" title="تصغير الخط">-</button>
+          <button class="font-btn" onclick="increaseFontSize()" title="تكبير الخط">+</button>
+        </div>
+        <div class="theme-switcher">
+          <button class="theme-btn" onclick="toggleThemeDropdown()" title="Change Theme">🎨</button>
+          <div class="theme-dropdown" id="themeDropdown">
+            <div class="theme-option active" data-theme="industrial" onclick="setTheme('industrial')">🏭 Industrial Bronze</div>
+            <div class="theme-option" data-theme="ocean" onclick="setTheme('ocean')">🌊 Ocean Blue</div>
+            <div class="theme-option" data-theme="dark" onclick="setTheme('dark')">⚫ Dark Carbon</div>
+            <div class="theme-option" data-theme="sunset" onclick="setTheme('sunset')">🌅 Sunset Amber</div>
+            <div class="theme-option" data-theme="forest" onclick="setTheme('forest')">🌲 Forest Green</div>
           </div>
         </div>
-        <div class="user-controls">
-          <div class="font-controls">
-            <button class="font-btn" onclick="decreaseFontSize()" title="تصغير الخط">-</button>
-            <button class="font-btn" onclick="increaseFontSize()" title="تكبير الخط">+</button>
-          </div>
-          <div class="theme-switcher">
-            <button class="theme-btn" onclick="toggleThemeDropdown()" title="Change Theme">🎨</button>
-            <div class="theme-dropdown" id="themeDropdown">
-              <div class="theme-option active" data-theme="industrial" onclick="setTheme('industrial')">🏭 Industrial Bronze</div>
-              <div class="theme-option" data-theme="ocean" onclick="setTheme('ocean')">🌊 Ocean Blue</div>
-              <div class="theme-option" data-theme="dark" onclick="setTheme('dark')">⚫ Dark Carbon</div>
-              <div class="theme-option" data-theme="sunset" onclick="setTheme('sunset')">🌅 Sunset Amber</div>
-              <div class="theme-option" data-theme="forest" onclick="setTheme('forest')">🌲 Forest Green</div>
-            </div>
-          </div>
-          <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+        <div class="user-avatar" id="userAvatar">F</div>
+        <div class="user-details">
+          <span class="user-name" id="userName">Loading...</span>
+          <span class="user-email" id="userEmail">Loading...</span>
         </div>
+        <button class="logout-btn" onclick="logout()">🚪 Logout</button>
       </div>
     </div>
   </div>
@@ -3793,7 +3956,7 @@ Report End
   </script>
 
   <footer style="text-align:center;padding:20px;background:rgba(0,0,0,0.3);color:white;margin-top:30px">
-    By <a href="#" class="whatsapp-link" onclick="openWhatsApp(); return false;">Fahad - 17877</a> – Version v5.2 - Added Theme Switcher
+    By <a href="#" class="whatsapp-link" onclick="openWhatsApp(); return false;">Fahad - 17877</a> – Version v5.3 - Unified Header Design
     <br><small style="color:#999;font-size:10px;margin-top:5px;display:block">📱 WhatsApp: +965 55222550</small>
   </footer>
 
