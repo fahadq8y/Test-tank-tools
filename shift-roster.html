@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Shift Roster v9.1 - Changed flex-wrap to nowrap in base CSS -->
+<!-- Shift Roster v9.2 - Reduced nav-link padding and font-size in base CSS for Desktop Mode -->
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
@@ -105,12 +105,13 @@
     .nav-link {
       color: white;
       text-decoration: none;
-      padding: 8px 16px;
+      padding: 6px 10px;
       border-radius: 8px;
       transition: all 0.3s ease;
       background: rgba(255,255,255,0.1);
       font-weight: 500;
       border: 1px solid rgba(255,255,255,0.2);
+      font-size: 12px;
     }
     
     .nav-link:hover {
@@ -844,7 +845,7 @@
 <body>
   <!-- Navigation Bar -->
   <div class="nav-bar">
-    <div class="nav-logo">📅 الورديات - Shift Roster v9.1</div>
+    <div class="nav-logo">📅 الورديات - Shift Roster v9.2</div>
     <div class="nav-links">
       <a href="index.html" class="nav-link">🛢️ PBCR</a>
       <a href="plcr.html" class="nav-link">⚗️ PLCR</a>
@@ -1452,7 +1453,7 @@
     switchView(); // This will render the appropriate view
     loadHolidays(); // Load Kuwait holidays
     
-    console.log('%c📅 SHIFT ROSTER v9.1 - Nowrap in Base CSS', 'color:#B8860B;font-size:20px;font-weight:bold');
+    console.log('%c📅 SHIFT ROSTER v9.2 - Fixed Desktop Mode Button Size', 'color:#B8860B;font-size:20px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
   </script>
   
