@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Live Tanks v5.0 - Unified Header from vacation-planner -->
+<!-- Live Tanks v7.1 - Unified Header from vacation-planner -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -32,124 +32,21 @@
 @keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
     *{margin:0;padding:0;box-sizing:border-box}
     body{background:linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.5)),url('background.jpg');background-size:cover;background-position:center;background-attachment:fixed;color:white;font-family:Arial,sans-serif;padding:20px;min-height:100vh}
-    /* Navigation Bar */
-    .nav-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 15px 30px;
-      background: rgba(0,0,0,0.5);
-      backdrop-filter: blur(10px);
-      border-bottom: 2px solid var(--primary);
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-      gap: 15px;
-      position: relative;
-      z-index: 1000;
-    }
-    
-    .nav-logo {
-      font-size: 24px;
-      font-weight: bold;
-      color: var(--primary);
-    }
-    
-    .nav-links {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-    
-    .nav-link {
-      color: white;
-      text-decoration: none;
-      padding: 8px 16px;
-      border-radius: 8px;
-      transition: all 0.3s ease;
-      background: rgba(255,255,255,0.1);
-      font-weight: 500;
-      border: 1px solid rgba(255,255,255,0.2);
-      font-size: 14px;
-    }
-    
-    .nav-link:hover {
-      background: var(--primary);
-      transform: translateY(-1px);
-    }
-    
-    .user-info {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    
-    /* Font Controls */
-    .font-controls {
-      display: flex;
-      gap: 5px;
-    }
-    
-    .font-btn {
-      background: rgba(255,255,255,0.1);
-      border: 1px solid rgba(255,255,255,0.3);
-      color: white;
-      padding: 6px 10px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 16px;
-      font-weight: bold;
-      transition: all 0.3s ease;
-      min-width: 32px;
-      min-height: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    
-    .font-btn:hover {
-      background: rgba(255,255,255,0.2);
-      transform: translateY(-1px);
-    }
-    
-    /* User Avatar */
-    .user-avatar {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      background: linear-gradient(45deg, var(--primary), var(--secondary));
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      font-size: 14px;
-      color: white;
-      border: 2px solid var(--accent);
-    }
-    
-    .user-name {
-      background: rgba(255,255,255,0.1);
-      padding: 6px 12px;
-      border-radius: 5px;
-      border: 1px solid rgba(255,255,255,0.2);
-      font-size: 14px;
-    }
-    
-    .logout-btn {
-      background: rgba(255,0,0,0.3);
-      color: white;
-      border: 1px solid rgba(255,0,0,0.5);
-      padding: 6px 12px;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: all 0.3s;
-      font-size: 14px;
-    }
-    
-    .logout-btn:hover {
-      background: rgba(255,0,0,0.5);
-      transform: translateY(-2px);
-    }
+    .nav-bar{display:flex;justify-content:space-between;align-items:center;padding:10px 20px;background:rgba(0,0,0,0.5);border-radius:10px;margin-bottom:20px;flex-wrap:wrap}
+    .nav-logo{font-size:24px;font-weight:bold;color:white}
+    .nav-links{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .nav-link{color:white;text-decoration:none;padding:8px 16px;border-radius:8px;transition:all 0.3s ease;background:rgba(255,255,255,0.1);font-weight:500;border:1px solid rgba(255,255,255,0.2)}
+    .nav-link:hover{background:rgba(255,255,255,0.2);transform:translateY(-1px)}
+    .nav-link.active{background:rgba(255,255,255,0.3);font-weight:bold;border:1px solid rgba(255,255,255,0.4)}
+    .nav-admin{background:linear-gradient(45deg,#FFD700,#FFA500);color:#003366;font-weight:bold;border-radius:8px;padding:8px 16px;text-decoration:none;transition:all 0.3s ease;border:1px solid #FFA500;font-size:inherit}
+    .nav-admin:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(255,215,0,0.3)}
+    .user-info{display:flex;align-items:center;gap:10px}
+    .user-name{background:rgba(255,255,255,0.1);padding:6px 12px;border-radius:5px;border:1px solid rgba(255,255,255,0.2);font-size:14px}
+    .user-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(45deg,#4CAF50,#45a049);display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:14px}
+    .logout-btn{background:rgba(255,0,0,0.2);border:1px solid rgba(255,0,0,0.5);color:white;padding:5px 10px;border-radius:5px;cursor:pointer;font-size:12px;transition:all 0.3s ease}
+    .font-controls{display:flex;gap:5px;margin-right:10px}
+    .font-btn{background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.3);color:white;padding:5px 10px;border-radius:5px;cursor:pointer;font-size:14px;font-weight:bold;transition:all 0.3s ease;min-width:30px}
+    .font-btn:hover{background:rgba(255,255,255,0.3);transform:translateY(-1px)}
     .page-header{text-align:center;margin-bottom:30px}
     .page-title{font-size:2.5rem;margin-bottom:10px;background:linear-gradient(45deg,#ff4444,#ff6666);-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:pulse 2s ease-in-out infinite}
     @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
@@ -329,46 +226,17 @@
     
     /* Media Queries for Header */
     @media (max-width: 768px) {
-      .nav-bar {
-        padding: 10px 15px;
-      }
-      
-      .nav-logo {
-        font-size: 18px;
-      }
-      
-      .nav-links {
-        flex-wrap: wrap;
-        gap: 5px;
-        justify-content: center;
-      }
-      
-      .nav-link {
-        padding: 6px 10px;
-        font-size: 12px;
-      }
+      .nav-bar {padding: 10px 15px;}
+      .nav-logo {font-size: 18px;}
+      .nav-links {flex-wrap: wrap; gap: 5px; justify-content: center;}
+      .nav-link {padding: 6px 10px; font-size: 12px;}
     }
     
     @media (max-width: 480px) {
-      .nav-bar {
-        padding: 8px 10px;
-      }
-      
-      .nav-logo {
-        font-size: 14px;
-      }
-      
-      .nav-link {
-        padding: 4px 6px;
-        font-size: 10px;
-      }
-      
-      .font-btn {
-        min-width: 28px;
-        min-height: 28px;
-        padding: 4px 8px;
-        font-size: 14px;
-      }
+      .nav-bar {padding: 8px 10px;}
+      .nav-logo {font-size: 14px;}
+      .nav-link {padding: 4px 6px; font-size: 10px;}
+      .font-btn {min-width: 28px; min-height: 28px; padding: 4px 8px; font-size: 14px;}
     }
   </style>
 </head>
@@ -389,7 +257,7 @@
   <div id="mainContent">
     <!-- Navigation -->
     <div class="nav-bar">
-      <div class="nav-logo">🔴 Live Tanks v5.0</div>
+      <div class="nav-logo">🔴 Live Tanks v7.1</div>
       <div class="nav-links">
         <a href="index.html" class="nav-link">🛢️ PBCR</a>
         <a href="plcr.html" class="nav-link">⛗️ PLCR</a>
@@ -839,7 +707,7 @@
     window.getDocs = getDocs;
 
     console.log('🔥 Firebase initialized for Live Tanks!');
-    console.log('%c🔴 LIVE TANKS v5.0 - Unified Header', 'color:#ff4444;font-size:20px;font-weight:bold');
+    console.log('%c🔴 LIVE TANKS v7.1 - Unified Header', 'color:#ff4444;font-size:20px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
     
     const auth = getAuth(app);
