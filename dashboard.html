@@ -370,6 +370,10 @@
         font-size: 14px;
       }
       
+      .nav-links {
+        flex-wrap: nowrap;
+      }
+      
       .nav-link {
         padding: 4px 6px;
         font-size: 10px;
@@ -417,7 +421,7 @@
 <body>
   <!-- Navigation Bar -->
   <div class="nav-bar">
-    <div class="nav-logo">🔥 Firebase Admin Dashboard v5.6</div>
+    <div class="nav-logo">🔥 Firebase Admin Dashboard v5.8</div>
     <div class="nav-links">
       <a href="index.html" class="nav-link">🛢️ PBCR</a>
       <a href="plcr.html" class="nav-link">⚗️ PLCR</a>
@@ -426,28 +430,28 @@
       <a href="vacation-planner.html" class="nav-link">🏖️ Vacation Planner</a>
       <a href="tank-management.html" class="nav-link" id="tank-management-link" style="display:none">🛢️ Tank Management</a>
       <a href="#device-management" onclick="showDeviceManagement()" class="nav-link" id="device-management-link" style="display:none">📱 Device Management</a>
-      <div class="user-info">
-        <div class="font-controls">
-          <button class="font-btn" onclick="decreaseFontSize()" title="تصغير الخط">-</button>
-          <button class="font-btn" onclick="increaseFontSize()" title="تكبير الخط">+</button>
-        </div>
-        <div class="theme-switcher">
-          <button class="theme-btn" onclick="toggleThemeDropdown()" title="Change Theme">🎨</button>
-          <div class="theme-dropdown" id="themeDropdown">
-            <div class="theme-option active" data-theme="industrial" onclick="setTheme('industrial')">🏭 Industrial Bronze</div>
-            <div class="theme-option" data-theme="ocean" onclick="setTheme('ocean')">🌊 Ocean Blue</div>
-            <div class="theme-option" data-theme="dark" onclick="setTheme('dark')">⚫ Dark Carbon</div>
-            <div class="theme-option" data-theme="sunset" onclick="setTheme('sunset')">🌅 Sunset Amber</div>
-            <div class="theme-option" data-theme="forest" onclick="setTheme('forest')">🌲 Forest Green</div>
-          </div>
-        </div>
-        <div class="user-avatar" id="userAvatar">F</div>
-        <div class="user-details">
-          <span class="user-name" id="userName">Loading...</span>
-          <span class="user-email" id="userEmail">Loading...</span>
-        </div>
-        <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+    </div>
+    <div class="user-info">
+      <div class="font-controls">
+        <button class="font-btn" onclick="decreaseFontSize()" title="تصغير الخط">-</button>
+        <button class="font-btn" onclick="increaseFontSize()" title="تكبير الخط">+</button>
       </div>
+      <div class="theme-switcher">
+        <button class="theme-btn" onclick="toggleThemeDropdown()" title="Change Theme">🎨</button>
+        <div class="theme-dropdown" id="themeDropdown">
+          <div class="theme-option active" data-theme="industrial" onclick="setTheme('industrial')">🏭 Industrial Bronze</div>
+          <div class="theme-option" data-theme="ocean" onclick="setTheme('ocean')">🌊 Ocean Blue</div>
+          <div class="theme-option" data-theme="dark" onclick="setTheme('dark')">⚫ Dark Carbon</div>
+          <div class="theme-option" data-theme="sunset" onclick="setTheme('sunset')">🌅 Sunset Amber</div>
+          <div class="theme-option" data-theme="forest" onclick="setTheme('forest')">🌲 Forest Green</div>
+        </div>
+      </div>
+      <div class="user-avatar" id="userAvatar">F</div>
+      <div class="user-details">
+        <span class="user-name" id="userName">Loading...</span>
+        <span class="user-email" id="userEmail">Loading...</span>
+      </div>
+      <button class="logout-btn" onclick="logout()">🚪 Logout</button>
     </div>
   </div>
 
@@ -3953,7 +3957,7 @@ Report End
   </script>
 
   <footer style="text-align:center;padding:20px;background:rgba(0,0,0,0.3);color:white;margin-top:30px">
-    By <a href="#" class="whatsapp-link" onclick="openWhatsApp(); return false;">Fahad - 17877</a> – Version v5.6 - Fixed Mobile Layout
+    By <a href="#" class="whatsapp-link" onclick="openWhatsApp(); return false;">Fahad - 17877</a> – Version v5.8 - Fixed HTML Structure
     <br><small style="color:#999;font-size:10px;margin-top:5px;display:block">📱 WhatsApp: +965 55222550</small>
   </footer>
 
