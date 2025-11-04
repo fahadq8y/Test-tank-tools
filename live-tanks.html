@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- Live Tanks v7.2 - Fixed JavaScript nav-user to user-info -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -40,8 +39,7 @@
     .nav-link.active{background:rgba(255,255,255,0.3);font-weight:bold;border:1px solid rgba(255,255,255,0.4)}
     .nav-admin{background:linear-gradient(45deg,#FFD700,#FFA500);color:#003366;font-weight:bold;border-radius:8px;padding:8px 16px;text-decoration:none;transition:all 0.3s ease;border:1px solid #FFA500;font-size:inherit}
     .nav-admin:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(255,215,0,0.3)}
-    .user-info{display:flex;align-items:center;gap:10px}
-    .user-name{background:rgba(255,255,255,0.1);padding:6px 12px;border-radius:5px;border:1px solid rgba(255,255,255,0.2);font-size:14px}
+    .nav-user{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.1);padding:5px 15px;border-radius:20px;backdrop-filter:blur(10px)}
     .user-avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(45deg,#4CAF50,#45a049);display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:14px}
     .logout-btn{background:rgba(255,0,0,0.2);border:1px solid rgba(255,0,0,0.5);color:white;padding:5px 10px;border-radius:5px;cursor:pointer;font-size:12px;transition:all 0.3s ease}
     .font-controls{display:flex;gap:5px;margin-right:10px}
@@ -212,7 +210,7 @@
     @media (max-width:768px){
       .nav-bar{flex-direction:column;gap:15px;padding:15px}
       .nav-links{order:1;justify-content:center;width:100%}
-      .user-info{order:2;width:100%;justify-content:space-between}
+      .nav-user{order:2;width:100%;justify-content:space-between}
       .page-title{font-size:2rem}
       .tanks-table{font-size:11px}
       .tanks-table th,.tanks-table td{padding:8px 4px}
@@ -222,21 +220,6 @@
       .tanks-table{overflow-x:auto;display:block;white-space:nowrap;font-size:10px}
       .tanks-table thead,.tanks-table tbody,.tanks-table tr{display:table;width:100%;table-layout:fixed}
       .tanks-table th,.tanks-table td{padding:4px 2px}
-    }
-    
-    /* Media Queries for Header */
-    @media (max-width: 768px) {
-      .nav-bar {padding: 10px 15px;}
-      .nav-logo {font-size: 18px;}
-      .nav-links {flex-wrap: wrap; gap: 5px; justify-content: center;}
-      .nav-link {padding: 6px 10px; font-size: 12px;}
-    }
-    
-    @media (max-width: 480px) {
-      .nav-bar {padding: 8px 10px;}
-      .nav-logo {font-size: 14px;}
-      .nav-link {padding: 4px 6px; font-size: 10px;}
-      .font-btn {min-width: 28px; min-height: 28px; padding: 4px 8px; font-size: 14px;}
     }
   </style>
 </head>
@@ -257,32 +240,33 @@
   <div id="mainContent">
     <!-- Navigation -->
     <div class="nav-bar">
-      <div class="nav-logo">🔴 Live Tanks v7.2</div>
+      <div class="nav-logo">Tank Tools</div>
       <div class="nav-links">
-        <a href="index.html" class="nav-link">🛢️ PBCR</a>
-        <a href="plcr.html" class="nav-link">⛗️ PLCR</a>
-        <a href="vacation-planner.html" class="nav-link">🏖️ Vacation Planner</a>
-        <a href="shift-roster.html" class="nav-link">📅 Shift Roster</a>
-        <a href="dashboard.html" class="nav-link">📊 Dashboard</a>
+        <a class="nav-link" href="index.html">PBCR</a>
+        <a class="nav-link" href="plcr.html">PLCR</a>
+        <a class="nav-link" href="NMOGASBL.html">NMOGAS</a>
+        <a class="nav-link" href="tank-management.html" id="tank-management-btn" style="display:none">🛢️ Tanks</a>
+        <a class="nav-link active" href="live-tanks.html">🔴 Live Tanks</a>
+        <a class="nav-admin" href="dashboard.html" id="adminLink" style="display:none">🔐 Dashboard</a>
       </div>
-      <div class="user-info">
+      <div class="nav-user" id="navUser">
         <div class="font-controls">
           <button class="font-btn" onclick="decreaseFontSize()" title="تصغير الخط">-</button>
           <button class="font-btn" onclick="increaseFontSize()" title="تكبير الخط">+</button>
         </div>
         <div class="theme-switcher">
-          <button class="theme-btn" onclick="toggleThemeDropdown()" title="تغيير الثيم">🎨</button>
+          <button class="theme-btn" onclick="toggleThemeDropdown()" title="Change Theme">🎨</button>
           <div class="theme-dropdown" id="themeDropdown">
-            <div class="theme-option" data-theme="default" onclick="setTheme('default')">🏭 Industrial Bronze</div>
+            <div class="theme-option active" data-theme="industrial" onclick="setTheme('industrial')">🏭 Industrial Bronze</div>
             <div class="theme-option" data-theme="ocean" onclick="setTheme('ocean')">🌊 Ocean Blue</div>
             <div class="theme-option" data-theme="dark" onclick="setTheme('dark')">⚫ Dark Carbon</div>
             <div class="theme-option" data-theme="sunset" onclick="setTheme('sunset')">🌅 Sunset Amber</div>
             <div class="theme-option" data-theme="forest" onclick="setTheme('forest')">🌲 Forest Green</div>
           </div>
         </div>
-        <div class="user-avatar" id="userAvatar">F</div>
-        <span class="user-name" id="userName">fam030@knpc.com</span>
-        <button class="logout-btn" onclick="handleLogout()">🚪 Logout</button>
+        <div class="user-avatar" id="userAvatar">U</div>
+        <div id="userName">User</div>
+        <button class="logout-btn" onclick="logout()">Logout</button>
       </div>
     </div>
 
@@ -707,8 +691,6 @@
     window.getDocs = getDocs;
 
     console.log('🔥 Firebase initialized for Live Tanks!');
-    console.log('%c🔴 LIVE TANKS v7.2 - Fixed JavaScript', 'color:#ff4444;font-size:20px;font-weight:bold');
-    console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
     
     const auth = getAuth(app);
     window.auth = auth;
@@ -3208,13 +3190,6 @@
       sessionStorage.removeItem('tanktools_session');
       localStorage.removeItem('tanktools_current_user');
       window.location.href = 'login.html';
-    }
-    
-    // ========== LOGOUT (Unified) ==========
-    function handleLogout() {
-      if (confirm('هل أنت متأكد من تسجيل الخروج؟')) {
-        logout();
-      }
     }
 
     function logActivity(action, username) {
