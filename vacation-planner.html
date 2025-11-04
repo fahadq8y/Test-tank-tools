@@ -1,14 +1,12 @@
 <!DOCTYPE html>
-<!-- Vacation Planner v1.3 - Custom Date Picker + Test Mode -->
+<!-- Vacation Planner v1.4 - Fixed shift display, added leave selector, days calculation -->
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🏖️ مخطط الإجازات - Vacation Planner</title>
-  
-  <!-- Permissions -->
+  <title>مخطط الإجازات - Vacation Planner</title>
+  <link href="icon.png" rel="icon" type="image/png"/>
   <script src="permissions.js"></script>
-  
   <style>
     * {
       margin: 0;
@@ -17,53 +15,56 @@
     }
     
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('background.jpg');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      color: white;
+      font-family: Arial, sans-serif;
       min-height: 100vh;
-      padding: 20px;
-      direction: rtl;
     }
     
     /* Navigation Bar */
     .nav-bar {
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(10px);
-      border-radius: 15px;
-      padding: 15px 30px;
-      margin-bottom: 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      padding: 15px 30px;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(10px);
+      border-bottom: 2px solid #4CAF50;
+      margin-bottom: 20px;
       flex-wrap: wrap;
       gap: 15px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
     }
     
     .nav-logo {
       font-size: 24px;
       font-weight: bold;
-      color: white;
+      color: #4CAF50;
     }
     
     .nav-links {
       display: flex;
       gap: 10px;
+      align-items: center;
       flex-wrap: wrap;
     }
     
     .nav-link {
-      background: rgba(255, 255, 255, 0.2);
       color: white;
+      text-decoration: none;
       padding: 8px 16px;
       border-radius: 8px;
-      text-decoration: none;
-      transition: all 0.3s;
-      font-size: 14px;
+      transition: all 0.3s ease;
+      background: rgba(255,255,255,0.1);
+      font-weight: 500;
+      border: 1px solid rgba(255,255,255,0.2);
     }
     
     .nav-link:hover {
-      background: rgba(255, 255, 255, 0.3);
-      transform: translateY(-2px);
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-1px);
     }
     
     .user-info {
@@ -73,44 +74,61 @@
     }
     
     .user-name {
-      color: white;
-      font-weight: bold;
+      background: rgba(255,255,255,0.1);
+      padding: 6px 12px;
+      border-radius: 5px;
+      border: 1px solid rgba(255,255,255,0.2);
+      font-size: 14px;
     }
     
     .logout-btn {
-      background: rgba(255, 0, 0, 0.3);
+      background: rgba(255,0,0,0.3);
       color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 8px;
+      border: 1px solid rgba(255,0,0,0.5);
+      padding: 6px 12px;
+      border-radius: 5px;
       cursor: pointer;
       transition: all 0.3s;
+      font-size: 14px;
     }
     
     .logout-btn:hover {
-      background: rgba(255, 0, 0, 0.5);
+      background: rgba(255,0,0,0.5);
+      transform: translateY(-2px);
     }
     
-    /* Container */
-    .container {
-      max-width: 1400px;
+    /* Main Container */
+    .main-container {
+      max-width: 1200px;
       margin: 0 auto;
+      padding: 20px;
     }
     
-    /* Card */
+    .page-title {
+      text-align: center;
+      font-size: 32px;
+      margin-bottom: 30px;
+      color: #4CAF50;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+    
+    /* Cards */
     .card {
-      background: rgba(255, 255, 255, 0.95);
-      border-radius: 20px;
-      padding: 30px;
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 25px;
       margin-bottom: 20px;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
     }
     
     .card-title {
-      font-size: 28px;
-      color: #667eea;
+      font-size: 20px;
       margin-bottom: 20px;
-      text-align: center;
+      color: #4CAF50;
+      border-bottom: 2px solid rgba(76,175,80,0.3);
+      padding-bottom: 10px;
     }
     
     /* Form */
@@ -122,328 +140,189 @@
       display: block;
       margin-bottom: 8px;
       font-weight: bold;
-      color: #333;
+      color: #fff;
     }
     
     .form-input, .form-select {
       width: 100%;
       padding: 12px;
-      border: 2px solid #e0e0e0;
-      border-radius: 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.9);
+      color: #003366;
       font-size: 16px;
       transition: all 0.3s;
     }
     
     .form-input:focus, .form-select:focus {
       outline: none;
-      border-color: #667eea;
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      border-color: #4CAF50;
+      box-shadow: 0 0 10px rgba(76,175,80,0.3);
     }
     
     .form-row {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 20px;
+      gap: 15px;
     }
     
-    /* Custom Date Picker */
-    .date-picker-container {
-      position: relative;
-    }
-    
-    .date-display {
-      width: 100%;
-      padding: 12px;
-      border: 2px solid #e0e0e0;
-      border-radius: 10px;
-      font-size: 16px;
-      cursor: pointer;
-      background: white;
-      transition: all 0.3s;
-    }
-    
-    .date-display:hover {
-      border-color: #667eea;
-    }
-    
-    .date-picker-popup {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
-      margin-top: 10px;
-      background: white;
-      border-radius: 15px;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-      padding: 20px;
-      z-index: 1000;
-      display: none;
-    }
-    
-    .date-picker-popup.active {
-      display: block;
-    }
-    
-    .date-picker-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 15px;
-    }
-    
-    .date-picker-nav {
-      background: #667eea;
-      color: white;
-      border: none;
-      width: 35px;
-      height: 35px;
-      border-radius: 50%;
-      cursor: pointer;
-      font-size: 18px;
-      transition: all 0.3s;
-    }
-    
-    .date-picker-nav:hover {
-      background: #5568d3;
-      transform: scale(1.1);
-    }
-    
-    .date-picker-month {
-      font-size: 18px;
-      font-weight: bold;
-      color: #333;
-    }
-    
-    .date-picker-days {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 5px;
-      margin-bottom: 10px;
-    }
-    
-    .date-picker-day-header {
-      text-align: center;
-      font-weight: bold;
-      color: #666;
-      padding: 8px;
-      font-size: 12px;
-    }
-    
-    .date-picker-day {
-      aspect-ratio: 1;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-size: 14px;
-      position: relative;
-      padding: 5px;
-      border: 1px solid #e0e0e0;
-    }
-    
-    .date-picker-day:hover {
-      background: rgba(102, 126, 234, 0.1);
-      transform: scale(1.05);
-    }
-    
-    .date-picker-day.disabled {
-      opacity: 0.3;
-      cursor: not-allowed;
-    }
-    
-    .date-picker-day.disabled:hover {
-      transform: none;
-      background: none;
-    }
-    
-    .date-picker-day.selected {
-      background: #667eea;
-      color: white;
-      font-weight: bold;
-    }
-    
-    .day-number {
-      font-size: 14px;
-      font-weight: bold;
-    }
-    
-    .day-shift {
-      font-size: 10px;
-      margin-top: 2px;
-    }
-    
-    .day-holiday {
-      position: absolute;
-      top: 2px;
-      right: 2px;
-      width: 6px;
-      height: 6px;
-      background: #f44336;
-      border-radius: 50%;
-    }
-    
-    /* Shift Colors */
-    .shift-M { background: rgba(76, 175, 80, 0.2); color: #2e7d32; }
-    .shift-A { background: rgba(255, 152, 0, 0.2); color: #e65100; }
-    .shift-N { background: rgba(33, 150, 243, 0.2); color: #0d47a1; }
-    .shift-O { background: rgba(158, 158, 158, 0.2); color: #424242; }
-    
-    .shift-M.selected { background: #4CAF50; color: white; }
-    .shift-A.selected { background: #FF9800; color: white; }
-    .shift-N.selected { background: #2196F3; color: white; }
-    .shift-O.selected { background: #9E9E9E; color: white; }
-    
-    /* Shift Info */
+    /* Shift Info Display */
     .shift-info {
+      background: rgba(76,175,80,0.2);
+      border: 2px solid #4CAF50;
+      border-radius: 8px;
+      padding: 12px;
       margin-top: 10px;
-      padding: 15px;
-      border-radius: 10px;
-      background: rgba(102, 126, 234, 0.1);
-      border-left: 4px solid #667eea;
+      font-weight: bold;
+      text-align: center;
     }
     
     .shift-info.warning {
-      background: rgba(255, 152, 0, 0.1);
-      border-left-color: #FF9800;
+      background: rgba(255,152,0,0.2);
+      border-color: #FF9800;
+      color: #FFB74D;
+    }
+    
+    .shift-info.error {
+      background: rgba(244,67,54,0.2);
+      border-color: #f44336;
+      color: #EF5350;
     }
     
     /* Buttons */
-    .btn-group {
-      display: flex;
-      gap: 10px;
-      margin-top: 20px;
-    }
-    
     .btn {
-      flex: 1;
       padding: 12px 24px;
       border: none;
-      border-radius: 10px;
+      border-radius: 8px;
       font-size: 16px;
       font-weight: bold;
       cursor: pointer;
       transition: all 0.3s;
+      display: inline-block;
+      text-align: center;
     }
     
     .btn-primary {
-      background: #667eea;
+      background: linear-gradient(45deg, #4CAF50, #45a049);
       color: white;
     }
     
     .btn-primary:hover {
-      background: #5568d3;
       transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+      box-shadow: 0 8px 25px rgba(76,175,80,0.4);
     }
     
     .btn-secondary {
-      background: #e0e0e0;
-      color: #333;
+      background: linear-gradient(45deg, #2196F3, #1976D2);
+      color: white;
     }
     
     .btn-secondary:hover {
-      background: #d0d0d0;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(33,150,243,0.4);
     }
     
-    /* Leave Card */
-    .leave-card {
-      background: rgba(102, 126, 234, 0.05);
-      border-radius: 15px;
-      padding: 20px;
-      margin-bottom: 15px;
-      border-left: 5px solid #667eea;
-      position: relative;
+    .btn-danger {
+      background: linear-gradient(45deg, #f44336, #d32f2f);
+      color: white;
     }
     
-    .leave-header {
+    .btn-danger:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(244,67,54,0.4);
+    }
+    
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    
+    /* Leave List */
+    .leave-item {
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 10px;
+      border-left: 4px solid #4CAF50;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 10px;
+    }
+    
+    .leave-info {
+      flex: 1;
     }
     
     .leave-dates {
-      font-size: 18px;
-      font-weight: bold;
-      color: #333;
-    }
-    
-    .leave-shift {
-      display: inline-block;
-      padding: 4px 12px;
-      border-radius: 20px;
       font-size: 14px;
-      font-weight: bold;
+      color: #4CAF50;
+      margin-bottom: 5px;
     }
     
-    .leave-details {
-      color: #666;
-      font-size: 14px;
-      margin-top: 5px;
+    .leave-shift-type {
+      font-size: 12px;
+      opacity: 0.8;
     }
     
-    .delete-btn {
-      background: #f44336;
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.3s;
+    /* Loading */
+    .loading {
+      text-align: center;
+      padding: 40px;
     }
     
-    .delete-btn:hover {
-      background: #d32f2f;
+    .loading-spinner {
+      border: 4px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top: 4px solid #4CAF50;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
     
     /* Alert */
     .alert {
-      padding: 15px 20px;
-      border-radius: 10px;
+      padding: 15px;
+      border-radius: 8px;
       margin-bottom: 20px;
+      font-weight: bold;
     }
     
     .alert-success {
-      background: rgba(76, 175, 80, 0.1);
-      border-left: 4px solid #4CAF50;
-      color: #2e7d32;
+      background: rgba(76,175,80,0.2);
+      border: 2px solid #4CAF50;
+      color: #4CAF50;
     }
     
     .alert-error {
-      background: rgba(244, 67, 54, 0.1);
-      border-left: 4px solid #f44336;
-      color: #c62828;
+      background: rgba(244,67,54,0.2);
+      border: 2px solid #f44336;
+      color: #f44336;
     }
     
-    /* Test Mode */
-    .test-mode {
-      background: rgba(255, 193, 7, 0.1);
-      border: 2px dashed #FFC107;
-      border-radius: 15px;
-      padding: 20px;
-      margin-bottom: 20px;
-    }
-    
-    .test-mode-title {
-      font-size: 20px;
-      font-weight: bold;
-      color: #F57C00;
-      margin-bottom: 15px;
-      text-align: center;
+    .alert-warning {
+      background: rgba(255,152,0,0.2);
+      border: 2px solid #FF9800;
+      color: #FF9800;
     }
     
     /* Responsive */
     @media (max-width: 768px) {
       .nav-bar {
         flex-direction: column;
-        align-items: stretch;
+        align-items: flex-start;
       }
       
       .nav-links {
-        flex-direction: column;
+        width: 100%;
+        justify-content: center;
       }
       
       .form-row {
@@ -453,13 +332,17 @@
       .btn-group {
         flex-direction: column;
       }
+      
+      .btn {
+        width: 100%;
+      }
     }
   </style>
 </head>
 <body>
   <!-- Navigation Bar -->
   <div class="nav-bar">
-    <div class="nav-logo">🏖️ مخطط الإجازات - Vacation Planner v1.3</div>
+    <div class="nav-logo">🏖️ مخطط الإجازات - Vacation Planner v1.4</div>
     <div class="nav-links">
       <a href="pbcr-calculator.html" class="nav-link">🛢️ PBCR</a>
       <a href="plcr.html" class="nav-link">⚗️ PLCR</a>
@@ -473,28 +356,18 @@
     </div>
   </div>
   
-  <div class="container">
-    <!-- Test Mode Card -->
-    <div class="card test-mode">
-      <div class="test-mode-title">🧪 وضع الاختبار - Test Mode</div>
-      <div class="form-group">
-        <label class="form-label">📝 اسم المستخدم التجريبي:</label>
-        <input type="text" class="form-input" id="testUserName" placeholder="مثال: أحمد، سالم، خالد...">
-      </div>
-      <button class="btn btn-primary" onclick="createTestUser()">✅ إنشاء مستخدم تجريبي</button>
-      <p style="text-align: center; margin-top: 15px; color: #666; font-size: 14px;">
-        💡 هذا الوضع للاختبار فقط. سيتم إزالته بعد التحقق من الصفحة.
-      </p>
-    </div>
+  <!-- Main Container -->
+  <div class="main-container">
+    <h1 class="page-title">🏖️ نظام إدارة الإجازات</h1>
     
-    <!-- Leave Request Card -->
+    <!-- My Leaves Card -->
     <div class="card">
-      <h2 class="card-title">📝 طلب إجازة جديدة</h2>
+      <h2 class="card-title">📋 إجازاتي (3 إجازات متاحة)</h2>
       
       <!-- Shift Selection -->
       <div class="form-group">
-        <label class="form-label">🔄 اختر الشفت:</label>
-        <select class="form-select" id="shiftSelect" onchange="selectShift()">
+        <label class="form-label">اختر شفتك:</label>
+        <select class="form-select" id="userShift" onchange="updateShiftInfo()">
           <option value="">-- اختر الشفت --</option>
           <option value="A">A Shift</option>
           <option value="B">B Shift</option>
@@ -503,44 +376,31 @@
         </select>
       </div>
       
+      <!-- Leave Selector -->
+      <div id="leaveSelector" style="display:none; margin-bottom: 20px;">
+        <div class="form-group">
+          <label class="form-label">اختر الإجازة:</label>
+          <select class="form-select" id="leaveNumber" onchange="selectLeave()">
+            <option value="">-- اختر الإجازة --</option>
+            <option value="1">الإجازة الأولى</option>
+            <option value="2">الإجازة الثانية</option>
+            <option value="3">الإجازة الثالثة</option>
+          </select>
+        </div>
+      </div>
+      
       <!-- Leave Form -->
       <div id="leaveForm" style="display:none;">
         <div class="form-row">
-          <!-- Start Date -->
           <div class="form-group">
             <label class="form-label">📅 تاريخ البداية:</label>
-            <div class="date-picker-container">
-              <div class="date-display" id="startDateDisplay" onclick="toggleDatePicker('start')">
-                اختر تاريخ البداية
-              </div>
-              <div class="date-picker-popup" id="startDatePicker">
-                <div class="date-picker-header">
-                  <button class="date-picker-nav" onclick="changeMonth('start', -1)">◀</button>
-                  <div class="date-picker-month" id="startMonthDisplay"></div>
-                  <button class="date-picker-nav" onclick="changeMonth('start', 1)">▶</button>
-                </div>
-                <div class="date-picker-days" id="startDaysGrid"></div>
-              </div>
-            </div>
+            <input type="date" class="form-input" id="startDate" onchange="checkStartDate()">
             <div id="startDateInfo" class="shift-info" style="display:none;"></div>
           </div>
           
-          <!-- End Date -->
           <div class="form-group">
             <label class="form-label">📅 تاريخ النهاية:</label>
-            <div class="date-picker-container">
-              <div class="date-display" id="endDateDisplay" onclick="toggleDatePicker('end')">
-                اختر تاريخ النهاية
-              </div>
-              <div class="date-picker-popup" id="endDatePicker">
-                <div class="date-picker-header">
-                  <button class="date-picker-nav" onclick="changeMonth('end', -1)">◀</button>
-                  <div class="date-picker-month" id="endMonthDisplay"></div>
-                  <button class="date-picker-nav" onclick="changeMonth('end', 1)">▶</button>
-                </div>
-                <div class="date-picker-days" id="endDaysGrid"></div>
-              </div>
-            </div>
+            <input type="date" class="form-input" id="endDate" onchange="checkEndDate()">
             <div id="endDateInfo" class="shift-info" style="display:none;"></div>
           </div>
         </div>
@@ -550,13 +410,13 @@
           <button class="btn btn-secondary" onclick="resetForm()">🔄 إعادة تعيين</button>
         </div>
       </div>
-    </div>
-    
-    <!-- My Leaves Card -->
-    <div class="card">
-      <h2 class="card-title">📋 إجازاتي (0/3)</h2>
-      <div id="leavesContainer">
-        <p style="text-align: center; opacity: 0.7;">لا توجد إجازات محفوظة</p>
+      
+      <!-- My Leaves List -->
+      <div id="myLeavesList" style="margin-top: 30px;">
+        <h3 style="color: #4CAF50; margin-bottom: 15px;">إجازاتي المحفوظة:</h3>
+        <div id="leavesContainer">
+          <p style="text-align: center; opacity: 0.7;">لا توجد إجازات محفوظة</p>
+        </div>
       </div>
     </div>
     
@@ -600,287 +460,144 @@
     </div>
   </div>
   
-  <script type="module">
-    // ========== FIREBASE IMPORTS ==========
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-    import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
-    import { getFirestore, doc, getDoc, collection, getDocs, addDoc, deleteDoc, query, where } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-    
-    // Firebase configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyDCkL9qMG8L7NNZ8jHqGbY3_Uf9VLxIcB0",
-      authDomain: "tank-tools-knpc.firebaseapp.com",
-      projectId: "tank-tools-knpc",
-      storageBucket: "tank-tools-knpc.firebasestorage.app",
-      messagingSenderId: "510062594324",
-      appId: "1:510062594324:web:51006259432481e7e1d5c6"
-    };
-    
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-    
-    // Make Firebase globally available
-    window.db = db;
-    window.doc = doc;
-    window.getDoc = getDoc;
-    window.collection = collection;
-    window.getDocs = getDocs;
-    window.addDoc = addDoc;
-    window.deleteDoc = deleteDoc;
-    window.query = query;
-    window.where = where;
-    
+  <script>
     // ========== CONSTANTS ==========
-    const START_DATE = new Date('2025-10-31');
-    const SHIFTS = ['A', 'M', 'N', 'O'];
-    const GOOGLE_CALENDAR_API_KEY = 'AIzaSyC5GZwG7bOgSSke3mRzmAYvc0DIyrPxGzM';
-    const KUWAIT_CALENDAR_ID = 'en.kw.official%23holiday@group.v.calendar.google.com';
+    // EXACT SAME LOGIC AS shift-roster.html v8.4
+    const START_DATE = new Date(2025, 9, 31); // Oct 31, 2025
+    const PATTERN = ['A', 'A', 'N', 'N', 'O', 'O', 'M', 'M'];
+    const SHIFT_OFFSETS = {
+      'A': 0,
+      'B': 4,
+      'C': 2,
+      'D': 6
+    };
     
     // ========== STATE ==========
     let currentUser = null;
     let userShift = '';
     let userLeaves = [];
-    let allLeaves = [];
-    let kuwaitHolidays = [];
-    let startDatePicker = { month: new Date().getMonth(), year: new Date().getFullYear(), selectedDate: null };
-    let endDatePicker = { month: new Date().getMonth(), year: new Date().getFullYear(), selectedDate: null };
+    let allLeaves = []; // All users' leaves
     
     // ========== SHIFT ROSTER LOGIC ==========
+    // EXACT SAME LOGIC AS shift-roster.html v8.4
     function getShiftForDate(date, shift) {
-      const daysDiff = Math.floor((date - START_DATE) / (1000 * 60 * 60 * 24));
-      const cycleDay = ((daysDiff % 32) + 32) % 32;
-      
-      const shiftIndex = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 }[shift];
-      const rotatedDay = (cycleDay + shiftIndex * 8) % 32;
-      
-      if (rotatedDay < 8) return 'M';
-      if (rotatedDay < 16) return 'A';
-      if (rotatedDay < 24) return 'N';
-      return 'O';
+      const diffTime = date - START_DATE;
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      const index = ((diffDays + SHIFT_OFFSETS[shift]) % 8 + 8) % 8;
+      return PATTERN[index];
     }
     
     function getShiftType(date, shift) {
-      const shiftLetter = getShiftForDate(date, shift);
+      const shiftCode = getShiftForDate(date, shift);
+      
+      // Check if it's first or second day of the shift
       const prevDate = new Date(date);
       prevDate.setDate(prevDate.getDate() - 1);
       const prevShift = getShiftForDate(prevDate, shift);
       
-      const isFirstDay = prevShift !== shiftLetter;
-      const dayType = isFirstDay ? 'First' : 'Second';
+      const isFirstDay = prevShift !== shiftCode;
       
       const shiftNames = {
-        'M': 'Morning',
-        'A': 'Afternoon',
-        'N': 'Night',
-        'O': 'Off'
+        'M': isFirstDay ? 'First Morning' : 'Second Morning',
+        'A': isFirstDay ? 'First Afternoon' : 'Second Afternoon',
+        'N': isFirstDay ? 'First Night' : 'Second Night',
+        'O': 'Off Day'
       };
       
       return {
-        letter: shiftLetter,
-        name: `${dayType} ${shiftNames[shiftLetter]}`,
+        code: shiftCode,
+        name: shiftNames[shiftCode],
         isFirst: isFirstDay
       };
     }
     
-    // ========== KUWAIT HOLIDAYS ==========
-    async function fetchKuwaitHolidays() {
-      try {
-        const year = new Date().getFullYear();
-        const timeMin = `${year}-01-01T00:00:00Z`;
-        const timeMax = `${year + 2}-12-31T23:59:59Z`;
-        
-        const url = `https://www.googleapis.com/calendar/v3/calendars/${KUWAIT_CALENDAR_ID}/events?key=${GOOGLE_CALENDAR_API_KEY}&timeMin=${timeMin}&timeMax=${timeMax}&singleEvents=true&orderBy=startTime`;
-        
-        const response = await fetch(url);
-        const data = await response.json();
-        
-        if (data.items) {
-          kuwaitHolidays = data.items.map(event => ({
-            date: event.start.date,
-            name: event.summary
-          }));
-          console.log('✅ Loaded', kuwaitHolidays.length, 'Kuwait holidays');
-        }
-      } catch (error) {
-        console.error('❌ Error fetching holidays:', error);
-      }
-    }
-    
-    function isHoliday(date) {
-      const y = date.getFullYear();
-      const m = String(date.getMonth() + 1).padStart(2, '0');
-      const d = String(date.getDate()).padStart(2, '0');
-      const dateStr = `${y}-${m}-${d}`;
-      return kuwaitHolidays.find(h => h.date === dateStr);
-    }
-    
-    // ========== DATE PICKER ==========
-    window.toggleDatePicker = function(type) {
-      const picker = document.getElementById(`${type}DatePicker`);
-      const otherPicker = document.getElementById(type === 'start' ? 'endDatePicker' : 'startDatePicker');
+    // ========== UI FUNCTIONS ==========
+    function updateShiftInfo() {
+      userShift = document.getElementById('userShift').value;
+      const leaveSelector = document.getElementById('leaveSelector');
+      const leaveForm = document.getElementById('leaveForm');
       
-      if (picker.classList.contains('active')) {
-        picker.classList.remove('active');
+      if (userShift) {
+        leaveSelector.style.display = 'block';
+        leaveForm.style.display = 'none';
+        document.getElementById('leaveNumber').value = '';
       } else {
-        otherPicker.classList.remove('active');
-        picker.classList.add('active');
-        renderDatePicker(type);
+        leaveSelector.style.display = 'none';
+        leaveForm.style.display = 'none';
       }
-    };
-    
-    window.changeMonth = function(type, delta) {
-      const picker = type === 'start' ? startDatePicker : endDatePicker;
-      picker.month += delta;
-      
-      if (picker.month < 0) {
-        picker.month = 11;
-        picker.year--;
-      } else if (picker.month > 11) {
-        picker.month = 0;
-        picker.year++;
-      }
-      
-      renderDatePicker(type);
-    };
-    
-    function renderDatePicker(type) {
-      const picker = type === 'start' ? startDatePicker : endDatePicker;
-      const monthDisplay = document.getElementById(`${type}MonthDisplay`);
-      const daysGrid = document.getElementById(`${type}DaysGrid`);
-      
-      const monthNames = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
-      monthDisplay.textContent = `${monthNames[picker.month]} ${picker.year}`;
-      
-      // Day headers
-      let html = '';
-      ['S', 'M', 'T', 'W', 'T', 'F', 'S'].forEach(day => {
-        html += `<div class="date-picker-day-header">${day}</div>`;
-      });
-      
-      // Days
-      const firstDay = new Date(picker.year, picker.month, 1).getDay();
-      const daysInMonth = new Date(picker.year, picker.month + 1, 0).getDate();
-      
-      // Empty cells
-      for (let i = 0; i < firstDay; i++) {
-        html += '<div class="date-picker-day disabled"></div>';
-      }
-      
-      // Days of month
-      for (let day = 1; day <= daysInMonth; day++) {
-        const date = new Date(picker.year, picker.month, day);
-        const shiftInfo = userShift ? getShiftType(date, userShift) : null;
-        const holiday = isHoliday(date);
-        
-        const isSelected = picker.selectedDate && 
-          picker.selectedDate.getDate() === day &&
-          picker.selectedDate.getMonth() === picker.month &&
-          picker.selectedDate.getFullYear() === picker.year;
-        
-        const shiftClass = shiftInfo ? `shift-${shiftInfo.letter}` : '';
-        const selectedClass = isSelected ? 'selected' : '';
-        
-        html += `
-          <div class="date-picker-day ${shiftClass} ${selectedClass}" onclick="selectDate('${type}', ${day})">
-            ${holiday ? '<div class="day-holiday"></div>' : ''}
-            <div class="day-number">${day}</div>
-            ${shiftInfo ? `<div class="day-shift">${shiftInfo.letter}</div>` : ''}
-          </div>
-        `;
-      }
-      
-      daysGrid.innerHTML = html;
     }
     
-    window.selectDate = function(type, day) {
-      const picker = type === 'start' ? startDatePicker : endDatePicker;
-      picker.selectedDate = new Date(picker.year, picker.month, day);
+    function selectLeave() {
+      const leaveNumber = document.getElementById('leaveNumber').value;
+      const leaveForm = document.getElementById('leaveForm');
       
-      const display = document.getElementById(`${type}DateDisplay`);
-      display.textContent = picker.selectedDate.toLocaleDateString('ar-EG', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-      });
-      
-      document.getElementById(`${type}DatePicker`).classList.remove('active');
-      
-      if (type === 'start') {
-        checkStartDate();
+      if (leaveNumber) {
+        leaveForm.style.display = 'block';
       } else {
-        checkEndDate();
+        leaveForm.style.display = 'none';
       }
-    };
+    }
     
     function checkStartDate() {
-      if (!startDatePicker.selectedDate || !userShift) return;
+      const startDateInput = document.getElementById('startDate');
+      const startDateInfo = document.getElementById('startDateInfo');
       
-      const shiftInfo = getShiftType(startDatePicker.selectedDate, userShift);
-      const holiday = isHoliday(startDatePicker.selectedDate);
+      if (!startDateInput.value || !userShift) return;
       
-      const info = document.getElementById('startDateInfo');
-      info.style.display = 'block';
+      const date = new Date(startDateInput.value);
+      const shiftInfo = getShiftType(date, userShift);
       
-      let html = `<strong>${userShift} Shift - ${shiftInfo.name} (${shiftInfo.letter})</strong>`;
-      if (holiday) {
-        html += `<br>🔴 <strong>عطلة رسمية:</strong> ${holiday.name}`;
-      }
+      startDateInfo.style.display = 'block';
+      startDateInfo.textContent = `${userShift} Shift - ${shiftInfo.name}`;
       
-      if (!shiftInfo.name.includes('First Morning')) {
-        info.classList.add('warning');
-        html += '<br>⚠️ <strong>تحذير:</strong> يُفضل البدء من First Morning';
+      // Check if it's First Morning (recommended)
+      if (shiftInfo.code === 'M' && shiftInfo.isFirst) {
+        startDateInfo.className = 'shift-info';
+        startDateInfo.textContent += ' ✅ (موصى به)';
+      } else if (shiftInfo.code === 'O') {
+        startDateInfo.className = 'shift-info warning';
+        startDateInfo.textContent += ' ⚠️ (يوم راحة)';
       } else {
-        info.classList.remove('warning');
+        startDateInfo.className = 'shift-info warning';
+        startDateInfo.textContent += ' ⚠️ (يُفضل البدء من First Morning)';
       }
-      
-      info.innerHTML = html;
     }
     
     function checkEndDate() {
-      if (!endDatePicker.selectedDate || !userShift) return;
+      const endDateInput = document.getElementById('endDate');
+      const endDateInfo = document.getElementById('endDateInfo');
       
-      const shiftInfo = getShiftType(endDatePicker.selectedDate, userShift);
-      const holiday = isHoliday(endDatePicker.selectedDate);
+      if (!endDateInput.value || !userShift) return;
       
-      const info = document.getElementById('endDateInfo');
-      info.style.display = 'block';
+      const date = new Date(endDateInput.value);
+      const shiftInfo = getShiftType(date, userShift);
       
-      let html = `<strong>${userShift} Shift - ${shiftInfo.name} (${shiftInfo.letter})</strong>`;
-      if (holiday) {
-        html += `<br>🔴 <strong>عطلة رسمية:</strong> ${holiday.name}`;
-      }
+      endDateInfo.style.display = 'block';
+      endDateInfo.textContent = `${userShift} Shift - ${shiftInfo.name}`;
       
-      if (!shiftInfo.name.includes('Second Night')) {
-        info.classList.add('warning');
-        html += '<br>⚠️ <strong>تحذير:</strong> يُفضل الانتهاء في Second Night';
+      // Check if it's Second Night (recommended)
+      if (shiftInfo.code === 'N' && !shiftInfo.isFirst) {
+        endDateInfo.className = 'shift-info';
+        endDateInfo.textContent += ' ✅ (موصى به)';
+      } else if (shiftInfo.code === 'O') {
+        endDateInfo.className = 'shift-info warning';
+        endDateInfo.textContent += ' ⚠️ (يوم راحة)';
       } else {
-        info.classList.remove('warning');
+        endDateInfo.className = 'shift-info warning';
+        endDateInfo.textContent += ' ⚠️ (يُفضل الانتهاء في Second Night)';
       }
-      
-      info.innerHTML = html;
     }
     
-    // ========== SHIFT SELECTION ==========
-    window.selectShift = function() {
-      const select = document.getElementById('shiftSelect');
-      userShift = select.value;
+    async function saveLeave() {
+      const startDate = document.getElementById('startDate').value;
+      const endDate = document.getElementById('endDate').value;
       
-      if (userShift) {
-        document.getElementById('leaveForm').style.display = 'block';
-      } else {
-        document.getElementById('leaveForm').style.display = 'none';
-      }
-    };
-    
-    // ========== SAVE LEAVE ==========
-    window.saveLeave = async function() {
-      if (!startDatePicker.selectedDate || !endDatePicker.selectedDate) {
+      if (!startDate || !endDate) {
         alert('يرجى تحديد تاريخ البداية والنهاية');
         return;
       }
       
-      if (startDatePicker.selectedDate > endDatePicker.selectedDate) {
+      if (new Date(startDate) > new Date(endDate)) {
         alert('تاريخ البداية يجب أن يكون قبل تاريخ النهاية');
         return;
       }
@@ -890,21 +607,22 @@
         return;
       }
       
-      const startShiftInfo = getShiftType(startDatePicker.selectedDate, userShift);
-      const endShiftInfo = getShiftType(endDatePicker.selectedDate, userShift);
+      const startShiftInfo = getShiftType(new Date(startDate), userShift);
+      const endShiftInfo = getShiftType(new Date(endDate), userShift);
       
       const leave = {
         userId: currentUser.username,
         userName: currentUser.name || currentUser.username,
         shift: userShift,
-        startDate: startDatePicker.selectedDate.toISOString().split('T')[0],
-        endDate: endDatePicker.selectedDate.toISOString().split('T')[0],
+        startDate: startDate,
+        endDate: endDate,
         startShiftType: startShiftInfo.name,
         endShiftType: endShiftInfo.name,
         createdAt: new Date().toISOString()
       };
       
       try {
+        // Save to Firestore
         const docRef = await window.addDoc(window.collection(window.db, 'vacations'), leave);
         leave.id = docRef.id;
         
@@ -912,88 +630,80 @@
         renderLeaves();
         resetForm();
         
-        await loadAllLeaves();
-        
         alert('✅ تم حفظ الإجازة بنجاح!');
+        console.log('✅ Leave saved to Firestore:', docRef.id);
       } catch (error) {
         console.error('❌ Error saving leave:', error);
         alert('❌ خطأ في حفظ الإجازة: ' + error.message);
       }
-    };
+    }
     
-    // ========== DELETE LEAVE ==========
-    window.deleteLeave = async function(id) {
+    async function deleteLeave(id) {
       if (confirm('هل أنت متأكد من حذف هذه الإجازة؟')) {
         try {
+          // Delete from Firestore
           await window.deleteDoc(window.doc(window.db, 'vacations', id));
           
           userLeaves = userLeaves.filter(l => l.id !== id);
           renderLeaves();
           
-          await loadAllLeaves();
-          
           alert('✅ تم حذف الإجازة بنجاح!');
+          console.log('✅ Leave deleted from Firestore:', id);
         } catch (error) {
           console.error('❌ Error deleting leave:', error);
           alert('❌ خطأ في حذف الإجازة: ' + error.message);
         }
       }
-    };
+    }
     
-    // ========== RENDER LEAVES ==========
     function renderLeaves() {
       const container = document.getElementById('leavesContainer');
-      const title = document.querySelector('.card-title');
-      title.textContent = `📋 إجازاتي (${userLeaves.length}/3)`;
       
       if (userLeaves.length === 0) {
         container.innerHTML = '<p style="text-align: center; opacity: 0.7;">لا توجد إجازات محفوظة</p>';
         return;
       }
       
-      let html = '';
-      userLeaves.forEach(leave => {
-        const startDate = new Date(leave.startDate);
-        const endDate = new Date(leave.endDate);
-        const days = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
-        
-        html += `
-          <div class="leave-card">
-            <div class="leave-header">
-              <div>
-                <div class="leave-dates">
-                  ${startDate.toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' })} - 
-                  ${endDate.toLocaleDateString('ar-EG', { month: 'short', day: 'numeric', year: 'numeric' })}
-                </div>
-                <div class="leave-details">
-                  <span class="leave-shift shift-${leave.shift.charAt(0)}" style="background: rgba(102,126,234,0.2); color: #667eea;">
-                    ${leave.shift} Shift
-                  </span>
-                  • ${days} أيام
-                </div>
-                <div class="leave-details" style="margin-top: 5px;">
-                  من: ${leave.startShiftType} | إلى: ${leave.endShiftType}
-                </div>
-              </div>
-              <button class="delete-btn" onclick="deleteLeave('${leave.id}')">🗑️ حذف</button>
+      container.innerHTML = userLeaves.map(leave => `
+        <div class="leave-item">
+          <div class="leave-info">
+            <div class="leave-dates">
+              📅 ${leave.startDate} → ${leave.endDate}
+            </div>
+            <div class="leave-shift-type">
+              ${leave.shift} Shift: ${leave.startShiftType} → ${leave.endShiftType}
             </div>
           </div>
-        `;
-      });
-      
-      container.innerHTML = html;
+          <button class="btn btn-danger" onclick="deleteLeave(${leave.id})" style="padding: 8px 16px; font-size: 14px;">
+            🗑️ حذف
+          </button>
+        </div>
+      `).join('');
     }
     
-    // ========== RESET FORM ==========
-    window.resetForm = function() {
-      startDatePicker.selectedDate = null;
-      endDatePicker.selectedDate = null;
-      
-      document.getElementById('startDateDisplay').textContent = 'اختر تاريخ البداية';
-      document.getElementById('endDateDisplay').textContent = 'اختر تاريخ النهاية';
+    function resetForm() {
+      document.getElementById('startDate').value = '';
+      document.getElementById('endDate').value = '';
       document.getElementById('startDateInfo').style.display = 'none';
       document.getElementById('endDateInfo').style.display = 'none';
-    };
+    }
+    
+    // ========== LOGOUT ==========
+    function handleLogout() {
+      if (confirm('هل أنت متأكد من تسجيل الخروج؟')) {
+        if (window.auth && window.auth.signOut) {
+          window.auth.signOut().then(() => {
+            localStorage.removeItem('tanktools_current_user');
+            sessionStorage.removeItem('tanktools_session');
+            window.location.href = 'login.html';
+          });
+        } else {
+          localStorage.removeItem('tanktools_current_user');
+          sessionStorage.removeItem('tanktools_session');
+          window.location.href = 'login.html';
+        }
+      }
+    }
     
     // ========== LOAD USER LEAVES ==========
     async function loadUserLeaves() {
@@ -1043,11 +753,12 @@
     }
     
     // ========== ANNUAL ROSTER ==========
-    window.renderAnnualRoster = function() {
+    function renderAnnualRoster() {
       const year = parseInt(document.getElementById('rosterYear').value);
       const grid = document.getElementById('annualRosterGrid');
       const suggestions = document.getElementById('conflictSuggestions');
       
+      // Count people on leave for each day
       const dailyCounts = {};
       const dailyPeople = {};
       
@@ -1055,6 +766,7 @@
         const start = new Date(leave.startDate);
         const end = new Date(leave.endDate);
         
+        // Iterate through each day of the leave
         for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
           if (d.getFullYear() === year) {
             const dateStr = d.toISOString().split('T')[0];
@@ -1066,10 +778,12 @@
         }
       });
       
+      // Find conflicts (4+ people)
       const conflicts = Object.entries(dailyCounts)
         .filter(([date, count]) => count >= 4)
         .sort((a, b) => new Date(a[0]) - new Date(b[0]));
       
+      // Render calendar grid (12 months)
       let html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-top: 20px;">';
       
       for (let month = 0; month < 12; month++) {
@@ -1083,15 +797,18 @@
             <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px;">
         `;
         
+        // Day headers
         ['S', 'M', 'T', 'W', 'T', 'F', 'S'].forEach(day => {
           html += `<div style="text-align: center; font-size: 12px; font-weight: bold; opacity: 0.7;">${day}</div>`;
         });
         
+        // Empty cells before month starts
         const firstDay = new Date(year, month, 1).getDay();
         for (let i = 0; i < firstDay; i++) {
           html += '<div></div>';
         }
         
+        // Days of month
         for (let day = 1; day <= daysInMonth; day++) {
           const date = new Date(year, month, day);
           const dateStr = date.toISOString().split('T')[0];
@@ -1135,6 +852,7 @@
       html += '</div>';
       grid.innerHTML = html;
       
+      // Render conflict suggestions
       if (conflicts.length > 0) {
         let suggestionsHtml = `
           <div class="alert alert-error">
@@ -1165,100 +883,146 @@
           </div>
         `;
       }
-    };
-    
-    // ========== TEST MODE ==========
-    window.createTestUser = function() {
-      const nameInput = document.getElementById('testUserName');
-      const name = nameInput.value.trim();
-      
-      if (!name) {
-        alert('يرجى إدخال اسم المستخدم');
-        return;
-      }
-      
-      currentUser = {
-        username: `test_${Date.now()}`,
-        name: name,
-        isTestUser: true
-      };
-      
-      document.getElementById('userName').textContent = name + ' (اختبار)';
-      nameInput.value = '';
-      
-      loadUserLeaves();
-      loadAllLeaves();
-      
-      alert(`✅ تم إنشاء مستخدم تجريبي: ${name}`);
-    };
-    
-    // ========== LOGOUT ==========
-    window.handleLogout = async function() {
-      if (currentUser && currentUser.isTestUser) {
-        currentUser = null;
-        userShift = '';
-        userLeaves = [];
-        document.getElementById('userName').textContent = 'Loading...';
-        document.getElementById('leaveForm').style.display = 'none';
-        document.getElementById('shiftSelect').value = '';
-        renderLeaves();
-        alert('تم تسجيل الخروج');
-        return;
-      }
-      
-      try {
-        await signOut(auth);
-        window.location.href = 'login.html';
-      } catch (error) {
-        console.error('Error signing out:', error);
-        alert('خطأ في تسجيل الخروج');
-      }
-    };
+    }
     
     // ========== INITIALIZE ==========
-    console.log('%c🏖️ VACATION PLANNER v1.3', 'color:#4CAF50;font-size:20px;font-weight:bold');
+    console.log('%c🏖️ VACATION PLANNER v1.4', 'color:#4CAF50;font-size:20px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
+  </script>
+  
+  <!-- Firebase SDK & Auth -->
+  <script type="module">
+    import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBCdv37V6vOFMe42rGlPyl9lVq-9JldEPg",
+      authDomain: "tank-tools-knpc-c2d95.firebaseapp.com",
+      projectId: "tank-tools-knpc-c2d95",
+      storageBucket: "tank-tools-knpc-c2d95.appspot.com",
+      messagingSenderId: "678793823159",
+      appId: "1:678793823159:web:7a7b1398aefdb7f24462b9"
+    };
+
+    // Initialize Firebase
+    let app, db;
+    const existingApps = getApps();
+    if (existingApps.length === 0) {
+      app = initializeApp(firebaseConfig);
+      console.log('🔥 Firebase initialized for Vacation Planner!');
+    } else {
+      app = getApp();
+      console.log('🔄 Using existing Firebase app');
+    }
+    db = getFirestore(app);
     
-    // Fetch Kuwait holidays
-    await fetchKuwaitHolidays();
+    // Make Firebase globally available
+    window.db = db;
+    window.doc = doc;
+    window.getDoc = getDoc;
     
-    // Auth state listener
+    // Import additional Firestore functions
+    import { collection, getDocs, addDoc, deleteDoc, query, where } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    window.collection = collection;
+    window.getDocs = getDocs;
+    window.addDoc = addDoc;
+    window.deleteDoc = deleteDoc;
+    window.query = query;
+    window.where = where;
+    
+    const auth = getAuth(app);
+    window.auth = auth;
+    
+    // AUTH STATE MANAGEMENT
     onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        const username = user.email.split('@')[0];
-        const userDoc = await window.getDoc(window.doc(window.db, 'users', username));
+      if (!user) {
+        console.log('❌ No Firebase Auth user, checking localStorage...');
         
+        // Fallback to localStorage for non-migrated users
+        const savedUser = localStorage.getItem('tanktools_current_user');
+        const savedSession = sessionStorage.getItem('tanktools_session');
+        
+        if (!savedUser || !savedSession) {
+          console.log('❌ No session found, redirecting to login...');
+          alert('يرجى تسجيل الدخول أولاً');
+          window.location.href = 'login.html';
+          return;
+        }
+        
+        // Use localStorage data for non-migrated users
+        const userData = JSON.parse(savedUser);
+        console.log('✅ Using localStorage session for:', userData.username);
+        window.currentUser = userData;
+        currentUser = userData;
+        
+        // Check page permissions (for now, allow dashboard users)
+        if (typeof hasPageAccess === 'function') {
+          if (!hasPageAccess(userData, 'dashboard.html')) {
+            alert('ليس لديك صلاحية للدخول إلى هذه الصفحة');
+            window.location.href = 'index.html';
+            return;
+          }
+        }
+        
+        // Update UI with user name
+        document.getElementById('userName').textContent = userData.name || userData.username;
+        console.log('✅ Vacation Planner loaded for:', userData.name);
+        
+        // Load user leaves
+        await loadUserLeaves();
+        
+        // Load all leaves for annual roster
+        await loadAllLeaves();
+        return;
+      }
+      
+      console.log('✅ Firebase Auth user logged in:', user.email);
+      
+      // Get username from email
+      const username = user.email.split('@')[0];
+      console.log('🔍 Looking up user in Firestore:', username);
+      
+      // Get user data from Firestore
+      try {
+        const userDoc = await getDoc(doc(db, 'users', username));
         if (!userDoc.exists()) {
-          alert('ليس لديك حساب مسجل');
+          console.error('❌ User document not found for:', username);
+          alert('حساب غير موجود');
           await signOut(auth);
           window.location.href = 'login.html';
           return;
         }
         
         const userData = userDoc.data();
+        window.currentUser = userData;
+        currentUser = userData;
         
-        if (!window.hasPageAccess(userData, 'dashboard.html')) {
-          alert('ليس لديك صلاحية للدخول إلى هذه الصفحة');
-          window.location.href = 'index.html';
-          return;
+        // Check page permissions (for now, allow dashboard users)
+        if (typeof hasPageAccess === 'function') {
+          if (!hasPageAccess(userData, 'dashboard.html')) {
+            alert('ليس لديك صلاحية للدخول إلى هذه الصفحة');
+            window.location.href = 'index.html';
+            return;
+          }
         }
         
-        currentUser = {
-          username: username,
-          name: userData.name || username,
-          ...userData
-        };
-        
-        document.getElementById('userName').textContent = userData.name || userData.username;
+        // Update UI with user name
+        document.getElementById('userName').textContent = userData.name || username;
         console.log('✅ Vacation Planner loaded for:', userData.name);
         
+        // Load user leaves
         await loadUserLeaves();
+        
+        // Load all leaves for annual roster
         await loadAllLeaves();
-        return;
+        
+      } catch (error) {
+        console.error('❌ Error loading user data:', error);
+        alert('خطأ في تحميل بيانات المستخدم');
+        window.location.href = 'login.html';
       }
-      
-      // No user logged in - allow test mode
-      console.log('⚠️ No user logged in - Test Mode enabled');
     });
   </script>
 </body>
