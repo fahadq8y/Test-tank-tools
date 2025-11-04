@@ -415,19 +415,30 @@
         font-size: 20px;
       }
       
-      .headers-row,
+      .headers-row {
+        grid-template-columns: 1fr 30%;
+        gap: 10px;
+      }
+      
       .content-row {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 30%;
+        gap: 10px;
       }
       
-      .days-header,
-      .days-grid {
-        order: 2;
+      .shift-header,
+      .shift-cell {
+        font-size: 14px;
+        padding: 6px;
       }
       
-      .shift-headers,
-      .shifts-grid {
-        order: 1;
+      .day-cell {
+        font-size: 12px;
+        padding: 4px;
+      }
+      
+      .days-header {
+        font-size: 12px;
+        padding: 6px;
       }
     }
   </style>
