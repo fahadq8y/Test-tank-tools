@@ -353,12 +353,99 @@
       font-size: 14px;
       font-weight: bold;
     }
+    
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      .nav-bar {
+        padding: 10px;
+      }
+      
+      .nav-logo {
+        font-size: 14px;
+      }
+      
+      .nav-links {
+        gap: 5px;
+        flex-wrap: wrap;
+      }
+      
+      .nav-link {
+        padding: 6px 10px;
+        font-size: 11px;
+      }
+      
+      .theme-btn {
+        width: 35px;
+        height: 35px;
+        font-size: 16px;
+      }
+      
+      .main-container {
+        padding: 15px;
+        margin: 15px;
+      }
+      
+      .month-nav button {
+        width: 45px;
+        height: 45px;
+        font-size: 18px;
+      }
+      
+      .month-display {
+        font-size: 18px;
+      }
+      
+      .calendar-container {
+        gap: 10px;
+      }
+      
+      .days-section {
+        flex: 0 0 20%;
+        gap: 4px;
+      }
+      
+      .day-cell {
+        padding: 8px 4px;
+        font-size: 12px;
+      }
+      
+      .shift-header {
+        padding: 6px;
+        font-size: 13px;
+      }
+      
+      .shift-cell {
+        padding: 8px 4px;
+        font-size: 13px;
+      }
+      
+      .legend {
+        gap: 8px;
+        padding: 8px;
+      }
+      
+      .legend-icon {
+        font-size: 12px;
+      }
+      
+      .legend-text {
+        font-size: 10px;
+      }
+      
+      .footer {
+        padding: 8px;
+      }
+      
+      .date-display {
+        font-size: 12px;
+      }
+    }
   </style>
 </head>
 <body>
   <!-- Navigation Bar -->
   <div class="nav-bar">
-    <div class="nav-logo">📅 الورديات - Shift Roster v5.4</div>
+    <div class="nav-logo">📅 الورديات - Shift Roster v5.5</div>
     <div class="nav-links">
       <a href="pbcr-calculator.html" class="nav-link">🛢️ PBCR</a>
       <a href="plcr.html" class="nav-link">⚗️ PLCR</a>
@@ -577,7 +664,7 @@
     renderCalendar();
     loadSavedTheme();
     
-    console.log('%c📅 SHIFT ROSTER v5.4 - Compact Layout', 'color:#B8860B;font-size:20px;font-weight:bold');
+    console.log('%c📅 SHIFT ROSTER v5.5 - Mobile Responsive', 'color:#B8860B;font-size:20px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
   </script>
 </body>
