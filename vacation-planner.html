@@ -2090,42 +2090,42 @@
     }
     
     // ========== FONT SIZE FUNCTIONS ==========
-    let currentFontSize = 100; // percentage
+    window.currentFontSize = 100; // percentage
     
-    function increaseFontSize() {
-      if (currentFontSize < 150) {
-        currentFontSize += 10;
-        applyFontSize();
-        saveFontSize();
+    window.increaseFontSize = function() {
+      if (window.currentFontSize < 150) {
+        window.currentFontSize += 10;
+        window.applyFontSize();
+        window.saveFontSize();
       }
     }
     
-    function decreaseFontSize() {
-      if (currentFontSize > 70) {
-        currentFontSize -= 10;
-        applyFontSize();
-        saveFontSize();
+    window.decreaseFontSize = function() {
+      if (window.currentFontSize > 70) {
+        window.currentFontSize -= 10;
+        window.applyFontSize();
+        window.saveFontSize();
       }
     }
     
-    function applyFontSize() {
-      document.documentElement.style.fontSize = currentFontSize + '%';
+    window.applyFontSize = function() {
+      document.documentElement.style.fontSize = window.currentFontSize + '%';
     }
     
-    function saveFontSize() {
-      localStorage.setItem('fontSize', currentFontSize);
+    window.saveFontSize = function() {
+      localStorage.setItem('fontSize', window.currentFontSize);
     }
     
-    function loadFontSize() {
+    window.loadFontSize = function() {
       const savedSize = localStorage.getItem('fontSize');
       if (savedSize) {
-        currentFontSize = parseInt(savedSize);
-        applyFontSize();
+        window.currentFontSize = parseInt(savedSize);
+        window.applyFontSize();
       }
     }
     
     // Load saved font size on page load
-    loadFontSize();
+    window.loadFontSize();
     
     // ========== THEME FUNCTIONS ==========
     function toggleThemeDropdown() {
