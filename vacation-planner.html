@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Vacation Planner v2.2 - Added theme switcher, fixed PBCR link, reversed calendar arrows -->
+<!-- Vacation Planner v2.3 - Added Font Controls & User Avatar for unified header design -->
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
@@ -184,6 +184,49 @@
       display: flex;
       align-items: center;
       gap: 10px;
+    }
+    
+    /* Font Controls */
+    .font-controls {
+      display: flex;
+      gap: 5px;
+    }
+    
+    .font-btn {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: white;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      min-width: 32px;
+      min-height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .font-btn:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-1px);
+    }
+    
+    /* User Avatar */
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, var(--primary), var(--secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 14px;
+      color: white;
+      border: 2px solid var(--accent);
     }
     
     .user-name {
@@ -540,6 +583,23 @@
       .nav-link {
         padding: 4px 6px;
         font-size: 10px;
+      }
+      
+      .font-controls {
+        gap: 3px;
+      }
+      
+      .font-btn {
+        min-width: 28px;
+        min-height: 28px;
+        padding: 4px 8px;
+        font-size: 14px;
+      }
+      
+      .user-avatar {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
       }
       
       .user-name {
@@ -954,7 +1014,7 @@
 <body>
   <!-- Navigation Bar -->
   <div class="nav-bar">
-    <div class="nav-logo">🏖️ مخطط الإجازات - Vacation Planner v2.2</div>
+    <div class="nav-logo">🏖️ مخطط الإجازات - Vacation Planner v2.3</div>
     <div class="nav-links">
       <a href="index.html" class="nav-link">🛢️ PBCR</a>
       <a href="plcr.html" class="nav-link">⚗️ PLCR</a>
@@ -963,6 +1023,10 @@
       <a href="dashboard.html" class="nav-link">📊 Dashboard</a>
       <button class="nav-link" onclick="toggleTestMode()" style="background: rgba(255,152,0,0.3); border-color: #FF9800;">🧪 Test Mode</button>
       <div class="user-info">
+        <div class="font-controls">
+          <button class="font-btn" onclick="decreaseFontSize()" title="تصغير الخط">-</button>
+          <button class="font-btn" onclick="increaseFontSize()" title="تكبير الخط">+</button>
+        </div>
         <div class="theme-switcher">
           <button class="theme-btn" onclick="toggleThemeDropdown()" title="Change Theme">🎨</button>
           <div class="theme-dropdown" id="themeDropdown">
@@ -973,6 +1037,7 @@
             <div class="theme-option" data-theme="forest" onclick="setTheme('forest')">🌲 Forest Green</div>
           </div>
         </div>
+        <div class="user-avatar" id="userAvatar">U</div>
         <span class="user-name" id="userName">Loading...</span>
         <button class="logout-btn" onclick="handleLogout()">🚺 Logout</button>
       </div>
@@ -2024,6 +2089,44 @@
       }
     }
     
+    // ========== FONT SIZE FUNCTIONS ==========
+    let currentFontSize = 100; // percentage
+    
+    function increaseFontSize() {
+      if (currentFontSize < 150) {
+        currentFontSize += 10;
+        applyFontSize();
+        saveFontSize();
+      }
+    }
+    
+    function decreaseFontSize() {
+      if (currentFontSize > 70) {
+        currentFontSize -= 10;
+        applyFontSize();
+        saveFontSize();
+      }
+    }
+    
+    function applyFontSize() {
+      document.documentElement.style.fontSize = currentFontSize + '%';
+    }
+    
+    function saveFontSize() {
+      localStorage.setItem('fontSize', currentFontSize);
+    }
+    
+    function loadFontSize() {
+      const savedSize = localStorage.getItem('fontSize');
+      if (savedSize) {
+        currentFontSize = parseInt(savedSize);
+        applyFontSize();
+      }
+    }
+    
+    // Load saved font size on page load
+    loadFontSize();
+    
     // ========== THEME FUNCTIONS ==========
     function toggleThemeDropdown() {
       const dropdown = document.getElementById('themeDropdown');
@@ -2072,7 +2175,7 @@
     });
     
     // ========== INITIALIZE ==========
-    console.log('%c🏖️ VACATION PLANNER v2.2', 'color:#4CAF50;font-size:20px;font-weight:bold');
+    console.log('%c🏖️ VACATION PLANNER v2.3', 'color:#4CAF50;font-size:20px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
   </script>
   
@@ -2154,6 +2257,14 @@
         
         // Update UI with user name
         document.getElementById('userName').textContent = userData.name || userData.username;
+        
+        // Update user avatar with first letter
+        const avatarElement = document.getElementById('userAvatar');
+        if (avatarElement) {
+          const firstLetter = (userData.name || userData.username || 'U').charAt(0).toUpperCase();
+          avatarElement.textContent = firstLetter;
+        }
+        
         console.log('✅ Vacation Planner loaded for:', userData.name);
         
         // Load user leaves
@@ -2196,6 +2307,14 @@
         
         // Update UI with user name
         document.getElementById('userName').textContent = userData.name || username;
+        
+        // Update user avatar with first letter
+        const avatarElement = document.getElementById('userAvatar');
+        if (avatarElement) {
+          const firstLetter = (userData.name || username || 'U').charAt(0).toUpperCase();
+          avatarElement.textContent = firstLetter;
+        }
+        
         console.log('✅ Vacation Planner loaded for:', userData.name);
         
         // Load user leaves
