@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- PBCR Calculator v8.0 - Unified Header from vacation-planner -->
+<!-- PBCR Calculator v8.2 - Applied flex-wrap wrap like vacation-planner -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -68,8 +68,7 @@
       display: flex;
       gap: 10px;
       align-items: center;
-      flex-wrap: nowrap;
-      overflow-x: auto;
+      flex-wrap: wrap;
     }
     
     .nav-link {
@@ -227,8 +226,9 @@ input,select{background:rgba(255,255,255,0.9);border-radius:12px;border:none;col
       }
       
       .nav-links {
-        flex-wrap: nowrap;
+        flex-wrap: wrap;
         gap: 5px;
+        justify-content: center;
       }
       
       .nav-link {
@@ -278,7 +278,7 @@ input,select{background:rgba(255,255,255,0.9);border-radius:12px;border:none;col
 <div id="mainContent" style="display:none;">
 <!-- Navigation Bar -->
   <div class="nav-bar">
-    <div class="nav-logo">🛢️ PBCR Calculator v2.0</div>
+    <div class="nav-logo">🛢️ PBCR Calculator v8.2</div>
     <div class="nav-links">
       <a href="plcr.html" class="nav-link">⚗️ PLCR</a>
       <a href="live-tanks.html" class="nav-link">🔴 Live Tanks</a>
@@ -448,7 +448,7 @@ const existingApps = getApps();
 if (existingApps.length === 0) {
     app = initializeApp({apiKey:"AIzaSyD7lJcoY33FEC9d6eWy67QIO9SV4lS24pg",authDomain:"tank-tools-knpc-c2d95.firebaseapp.com",projectId:"tank-tools-knpc-c2d95",storageBucket:"tank-tools-knpc-c2d95.firebasestorage.app",messagingSenderId:"510062594324",appId:"1:510062594324:web:b892fd02007a5ca2f0da01"});
     console.log('🔥 Firebase initialized for Index Calculator!');
-    console.log('%c🛢️ PBCR CALCULATOR v8.0 - Unified Header', 'color:#B8860B;font-size:20px;font-weight:bold');
+    console.log('%c🛢️ PBCR CALCULATOR v8.2 - Flex Wrap', 'color:#B8860B;font-size:20px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
 } else {
     app = getApp();
@@ -1132,7 +1132,7 @@ function handleLogout() {
 
 </script>
 <footer>
-  By <a href="#" class="whatsapp-link" onclick="window.open('https://wa.me/96555222550','_blank'); return false;">Fahad - 17877</a> – Version v8.0 - Unified Header
+  By <a href="#" class="whatsapp-link" onclick="window.open('https://wa.me/96555222550','_blank'); return false;">Fahad - 17877</a> – Version v8.2 - Flex Wrap
   <br><small style="color:#999;font-size:10px;margin-top:5px;display:block">📱 WhatsApp: +965 55222550</small>
 </footer>
 <style>
