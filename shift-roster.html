@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Shift Roster v8.2 - Holiday background styling instead of markers -->
+<!-- Shift Roster v8.3 - Fixed holiday date matching (timezone issue) -->
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
@@ -681,7 +681,7 @@
 <body>
   <!-- Navigation Bar -->
   <div class="nav-bar">
-    <div class="nav-logo">📅 الورديات - Shift Roster v8.0</div>
+    <div class="nav-logo">📅 الورديات - Shift Roster v8.3</div>
     <div class="nav-links">
       <a href="pbcr-calculator.html" class="nav-link">🛢️ PBCR</a>
       <a href="plcr.html" class="nav-link">⚗️ PLCR</a>
@@ -868,9 +868,17 @@
       }
     }
     
+    // Format date to YYYY-MM-DD (avoiding timezone issues)
+    function formatDate(year, month, day) {
+      const y = year;
+      const m = String(month + 1).padStart(2, '0');
+      const d = String(day).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+    
     // Check if a date is a holiday
     function isHoliday(date) {
-      const dateStr = date.toISOString().split('T')[0];
+      const dateStr = formatDate(date.getFullYear(), date.getMonth(), date.getDate());
       return kuwaitHolidays.find(h => h.date === dateStr);
     }
     
@@ -1224,7 +1232,7 @@
     switchView(); // This will render the appropriate view
     loadHolidays(); // Load Kuwait holidays
     
-    console.log('%c📅 SHIFT ROSTER v8.2 - Holiday Background Styling', 'color:#B8860B;font-size:20px;font-weight:bold');
+    console.log('%c📅 SHIFT ROSTER v8.3 - Fixed Holiday Date Matching', 'color:#B8860B;font-size:20px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
   </script>
 </body>
