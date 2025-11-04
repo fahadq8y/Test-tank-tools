@@ -417,12 +417,12 @@
       
       .headers-row {
         grid-template-columns: 1fr 30%;
-        gap: 10px;
+        gap: 5px;
       }
       
       .content-row {
         grid-template-columns: 1fr 30%;
-        gap: 10px;
+        gap: 5px;
       }
       
       .shift-header,
@@ -538,7 +538,7 @@
     function getShiftForDay(date, shift) {
       const diffTime = date - START_DATE;
       const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-      const index = (diffDays + SHIFT_OFFSETS[shift]) % 8;
+      const index = ((diffDays + SHIFT_OFFSETS[shift]) % 8 + 8) % 8;
       return PATTERN[index];
     }
     
