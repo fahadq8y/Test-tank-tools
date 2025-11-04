@@ -239,14 +239,6 @@
       font-weight: bold;
     }
     
-    /* Shift Headers Container */
-    .shift-headers-container {
-      display: flex;
-      justify-content: flex-start;
-      margin-bottom: 2px;
-      padding-right: 20%;
-    }
-    
     /* Shifts Section */
     .shifts-section {
       flex: 1;
@@ -263,6 +255,7 @@
       grid-template-columns: repeat(4, 1fr);
       background: var(--secondary);
       border-bottom: 2px solid rgba(255,255,255,0.2);
+      min-height: 40px;
     }
     
     .shift-header {
@@ -459,7 +452,7 @@
 <body>
   <!-- Navigation Bar -->
   <div class="nav-bar">
-    <div class="nav-logo">📅 الورديات - Shift Roster v6.5</div>
+    <div class="nav-logo">📅 الورديات - Shift Roster v6.6</div>
     <div class="nav-links">
       <a href="pbcr-calculator.html" class="nav-link">🛢️ PBCR</a>
       <a href="plcr.html" class="nav-link">⚗️ PLCR</a>
@@ -487,16 +480,6 @@
       <button onclick="previousMonth()">❯</button>
     </div>
     
-    <!-- Shift Headers -->
-    <div class="shift-headers-container">
-      <div class="shift-headers">
-        <div class="shift-header">A</div>
-        <div class="shift-header">B</div>
-        <div class="shift-header">C</div>
-        <div class="shift-header">D</div>
-      </div>
-    </div>
-    
     <!-- Calendar Container -->
     <div class="calendar-container">
       <!-- Days Section -->
@@ -504,6 +487,12 @@
       
       <!-- Shifts Section -->
       <div class="shifts-section">
+        <div class="shift-headers">
+          <div class="shift-header">D</div>
+          <div class="shift-header">C</div>
+          <div class="shift-header">B</div>
+          <div class="shift-header">A</div>
+        </div>
         <div class="shift-grid" id="shiftGrid"></div>
       </div>
     </div>
@@ -682,7 +671,7 @@
     renderCalendar();
     loadSavedTheme();
     
-    console.log('%c📅 SHIFT ROSTER v6.5 - Perfect Vertical Alignment', 'color:#B8860B;font-size:20px;font-weight:bold');
+    console.log('%c📅 SHIFT ROSTER v6.6 - Headers Inside Columns', 'color:#B8860B;font-size:20px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
   </script>
 </body>
