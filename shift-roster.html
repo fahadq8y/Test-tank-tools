@@ -249,16 +249,17 @@
       backdrop-filter: blur(5px);
     }
     
-    /* Calendar Grid */
+    /* Calendar Grid - Horizontal Rows */
     .calendar-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      display: flex;
+      flex-direction: column;
       gap: 0;
     }
     
-    .day-column {
-      display: flex;
-      flex-direction: column;
+    .day-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
     }
     
     .day-cell {
@@ -591,21 +592,15 @@
       // Get days in month
       const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
       
-      // Create columns for each shift
       const shifts = ['A', 'B', 'C', 'D'];
-      const columns = {};
       
-      shifts.forEach(shift => {
-        const column = document.createElement('div');
-        column.className = 'day-column';
-        columns[shift] = column;
-        grid.appendChild(column);
-      });
-      
-      // Fill in days
+      // Create a row for each day
       for (let day = 1; day <= daysInMonth; day++) {
         const date = new Date(currentYear, currentMonth, day);
+        const row = document.createElement('div');
+        row.className = 'day-row';
         
+        // Create 4 cells for each shift (A, B, C, D)
         shifts.forEach(shift => {
           const cell = document.createElement('div');
           cell.className = 'day-cell';
@@ -651,8 +646,10 @@
             <span class="day-name">${dayName}</span>
           `;
           
-          columns[shift].appendChild(cell);
+          row.appendChild(cell);
         });
+        
+        grid.appendChild(row);
       }
       
       // Update month display
@@ -732,7 +729,7 @@
     renderCalendar();
     loadSavedTheme();
     
-    console.log('%c📅 SHIFT ROSTER v3.0 - Theme System', 'color:#FFD700;font-size:20px;font-weight:bold');
+    console.log('%c📅 SHIFT ROSTER v4.0 - Horizontal Layout', 'color:#FFD700;font-size:20px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
   </script>
 </body>
