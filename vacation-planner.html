@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<!-- Vacation Planner v1.4 - Fixed shift display, added leave selector, days calculation -->
+<!-- Vacation Planner v1.5 - Custom calendar with shift display, responsive design, day details modal, test mode -->
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>مخطط الإجازات - Vacation Planner</title>
   <link href="icon.png" rel="icon" type="image/png"/>
   <script src="permissions.js"></script>
@@ -318,40 +318,359 @@
       .nav-bar {
         flex-direction: column;
         align-items: flex-start;
+        padding: 10px 15px;
+      }
+      
+      .nav-logo {
+        font-size: 18px;
       }
       
       .nav-links {
         width: 100%;
         justify-content: center;
+        gap: 5px;
+      }
+      
+      .nav-link {
+        padding: 6px 10px;
+        font-size: 12px;
+      }
+      
+      .container {
+        padding: 15px;
+      }
+      
+      .section {
+        padding: 15px;
+      }
+      
+      .section-title {
+        font-size: 18px;
       }
       
       .form-row {
         grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      
+      .form-label {
+        font-size: 14px;
+      }
+      
+      .form-input, .form-select {
+        font-size: 14px;
+        padding: 10px;
       }
       
       .btn-group {
         flex-direction: column;
+        gap: 10px;
       }
       
       .btn {
         width: 100%;
+        font-size: 14px;
+        padding: 10px;
       }
+      
+      .leave-card {
+        padding: 12px;
+      }
+      
+      .leave-dates {
+        font-size: 14px;
+      }
+      
+      .leave-shift {
+        font-size: 12px;
+      }
+      
+      .annual-roster {
+        overflow-x: auto;
+      }
+      
+      .month-grid {
+        min-width: 280px;
+      }
+      
+      .month-name {
+        font-size: 14px;
+        padding: 8px;
+      }
+      
+      .day-cell {
+        font-size: 11px;
+        padding: 4px 2px;
+      }
+      
+      .conflict-count {
+        font-size: 9px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .nav-logo {
+        font-size: 16px;
+      }
+      
+      .nav-link {
+        padding: 5px 8px;
+        font-size: 11px;
+      }
+      
+      .user-name {
+        font-size: 12px;
+        padding: 4px 8px;
+      }
+      
+      .logout-btn {
+        font-size: 12px;
+        padding: 4px 8px;
+      }
+      
+      .section-title {
+        font-size: 16px;
+      }
+      
+      .form-label {
+        font-size: 13px;
+      }
+      
+      .form-input, .form-select {
+        font-size: 13px;
+      }
+      
+      .btn {
+        font-size: 13px;
+      }
+      
+      .leave-dates {
+        font-size: 13px;
+      }
+      
+      .leave-shift {
+        font-size: 11px;
+      }
+      
+      .month-name {
+        font-size: 12px;
+        padding: 6px;
+      }
+      
+      .day-cell {
+        font-size: 10px;
+        padding: 3px 1px;
+      }
+      
+      .conflict-count {
+        font-size: 8px;
+      }
+    }
+    
+    /* Modal */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      backdrop-filter: blur(5px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal-content {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      border-radius: 15px;
+      padding: 25px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      position: relative;
+      border: 2px solid #4CAF50;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    }
+    
+    .modal-close {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      font-size: 30px;
+      color: #fff;
+      cursor: pointer;
+      transition: all 0.3s;
+      width: 35px;
+      height: 35px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: rgba(255,0,0,0.2);
+    }
+    
+    .modal-close:hover {
+      background: rgba(255,0,0,0.4);
+      transform: rotate(90deg);
+    }
+    
+    .modal-title {
+      color: #4CAF50;
+      font-size: 22px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    
+    /* Custom Calendar */
+    .custom-calendar {
+      background: rgba(255,255,255,0.05);
+      border: 2px solid rgba(255,255,255,0.2);
+      border-radius: 10px;
+      padding: 15px;
+      margin-top: 10px;
+    }
+    
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    
+    .calendar-nav-btn {
+      background: rgba(76,175,80,0.3);
+      border: 1px solid #4CAF50;
+      color: white;
+      padding: 8px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 18px;
+    }
+    
+    .calendar-nav-btn:hover {
+      background: rgba(76,175,80,0.5);
+    }
+    
+    .calendar-month-year {
+      font-size: 18px;
+      font-weight: bold;
+      color: #4CAF50;
+    }
+    
+    .calendar-weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+      margin-bottom: 10px;
+    }
+    
+    .calendar-weekday {
+      text-align: center;
+      font-weight: bold;
+      color: #4CAF50;
+      font-size: 14px;
+      padding: 5px;
+    }
+    
+    .calendar-days {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+    }
+    
+    .calendar-day {
+      aspect-ratio: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+      font-size: 14px;
+      border: 2px solid transparent;
+    }
+    
+    .calendar-day:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 10px rgba(76,175,80,0.5);
+    }
+    
+    .calendar-day.empty {
+      cursor: default;
+      opacity: 0;
+    }
+    
+    .calendar-day.empty:hover {
+      transform: none;
+      box-shadow: none;
+    }
+    
+    .calendar-day.selected {
+      border-color: #FFD700;
+      box-shadow: 0 0 15px rgba(255,215,0,0.5);
+    }
+    
+    .calendar-day.shift-M {
+      background: rgba(76,175,80,0.3);
+      border-color: #4CAF50;
+    }
+    
+    .calendar-day.shift-A {
+      background: rgba(255,152,0,0.3);
+      border-color: #FF9800;
+    }
+    
+    .calendar-day.shift-N {
+      background: rgba(33,150,243,0.3);
+      border-color: #2196F3;
+    }
+    
+    .calendar-day.shift-O {
+      background: rgba(158,158,158,0.3);
+      border-color: #9E9E9E;
+    }
+    
+    .calendar-day-number {
+      font-weight: bold;
+      margin-bottom: 2px;
+    }
+    
+    .calendar-day-shift {
+      font-size: 10px;
+      opacity: 0.9;
+    }
+    
+    .calendar-day-holiday {
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      width: 6px;
+      height: 6px;
+      background: red;
+      border-radius: 50%;
     }
   </style>
 </head>
 <body>
   <!-- Navigation Bar -->
   <div class="nav-bar">
-    <div class="nav-logo">🏖️ مخطط الإجازات - Vacation Planner v1.4</div>
+    <div class="nav-logo">🏖️ مخطط الإجازات - Vacation Planner v1.5</div>
     <div class="nav-links">
       <a href="pbcr-calculator.html" class="nav-link">🛢️ PBCR</a>
       <a href="plcr.html" class="nav-link">⚗️ PLCR</a>
       <a href="live-tanks.html" class="nav-link">🔴 Live Tanks</a>
       <a href="shift-roster.html" class="nav-link">📅 Shift Roster</a>
       <a href="dashboard.html" class="nav-link">📊 Dashboard</a>
+      <button class="nav-link" onclick="toggleTestMode()" style="background: rgba(255,152,0,0.3); border-color: #FF9800;">🧪 Test Mode</button>
       <div class="user-info">
         <span class="user-name" id="userName">Loading...</span>
-        <button class="logout-btn" onclick="handleLogout()">🚪 Logout</button>
+        <button class="logout-btn" onclick="handleLogout()">🚺 Logout</button>
       </div>
     </div>
   </div>
@@ -394,13 +713,13 @@
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">📅 تاريخ البداية:</label>
-            <input type="date" class="form-input" id="startDate" onchange="checkStartDate()">
+            <input type="text" class="form-input" id="startDate" readonly onclick="openStartCalendar()" placeholder="اختر تاريخ البداية" style="cursor:pointer;">
             <div id="startDateInfo" class="shift-info" style="display:none;"></div>
           </div>
           
           <div class="form-group">
             <label class="form-label">📅 تاريخ النهاية:</label>
-            <input type="date" class="form-input" id="endDate" onchange="checkEndDate()">
+            <input type="text" class="form-input" id="endDate" readonly onclick="openEndCalendar()" placeholder="اختر تاريخ النهاية" style="cursor:pointer;">
             <div id="endDateInfo" class="shift-info" style="display:none;"></div>
           </div>
         </div>
@@ -460,6 +779,38 @@
     </div>
   </div>
   
+  <!-- Day Details Modal -->
+  <div id="dayDetailsModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <span class="modal-close" onclick="closeDayDetailsModal()">&times;</span>
+      <h2 class="modal-title" id="modalTitle">📅 تفاصيل اليوم</h2>
+      <div id="modalBody">
+        <p style="text-align: center;">جاري التحميل...</p>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Custom Calendar Modal -->
+  <div id="calendarModal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <span class="modal-close" onclick="closeCalendar()">&times;</span>
+      <h2 class="modal-title" id="calendarTitle">📅 اختر التاريخ</h2>
+      <div id="calendarContainer"></div>
+    </div>
+  </div>
+  
+  <!-- Test Mode Modal -->
+  <div id="testModeModal" class="modal" style="display:none;">
+    <div class="modal-content" style="max-width: 700px;">
+      <span class="modal-close" onclick="closeTestMode()">&times;</span>
+      <h2 class="modal-title">🧪 وضع الاختبار - Test Mode</h2>
+      <p style="text-align: center; margin-bottom: 20px; opacity: 0.8;">
+        أضف مستخدمين وهميين وإجازاتهم لاختبار التعارضات
+      </p>
+      <div id="testModeContainer"></div>
+    </div>
+  </div>
+  
   <script>
     // ========== CONSTANTS ==========
     // EXACT SAME LOGIC AS shift-roster.html v8.4
@@ -472,11 +823,23 @@
       'D': 6
     };
     
+    // Official Holidays (Kuwait)
+    const OFFICIAL_HOLIDAYS = [
+      '2026-01-01', // New Year
+      '2026-02-25', // National Day
+      '2026-02-26', // Liberation Day
+      // Add more holidays as needed
+    ];
+    
     // ========== STATE ==========
     let currentUser = null;
     let userShift = '';
     let userLeaves = [];
     let allLeaves = []; // All users' leaves
+    let calendarMode = ''; // 'start' or 'end'
+    let calendarCurrentMonth = new Date().getMonth();
+    let calendarCurrentYear = new Date().getFullYear();
+    let testUsers = JSON.parse(localStorage.getItem('vacation_test_users') || '[]');
     
     // ========== SHIFT ROSTER LOGIC ==========
     // EXACT SAME LOGIC AS shift-roster.html v8.4
@@ -544,7 +907,9 @@
       
       if (!startDateInput.value || !userShift) return;
       
-      const date = new Date(startDateInput.value);
+      // Fix timezone issue
+      const [year, month, day] = startDateInput.value.split('-');
+      const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
       const shiftInfo = getShiftType(date, userShift);
       
       startDateInfo.style.display = 'block';
@@ -569,22 +934,370 @@
       
       if (!endDateInput.value || !userShift) return;
       
-      const date = new Date(endDateInput.value);
-      const shiftInfo = getShiftType(date, userShift);
+      // Fix timezone issue
+      const dateParts = endDateInput.value.split('-');
+      if (dateParts.length === 3) {
+        const [year, month, day] = dateParts;
+        const date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        const shiftInfo = getShiftType(date, userShift);
+        
+        endDateInfo.style.display = 'block';
+        endDateInfo.textContent = `${userShift} Shift - ${shiftInfo.name}`;
+        
+        // Check if it's Second Night (recommended)
+        if (shiftInfo.code === 'N' && !shiftInfo.isFirst) {
+          endDateInfo.className = 'shift-info';
+          endDateInfo.textContent += ' ✅ (موصى به)';
+        } else if (shiftInfo.code === 'O') {
+          endDateInfo.className = 'shift-info warning';
+          endDateInfo.textContent += ' ⚠️ (يوم راحة)';
+        } else {
+          endDateInfo.className = 'shift-info warning';
+          endDateInfo.textContent += ' ⚠️ (يُفضل الانتهاء في Second Night)';
+        }
+      }
+    }
+    
+    // ========== CUSTOM CALENDAR ==========
+    function openStartCalendar() {
+      if (!userShift) {
+        alert('يرجى اختيار الشفت أولاً');
+        return;
+      }
+      calendarMode = 'start';
+      document.getElementById('calendarTitle').textContent = '📅 اختر تاريخ البداية';
+      renderCalendar();
+      document.getElementById('calendarModal').style.display = 'flex';
+    }
+    
+    function openEndCalendar() {
+      if (!userShift) {
+        alert('يرجى اختيار الشفت أولاً');
+        return;
+      }
+      calendarMode = 'end';
+      document.getElementById('calendarTitle').textContent = '📅 اختر تاريخ النهاية';
+      renderCalendar();
+      document.getElementById('calendarModal').style.display = 'flex';
+    }
+    
+    function closeCalendar() {
+      document.getElementById('calendarModal').style.display = 'none';
+    }
+    
+    function renderCalendar() {
+      const container = document.getElementById('calendarContainer');
+      const monthNames = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+      const weekdays = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
       
-      endDateInfo.style.display = 'block';
-      endDateInfo.textContent = `${userShift} Shift - ${shiftInfo.name}`;
+      const firstDay = new Date(calendarCurrentYear, calendarCurrentMonth, 1);
+      const lastDay = new Date(calendarCurrentYear, calendarCurrentMonth + 1, 0);
+      const daysInMonth = lastDay.getDate();
+      const startingDayOfWeek = firstDay.getDay();
       
-      // Check if it's Second Night (recommended)
-      if (shiftInfo.code === 'N' && !shiftInfo.isFirst) {
-        endDateInfo.className = 'shift-info';
-        endDateInfo.textContent += ' ✅ (موصى به)';
-      } else if (shiftInfo.code === 'O') {
-        endDateInfo.className = 'shift-info warning';
-        endDateInfo.textContent += ' ⚠️ (يوم راحة)';
+      let html = `
+        <div class="custom-calendar">
+          <div class="calendar-header">
+            <button class="calendar-nav-btn" onclick="prevMonth()">◀</button>
+            <div class="calendar-month-year">${monthNames[calendarCurrentMonth]} ${calendarCurrentYear}</div>
+            <button class="calendar-nav-btn" onclick="nextMonth()">▶</button>
+          </div>
+          
+          <div class="calendar-weekdays">
+            ${weekdays.map(day => `<div class="calendar-weekday">${day}</div>`).join('')}
+          </div>
+          
+          <div class="calendar-days">
+      `;
+      
+      // Empty cells before first day
+      for (let i = 0; i < startingDayOfWeek; i++) {
+        html += '<div class="calendar-day empty"></div>';
+      }
+      
+      // Days of month
+      for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(calendarCurrentYear, calendarCurrentMonth, day);
+        const dateStr = `${calendarCurrentYear}-${String(calendarCurrentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const shiftInfo = getShiftType(date, userShift);
+        const isHoliday = OFFICIAL_HOLIDAYS.includes(dateStr);
+        
+        const currentValue = calendarMode === 'start' ? document.getElementById('startDate').value : document.getElementById('endDate').value;
+        const isSelected = currentValue === dateStr;
+        
+        html += `
+          <div class="calendar-day shift-${shiftInfo.code} ${isSelected ? 'selected' : ''}" onclick="selectDate('${dateStr}')">
+            <div class="calendar-day-number">${day}</div>
+            <div class="calendar-day-shift">${shiftInfo.name.split(' ')[0]}</div>
+            ${isHoliday ? '<div class="calendar-day-holiday"></div>' : ''}
+          </div>
+        `;
+      }
+      
+      html += `
+          </div>
+        </div>
+      `;
+      
+      container.innerHTML = html;
+    }
+    
+    function prevMonth() {
+      calendarCurrentMonth--;
+      if (calendarCurrentMonth < 0) {
+        calendarCurrentMonth = 11;
+        calendarCurrentYear--;
+      }
+      renderCalendar();
+    }
+    
+    function nextMonth() {
+      calendarCurrentMonth++;
+      if (calendarCurrentMonth > 11) {
+        calendarCurrentMonth = 0;
+        calendarCurrentYear++;
+      }
+      renderCalendar();
+    }
+    
+    function selectDate(dateStr) {
+      if (calendarMode === 'start') {
+        document.getElementById('startDate').value = dateStr;
+        checkStartDate();
       } else {
-        endDateInfo.className = 'shift-info warning';
-        endDateInfo.textContent += ' ⚠️ (يُفضل الانتهاء في Second Night)';
+        document.getElementById('endDate').value = dateStr;
+        checkEndDate();
+      }
+      closeCalendar();
+    }
+    
+    // ========== DAY DETAILS MODAL ==========
+    function showDayDetails(dateStr) {
+      const date = new Date(dateStr);
+      const dateFormatted = date.toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      
+      document.getElementById('modalTitle').textContent = `📅 ${dateFormatted}`;
+      
+      // Find people on leave on this day
+      const peopleOnLeave = [];
+      allLeaves.forEach(leave => {
+        const start = new Date(leave.startDate);
+        const end = new Date(leave.endDate);
+        const checkDate = new Date(dateStr);
+        
+        if (checkDate >= start && checkDate <= end) {
+          peopleOnLeave.push({
+            name: leave.userName || leave.userId,
+            shift: leave.shift,
+            startDate: leave.startDate,
+            endDate: leave.endDate
+          });
+        }
+      });
+      
+      let html = '';
+      if (peopleOnLeave.length === 0) {
+        html = '<p style="text-align: center; opacity: 0.7;">لا يوجد أحد في إجازة في هذا اليوم</p>';
+      } else {
+        html = `
+          <div style="margin-bottom: 15px;">
+            <strong style="color: #4CAF50;">عدد الأشخاص في إجازة:</strong> ${peopleOnLeave.length}
+            ${peopleOnLeave.length >= 4 ? '<span style="color: #f44336; margin-right: 10px;">⚠️ تعارض!</span>' : ''}
+          </div>
+        `;
+        
+        peopleOnLeave.forEach(person => {
+          html += `
+            <div style="
+              background: rgba(255,255,255,0.05);
+              border: 1px solid rgba(255,255,255,0.2);
+              border-radius: 8px;
+              padding: 12px;
+              margin-bottom: 10px;
+            ">
+              <div style="font-size: 16px; font-weight: bold; color: #4CAF50; margin-bottom: 5px;">
+                👤 ${person.name}
+              </div>
+              <div style="font-size: 14px; opacity: 0.9;">
+                🔄 Shift: ${person.shift}
+              </div>
+              <div style="font-size: 13px; opacity: 0.8; margin-top: 5px;">
+                📅 ${person.startDate} → ${person.endDate}
+              </div>
+            </div>
+          `;
+        });
+      }
+      
+      document.getElementById('modalBody').innerHTML = html;
+      document.getElementById('dayDetailsModal').style.display = 'flex';
+    }
+    
+    function closeDayDetailsModal() {
+      document.getElementById('dayDetailsModal').style.display = 'none';
+    }
+    
+    // ========== TEST MODE ==========
+    function toggleTestMode() {
+      renderTestMode();
+      document.getElementById('testModeModal').style.display = 'flex';
+    }
+    
+    function closeTestMode() {
+      document.getElementById('testModeModal').style.display = 'none';
+    }
+    
+    function renderTestMode() {
+      const container = document.getElementById('testModeContainer');
+      
+      let html = `
+        <div style="margin-bottom: 20px;">
+          <button class="btn btn-primary" onclick="addTestUser()" style="width: 100%;">
+            ➕ إضافة مستخدم وهمي
+          </button>
+        </div>
+      `;
+      
+      if (testUsers.length === 0) {
+        html += '<p style="text-align: center; opacity: 0.7;">لا يوجد مستخدمين وهميين</p>';
+      } else {
+        testUsers.forEach((user, index) => {
+          html += `
+            <div style="
+              background: rgba(255,255,255,0.05);
+              border: 1px solid rgba(255,255,255,0.2);
+              border-radius: 10px;
+              padding: 15px;
+              margin-bottom: 15px;
+            ">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <div>
+                  <strong style="color: #4CAF50; font-size: 16px;">👤 ${user.name}</strong>
+                  <span style="margin-right: 10px; opacity: 0.8;">Shift: ${user.shift}</span>
+                </div>
+                <button onclick="deleteTestUser(${index})" style="
+                  background: rgba(244,67,54,0.3);
+                  border: 1px solid #f44336;
+                  color: white;
+                  padding: 5px 10px;
+                  border-radius: 5px;
+                  cursor: pointer;
+                ">🗑️ حذف</button>
+              </div>
+              
+              <div style="margin-top: 10px;">
+                <strong style="color: #4CAF50;">إجازاته:</strong>
+                ${user.leaves.length === 0 ? '<p style="opacity: 0.7; margin: 5px 0;">لا توجد إجازات</p>' : ''}
+                ${user.leaves.map((leave, leaveIndex) => `
+                  <div style="
+                    background: rgba(76,175,80,0.1);
+                    border: 1px solid rgba(76,175,80,0.3);
+                    border-radius: 5px;
+                    padding: 8px;
+                    margin: 5px 0;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                  ">
+                    <span>📅 ${leave.startDate} → ${leave.endDate}</span>
+                    <button onclick="deleteTestLeave(${index}, ${leaveIndex})" style="
+                      background: rgba(244,67,54,0.3);
+                      border: 1px solid #f44336;
+                      color: white;
+                      padding: 3px 8px;
+                      border-radius: 3px;
+                      cursor: pointer;
+                      font-size: 12px;
+                    ">❌</button>
+                  </div>
+                `).join('')}
+                <button onclick="addTestLeave(${index})" style="
+                  background: rgba(76,175,80,0.3);
+                  border: 1px solid #4CAF50;
+                  color: white;
+                  padding: 5px 10px;
+                  border-radius: 5px;
+                  cursor: pointer;
+                  margin-top: 5px;
+                  width: 100%;
+                ">➕ إضافة إجازة</button>
+              </div>
+            </div>
+          `;
+        });
+      }
+      
+      html += `
+        <div style="margin-top: 20px; text-align: center;">
+          <button class="btn btn-secondary" onclick="clearAllTestData()" style="width: 100%;">
+            🗑️ حذف جميع البيانات الوهمية
+          </button>
+        </div>
+      `;
+      
+      container.innerHTML = html;
+    }
+    
+    function addTestUser() {
+      const name = prompt('أدخل اسم المستخدم الوهمي:');
+      if (!name) return;
+      
+      const shift = prompt('أدخل الشفت (A/B/C/D):');
+      if (!shift || !['A', 'B', 'C', 'D'].includes(shift.toUpperCase())) {
+        alert('يرجى إدخال شفت صحيح (A/B/C/D)');
+        return;
+      }
+      
+      testUsers.push({
+        name: name,
+        shift: shift.toUpperCase(),
+        leaves: []
+      });
+      
+      localStorage.setItem('vacation_test_users', JSON.stringify(testUsers));
+      renderTestMode();
+      loadAllLeaves(); // Reload to include test users
+    }
+    
+    function deleteTestUser(index) {
+      if (confirm('هل أنت متأكد من حذف هذا المستخدم؟')) {
+        testUsers.splice(index, 1);
+        localStorage.setItem('vacation_test_users', JSON.stringify(testUsers));
+        renderTestMode();
+        loadAllLeaves();
+      }
+    }
+    
+    function addTestLeave(userIndex) {
+      const startDate = prompt('أدخل تاريخ البداية (YYYY-MM-DD):');
+      if (!startDate) return;
+      
+      const endDate = prompt('أدخل تاريخ النهاية (YYYY-MM-DD):');
+      if (!endDate) return;
+      
+      testUsers[userIndex].leaves.push({
+        startDate: startDate,
+        endDate: endDate
+      });
+      
+      localStorage.setItem('vacation_test_users', JSON.stringify(testUsers));
+      renderTestMode();
+      loadAllLeaves();
+    }
+    
+    function deleteTestLeave(userIndex, leaveIndex) {
+      testUsers[userIndex].leaves.splice(leaveIndex, 1);
+      localStorage.setItem('vacation_test_users', JSON.stringify(testUsers));
+      renderTestMode();
+      loadAllLeaves();
+    }
+    
+    function clearAllTestData() {
+      if (confirm('هل أنت متأكد من حذف جميع البيانات الوهمية؟')) {
+        testUsers = [];
+        localStorage.removeItem('vacation_test_users');
+        renderTestMode();
+        loadAllLeaves();
       }
     }
     
@@ -745,7 +1458,21 @@
           });
         });
         
-        console.log('✅ Loaded', allLeaves.length, 'total leaves from Firestore');
+        // Add test users' leaves
+        testUsers.forEach(user => {
+          user.leaves.forEach(leave => {
+            allLeaves.push({
+              userId: `test_${user.name}`,
+              userName: `🧪 ${user.name}`,
+              shift: user.shift,
+              startDate: leave.startDate,
+              endDate: leave.endDate,
+              isTest: true
+            });
+          });
+        });
+        
+        console.log('✅ Loaded', allLeaves.length, 'total leaves (including test users)');
         renderAnnualRoster();
       } catch (error) {
         console.error('❌ Error loading all leaves:', error);
@@ -840,7 +1567,7 @@
               color: ${textColor};
               cursor: ${count > 0 ? 'pointer' : 'default'};
               border: ${count >= 4 ? '2px solid #f44336' : count === 3 ? '1px solid #FF9800' : 'none'};
-            " title="${title}">
+            " title="${title}" ${count > 0 ? `onclick="showDayDetails('${dateStr}')"` : ''}>
               ${day}${count > 0 ? `<br><span style="font-size: 10px;">(${count})</span>` : ''}
             </div>
           `;
@@ -886,7 +1613,7 @@
     }
     
     // ========== INITIALIZE ==========
-    console.log('%c🏖️ VACATION PLANNER v1.4', 'color:#4CAF50;font-size:20px;font-weight:bold');
+    console.log('%c🏖️ VACATION PLANNER v1.5', 'color:#4CAF50;font-size:20px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
   </script>
   
