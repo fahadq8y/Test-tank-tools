@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<!-- Vacation Planner v1.0 - Shift-based leave management system -->
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>مخطط الإجازات - Vacation Planner</title>
+  <link href="icon.png" rel="icon" type="image/png"/>
+  <script src="permissions.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('background.jpg');
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+      color: white;
+      font-family: Arial, sans-serif;
+      min-height: 100vh;
+    }
+    
+    /* Navigation Bar */
+    .nav-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 30px;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(10px);
+      border-bottom: 2px solid #4CAF50;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    
+    .nav-logo {
+      font-size: 24px;
+      font-weight: bold;
+      color: #4CAF50;
+    }
+    
+    .nav-links {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    
+    .nav-link {
+      color: white;
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      background: rgba(255,255,255,0.1);
+      font-weight: 500;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    .nav-link:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-1px);
+    }
+    
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .user-name {
+      background: rgba(255,255,255,0.1);
+      padding: 6px 12px;
+      border-radius: 5px;
+      border: 1px solid rgba(255,255,255,0.2);
+      font-size: 14px;
+    }
+    
+    .logout-btn {
+      background: rgba(255,0,0,0.3);
+      color: white;
+      border: 1px solid rgba(255,0,0,0.5);
+      padding: 6px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 14px;
+    }
+    
+    .logout-btn:hover {
+      background: rgba(255,0,0,0.5);
+      transform: translateY(-2px);
+    }
+    
+    /* Main Container */
+    .main-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .page-title {
+      text-align: center;
+      font-size: 32px;
+      margin-bottom: 30px;
+      color: #4CAF50;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+    
+    /* Cards */
+    .card {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 25px;
+      margin-bottom: 20px;
+      border: 1px solid rgba(255,255,255,0.2);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
+    
+    .card-title {
+      font-size: 20px;
+      margin-bottom: 20px;
+      color: #4CAF50;
+      border-bottom: 2px solid rgba(76,175,80,0.3);
+      padding-bottom: 10px;
+    }
+    
+    /* Form */
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: #fff;
+    }
+    
+    .form-input, .form-select {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.9);
+      color: #003366;
+      font-size: 16px;
+      transition: all 0.3s;
+    }
+    
+    .form-input:focus, .form-select:focus {
+      outline: none;
+      border-color: #4CAF50;
+      box-shadow: 0 0 10px rgba(76,175,80,0.3);
+    }
+    
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+    }
+    
+    /* Shift Info Display */
+    .shift-info {
+      background: rgba(76,175,80,0.2);
+      border: 2px solid #4CAF50;
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 10px;
+      font-weight: bold;
+      text-align: center;
+    }
+    
+    .shift-info.warning {
+      background: rgba(255,152,0,0.2);
+      border-color: #FF9800;
+      color: #FFB74D;
+    }
+    
+    .shift-info.error {
+      background: rgba(244,67,54,0.2);
+      border-color: #f44336;
+      color: #EF5350;
+    }
+    
+    /* Buttons */
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: inline-block;
+      text-align: center;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(45deg, #4CAF50, #45a049);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(76,175,80,0.4);
+    }
+    
+    .btn-secondary {
+      background: linear-gradient(45deg, #2196F3, #1976D2);
+      color: white;
+    }
+    
+    .btn-secondary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(33,150,243,0.4);
+    }
+    
+    .btn-danger {
+      background: linear-gradient(45deg, #f44336, #d32f2f);
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(244,67,54,0.4);
+    }
+    
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    
+    /* Leave List */
+    .leave-item {
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 10px;
+      border-left: 4px solid #4CAF50;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .leave-info {
+      flex: 1;
+    }
+    
+    .leave-dates {
+      font-size: 14px;
+      color: #4CAF50;
+      margin-bottom: 5px;
+    }
+    
+    .leave-shift-type {
+      font-size: 12px;
+      opacity: 0.8;
+    }
+    
+    /* Loading */
+    .loading {
+      text-align: center;
+      padding: 40px;
+    }
+    
+    .loading-spinner {
+      border: 4px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top: 4px solid #4CAF50;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    /* Alert */
+    .alert {
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-weight: bold;
+    }
+    
+    .alert-success {
+      background: rgba(76,175,80,0.2);
+      border: 2px solid #4CAF50;
+      color: #4CAF50;
+    }
+    
+    .alert-error {
+      background: rgba(244,67,54,0.2);
+      border: 2px solid #f44336;
+      color: #f44336;
+    }
+    
+    .alert-warning {
+      background: rgba(255,152,0,0.2);
+      border: 2px solid #FF9800;
+      color: #FF9800;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .nav-bar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .nav-links {
+        width: 100%;
+        justify-content: center;
+      }
+      
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+      
+      .btn-group {
+        flex-direction: column;
+      }
+      
+      .btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation Bar -->
+  <div class="nav-bar">
+    <div class="nav-logo">🏖️ مخطط الإجازات - Vacation Planner v1.0</div>
+    <div class="nav-links">
+      <a href="pbcr-calculator.html" class="nav-link">🛢️ PBCR</a>
+      <a href="plcr.html" class="nav-link">⚗️ PLCR</a>
+      <a href="live-tanks.html" class="nav-link">🔴 Live Tanks</a>
+      <a href="shift-roster.html" class="nav-link">📅 Shift Roster</a>
+      <a href="dashboard.html" class="nav-link">📊 Dashboard</a>
+      <div class="user-info">
+        <span class="user-name" id="userName">Loading...</span>
+        <button class="logout-btn" onclick="handleLogout()">🚪 Logout</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Main Container -->
+  <div class="main-container">
+    <h1 class="page-title">🏖️ نظام إدارة الإجازات</h1>
+    
+    <!-- My Leaves Card -->
+    <div class="card">
+      <h2 class="card-title">📋 إجازاتي (3 إجازات متاحة)</h2>
+      
+      <!-- Shift Selection -->
+      <div class="form-group">
+        <label class="form-label">اختر شفتك:</label>
+        <select class="form-select" id="userShift" onchange="updateShiftInfo()">
+          <option value="">-- اختر الشفت --</option>
+          <option value="A">A Shift</option>
+          <option value="B">B Shift</option>
+          <option value="C">C Shift</option>
+          <option value="D">D Shift</option>
+        </select>
+      </div>
+      
+      <!-- Leave Form -->
+      <div id="leaveForm" style="display:none;">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">📅 تاريخ البداية:</label>
+            <input type="date" class="form-input" id="startDate" onchange="checkStartDate()">
+            <div id="startDateInfo" class="shift-info" style="display:none;"></div>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">📅 تاريخ النهاية:</label>
+            <input type="date" class="form-input" id="endDate" onchange="checkEndDate()">
+            <div id="endDateInfo" class="shift-info" style="display:none;"></div>
+          </div>
+        </div>
+        
+        <div class="btn-group">
+          <button class="btn btn-primary" onclick="saveLeave()">💾 حفظ الإجازة</button>
+          <button class="btn btn-secondary" onclick="resetForm()">🔄 إعادة تعيين</button>
+        </div>
+      </div>
+      
+      <!-- My Leaves List -->
+      <div id="myLeavesList" style="margin-top: 30px;">
+        <h3 style="color: #4CAF50; margin-bottom: 15px;">إجازاتي المحفوظة:</h3>
+        <div id="leavesContainer">
+          <p style="text-align: center; opacity: 0.7;">لا توجد إجازات محفوظة</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Annual Roster Card -->
+    <div class="card">
+      <h2 class="card-title">📊 الروستر السنوي للإجازات</h2>
+      <p style="text-align: center; opacity: 0.8;">قريباً...</p>
+    </div>
+  </div>
+  
+  <script>
+    // ========== CONSTANTS ==========
+    const START_DATE = new Date('2025-10-31'); // Same as shift-roster.html
+    const SHIFTS = ['A', 'M', 'N', 'O']; // Morning, Afternoon, Night, Off
+    
+    // ========== STATE ==========
+    let currentUser = null;
+    let userShift = '';
+    let userLeaves = [];
+    
+    // ========== SHIFT ROSTER LOGIC ==========
+    // Same logic as shift-roster.html
+    function getShiftForDate(date, shift) {
+      const daysDiff = Math.floor((date - START_DATE) / (1000 * 60 * 60 * 24));
+      const cycleDay = ((daysDiff % 32) + 32) % 32;
+      
+      const shiftPatterns = {
+        'A': [0,0,0,0,0,0,0,0, 1,1,1,1,1,1,1,1, 2,2,2,2,2,2,2,2, 3,3,3,3,3,3,3,3],
+        'B': [2,2,2,2,2,2,2,2, 3,3,3,3,3,3,3,3, 0,0,0,0,0,0,0,0, 1,1,1,1,1,1,1,1],
+        'C': [1,1,1,1,1,1,1,1, 2,2,2,2,2,2,2,2, 3,3,3,3,3,3,3,3, 0,0,0,0,0,0,0,0],
+        'D': [3,3,3,3,3,3,3,3, 0,0,0,0,0,0,0,0, 1,1,1,1,1,1,1,1, 2,2,2,2,2,2,2,2]
+      };
+      
+      const shiftIndex = shiftPatterns[shift][cycleDay];
+      return SHIFTS[shiftIndex];
+    }
+    
+    function getShiftType(date, shift) {
+      const shiftCode = getShiftForDate(date, shift);
+      
+      // Check if it's first or second day of the shift
+      const prevDate = new Date(date);
+      prevDate.setDate(prevDate.getDate() - 1);
+      const prevShift = getShiftForDate(prevDate, shift);
+      
+      const isFirstDay = prevShift !== shiftCode;
+      
+      const shiftNames = {
+        'M': isFirstDay ? 'First Morning' : 'Second Morning',
+        'A': isFirstDay ? 'First Afternoon' : 'Second Afternoon',
+        'N': isFirstDay ? 'First Night' : 'Second Night',
+        'O': 'Off Day'
+      };
+      
+      return {
+        code: shiftCode,
+        name: shiftNames[shiftCode],
+        isFirst: isFirstDay
+      };
+    }
+    
+    // ========== UI FUNCTIONS ==========
+    function updateShiftInfo() {
+      userShift = document.getElementById('userShift').value;
+      const leaveForm = document.getElementById('leaveForm');
+      
+      if (userShift) {
+        leaveForm.style.display = 'block';
+      } else {
+        leaveForm.style.display = 'none';
+      }
+    }
+    
+    function checkStartDate() {
+      const startDateInput = document.getElementById('startDate');
+      const startDateInfo = document.getElementById('startDateInfo');
+      
+      if (!startDateInput.value || !userShift) return;
+      
+      const date = new Date(startDateInput.value);
+      const shiftInfo = getShiftType(date, userShift);
+      
+      startDateInfo.style.display = 'block';
+      startDateInfo.textContent = `${userShift} Shift - ${shiftInfo.name}`;
+      
+      // Check if it's First Morning (recommended)
+      if (shiftInfo.code === 'M' && shiftInfo.isFirst) {
+        startDateInfo.className = 'shift-info';
+        startDateInfo.textContent += ' ✅ (موصى به)';
+      } else if (shiftInfo.code === 'O') {
+        startDateInfo.className = 'shift-info warning';
+        startDateInfo.textContent += ' ⚠️ (يوم راحة)';
+      } else {
+        startDateInfo.className = 'shift-info warning';
+        startDateInfo.textContent += ' ⚠️ (يُفضل البدء من First Morning)';
+      }
+    }
+    
+    function checkEndDate() {
+      const endDateInput = document.getElementById('endDate');
+      const endDateInfo = document.getElementById('endDateInfo');
+      
+      if (!endDateInput.value || !userShift) return;
+      
+      const date = new Date(endDateInput.value);
+      const shiftInfo = getShiftType(date, userShift);
+      
+      endDateInfo.style.display = 'block';
+      endDateInfo.textContent = `${userShift} Shift - ${shiftInfo.name}`;
+      
+      // Check if it's Second Night (recommended)
+      if (shiftInfo.code === 'N' && !shiftInfo.isFirst) {
+        endDateInfo.className = 'shift-info';
+        endDateInfo.textContent += ' ✅ (موصى به)';
+      } else if (shiftInfo.code === 'O') {
+        endDateInfo.className = 'shift-info warning';
+        endDateInfo.textContent += ' ⚠️ (يوم راحة)';
+      } else {
+        endDateInfo.className = 'shift-info warning';
+        endDateInfo.textContent += ' ⚠️ (يُفضل الانتهاء في Second Night)';
+      }
+    }
+    
+    function saveLeave() {
+      const startDate = document.getElementById('startDate').value;
+      const endDate = document.getElementById('endDate').value;
+      
+      if (!startDate || !endDate) {
+        alert('يرجى تحديد تاريخ البداية والنهاية');
+        return;
+      }
+      
+      if (new Date(startDate) > new Date(endDate)) {
+        alert('تاريخ البداية يجب أن يكون قبل تاريخ النهاية');
+        return;
+      }
+      
+      if (userLeaves.length >= 3) {
+        alert('لقد وصلت للحد الأقصى من الإجازات (3 إجازات)');
+        return;
+      }
+      
+      const startShiftInfo = getShiftType(new Date(startDate), userShift);
+      const endShiftInfo = getShiftType(new Date(endDate), userShift);
+      
+      const leave = {
+        id: Date.now(),
+        shift: userShift,
+        startDate: startDate,
+        endDate: endDate,
+        startShiftType: startShiftInfo.name,
+        endShiftType: endShiftInfo.name,
+        createdAt: new Date().toISOString()
+      };
+      
+      userLeaves.push(leave);
+      renderLeaves();
+      resetForm();
+      
+      alert('✅ تم حفظ الإجازة بنجاح!');
+    }
+    
+    function deleteLeave(id) {
+      if (confirm('هل أنت متأكد من حذف هذه الإجازة؟')) {
+        userLeaves = userLeaves.filter(l => l.id !== id);
+        renderLeaves();
+      }
+    }
+    
+    function renderLeaves() {
+      const container = document.getElementById('leavesContainer');
+      
+      if (userLeaves.length === 0) {
+        container.innerHTML = '<p style="text-align: center; opacity: 0.7;">لا توجد إجازات محفوظة</p>';
+        return;
+      }
+      
+      container.innerHTML = userLeaves.map(leave => `
+        <div class="leave-item">
+          <div class="leave-info">
+            <div class="leave-dates">
+              📅 ${leave.startDate} → ${leave.endDate}
+            </div>
+            <div class="leave-shift-type">
+              ${leave.shift} Shift: ${leave.startShiftType} → ${leave.endShiftType}
+            </div>
+          </div>
+          <button class="btn btn-danger" onclick="deleteLeave(${leave.id})" style="padding: 8px 16px; font-size: 14px;">
+            🗑️ حذف
+          </button>
+        </div>
+      `).join('');
+    }
+    
+    function resetForm() {
+      document.getElementById('startDate').value = '';
+      document.getElementById('endDate').value = '';
+      document.getElementById('startDateInfo').style.display = 'none';
+      document.getElementById('endDateInfo').style.display = 'none';
+    }
+    
+    // ========== LOGOUT ==========
+    function handleLogout() {
+      if (confirm('هل أنت متأكد من تسجيل الخروج؟')) {
+        if (window.auth && window.auth.signOut) {
+          window.auth.signOut().then(() => {
+            localStorage.removeItem('tanktools_current_user');
+            sessionStorage.removeItem('tanktools_session');
+            window.location.href = 'login.html';
+          });
+        } else {
+          localStorage.removeItem('tanktools_current_user');
+          sessionStorage.removeItem('tanktools_session');
+          window.location.href = 'login.html';
+        }
+      }
+    }
+    
+    // ========== INITIALIZE ==========
+    console.log('%c🏖️ VACATION PLANNER v1.0', 'color:#4CAF50;font-size:20px;font-weight:bold');
+    console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
+  </script>
+  
+  <!-- Firebase SDK & Auth -->
+  <script type="module">
+    import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBCdv37V6vOFMe42rGlPyl9lVq-9JldEPg",
+      authDomain: "tank-tools-knpc-c2d95.firebaseapp.com",
+      projectId: "tank-tools-knpc-c2d95",
+      storageBucket: "tank-tools-knpc-c2d95.appspot.com",
+      messagingSenderId: "678793823159",
+      appId: "1:678793823159:web:7a7b1398aefdb7f24462b9"
+    };
+
+    // Initialize Firebase
+    let app, db;
+    const existingApps = getApps();
+    if (existingApps.length === 0) {
+      app = initializeApp(firebaseConfig);
+      console.log('🔥 Firebase initialized for Vacation Planner!');
+    } else {
+      app = getApp();
+      console.log('🔄 Using existing Firebase app');
+    }
+    db = getFirestore(app);
+    
+    // Make Firebase globally available
+    window.db = db;
+    window.doc = doc;
+    window.getDoc = getDoc;
+    
+    const auth = getAuth(app);
+    window.auth = auth;
+    
+    // AUTH STATE MANAGEMENT
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        console.log('❌ No Firebase Auth user, checking localStorage...');
+        
+        // Fallback to localStorage for non-migrated users
+        const savedUser = localStorage.getItem('tanktools_current_user');
+        const savedSession = sessionStorage.getItem('tanktools_session');
+        
+        if (!savedUser || !savedSession) {
+          console.log('❌ No session found, redirecting to login...');
+          alert('يرجى تسجيل الدخول أولاً');
+          window.location.href = 'login.html';
+          return;
+        }
+        
+        // Use localStorage data for non-migrated users
+        const userData = JSON.parse(savedUser);
+        console.log('✅ Using localStorage session for:', userData.username);
+        window.currentUser = userData;
+        currentUser = userData;
+        
+        // Check page permissions (for now, allow dashboard users)
+        if (typeof hasPageAccess === 'function') {
+          if (!hasPageAccess(userData, 'dashboard.html')) {
+            alert('ليس لديك صلاحية للدخول إلى هذه الصفحة');
+            window.location.href = 'index.html';
+            return;
+          }
+        }
+        
+        // Update UI with user name
+        document.getElementById('userName').textContent = userData.name || userData.username;
+        console.log('✅ Vacation Planner loaded for:', userData.name);
+        return;
+      }
+      
+      console.log('✅ Firebase Auth user logged in:', user.email);
+      
+      // Get username from email
+      const username = user.email.split('@')[0];
+      console.log('🔍 Looking up user in Firestore:', username);
+      
+      // Get user data from Firestore
+      try {
+        const userDoc = await getDoc(doc(db, 'users', username));
+        if (!userDoc.exists()) {
+          console.error('❌ User document not found for:', username);
+          alert('حساب غير موجود');
+          await signOut(auth);
+          window.location.href = 'login.html';
+          return;
+        }
+        
+        const userData = userDoc.data();
+        window.currentUser = userData;
+        currentUser = userData;
+        
+        // Check page permissions (for now, allow dashboard users)
+        if (typeof hasPageAccess === 'function') {
+          if (!hasPageAccess(userData, 'dashboard.html')) {
+            alert('ليس لديك صلاحية للدخول إلى هذه الصفحة');
+            window.location.href = 'index.html';
+            return;
+          }
+        }
+        
+        // Update UI with user name
+        document.getElementById('userName').textContent = userData.name || username;
+        console.log('✅ Vacation Planner loaded for:', userData.name);
+        
+      } catch (error) {
+        console.error('❌ Error loading user data:', error);
+        alert('خطأ في تحميل بيانات المستخدم');
+        window.location.href = 'login.html';
+      }
+    });
+  </script>
+</body>
+</html>
