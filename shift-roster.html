@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Shift Roster v8.0 - Added Calendar View with Dropdown Selector -->
+<!-- Shift Roster v8.1 - Added Google Calendar API for Kuwait Holidays -->
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
@@ -458,6 +458,14 @@
       font-weight: bold;
     }
     
+    .holiday-marker {
+      position: absolute;
+      top: 5px;
+      left: 5px;
+      font-size: 12px;
+      cursor: help;
+    }
+    
     /* Shift Selector Buttons */
     .shift-selector {
       display: flex;
@@ -799,6 +807,116 @@
     let currentYear = 2025;
     let selectedShift = 'A'; // Default shift for calendar view
     
+    // ========== GOOGLE CALENDAR API FOR KUWAIT HOLIDAYS ==========
+    const GOOGLE_API_KEY = 'AIzaSyC5GZwG7bOgSSke3mRzmAYvc0DIyrPxGzM';
+    const KUWAIT_CALENDAR_ID = 'en.kw.official%23holiday@group.v.calendar.google.com';
+    let kuwaitHolidays = [];
+    
+    // Fetch Kuwait holidays from Google Calendar API
+    async function fetchKuwaitHolidays(year) {
+      // Check cache first
+      const cacheKey = `kuwait-holidays-${year}`;
+      const cached = localStorage.getItem(cacheKey);
+      
+      if (cached) {
+        const data = JSON.parse(cached);
+        // Check if cache is still valid (30 days)
+        if (Date.now() - data.timestamp < 30 * 24 * 60 * 60 * 1000) {
+          console.log('✅ Using cached Kuwait holidays for', year);
+          return data.holidays;
+        }
+      }
+      
+      // Fetch from API
+      try {
+        const timeMin = `${year}-01-01T00:00:00Z`;
+        const timeMax = `${year}-12-31T23:59:59Z`;
+        const url = `https://www.googleapis.com/calendar/v3/calendars/${KUWAIT_CALENDAR_ID}/events?key=${GOOGLE_API_KEY}&timeMin=${timeMin}&timeMax=${timeMax}&singleEvents=true&orderBy=startTime`;
+        
+        console.log('🔄 Fetching Kuwait holidays for', year);
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+          throw new Error(`API Error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        const holidays = data.items.map(item => ({
+          name: item.summary,
+          date: item.start.date,
+          description: item.description || ''
+        }));
+        
+        // Cache the results
+        localStorage.setItem(cacheKey, JSON.stringify({
+          holidays: holidays,
+          timestamp: Date.now()
+        }));
+        
+        console.log(`✅ Fetched ${holidays.length} Kuwait holidays for ${year}`);
+        return holidays;
+      } catch (error) {
+        console.error('❌ Error fetching Kuwait holidays:', error);
+        return [];
+      }
+    }
+    
+    // Check if a date is a holiday
+    function isHoliday(date) {
+      const dateStr = date.toISOString().split('T')[0];
+      return kuwaitHolidays.find(h => h.date === dateStr);
+    }
+    
+    // Load holidays for current year
+    async function loadHolidays() {
+      kuwaitHolidays = await fetchKuwaitHolidays(currentYear);
+      renderCurrentView();
+      updateEventsDisplay();
+    }
+    
+    // Update events display
+    function updateEventsDisplay() {
+      const eventsLists = document.querySelectorAll('.events-list');
+      
+      if (kuwaitHolidays.length === 0) {
+        eventsLists.forEach(list => {
+          list.innerHTML = '<div style="color: #888; font-style: italic;">Loading holidays...</div>';
+        });
+        return;
+      }
+      
+      // Filter holidays for current month
+      const monthHolidays = kuwaitHolidays.filter(h => {
+        const holidayDate = new Date(h.date);
+        return holidayDate.getMonth() === currentMonth && holidayDate.getFullYear() === currentYear;
+      });
+      
+      if (monthHolidays.length === 0) {
+        eventsLists.forEach(list => {
+          list.innerHTML = '<div style="color: #888; font-style: italic;">No holidays this month</div>';
+        });
+        return;
+      }
+      
+      // Display holidays
+      let html = '';
+      monthHolidays.forEach(holiday => {
+        const date = new Date(holiday.date);
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const dateStr = `${monthNames[date.getMonth()]} ${date.getDate()}`;
+        html += `<div style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
+          <span style="color: var(--accent); font-weight: bold;">${dateStr}</span>
+          <span style="margin: 0 10px;">•</span>
+          <span>${holiday.name}</span>
+          <span style="margin-left: 10px;">🔴</span>
+        </div>`;
+      });
+      
+      eventsLists.forEach(list => {
+        list.innerHTML = html;
+      });
+    }
+    
     // Shift system
     const START_DATE = new Date(2025, 9, 31); // Oct 31, 2025
     const PATTERN = ['A', 'A', 'N', 'N', 'O', 'O', 'M', 'M'];
@@ -885,6 +1003,13 @@
             if (isFriday(date)) {
               dayCell.classList.add('friday');
             }
+            
+            // Mark holiday in old view
+            const holiday = isHoliday(date);
+            if (holiday) {
+              dayCell.innerHTML += ' 🔴';
+              dayCell.title = holiday.name;
+            }
           }
           
           daysGrid.appendChild(dayCell);
@@ -944,6 +1069,16 @@
           cell.classList.add('friday');
         }
         
+        // Mark holiday
+        const holiday = isHoliday(date);
+        if (holiday) {
+          const holidayMarker = document.createElement('div');
+          holidayMarker.className = 'holiday-marker';
+          holidayMarker.textContent = '🔴';
+          holidayMarker.title = holiday.name;
+          cell.appendChild(holidayMarker);
+        }
+        
         calendarGrid.appendChild(cell);
       }
       
@@ -1000,7 +1135,8 @@
         currentYear--;
       }
       updateMonthDisplay();
-      renderCurrentView();
+      // Load holidays for new year if needed
+      loadHolidays();
     }
     
     function nextMonth() {
@@ -1010,7 +1146,8 @@
         currentYear++;
       }
       updateMonthDisplay();
-      renderCurrentView();
+      // Load holidays for new year if needed
+      loadHolidays();
     }
     
     function updateMonthDisplay() {
@@ -1081,8 +1218,9 @@
     loadSavedPreferences();
     updateMonthDisplay();
     switchView(); // This will render the appropriate view
+    loadHolidays(); // Load Kuwait holidays
     
-    console.log('%c📅 SHIFT ROSTER v8.0 - Calendar View Added', 'color:#B8860B;font-size:20px;font-weight:bold');
+    console.log('%c📅 SHIFT ROSTER v8.1 - Kuwait Holidays API Added', 'color:#B8860B;font-size:20px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
   </script>
 </body>
