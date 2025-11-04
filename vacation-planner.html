@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Vacation Planner v1.9 - Fixed landscape mode layout -->
+<!-- Vacation Planner v2.0 - Added vacation days calculator & fixed delete from localStorage -->
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
@@ -821,7 +821,7 @@
 <body>
   <!-- Navigation Bar -->
   <div class="nav-bar">
-    <div class="nav-logo">🏖️ مخطط الإجازات - Vacation Planner v1.9</div>
+    <div class="nav-logo">🏖️ مخطط الإجازات - Vacation Planner v2.0</div>
     <div class="nav-links">
       <a href="pbcr-calculator.html" class="nav-link">🛢️ PBCR</a>
       <a href="plcr.html" class="nav-link">⚗️ PLCR</a>
@@ -991,6 +991,28 @@
       '2026-02-26', // Liberation Day
       // Add more holidays as needed
     ];
+    
+    // Calculate vacation days (excluding Fridays and official holidays)
+    function calculateVacationDays(startDateStr, endDateStr) {
+      const start = new Date(startDateStr + 'T00:00:00');
+      const end = new Date(endDateStr + 'T00:00:00');
+      
+      let totalDays = 0;
+      let workDays = 0;
+      
+      for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+        totalDays++;
+        const dateStr = d.toISOString().split('T')[0];
+        const dayOfWeek = d.getDay();
+        
+        // Skip Fridays (5) and official holidays
+        if (dayOfWeek !== 5 && !OFFICIAL_HOLIDAYS.includes(dateStr)) {
+          workDays++;
+        }
+      }
+      
+      return { totalDays, workDays };
+    }
     
     // ========== STATE ==========
     let currentUser = null;
@@ -1526,6 +1548,15 @@
         // Delete from Firestore: vacations/{userId}/leaves/{leaveId}
         await window.deleteDoc(window.doc(window.db, 'vacations', userId, 'leaves', id));
         
+        // Also delete from Test Mode localStorage if exists
+        testUsers = testUsers.map(user => {
+          if (user.leaves) {
+            user.leaves = user.leaves.filter(l => l.id !== id);
+          }
+          return user;
+        });
+        localStorage.setItem('vacation_test_users', JSON.stringify(testUsers));
+        
         // Remove from local array
         userLeaves = userLeaves.filter(l => l.id !== id);
         renderLeaves();
@@ -1549,7 +1580,9 @@
         return;
       }
       
-      container.innerHTML = userLeaves.map(leave => `
+      container.innerHTML = userLeaves.map(leave => {
+        const days = calculateVacationDays(leave.startDate, leave.endDate);
+        return `
         <div class="leave-item">
           <div class="leave-info">
             <div class="leave-dates">
@@ -1558,12 +1591,15 @@
             <div class="leave-shift-type">
               ${leave.shift} Shift: ${leave.startShiftType} → ${leave.endShiftType}
             </div>
+            <div class="leave-days" style="font-size: 12px; color: #4CAF50; margin-top: 5px;">
+              📆 ${days.workDays} يوم عمل (من ${days.totalDays} يوم إجمالي)
+            </div>
           </div>
           <button class="btn btn-danger delete-leave-btn" data-id="${leave.id}" style="padding: 8px 16px; font-size: 14px;">
             🗑️ حذف
           </button>
         </div>
-      `).join('');
+      `}).join('');
       
       // Add event listeners to delete buttons
       document.querySelectorAll('.delete-leave-btn').forEach(btn => {
@@ -1853,7 +1889,7 @@
     }
     
     // ========== INITIALIZE ==========
-    console.log('%c🏖️ VACATION PLANNER v1.9', 'color:#4CAF50;font-size:20px;font-weight:bold');
+    console.log('%c🏖️ VACATION PLANNER v2.0', 'color:#4CAF50;font-size:20px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
   </script>
   
