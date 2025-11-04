@@ -155,7 +155,6 @@
     }
     
     .day-cell {
-      background: #C41E3A;
       color: white;
       text-align: center;
       padding: 20px 10px;
@@ -164,23 +163,67 @@
       border: 1px solid rgba(255,255,255,0.1);
       min-height: 70px;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       position: relative;
+      transition: all 0.3s ease;
+    }
+    
+    .day-cell:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      z-index: 10;
+    }
+    
+    /* Shift Type Colors */
+    .day-cell.shift-morning {
+      background: linear-gradient(135deg, #FF8C00, #FFA500);
+    }
+    
+    .day-cell.shift-afternoon {
+      background: linear-gradient(135deg, #FFD700, #FFC107);
+    }
+    
+    .day-cell.shift-night {
+      background: linear-gradient(135deg, #4A148C, #6A1B9A);
+    }
+    
+    .day-cell.shift-off {
+      background: linear-gradient(135deg, #2E7D32, #43A047);
     }
     
     .day-number {
       position: absolute;
       top: 5px;
       right: 5px;
-      font-size: 12px;
-      color: rgba(255,255,255,0.5);
+      font-size: 11px;
+      color: rgba(255,255,255,0.7);
+      background: rgba(0,0,0,0.2);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    
+    .day-name {
+      font-size: 10px;
+      color: rgba(255,255,255,0.6);
+      margin-top: 2px;
+    }
+    
+    .shift-icon {
+      font-size: 20px;
+      margin-bottom: 5px;
     }
     
     .day-cell.current {
-      background: #8B0000;
       font-weight: bold;
-      box-shadow: inset 0 0 0 3px rgba(255,255,255,0.5);
+      box-shadow: inset 0 0 0 3px rgba(255,255,255,0.8), 0 0 20px rgba(255,255,255,0.5);
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { box-shadow: inset 0 0 0 3px rgba(255,255,255,0.8), 0 0 20px rgba(255,255,255,0.5); }
+      50% { box-shadow: inset 0 0 0 3px rgba(255,255,255,1), 0 0 30px rgba(255,255,255,0.8); }
     }
     
     .day-cell.friday .day-number::after {
@@ -188,6 +231,57 @@
       margin-right: 3px;
       color: rgba(255,215,0,0.8);
       font-weight: bold;
+    }
+    
+    /* Legend */
+    .legend {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      padding: 20px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 15px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    .legend-color {
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    
+    .legend-color.morning {
+      background: linear-gradient(135deg, #FF8C00, #FFA500);
+    }
+    
+    .legend-color.afternoon {
+      background: linear-gradient(135deg, #FFD700, #FFC107);
+    }
+    
+    .legend-color.night {
+      background: linear-gradient(135deg, #4A148C, #6A1B9A);
+    }
+    
+    .legend-color.off {
+      background: linear-gradient(135deg, #2E7D32, #43A047);
+    }
+    
+    .legend-text {
+      color: white;
+      font-size: 14px;
+      font-weight: 500;
     }
     
     /* Date Display */
@@ -288,6 +382,26 @@
     </div>
     
     <div class="roster-container">
+      <!-- Legend -->
+      <div class="legend">
+        <div class="legend-item">
+          <div class="legend-color morning"></div>
+          <span class="legend-text">🌅 Morning (M)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color afternoon"></div>
+          <span class="legend-text">☀️ Afternoon (A)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color night"></div>
+          <span class="legend-text">🌙 Night (N)</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color off"></div>
+          <span class="legend-text">🏖️ Off (O)</span>
+        </div>
+      </div>
+      
       <div class="shift-headers">
         <div class="shift-header">A</div>
         <div class="shift-header">B</div>
@@ -388,7 +502,37 @@
           }
           
           const shiftType = getShiftForDay(date, shift);
-          cell.innerHTML = `<span class="day-number">${String(day).padStart(2, '0')}</span>${shiftType}`;
+          
+          // Add shift type class for colors
+          if (shiftType === 'M') {
+            cell.classList.add('shift-morning');
+          } else if (shiftType === 'A') {
+            cell.classList.add('shift-afternoon');
+          } else if (shiftType === 'N') {
+            cell.classList.add('shift-night');
+          } else if (shiftType === 'O') {
+            cell.classList.add('shift-off');
+          }
+          
+          // Get day name
+          const dayNames = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+          const dayName = dayNames[date.getDay()];
+          
+          // Get shift icon
+          const shiftIcons = {
+            'M': '🌅',
+            'A': '☀️',
+            'N': '🌙',
+            'O': '🏖️'
+          };
+          const icon = shiftIcons[shiftType];
+          
+          cell.innerHTML = `
+            <span class="day-number">${String(day).padStart(2, '0')}</span>
+            <span class="shift-icon">${icon}</span>
+            <span>${shiftType}</span>
+            <span class="day-name">${dayName}</span>
+          `;
           
           columns[shift].appendChild(cell);
         });
@@ -433,7 +577,7 @@
     // Initialize
     renderCalendar();
     
-    console.log('%c📅 SHIFT ROSTER v1.0', 'color:#C41E3A;font-size:20px;font-weight:bold');
+    console.log('%c📅 SHIFT ROSTER v2.0 - Professional Design', 'color:#FFD700;font-size:20px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
   </script>
 </body>
