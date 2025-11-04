@@ -582,12 +582,11 @@
           
           // Calculate day number: row * 4 + col + 1
           const day = (3 - col) * 8 + row + 1;
-          if (day <= daysInMonth) {
-            const date = new Date(currentYear, currentMonth, day);
-            const shiftType = getShiftForDay(date, shift);
-            shiftCell.textContent = shiftType;
-            shiftCell.classList.add(`shift-${shiftType}`);
-          }
+          // Always show shifts, even if day doesn't exist in month
+          const date = new Date(currentYear, currentMonth, day);
+          const shiftType = getShiftForDay(date, shift);
+          shiftCell.textContent = shiftType;
+          shiftCell.classList.add(`shift-${shiftType}`);
           
           shiftRow.appendChild(shiftCell);
         });
