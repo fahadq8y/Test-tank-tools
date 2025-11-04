@@ -713,27 +713,32 @@
 <body>
   <!-- Navigation Bar -->
   <div class="nav-bar">
-    <div class="nav-logo">📅 الورديات - Shift Roster v8.5</div>
+    <div class="nav-logo">📅 الورديات - Shift Roster v8.6</div>
     <div class="nav-links">
-      <a href="pbcr-calculator.html" class="nav-link">🛢️ PBCR</a>
+      <a href="index.html" class="nav-link">🛢️ PBCR</a>
       <a href="plcr.html" class="nav-link">⚗️ PLCR</a>
       <a href="live-tanks.html" class="nav-link">🔴 Live Tanks</a>
-      <a href="vacation-planner.html" class="nav-link">🏖️ Vacation Planner</a>
+      <a href="vacation-planner.html" class="nav-link">🏭️ Vacation Planner</a>
       <a href="dashboard.html" class="nav-link">📊 Dashboard</a>
-      <div class="user-info">
-        <span class="user-name" id="userName">Loading...</span>
-        <button class="logout-btn" onclick="handleLogout()">🚪 Logout</button>
+    </div>
+    <div class="user-info">
+      <div class="font-controls">
+        <button class="font-btn" onclick="decreaseFontSize()" title="تصغير الخط">-</button>
+        <button class="font-btn" onclick="increaseFontSize()" title="تكبير الخط">+</button>
       </div>
-      <div class="theme-selector">
-        <button class="theme-button" onclick="toggleThemeMenu()">🎨</button>
-        <div class="theme-menu" id="themeMenu">
-          <div class="theme-option" onclick="setTheme('industrial')">🏭 Industrial Bronze</div>
-          <div class="theme-option" onclick="setTheme('ocean')">🌊 Ocean Blue</div>
-          <div class="theme-option" onclick="setTheme('dark')">⚫ Dark Carbon</div>
-          <div class="theme-option" onclick="setTheme('sunset')">🌅 Sunset Amber</div>
-          <div class="theme-option" onclick="setTheme('forest')">🌲 Forest Green</div>
+      <div class="theme-switcher">
+        <button class="theme-btn" onclick="toggleThemeMenu()" title="Change Theme">🎨</button>
+        <div class="theme-dropdown" id="themeMenu">
+          <div class="theme-option" data-theme="industrial" onclick="setTheme('industrial')">🏭 Industrial Bronze</div>
+          <div class="theme-option" data-theme="ocean" onclick="setTheme('ocean')">🌊 Ocean Blue</div>
+          <div class="theme-option" data-theme="dark" onclick="setTheme('dark')">⚫ Dark Carbon</div>
+          <div class="theme-option" data-theme="sunset" onclick="setTheme('sunset')">🌅 Sunset Amber</div>
+          <div class="theme-option" data-theme="forest" onclick="setTheme('forest')">🌲 Forest Green</div>
         </div>
       </div>
+      <div class="user-avatar" id="userAvatar">U</div>
+      <span class="user-name" id="userName">Loading...</span>
+      <button class="logout-btn" onclick="handleLogout()">🚪 Logout</button>
     </div>
   </div>
   
@@ -846,6 +851,36 @@
   </div>
   
   <script>
+    // ========== FONT SIZE CONTROL ==========
+    window.increaseFontSize = function() {
+      let currentSize = parseFloat(getComputedStyle(document.body).fontSize);
+      if (currentSize < 20) {
+        document.body.style.fontSize = (currentSize + 1) + 'px';
+        localStorage.setItem('fontSize', (currentSize + 1));
+        console.log('Font size increased to:', (currentSize + 1) + 'px');
+      }
+    };
+
+    window.decreaseFontSize = function() {
+      let currentSize = parseFloat(getComputedStyle(document.body).fontSize);
+      if (currentSize > 12) {
+        document.body.style.fontSize = (currentSize - 1) + 'px';
+        localStorage.setItem('fontSize', (currentSize - 1));
+        console.log('Font size decreased to:', (currentSize - 1) + 'px');
+      }
+    };
+
+    window.applyFontSize = function() {
+      const savedSize = localStorage.getItem('fontSize');
+      if (savedSize) {
+        document.body.style.fontSize = savedSize + 'px';
+        console.log('Applied saved font size:', savedSize + 'px');
+      }
+    };
+
+    // Apply saved font size on load
+    applyFontSize();
+
     // Current date
     let currentMonth = 10; // November (0-indexed)
     let currentYear = 2025;
@@ -1358,6 +1393,13 @@
         
         // Update UI with user name
         document.getElementById('userName').textContent = userData.name || userData.username;
+        
+        // Update user avatar
+        const userAvatar = document.getElementById('userAvatar');
+        if (userAvatar && userData.name) {
+          userAvatar.textContent = userData.name.charAt(0).toUpperCase();
+        }
+        
         console.log('✅ Shift Roster loaded for:', userData.name);
         return;
       }
@@ -1393,6 +1435,13 @@
         
         // Update UI with user name
         document.getElementById('userName').textContent = userData.name || username;
+        
+        // Update user avatar
+        const userAvatar = document.getElementById('userAvatar');
+        if (userAvatar && userData.name) {
+          userAvatar.textContent = userData.name.charAt(0).toUpperCase();
+        }
+        
         console.log('✅ Shift Roster loaded for:', userData.name);
         
       } catch (error) {
