@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Vacation Planner v1.0 - Shift-based leave management system -->
+<!-- Vacation Planner v1.2 - Added Annual Roster with Conflict Detection -->
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
@@ -342,7 +342,7 @@
 <body>
   <!-- Navigation Bar -->
   <div class="nav-bar">
-    <div class="nav-logo">🏖️ مخطط الإجازات - Vacation Planner v1.0</div>
+    <div class="nav-logo">🏖️ مخطط الإجازات - Vacation Planner v1.2</div>
     <div class="nav-links">
       <a href="pbcr-calculator.html" class="nav-link">🛢️ PBCR</a>
       <a href="plcr.html" class="nav-link">⚗️ PLCR</a>
@@ -410,7 +410,40 @@
     <!-- Annual Roster Card -->
     <div class="card">
       <h2 class="card-title">📊 الروستر السنوي للإجازات</h2>
-      <p style="text-align: center; opacity: 0.8;">قريباً...</p>
+      
+      <!-- Year Selector -->
+      <div class="form-group">
+        <label class="form-label">اختر السنة:</label>
+        <select class="form-select" id="rosterYear" onchange="renderAnnualRoster()">
+          <option value="2025">2025</option>
+          <option value="2026" selected>2026</option>
+          <option value="2027">2027</option>
+        </select>
+      </div>
+      
+      <!-- Legend -->
+      <div style="display: flex; gap: 15px; justify-content: center; margin: 20px 0; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: 5px;">
+          <div style="width: 20px; height: 20px; background: rgba(76,175,80,0.3); border-radius: 4px;"></div>
+          <span style="font-size: 14px;">✅ 1-2 أشخاص</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 5px;">
+          <div style="width: 20px; height: 20px; background: rgba(255,152,0,0.3); border-radius: 4px;"></div>
+          <span style="font-size: 14px;">⚠️ 3 أشخاص (الحد الأقصى)</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 5px;">
+          <div style="width: 20px; height: 20px; background: rgba(244,67,54,0.3); border-radius: 4px;"></div>
+          <span style="font-size: 14px;">🔴 4+ أشخاص (تعارض!)</span>
+        </div>
+      </div>
+      
+      <!-- Annual Roster Grid -->
+      <div id="annualRosterGrid" style="overflow-x: auto;">
+        <p style="text-align: center; opacity: 0.7;">جاري التحميل...</p>
+      </div>
+      
+      <!-- Conflict Suggestions -->
+      <div id="conflictSuggestions" style="margin-top: 20px;"></div>
     </div>
   </div>
   
@@ -423,6 +456,7 @@
     let currentUser = null;
     let userShift = '';
     let userLeaves = [];
+    let allLeaves = []; // All users' leaves
     
     // ========== SHIFT ROSTER LOGIC ==========
     // Same logic as shift-roster.html
@@ -527,7 +561,7 @@
       }
     }
     
-    function saveLeave() {
+    async function saveLeave() {
       const startDate = document.getElementById('startDate').value;
       const endDate = document.getElementById('endDate').value;
       
@@ -550,7 +584,8 @@
       const endShiftInfo = getShiftType(new Date(endDate), userShift);
       
       const leave = {
-        id: Date.now(),
+        userId: currentUser.username,
+        userName: currentUser.name || currentUser.username,
         shift: userShift,
         startDate: startDate,
         endDate: endDate,
@@ -559,17 +594,38 @@
         createdAt: new Date().toISOString()
       };
       
-      userLeaves.push(leave);
-      renderLeaves();
-      resetForm();
-      
-      alert('✅ تم حفظ الإجازة بنجاح!');
+      try {
+        // Save to Firestore
+        const docRef = await window.addDoc(window.collection(window.db, 'vacations'), leave);
+        leave.id = docRef.id;
+        
+        userLeaves.push(leave);
+        renderLeaves();
+        resetForm();
+        
+        alert('✅ تم حفظ الإجازة بنجاح!');
+        console.log('✅ Leave saved to Firestore:', docRef.id);
+      } catch (error) {
+        console.error('❌ Error saving leave:', error);
+        alert('❌ خطأ في حفظ الإجازة: ' + error.message);
+      }
     }
     
-    function deleteLeave(id) {
+    async function deleteLeave(id) {
       if (confirm('هل أنت متأكد من حذف هذه الإجازة؟')) {
-        userLeaves = userLeaves.filter(l => l.id !== id);
-        renderLeaves();
+        try {
+          // Delete from Firestore
+          await window.deleteDoc(window.doc(window.db, 'vacations', id));
+          
+          userLeaves = userLeaves.filter(l => l.id !== id);
+          renderLeaves();
+          
+          alert('✅ تم حذف الإجازة بنجاح!');
+          console.log('✅ Leave deleted from Firestore:', id);
+        } catch (error) {
+          console.error('❌ Error deleting leave:', error);
+          alert('❌ خطأ في حذف الإجازة: ' + error.message);
+        }
       }
     }
     
@@ -622,8 +678,188 @@
       }
     }
     
+    // ========== LOAD USER LEAVES ==========
+    async function loadUserLeaves() {
+      if (!currentUser) return;
+      
+      try {
+        const q = window.query(
+          window.collection(window.db, 'vacations'),
+          window.where('userId', '==', currentUser.username)
+        );
+        
+        const querySnapshot = await window.getDocs(q);
+        userLeaves = [];
+        
+        querySnapshot.forEach((doc) => {
+          userLeaves.push({
+            id: doc.id,
+            ...doc.data()
+          });
+        });
+        
+        renderLeaves();
+        console.log('✅ Loaded', userLeaves.length, 'leaves from Firestore');
+      } catch (error) {
+        console.error('❌ Error loading leaves:', error);
+      }
+    }
+    
+    // ========== LOAD ALL LEAVES ==========
+    async function loadAllLeaves() {
+      try {
+        const querySnapshot = await window.getDocs(window.collection(window.db, 'vacations'));
+        allLeaves = [];
+        
+        querySnapshot.forEach((doc) => {
+          allLeaves.push({
+            id: doc.id,
+            ...doc.data()
+          });
+        });
+        
+        console.log('✅ Loaded', allLeaves.length, 'total leaves from Firestore');
+        renderAnnualRoster();
+      } catch (error) {
+        console.error('❌ Error loading all leaves:', error);
+      }
+    }
+    
+    // ========== ANNUAL ROSTER ==========
+    function renderAnnualRoster() {
+      const year = parseInt(document.getElementById('rosterYear').value);
+      const grid = document.getElementById('annualRosterGrid');
+      const suggestions = document.getElementById('conflictSuggestions');
+      
+      // Count people on leave for each day
+      const dailyCounts = {};
+      const dailyPeople = {};
+      
+      allLeaves.forEach(leave => {
+        const start = new Date(leave.startDate);
+        const end = new Date(leave.endDate);
+        
+        // Iterate through each day of the leave
+        for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+          if (d.getFullYear() === year) {
+            const dateStr = d.toISOString().split('T')[0];
+            dailyCounts[dateStr] = (dailyCounts[dateStr] || 0) + 1;
+            
+            if (!dailyPeople[dateStr]) dailyPeople[dateStr] = [];
+            dailyPeople[dateStr].push(leave.userName || leave.userId);
+          }
+        }
+      });
+      
+      // Find conflicts (4+ people)
+      const conflicts = Object.entries(dailyCounts)
+        .filter(([date, count]) => count >= 4)
+        .sort((a, b) => new Date(a[0]) - new Date(b[0]));
+      
+      // Render calendar grid (12 months)
+      let html = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-top: 20px;">';
+      
+      for (let month = 0; month < 12; month++) {
+        const monthDate = new Date(year, month, 1);
+        const monthName = monthDate.toLocaleDateString('ar-EG', { month: 'long' });
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        
+        html += `
+          <div style="background: rgba(255,255,255,0.05); border-radius: 10px; padding: 15px;">
+            <h3 style="text-align: center; color: #4CAF50; margin-bottom: 10px; font-size: 16px;">${monthName} ${year}</h3>
+            <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px;">
+        `;
+        
+        // Day headers
+        ['S', 'M', 'T', 'W', 'T', 'F', 'S'].forEach(day => {
+          html += `<div style="text-align: center; font-size: 12px; font-weight: bold; opacity: 0.7;">${day}</div>`;
+        });
+        
+        // Empty cells before month starts
+        const firstDay = new Date(year, month, 1).getDay();
+        for (let i = 0; i < firstDay; i++) {
+          html += '<div></div>';
+        }
+        
+        // Days of month
+        for (let day = 1; day <= daysInMonth; day++) {
+          const date = new Date(year, month, day);
+          const dateStr = date.toISOString().split('T')[0];
+          const count = dailyCounts[dateStr] || 0;
+          
+          let bgColor = 'rgba(255,255,255,0.05)';
+          let textColor = '#fff';
+          
+          if (count >= 4) {
+            bgColor = 'rgba(244,67,54,0.4)';
+            textColor = '#fff';
+          } else if (count === 3) {
+            bgColor = 'rgba(255,152,0,0.4)';
+            textColor = '#fff';
+          } else if (count > 0) {
+            bgColor = 'rgba(76,175,80,0.3)';
+            textColor = '#fff';
+          }
+          
+          const title = count > 0 ? `${count} أشخاص: ${dailyPeople[dateStr].join(', ')}` : '';
+          
+          html += `
+            <div style="
+              background: ${bgColor};
+              border-radius: 4px;
+              padding: 8px 4px;
+              text-align: center;
+              font-size: 12px;
+              color: ${textColor};
+              cursor: ${count > 0 ? 'pointer' : 'default'};
+              border: ${count >= 4 ? '2px solid #f44336' : count === 3 ? '1px solid #FF9800' : 'none'};
+            " title="${title}">
+              ${day}${count > 0 ? `<br><span style="font-size: 10px;">(${count})</span>` : ''}
+            </div>
+          `;
+        }
+        
+        html += '</div></div>';
+      }
+      
+      html += '</div>';
+      grid.innerHTML = html;
+      
+      // Render conflict suggestions
+      if (conflicts.length > 0) {
+        let suggestionsHtml = `
+          <div class="alert alert-error">
+            <h3 style="margin-bottom: 10px;">🔴 تعارضات مكتشفة (${conflicts.length} يوم)</h3>
+            <ul style="margin: 10px 0; padding-right: 20px;">
+        `;
+        
+        conflicts.forEach(([date, count]) => {
+          const people = dailyPeople[date].join(', ');
+          const dateObj = new Date(date);
+          const dateStr = dateObj.toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
+          suggestionsHtml += `<li style="margin: 5px 0;"><strong>${dateStr}</strong>: ${count} أشخاص (${people})</li>`;
+        });
+        
+        suggestionsHtml += `
+            </ul>
+            <p style="margin-top: 15px; font-size: 14px;">
+              💡 <strong>نصيحة:</strong> يرجى من أحد الأشخاص تغيير تاريخ إجازته لتجنب التعارض.
+            </p>
+          </div>
+        `;
+        
+        suggestions.innerHTML = suggestionsHtml;
+      } else {
+        suggestions.innerHTML = `
+          <div class="alert alert-success">
+            ✅ لا توجد تعارضات! جميع الإجازات متوافقة.
+          </div>
+        `;
+      }
+    }
+    
     // ========== INITIALIZE ==========
-    console.log('%c🏖️ VACATION PLANNER v1.0', 'color:#4CAF50;font-size:20px;font-weight:bold');
+    console.log('%c🏖️ VACATION PLANNER v1.2', 'color:#4CAF50;font-size:20px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
   </script>
   
@@ -659,6 +895,15 @@
     window.db = db;
     window.doc = doc;
     window.getDoc = getDoc;
+    
+    // Import additional Firestore functions
+    import { collection, getDocs, addDoc, deleteDoc, query, where } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    window.collection = collection;
+    window.getDocs = getDocs;
+    window.addDoc = addDoc;
+    window.deleteDoc = deleteDoc;
+    window.query = query;
+    window.where = where;
     
     const auth = getAuth(app);
     window.auth = auth;
@@ -697,6 +942,12 @@
         // Update UI with user name
         document.getElementById('userName').textContent = userData.name || userData.username;
         console.log('✅ Vacation Planner loaded for:', userData.name);
+        
+        // Load user leaves
+        await loadUserLeaves();
+        
+        // Load all leaves for annual roster
+        await loadAllLeaves();
         return;
       }
       
@@ -733,6 +984,12 @@
         // Update UI with user name
         document.getElementById('userName').textContent = userData.name || username;
         console.log('✅ Vacation Planner loaded for:', userData.name);
+        
+        // Load user leaves
+        await loadUserLeaves();
+        
+        // Load all leaves for annual roster
+        await loadAllLeaves();
         
       } catch (error) {
         console.error('❌ Error loading user data:', error);
