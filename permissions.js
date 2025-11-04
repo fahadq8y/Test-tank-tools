@@ -12,19 +12,19 @@ const PERMISSIONS = {
     features: ['all']
   },
   'supervisor': {
-    pages: ['index.html', 'plcr.html', 'nmogas.html', 'live-tanks.html', 'dashboard.html'],
+    pages: ['index.html', 'plcr.html', 'nmogas.html', 'live-tanks.html', 'dashboard.html', 'shift-roster.html'],
     features: ['view_all', 'edit_tanks', 'view_dashboard']
   },
   'planning': {
-    pages: ['index.html', 'plcr.html', 'nmogas.html', 'dashboard.html'],
+    pages: ['index.html', 'plcr.html', 'nmogas.html', 'dashboard.html', 'shift-roster.html'],
     features: ['view_all', 'add_tanks', 'edit_tanks']
   },
   'control_panel': {
-    pages: ['index.html', 'plcr.html', 'nmogas.html', 'live-tanks.html', 'tank-management.html', 'dashboard.html'],
+    pages: ['index.html', 'plcr.html', 'nmogas.html', 'live-tanks.html', 'tank-management.html', 'dashboard.html', 'shift-roster.html'],
     features: ['view_all', 'add_to_live_tanks', 'edit_live_tanks', 'delete_live_tanks']
   },
   'field_operator': {
-    pages: ['index.html', 'plcr.html', 'dashboard.html'],
+    pages: ['index.html', 'plcr.html', 'dashboard.html', 'shift-roster.html'],
     features: ['view_assigned', 'update_level']
   }
 };

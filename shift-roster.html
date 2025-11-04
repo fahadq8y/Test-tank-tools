@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Shift Roster v8.4 - Added login authentication with dashboard permissions -->
+<!-- Shift Roster v8.5 - Added Shift Roster checkbox in Dashboard permissions -->
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
@@ -713,7 +713,7 @@
 <body>
   <!-- Navigation Bar -->
   <div class="nav-bar">
-    <div class="nav-logo">📅 الورديات - Shift Roster v8.4</div>
+    <div class="nav-logo">📅 الورديات - Shift Roster v8.5</div>
     <div class="nav-links">
       <a href="pbcr-calculator.html" class="nav-link">🛢️ PBCR</a>
       <a href="plcr.html" class="nav-link">⚗️ PLCR</a>
@@ -1285,7 +1285,7 @@
     switchView(); // This will render the appropriate view
     loadHolidays(); // Load Kuwait holidays
     
-    console.log('%c📅 SHIFT ROSTER v8.4 - Login Authentication Added', 'color:#B8860B;font-size:20px;font-weight:bold');
+    console.log('%c📅 SHIFT ROSTER v8.5 - Dashboard Permissions Control', 'color:#B8860B;font-size:20px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
   </script>
   
@@ -1346,9 +1346,9 @@
         console.log('✅ Using localStorage session for:', userData.username);
         window.currentUser = userData;
         
-        // Check page permissions (same as dashboard.html)
+        // Check page permissions
         if (typeof hasPageAccess === 'function') {
-          if (!hasPageAccess(userData, 'dashboard.html')) {
+          if (!hasPageAccess(userData, 'shift-roster.html')) {
             alert('ليس لديك صلاحية للدخول إلى هذه الصفحة');
             window.location.href = 'index.html';
             return;
@@ -1381,9 +1381,9 @@
         const userData = userDoc.data();
         window.currentUser = userData;
         
-        // Check page permissions (same as dashboard.html)
+        // Check page permissions
         if (typeof hasPageAccess === 'function') {
-          if (!hasPageAccess(userData, 'dashboard.html')) {
+          if (!hasPageAccess(userData, 'shift-roster.html')) {
             alert('ليس لديك صلاحية للدخول إلى هذه الصفحة');
             window.location.href = 'index.html';
             return;
