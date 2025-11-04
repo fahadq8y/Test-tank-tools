@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Live Tanks v7.1 - Unified Header from vacation-planner -->
+<!-- Live Tanks v7.2 - Fixed adminLink missing element error -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -257,13 +257,14 @@
   <div id="mainContent">
     <!-- Navigation -->
     <div class="nav-bar">
-      <div class="nav-logo">🔴 Live Tanks v7.1</div>
+      <div class="nav-logo">🔴 Live Tanks v7.2</div>
       <div class="nav-links">
         <a href="index.html" class="nav-link">🛢️ PBCR</a>
         <a href="plcr.html" class="nav-link">⛗️ PLCR</a>
         <a href="vacation-planner.html" class="nav-link">🏖️ Vacation Planner</a>
         <a href="shift-roster.html" class="nav-link">📅 Shift Roster</a>
         <a href="dashboard.html" class="nav-link">📊 Dashboard</a>
+        <a href="dashboard.html" id="adminLink" class="nav-admin" style="display:none">⚙️ Admin</a>
       </div>
       <div class="user-info">
         <div class="font-controls">
@@ -748,11 +749,9 @@
           applyUIPermissions(userData);
         }
         
-        // Display user name
-        const userNameEl = document.getElementById('userName');
-        if (userNameEl) {
-          userNameEl.textContent = userData.name || userData.username;
-        }
+        // Display user name and avatar
+        currentUser = window.currentUser;
+        loadUserInfo();
         
         console.log('✅ Permissions applied for:', userData.name || userData.username);
         
@@ -795,11 +794,9 @@
           applyUIPermissions(userData);
         }
         
-        // Display user name
-        const userNameEl = document.getElementById('userName');
-        if (userNameEl) {
-          userNameEl.textContent = userData.name || user.email;
-        }
+        // Display user name and avatar
+        currentUser = window.currentUser;
+        loadUserInfo();
         
         console.log('✅ Permissions applied for:', userData.name || user.email);
         
