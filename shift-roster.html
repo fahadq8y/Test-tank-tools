@@ -452,7 +452,7 @@
 <body>
   <!-- Navigation Bar -->
   <div class="nav-bar">
-    <div class="nav-logo">📅 الورديات - Shift Roster v6.6</div>
+    <div class="nav-logo">📅 الورديات - Shift Roster v6.7</div>
     <div class="nav-links">
       <a href="pbcr-calculator.html" class="nav-link">🛢️ PBCR</a>
       <a href="plcr.html" class="nav-link">⚗️ PLCR</a>
@@ -565,8 +565,15 @@
       
       const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
       
-      // Render days (4 columns × 8 rows = 32 cells)
-      for (let i = 1; i <= 32; i++) {
+      // Render days header row (empty to match shift headers)
+      for (let i = 0; i < 4; i++) {
+        const emptyCell = document.createElement('div');
+        emptyCell.className = 'day-cell day-header-spacer';
+        daysSection.appendChild(emptyCell);
+      }
+      
+      // Render days (4 columns × 7 rows = 28 cells)
+      for (let i = 1; i <= 28; i++) {
         const dayCell = document.createElement('div');
         dayCell.className = 'day-cell';
         
@@ -671,7 +678,7 @@
     renderCalendar();
     loadSavedTheme();
     
-    console.log('%c📅 SHIFT ROSTER v6.6 - Headers Inside Columns', 'color:#B8860B;font-size:20px;font-weight:bold');
+    console.log('%c📅 SHIFT ROSTER v6.7 - Perfect Alignment with Headers', 'color:#B8860B;font-size:20px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
   </script>
 </body>
