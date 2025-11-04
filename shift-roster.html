@@ -9,6 +9,113 @@
   <meta name="theme-color" content="#C41E3A">
   <script src="permissions.js"></script>
   <style>
+    /* === CSS Variables & Themes === */
+    :root {
+      --primary: #B8860B;
+      --secondary: #8B4513;
+      --accent: #CD853F;
+      --text: #FFD700;
+    }
+    
+    [data-theme="ocean"] {
+      --primary: #1e3a5f;
+      --secondary: #2c5f8d;
+      --accent: #4a90c4;
+      --text: #87CEEB;
+    }
+    
+    [data-theme="dark"] {
+      --primary: #2c2c2c;
+      --secondary: #1a1a1a;
+      --accent: #ff6b35;
+      --text: #ff6b35;
+    }
+    
+    [data-theme="sunset"] {
+      --primary: #ff6b35;
+      --secondary: #f7931e;
+      --accent: #ffd700;
+      --text: #ffd700;
+    }
+    
+    [data-theme="forest"] {
+      --primary: #2d5016;
+      --secondary: #4a7c59;
+      --accent: #6b9b37;
+      --text: #90EE90;
+    }
+    
+    /* Theme Switcher */
+    .theme-switcher {
+      position: relative;
+      display: inline-block;
+    }
+    
+    .theme-btn {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: white;
+      padding: 10px 15px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 20px;
+      transition: all 0.3s ease;
+      min-width: 48px;
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .theme-btn:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-1px);
+    }
+    
+    .theme-dropdown {
+      display: none;
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 5px;
+      background: rgba(0,0,0,0.9);
+      border-radius: 8px;
+      min-width: 180px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      z-index: 1000;
+    }
+    
+    .theme-dropdown.show {
+      display: block;
+      animation: slideDown 0.3s ease;
+    }
+    
+    .theme-option {
+      padding: 10px 15px;
+      cursor: pointer;
+      color: white;
+      transition: all 0.2s ease;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .theme-option:last-child {
+      border-bottom: none;
+    }
+    
+    .theme-option:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    
+    .theme-option.active {
+      background: var(--primary);
+      font-weight: bold;
+    }
+    
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
     * {
       margin: 0;
       padding: 0;
@@ -176,21 +283,21 @@
       z-index: 10;
     }
     
-    /* Shift Type Colors */
+    /* Shift Type Colors - Using Theme Variables */
     .day-cell.shift-morning {
-      background: linear-gradient(135deg, #FF8C00, #FFA500);
+      background: linear-gradient(135deg, var(--primary), var(--accent));
     }
     
     .day-cell.shift-afternoon {
-      background: linear-gradient(135deg, #FFD700, #FFC107);
+      background: linear-gradient(135deg, var(--accent), var(--text));
     }
     
     .day-cell.shift-night {
-      background: linear-gradient(135deg, #4A148C, #6A1B9A);
+      background: linear-gradient(135deg, var(--secondary), var(--primary));
     }
     
     .day-cell.shift-off {
-      background: linear-gradient(135deg, #2E7D32, #43A047);
+      background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1));
     }
     
     .day-number {
@@ -263,19 +370,19 @@
     }
     
     .legend-color.morning {
-      background: linear-gradient(135deg, #FF8C00, #FFA500);
+      background: linear-gradient(135deg, var(--primary), var(--accent));
     }
     
     .legend-color.afternoon {
-      background: linear-gradient(135deg, #FFD700, #FFC107);
+      background: linear-gradient(135deg, var(--accent), var(--text));
     }
     
     .legend-color.night {
-      background: linear-gradient(135deg, #4A148C, #6A1B9A);
+      background: linear-gradient(135deg, var(--secondary), var(--primary));
     }
     
     .legend-color.off {
-      background: linear-gradient(135deg, #2E7D32, #43A047);
+      background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1));
     }
     
     .legend-text {
@@ -371,6 +478,16 @@
       <a href="plcr.html" class="nav-link">⚗️ PLCR</a>
       <a href="live-tanks.html" class="nav-link">🔴 Live Tanks</a>
       <a href="dashboard.html" class="nav-link">📊 Dashboard</a>
+      <div class="theme-switcher">
+        <button class="theme-btn" onclick="toggleThemeDropdown()" title="تغيير الثيم">🎨</button>
+        <div class="theme-dropdown" id="themeDropdown">
+          <div class="theme-option" data-theme="industrial" onclick="setTheme('industrial')">🏭 Industrial Bronze</div>
+          <div class="theme-option" data-theme="ocean" onclick="setTheme('ocean')">🌊 Ocean Blue</div>
+          <div class="theme-option" data-theme="dark" onclick="setTheme('dark')">⚫ Dark Carbon</div>
+          <div class="theme-option" data-theme="sunset" onclick="setTheme('sunset')">🌅 Sunset Amber</div>
+          <div class="theme-option" data-theme="forest" onclick="setTheme('forest')">🌲 Forest Green</div>
+        </div>
+      </div>
     </div>
   </div>
   
@@ -574,10 +691,48 @@
       alert('لا توجد إشعارات جديدة');
     };
     
+    // === Theme Switching Functions ===
+    window.setTheme = function(theme) {
+      document.documentElement.setAttribute('data-theme', theme === 'industrial' ? '' : theme);
+      localStorage.setItem('selectedTheme', theme);
+      updateActiveTheme(theme);
+      console.log('🎨 Theme changed to:', theme);
+      // Close dropdown
+      document.getElementById('themeDropdown').classList.remove('show');
+    };
+    
+    window.toggleThemeDropdown = function() {
+      document.getElementById('themeDropdown').classList.toggle('show');
+    };
+    
+    function updateActiveTheme(theme) {
+      document.querySelectorAll('.theme-option').forEach(opt => {
+        opt.classList.remove('active');
+        if (opt.getAttribute('data-theme') === theme) {
+          opt.classList.add('active');
+        }
+      });
+    }
+    
+    function loadSavedTheme() {
+      const savedTheme = localStorage.getItem('selectedTheme') || 'industrial';
+      setTheme(savedTheme);
+      console.log('🎨 Loaded saved theme:', savedTheme);
+    }
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(event) {
+      const themeSwitcher = document.querySelector('.theme-switcher');
+      if (themeSwitcher && !themeSwitcher.contains(event.target)) {
+        document.getElementById('themeDropdown').classList.remove('show');
+      }
+    });
+    
     // Initialize
     renderCalendar();
+    loadSavedTheme();
     
-    console.log('%c📅 SHIFT ROSTER v2.0 - Professional Design', 'color:#FFD700;font-size:20px;font-weight:bold');
+    console.log('%c📅 SHIFT ROSTER v3.0 - Theme System', 'color:#FFD700;font-size:20px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
   </script>
 </body>
