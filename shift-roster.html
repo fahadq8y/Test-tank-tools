@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Shift Roster v4.1 - Horizontal Layout -->
+<!-- Shift Roster v4.2 - Clean Layout -->
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
@@ -410,44 +410,9 @@
       font-size: 16px;
     }
     
-    /* Bottom Navigation */
-    .bottom-nav {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: rgba(0,0,0,0.8);
-      backdrop-filter: blur(10px);
-      display: flex;
-      justify-content: space-around;
-      padding: 15px;
-      box-shadow: 0 -2px 10px rgba(0,0,0,0.3);
-      z-index: 100;
-      border-top: 1px solid rgba(255,255,255,0.1);
-    }
-    
-    .nav-btn {
-      background: transparent;
-      border: none;
-      font-size: 28px;
-      color: rgba(255,255,255,0.5);
-      cursor: pointer;
-      padding: 10px 20px;
-      transition: all 0.3s;
-    }
-    
-    .nav-btn.active {
-      color: #00ffff;
-    }
-    
-    .nav-btn:hover {
-      color: white;
-      transform: scale(1.1);
-    }
-    
-    /* Responsive */
-    @media (max-width: 600px) {
-      .header h1 {
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .month-nav button {
         font-size: 20px;
       }
       
@@ -474,7 +439,7 @@
 </head>
 <body>
   <div class="nav-bar">
-    <div class="nav-logo">📅 الورديات - Shift Roster v4.1</div>
+    <div class="nav-logo">📅 الورديات - Shift Roster v4.2</div>
     <div class="nav-links">
       <a href="pbcr-calculator.html" class="nav-link">🛢️ PBCR</a>
       <a href="plcr.html" class="nav-link">⚗️ PLCR</a>
@@ -538,11 +503,6 @@
     <div class="no-events">No Events</div>
   </div>
   
-  <div class="bottom-nav">
-    <button class="nav-btn">⚙️</button>
-    <button class="nav-btn">🧭</button>
-    <button class="nav-btn active">📅</button>
-  </div>
   
   <script type="module">
     // Shift Roster System
@@ -730,7 +690,7 @@
     renderCalendar();
     loadSavedTheme();
     
-    console.log('%c📅 SHIFT ROSTER v4.1 - Horizontal Layout', 'color:#FFD700;font-size:20px;font-weight:bold');
+    console.log('%c📅 SHIFT ROSTER v4.2 - Clean Layout', 'color:#FFD700;font-size:20px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
   </script>
 </body>
