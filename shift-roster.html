@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Shift Roster v8.1 - Added Google Calendar API for Kuwait Holidays -->
+<!-- Shift Roster v8.2 - Holiday background styling instead of markers -->
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
@@ -458,12 +458,19 @@
       font-weight: bold;
     }
     
-    .holiday-marker {
-      position: absolute;
-      top: 5px;
-      left: 5px;
-      font-size: 12px;
-      cursor: help;
+    /* Holiday background styling */
+    .calendar-cell.holiday .calendar-cell-day {
+      background: rgba(255, 0, 0, 0.4);
+      color: white !important;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    
+    .day-cell.holiday {
+      background: rgba(255, 0, 0, 0.4) !important;
+      color: white !important;
+      font-weight: bold;
     }
     
     /* Shift Selector Buttons */
@@ -1004,10 +1011,10 @@
               dayCell.classList.add('friday');
             }
             
-            // Mark holiday in old view
+            // Mark holiday with background in old view
             const holiday = isHoliday(date);
             if (holiday) {
-              dayCell.innerHTML += ' 🔴';
+              dayCell.classList.add('holiday');
               dayCell.title = holiday.name;
             }
           }
@@ -1069,14 +1076,11 @@
           cell.classList.add('friday');
         }
         
-        // Mark holiday
+        // Mark holiday with background
         const holiday = isHoliday(date);
         if (holiday) {
-          const holidayMarker = document.createElement('div');
-          holidayMarker.className = 'holiday-marker';
-          holidayMarker.textContent = '🔴';
-          holidayMarker.title = holiday.name;
-          cell.appendChild(holidayMarker);
+          cell.classList.add('holiday');
+          cell.title = holiday.name;
         }
         
         calendarGrid.appendChild(cell);
@@ -1220,7 +1224,7 @@
     switchView(); // This will render the appropriate view
     loadHolidays(); // Load Kuwait holidays
     
-    console.log('%c📅 SHIFT ROSTER v8.1 - Kuwait Holidays API Added', 'color:#B8860B;font-size:20px;font-weight:bold');
+    console.log('%c📅 SHIFT ROSTER v8.2 - Holiday Background Styling', 'color:#B8860B;font-size:20px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
   </script>
 </body>
