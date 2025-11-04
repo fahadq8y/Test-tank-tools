@@ -421,7 +421,7 @@
 <body>
   <!-- Navigation Bar -->
   <div class="nav-bar">
-    <div class="nav-logo">🔥 Firebase Admin Dashboard v5.9</div>
+    <div class="nav-logo">🔥 Firebase Admin Dashboard v6.0</div>
     <div class="nav-links">
       <a href="index.html" class="nav-link">🛢️ PBCR</a>
       <a href="plcr.html" class="nav-link">⚗️ PLCR</a>
@@ -1429,21 +1429,21 @@
       try {
         // تعريف محلي للوظائف (في حالة عدم توفر permissions.js)
         const localJobTitles = {
-          'section_head': 'رئيس قسم',
-          'planning': 'تخطيط',
-          'supervisor': 'مشرف',
-          'panel_operator': 'مشغل لوحة تحكم',
-          'senior': 'أقدم',
-          'field_operator': 'مشغل ميداني'
+          'section_head': 'Section Head',
+          'planning': 'Planning',
+          'supervisor': 'Supervisor',
+          'panel_operator': 'Panel Operator',
+          'senior': 'Senior',
+          'field_operator': 'Field Operator'
         };
         
         const localSpecializations = {
-          'admin': 'مدير النظام',
-          'supervisor': 'مشرف',
-          'planning': 'تخطيط',
-          'control_panel': 'غرفة التحكم',
-          'field_operator': 'مشغل ميداني',
-          'default_user': 'مستخدم افتراضي'
+          'admin': 'Admin',
+          'supervisor': 'Supervisor',
+          'planning': 'Planning',
+          'control_panel': 'Control Panel',
+          'field_operator': 'Field Operator',
+          'default_user': 'Default User'
         };
         
         // إذا كان السلم الوظيفي محدد مخصصاً
@@ -1459,10 +1459,10 @@
         // إذا كان يستخدم النظام القديم
         if (user.role) {
           const roleMapping = {
-            'admin': 'مدير النظام',
-            'supervisor': 'مشرف',
-            'panel_operator': 'مشغل لوحة',
-            'field_operator': 'مشغل ميداني'
+            'admin': 'Admin',
+            'supervisor': 'Supervisor',
+            'panel_operator': 'Panel Operator',
+            'field_operator': 'Field Operator'
           };
           return roleMapping[user.role] || user.role;
         }
@@ -1910,6 +1910,7 @@
                 <label><input type="checkbox" value="dashboard.html"> Dashboard</label>
                 <label><input type="checkbox" value="verify.html"> Verification</label>
                 <label><input type="checkbox" value="shift-roster.html"> 📅 Shift Roster</label>
+                <label><input type="checkbox" value="vacation-planner.html"> 🏖️ Vacation Planner</label>
               </div>
             </div>
             
