@@ -206,7 +206,7 @@
       flex: 0 0 20%;
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      grid-template-rows: repeat(8, 1fr);
+      grid-auto-rows: 1fr;
       gap: 8px;
     }
     
@@ -239,6 +239,14 @@
       font-weight: bold;
     }
     
+    /* Shift Headers Container */
+    .shift-headers-container {
+      display: flex;
+      justify-content: flex-start;
+      margin-bottom: 10px;
+      padding-right: 20%;
+    }
+    
     /* Shifts Section */
     .shifts-section {
       flex: 1;
@@ -264,6 +272,9 @@
       font-size: 16px;
       font-weight: bold;
       border-right: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     
     .shift-header:last-child {
@@ -271,8 +282,8 @@
     }
     
     .shift-grid {
-      display: grid;
-      grid-template-rows: repeat(8, 1fr);
+      display: flex;
+      flex-direction: column;
       flex: 1;
     }
     
@@ -280,6 +291,7 @@
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       border-bottom: 1px solid rgba(255,255,255,0.05);
+      flex: 1;
     }
     
     .shift-row:last-child {
@@ -447,7 +459,7 @@
 <body>
   <!-- Navigation Bar -->
   <div class="nav-bar">
-    <div class="nav-logo">📅 الورديات - Shift Roster v6.1</div>
+    <div class="nav-logo">📅 الورديات - Shift Roster v6.4</div>
     <div class="nav-links">
       <a href="pbcr-calculator.html" class="nav-link">🛢️ PBCR</a>
       <a href="plcr.html" class="nav-link">⚗️ PLCR</a>
@@ -475,6 +487,16 @@
       <button onclick="previousMonth()">❯</button>
     </div>
     
+    <!-- Shift Headers -->
+    <div class="shift-headers-container">
+      <div class="shift-headers">
+        <div class="shift-header">A</div>
+        <div class="shift-header">B</div>
+        <div class="shift-header">C</div>
+        <div class="shift-header">D</div>
+      </div>
+    </div>
+    
     <!-- Calendar Container -->
     <div class="calendar-container">
       <!-- Days Section -->
@@ -482,12 +504,6 @@
       
       <!-- Shifts Section -->
       <div class="shifts-section">
-        <div class="shift-headers">
-          <div class="shift-header">A</div>
-          <div class="shift-header">B</div>
-          <div class="shift-header">C</div>
-          <div class="shift-header">D</div>
-        </div>
         <div class="shift-grid" id="shiftGrid"></div>
       </div>
     </div>
@@ -666,7 +682,7 @@
     renderCalendar();
     loadSavedTheme();
     
-    console.log('%c📅 SHIFT ROSTER v6.1 - Perfect Alignment', 'color:#B8860B;font-size:20px;font-weight:bold');
+    console.log('%c📅 SHIFT ROSTER v6.4 - Headers Above Grid', 'color:#B8860B;font-size:20px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
   </script>
 </body>
