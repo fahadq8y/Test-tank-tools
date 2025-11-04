@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Vacation Planner v2.0 - Added vacation days calculator & fixed delete from localStorage -->
+<!-- Vacation Planner v2.1 - Fixed delete from Firestore & calendar portrait mode -->
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
@@ -587,10 +587,30 @@
       
       .calendar-day {
         font-size: 11px;
+        min-width: 0;
+        padding: 3px 1px;
+      }
+      
+      .calendar-day-number {
+        font-size: 11px;
       }
       
       .calendar-day-shift {
-        font-size: 8px;
+        font-size: 7px;
+        line-height: 1;
+      }
+      
+      .calendar-days {
+        gap: 3px;
+      }
+      
+      .calendar-weekdays {
+        gap: 3px;
+      }
+      
+      .calendar-weekday {
+        font-size: 10px;
+        padding: 2px;
       }
     }
     
@@ -821,7 +841,7 @@
 <body>
   <!-- Navigation Bar -->
   <div class="nav-bar">
-    <div class="nav-logo">🏖️ مخطط الإجازات - Vacation Planner v2.0</div>
+    <div class="nav-logo">🏖️ مخطط الإجازات - Vacation Planner v2.1</div>
     <div class="nav-links">
       <a href="pbcr-calculator.html" class="nav-link">🛢️ PBCR</a>
       <a href="plcr.html" class="nav-link">⚗️ PLCR</a>
@@ -1538,15 +1558,8 @@
       if (!confirm('هل أنت متأكد من حذف هذه الإجازة؟')) return;
       
       try {
-        // Get current user ID
-        const userId = currentUser?.uid || currentUser?.username;
-        if (!userId) {
-          alert('❌ خطأ: لم يتم العثور على معرف المستخدم');
-          return;
-        }
-        
-        // Delete from Firestore: vacations/{userId}/leaves/{leaveId}
-        await window.deleteDoc(window.doc(window.db, 'vacations', userId, 'leaves', id));
+        // Delete from Firestore: vacations/{docId}
+        await window.deleteDoc(window.doc(window.db, 'vacations', id));
         
         // Also delete from Test Mode localStorage if exists
         testUsers = testUsers.map(user => {
@@ -1889,7 +1902,7 @@
     }
     
     // ========== INITIALIZE ==========
-    console.log('%c🏖️ VACATION PLANNER v2.0', 'color:#4CAF50;font-size:20px;font-weight:bold');
+    console.log('%c🏖️ VACATION PLANNER v2.1', 'color:#4CAF50;font-size:20px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
   </script>
   
