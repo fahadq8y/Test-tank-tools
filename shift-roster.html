@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Shift Roster v8.5 - Added Shift Roster checkbox in Dashboard permissions -->
+<!-- Shift Roster v8.7 - Fixed header CSS to match vacation-planner template -->
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
@@ -74,58 +74,104 @@
     
     /* Navigation Bar */
     .nav-bar {
-      background: rgba(0,0,0,0.5);
-      backdrop-filter: blur(10px);
-      padding: 15px 30px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      padding: 15px 30px;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(10px);
       border-bottom: 2px solid var(--primary);
-      position: sticky;
-      top: 0;
-      z-index: 100;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 15px;
+      position: relative;
+      z-index: 1000;
     }
     
     .nav-logo {
-      font-size: 20px;
+      font-size: 24px;
       font-weight: bold;
       color: var(--primary);
     }
     
     .nav-links {
       display: flex;
-      gap: 15px;
+      gap: 10px;
       align-items: center;
+      flex-wrap: wrap;
     }
     
     .nav-link {
       color: white;
       text-decoration: none;
       padding: 8px 16px;
-      border-radius: 5px;
-      background: var(--bg-overlay);
-      transition: all 0.3s;
-      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      background: rgba(255,255,255,0.1);
+      font-weight: 500;
+      border: 1px solid rgba(255,255,255,0.2);
     }
     
     .nav-link:hover {
       background: var(--primary);
-      transform: translateY(-2px);
+      transform: translateY(-1px);
     }
     
     .user-info {
       display: flex;
       align-items: center;
       gap: 10px;
+    }
+    
+    /* Font Controls */
+    .font-controls {
+      display: flex;
+      gap: 5px;
+    }
+    
+    .font-btn {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.3);
       color: white;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      min-width: 32px;
+      min-height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .font-btn:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-1px);
+    }
+    
+    /* User Avatar */
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, var(--primary), var(--secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
       font-size: 14px;
+      color: white;
+      border: 2px solid var(--accent);
     }
     
     .user-name {
-      background: var(--bg-overlay);
+      background: rgba(255,255,255,0.1);
       padding: 6px 12px;
       border-radius: 5px;
       border: 1px solid rgba(255,255,255,0.2);
+      font-size: 14px;
     }
     
     .logout-btn {
@@ -144,51 +190,81 @@
       transform: translateY(-2px);
     }
     
-    .theme-selector {
+    /* Theme Switcher */
+    .theme-toggle {
       position: relative;
     }
     
-    .theme-button {
-      background: var(--bg-overlay);
-      border: 1px solid rgba(255,255,255,0.1);
+    .theme-btn {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.3);
       color: white;
-      padding: 8px 16px;
-      border-radius: 5px;
+      padding: 8px 12px;
+      border-radius: 8px;
       cursor: pointer;
-      font-size: 16px;
-      transition: all 0.3s;
+      font-size: 18px;
+      transition: all 0.3s ease;
+      min-width: 36px;
+      min-height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     
-    .theme-button:hover {
-      background: var(--primary);
+    .theme-btn:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-1px);
     }
     
-    .theme-menu {
+    .theme-dropdown {
+      display: none;
       position: absolute;
       top: 100%;
       right: 0;
       margin-top: 5px;
       background: rgba(0,0,0,0.9);
       border-radius: 8px;
-      padding: 10px;
-      display: none;
-      min-width: 200px;
-      border: 1px solid rgba(255,255,255,0.1);
+      min-width: 180px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      z-index: 10000;
+      border: 1px solid rgba(255,255,255,0.2);
     }
     
-    .theme-menu.show {
+    .theme-dropdown.show {
       display: block;
+      animation: slideDown 0.3s ease;
     }
     
     .theme-option {
-      padding: 10px;
+      padding: 10px 15px;
       cursor: pointer;
-      border-radius: 5px;
-      transition: all 0.3s;
+      color: white;
+      transition: all 0.2s ease;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .theme-option:last-child {
+      border-bottom: none;
     }
     
     .theme-option:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    
+    .theme-option.active {
       background: var(--primary);
+      font-weight: bold;
+    }
+    
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
     
     /* Main Container */
@@ -639,12 +715,23 @@
     @media (max-width: 768px) {
       .nav-bar {
         flex-direction: column;
-        gap: 10px;
+        align-items: flex-start;
+        padding: 10px 15px;
+      }
+      
+      .nav-logo {
+        font-size: 18px;
       }
       
       .nav-links {
-        flex-wrap: wrap;
+        width: 100%;
         justify-content: center;
+        gap: 5px;
+      }
+      
+      .nav-link {
+        padding: 6px 10px;
+        font-size: 12px;
       }
       
       .month-display {
@@ -708,12 +795,61 @@
         font-size: 18px;
       }
     }
+    
+    @media (max-width: 480px) {
+      body {
+        font-size: 14px;
+      }
+      
+      .nav-bar {
+        padding: 8px 10px;
+      }
+      
+      .nav-logo {
+        font-size: 14px;
+        width: 100%;
+        text-align: center;
+        margin-bottom: 5px;
+      }
+      
+      .nav-link {
+        padding: 4px 6px;
+        font-size: 10px;
+      }
+      
+      .font-controls {
+        gap: 3px;
+      }
+      
+      .font-btn {
+        min-width: 28px;
+        min-height: 28px;
+        padding: 4px 8px;
+        font-size: 14px;
+      }
+      
+      .user-avatar {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+      }
+      
+      .user-name {
+        font-size: 11px;
+        padding: 3px 6px;
+      }
+      
+      .logout-btn {
+        font-size: 11px;
+        padding: 3px 6px;
+      }
+    }
   </style>
 </head>
 <body>
   <!-- Navigation Bar -->
   <div class="nav-bar">
-    <div class="nav-logo">📅 الورديات - Shift Roster v8.6</div>
+    <div class="nav-logo">📅 الورديات - Shift Roster v8.7</div>
     <div class="nav-links">
       <a href="index.html" class="nav-link">🛢️ PBCR</a>
       <a href="plcr.html" class="nav-link">⚗️ PLCR</a>
@@ -1321,7 +1457,7 @@
     switchView(); // This will render the appropriate view
     loadHolidays(); // Load Kuwait holidays
     
-    console.log('%c📅 SHIFT ROSTER v8.5 - Dashboard Permissions Control', 'color:#B8860B;font-size:20px;font-weight:bold');
+    console.log('%c📅 SHIFT ROSTER v8.7 - Unified Header Design', 'color:#B8860B;font-size:20px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
   </script>
   
