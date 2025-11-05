@@ -168,7 +168,9 @@ function applyUIPermissions(user) {
     if (element) {
       const hasAccess = hasPageAccess(user, page);
       element.style.display = hasAccess ? '' : 'none';
-      console.log(`${hasAccess ? '✅' : '❌'} ${page} button:`, hasAccess ? 'visible' : 'hidden');
+      console.log(`${hasAccess ? '✅' : '❌'} ${page} button:`, hasAccess ? 'visible' : 'hidden', '| Selector:', selector, '| Element:', element);
+    } else {
+      console.log(`⚠️ ${page} button NOT FOUND | Selector:`, selector);
     }
   });
   
