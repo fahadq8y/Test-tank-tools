@@ -722,6 +722,7 @@
         sessionStorage.setItem('tanktools_session', 'active');
         
         // ✅ Save login timestamp for Auto-Logout (7 days)
+        const isPWA = window.matchMedia('(display-mode: standalone)').matches;
         if (isPWA) {
           const loginTimestamp = Date.now();
           localStorage.setItem('tanktools_login_timestamp', loginTimestamp.toString());
