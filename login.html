@@ -401,15 +401,10 @@
         const isPWA = window.matchMedia('(display-mode: standalone)').matches;
         console.log('📱 Running as:', isPWA ? 'PWA (Standalone App)' : 'Browser');
         
-        if (isPWA) {
-          // PWA: Stay logged in permanently (with 7-day auto-logout)
-          await setPersistence(auth, browserLocalPersistence);
-          console.log('✅ Auth Persistence: LOCAL (stay logged in)');
-        } else {
-          // Browser: Session only (logout when browser closes)
-          await setPersistence(auth, browserSessionPersistence);
-          console.log('✅ Auth Persistence: SESSION (logout on close)');
-        }
+        // ✅ Always use LOCAL persistence for both PWA and Browser
+        // This ensures Firebase Auth state persists across page navigation
+        await setPersistence(auth, browserLocalPersistence);
+        console.log('✅ Auth Persistence: LOCAL (stay logged in)', isPWA ? '(PWA Mode)' : '(Browser Mode)');
         
         // Step 1: Generate device fingerprint
         console.log('🔍 Generating device fingerprint...');
