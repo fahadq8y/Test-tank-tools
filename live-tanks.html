@@ -997,28 +997,28 @@
         currentUser = user;
         console.log('checkLoginStatus: Current user:', user);
         
-        // ✅ Wait for permissions.js to load
-        if (typeof hasPermission !== 'function') {
-          console.log('⏳ Waiting for permissions.js to load...');
+        // ✅ Wait for permissions.js v4.0 to load
+        if (typeof hasLiveTanksPermission !== 'function') {
+          console.log('⏳ Waiting for permissions.js v4.0 to load...');
           await new Promise(resolve => {
             const checkInterval = setInterval(() => {
-              if (typeof hasPermission === 'function') {
+              if (typeof hasLiveTanksPermission === 'function') {
                 clearInterval(checkInterval);
-                console.log('✅ permissions.js loaded!');
+                console.log('✅ permissions.js v4.0 loaded!');
                 resolve();
               }
             }, 100);
             // Timeout after 5 seconds
             setTimeout(() => {
               clearInterval(checkInterval);
-              console.error('❌ Timeout waiting for permissions.js');
+              console.error('❌ Timeout waiting for permissions.js v4.0');
               resolve();
             }, 5000);
           });
         }
         
-        // استخدام دالة hasPermission من permissions.js للتحقق من صلاحية الوصول
-        const canViewLiveTanks = typeof hasPermission === 'function' ? await hasPermission('canViewLiveTanks') : false;
+        // استخدام دالة hasLiveTanksPermission من permissions.js v4.0
+        const canViewLiveTanks = typeof hasLiveTanksPermission === 'function' ? hasLiveTanksPermission(user, 'canViewLiveTanks') : false;
         
         console.log('checkLoginStatus: Can view Live Tanks:', canViewLiveTanks);
         
@@ -1039,8 +1039,8 @@
 
     async function canUserAccessLiveTanks() {
       try {
-        // استخدام دالة hasPermission من permissions.js للتحقق من صلاحية الوصول
-        return await hasPermission('canViewLiveTanks');
+        // استخدام دالة hasLiveTanksPermission من permissions.js v4.0
+        return hasLiveTanksPermission(currentUser, 'canViewLiveTanks');
       } catch (error) {
         console.error('❌ Error checking Live Tanks access permission:', error);
         return false;
