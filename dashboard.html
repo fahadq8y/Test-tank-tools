@@ -421,7 +421,7 @@
 <body>
   <!-- Navigation Bar -->
   <div class="nav-bar">
-    <div class="nav-logo">🔥 Firebase Admin Dashboard v6.0</div>
+    <div class="nav-logo">🔥 Firebase Admin Dashboard v6.1</div>
     <div class="nav-links">
       <a href="index.html" class="nav-link">🛢️ PBCR</a>
       <a href="plcr.html" class="nav-link">⚗️ PLCR</a>
@@ -1225,10 +1225,8 @@
                 <th>📛 Full Name</th>
                 <th>🔑 Username</th>
                 <th>📧 Email</th>
-                <th>🏢 Specialization</th>
                 <th>👔 Job Title</th>
                 <th>📄 Pages Access</th>
-                <th>🛢️ Live Tanks</th>
                 <th>🔘 Add Buttons</th>
                 <th>🔄 Status</th>
                 <th>⏰ Last Login</th>
@@ -1269,10 +1267,8 @@
             <td><strong>${user.fullName || user.username}</strong></td>
             <td>${user.username}</td>
             <td>${user.email || `${user.username}@example.com`}</td>
-            <td><span class="status-badge ${specializationClass}">${formatSpecializationName(specialization)}</span></td>
             <td><span class="status-badge badge-info">${jobTitle}</span></td>
             <td><small>${pagesAccess}</small></td>
-            <td><span class="status-badge ${liveTanksAccess.class}">${liveTanksAccess.text}</span></td>
             <td><small>${buttonAccess}</small></td>
             <td><span class="status-badge ${statusClass}">${statusText}</span></td>
             <td>${lastLoginDate ? lastLoginDate.toLocaleString() : 'Never'}</td>
@@ -1876,18 +1872,6 @@
           </div>
           <div style="padding: 20px;">
             <div class="form-group">
-              <label class="form-label">Specialization (للنظام):</label>
-              <select id="userSpecialization" class="form-select">
-                <option value="admin">Administrator</option>
-                <option value="supervisor">Supervisor</option>
-                <option value="planning">Planning</option>
-                <option value="control_panel">Control Panel</option>
-                <option value="field_operator">Field Operator</option>
-                <option value="default_user">Default User</option>
-              </select>
-            </div>
-            
-            <div class="form-group">
               <label class="form-label">👔 Job Title (السلم الوظيفي للعرض):</label>
               <select id="userJobTitle" class="form-select">
                 <option value="">اختر السلم الوظيفي</option>
@@ -1945,7 +1929,6 @@
       
       // تعبئة القيم الحالية
       const specialization = user.specialization || user.role || 'planning';
-      permissionsModal.querySelector('#userSpecialization').value = specialization;
       
       // تعريف محلي للصفحات والصلاحيات الافتراضية
       const localDefaults = {
@@ -1982,7 +1965,7 @@
       };
       
       // تعبئة الصفحات المسموحة
-      const currentPages = user.customPages || localDefaults[specialization]?.pages || [];
+      const currentPages = user.pageAccess || user.customPages || localDefaults[specialization]?.pages || [];
       const pageCheckboxes = permissionsModal.querySelectorAll('input[type="checkbox"][value]');
       pageCheckboxes.forEach(checkbox => {
         checkbox.checked = currentPages.includes(checkbox.value) || currentPages.includes('all');
@@ -2015,9 +1998,6 @@
         const normalizedUsername = username.toLowerCase();
         console.log('Normalized username:', normalizedUsername);
         
-        const specialization = modal.querySelector('#userSpecialization').value;
-        console.log('Specialization:', specialization);
-        
         // جمع السلم الوظيفي
         const jobTitle = modal.querySelector('#userJobTitle').value;
         console.log('Job Title:', jobTitle);
@@ -2033,8 +2013,7 @@
           canViewLiveTanks: modal.querySelector('#canViewLiveTanks').checked,
           canEditLiveTanks: modal.querySelector('#canEditLiveTanks').checked,
           canAddToLiveTanks: modal.querySelector('#canAddToLiveTanks').checked,
-          canDeleteFromLiveTanks: modal.querySelector('#canDeleteFromLiveTanks').checked,
-          canManageUsers: specialization === 'admin'
+          canDeleteFromLiveTanks: modal.querySelector('#canDeleteFromLiveTanks').checked
         };
         console.log('Custom permissions:', customPermissions);
         
@@ -2073,10 +2052,9 @@
           const userData = userDoc.exists() ? userDoc.data() : existingUser;
           const updateData = {
             username: normalizedUsername, // تخزين المعرف بحالة موحدة
-            specialization: specialization,
             jobTitle: jobTitle, // ✅ السلم الوظيفي
-            customPages: selectedPages,
-            customPermissions: customPermissions,
+            pageAccess: selectedPages, // ✅ الصفحات المصرح بها
+            permissions: customPermissions, // ✅ الصلاحيات
             customButtonAccess: customButtonAccess, // ✅ صلاحيات الأزرار
             updatedAt: serverTimestamp()
           };
@@ -2103,10 +2081,9 @@
             username: normalizedUsername, // تخزين المعرف بحالة موحدة
             fullName: username, // قيمة افتراضية
             email: `${normalizedUsername}@example.com`, // قيمة افتراضية
-            specialization: specialization,
             jobTitle: jobTitle, // ✅ السلم الوظيفي
-            customPages: selectedPages,
-            customPermissions: customPermissions,
+            pageAccess: selectedPages, // ✅ الصفحات المصرح بها
+            permissions: customPermissions, // ✅ الصلاحيات
             customButtonAccess: customButtonAccess, // ✅ صلاحيات الأزرار
             isActive: true,
             createdAt: serverTimestamp(),
