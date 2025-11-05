@@ -1,7 +1,7 @@
 /**
  * 🔐 Tank Tools - Unified Permissions System
  * Developer: Fahad - 17877
- * Version: 2.2 - Added sessionStorage Cache for Permissions (Performance Boost)
+ * Version: 2.3 - Added custom pageAccess support + Enhanced UI permissions
  * Date: 2025-11-03
  */
 
@@ -40,7 +40,16 @@ function hasPageAccess(user, pageName) {
     return false;
   }
   
-  // ✅ Support new system (specialization)
+  // ✅ Priority 1: Check custom pageAccess from Firestore (Dashboard permissions)
+  if (user.pageAccess && Array.isArray(user.pageAccess)) {
+    console.log(`hasPageAccess: Checking custom pageAccess for ${pageName}:`, user.pageAccess);
+    if (user.pageAccess.includes(pageName)) {
+      console.log(`✅ hasPageAccess: ${pageName} found in custom pageAccess`);
+      return true;
+    }
+  }
+  
+  // ✅ Priority 2: Support new system (specialization)
   if (user.specialization) {
     const perms = PERMISSIONS[user.specialization];
     if (perms) {
@@ -51,7 +60,7 @@ function hasPageAccess(user, pageName) {
     }
   }
   
-  // ✅ Support old system (role) - for existing users
+  // ✅ Priority 3: Support old system (role) - for existing users
   if (user.role) {
     const roleMapping = {
       'admin': 'admin',
@@ -72,6 +81,7 @@ function hasPageAccess(user, pageName) {
     }
   }
   
+  console.log(`❌ hasPageAccess: No access to ${pageName} for user`);
   return false;
 }
 
@@ -153,11 +163,50 @@ function checkPagePermissions(user) {
  * @param {Object} user - User object with specialization
  */
 function applyUIPermissions(user) {
-  // Show/hide Live Tanks button
-  const liveTanksBtn = document.getElementById('live-tanks-link') || 
-                       document.querySelector('a[href="live-tanks.html"]');
-  if (liveTanksBtn) {
-    liveTanksBtn.style.display = hasPageAccess(user, 'live-tanks.html') ? '' : 'none';
+  console.log('🔒 Applying UI permissions for user:', user);
+  
+  // Show/hide PBCR link
+  const pbcrLink = document.querySelector('a[href="index.html"]');
+  if (pbcrLink && pbcrLink.classList.contains('nav-link')) {
+    pbcrLink.style.display = hasPageAccess(user, 'index.html') ? '' : 'none';
+    console.log('PBCR link:', hasPageAccess(user, 'index.html') ? 'visible' : 'hidden');
+  }
+  
+  // Show/hide PLCR link
+  const plcrLink = document.querySelector('a[href="plcr.html"]');
+  if (plcrLink && plcrLink.classList.contains('nav-link')) {
+    plcrLink.style.display = hasPageAccess(user, 'plcr.html') ? '' : 'none';
+    console.log('PLCR link:', hasPageAccess(user, 'plcr.html') ? 'visible' : 'hidden');
+  }
+  
+  // Show/hide Live Tanks link
+  const liveTanksLink = document.getElementById('live-tanks-link') || 
+                        document.querySelector('a[href="live-tanks.html"]');
+  if (liveTanksLink) {
+    liveTanksLink.style.display = hasPageAccess(user, 'live-tanks.html') ? '' : 'none';
+    console.log('Live Tanks link:', hasPageAccess(user, 'live-tanks.html') ? 'visible' : 'hidden');
+  }
+  
+  // Show/hide Vacation Planner link
+  const vacationLink = document.querySelector('a[href="vacation-planner.html"]');
+  if (vacationLink && vacationLink.classList.contains('nav-link')) {
+    vacationLink.style.display = hasPageAccess(user, 'vacation-planner.html') ? '' : 'none';
+    console.log('Vacation Planner link:', hasPageAccess(user, 'vacation-planner.html') ? 'visible' : 'hidden');
+  }
+  
+  // Show/hide Shift Roster link
+  const shiftRosterLink = document.querySelector('a[href="shift-roster.html"]');
+  if (shiftRosterLink && shiftRosterLink.classList.contains('nav-link')) {
+    shiftRosterLink.style.display = hasPageAccess(user, 'shift-roster.html') ? '' : 'none';
+    console.log('Shift Roster link:', hasPageAccess(user, 'shift-roster.html') ? 'visible' : 'hidden');
+  }
+  
+  // Show/hide Dashboard link
+  const dashboardLink = document.getElementById('dashboard-link') ||
+                        document.querySelector('a[href="dashboard.html"]');
+  if (dashboardLink) {
+    dashboardLink.style.display = hasPageAccess(user, 'dashboard.html') ? '' : 'none';
+    console.log('Dashboard link:', hasPageAccess(user, 'dashboard.html') ? 'visible' : 'hidden');
   }
   
   // Show/hide Add to Live Tanks button
@@ -166,18 +215,13 @@ function applyUIPermissions(user) {
     addToLiveTanksBtn.style.display = hasFeatureAccess(user, 'add_to_live_tanks') ? '' : 'none';
   }
   
-  // Show/hide Dashboard link
-  const dashboardLink = document.getElementById('dashboard-link') ||
-                        document.querySelector('a[href="dashboard.html"]');
-  if (dashboardLink) {
-    dashboardLink.style.display = hasPageAccess(user, 'dashboard.html') ? '' : 'none';
-  }
-  
   // Show/hide Tank Management link
   const tankMgmtLink = document.querySelector('a[href="tank-management.html"]');
   if (tankMgmtLink) {
     tankMgmtLink.style.display = hasPageAccess(user, 'tank-management.html') ? '' : 'none';
   }
+  
+  console.log('✅ UI permissions applied');
 }
 
 /**
@@ -213,7 +257,7 @@ function getSpecializationBadgeClass(specialization) {
 }
 
 // Log initialization
-console.log('✅ Permissions system v2.2 loaded - with sessionStorage Cache');
+console.log('✅ Permissions system v2.3 loaded - Custom pageAccess + Enhanced UI');
 
 /**
  * ✅ Check if current user has a specific permission (Firebase Auth + Firestore)
