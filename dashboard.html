@@ -421,7 +421,7 @@
 <body>
   <!-- Navigation Bar -->
   <div class="nav-bar">
-    <div class="nav-logo">🔥 Firebase Admin Dashboard v6.1</div>
+    <div class="nav-logo">🔥 Firebase Admin Dashboard v6.2</div>
     <div class="nav-links">
       <a href="index.html" class="nav-link">🛢️ PBCR</a>
       <a href="plcr.html" class="nav-link">⚗️ PLCR</a>
@@ -1374,9 +1374,10 @@
       }
 
       // للمستخدمين الجدد
-      if (user.customPages && Array.isArray(user.customPages)) {
-        if (user.customPages.includes('all')) return 'All Pages';
-        return user.customPages.map(page => {
+      const userPages = user.pageAccess || user.customPages;
+      if (userPages && Array.isArray(userPages)) {
+        if (userPages.includes('all')) return 'All Pages';
+        return userPages.map(page => {
           const pageNames = {
             'index.html': 'PBCR',
             'plcr.html': 'PLCR',
