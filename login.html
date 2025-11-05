@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tank Tools - PWA Persistence v6.5</title>
+  <title>Tank Tools - PWA Persistence v6.6</title>
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" href="icon.png" type="image/png">
   <meta name="theme-color" content="#003366">
@@ -164,6 +164,9 @@
     window.serverTimestamp = serverTimestamp;
     window.signInWithEmailAndPassword = signInWithEmailAndPassword;
     window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
+    window.setPersistence = setPersistence;
+    window.browserLocalPersistence = browserLocalPersistence;
+    window.browserSessionPersistence = browserSessionPersistence;
     window.query = query;
     window.where = where;
     window.getDocs = getDocs;
@@ -827,21 +830,29 @@
           return;
         }
         
-        // Create user data
+        // Step 1: Create user in Firebase Auth
+        console.log('🔥 Creating user in Firebase Auth...');
+        const email = `${username}@knpc.com`;
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const firebaseUser = userCredential.user;
+        console.log('✅ User created in Firebase Auth:', firebaseUser.uid);
+        
+        // Step 2: Create user data for Firestore
         const userData = {
           id: Date.now(),
           username: username,
           fullName: fullName,
-          email: `${username}@knpc.com`,
-          password: password, // In production, this should be hashed
+          email: email,
+          firebaseUid: firebaseUser.uid, // Store Firebase Auth UID
           role: 'user',
           isActive: false, // User needs admin approval
           createdAt: serverTimestamp(),
           emailVerified: false
         };
         
-        // Save user to Firebase
+        // Step 3: Save user to Firestore
         await setDoc(userDocRef, userData);
+        console.log('✅ User data saved to Firestore');
         
         // Register user's first device during registration
         try {
