@@ -969,15 +969,8 @@
       "Heavy Oil": 19, "Light Product": 20, "Mixed Product": 21, "Refined Oil": 22, "Final Product": 23, "Blended Oil": 24
     };
 
-    // Role permissions
-    const rolePermissions = {
-      "admin": { canView: true, canAdd: true, canEdit: true, canDelete: true },
-      "panel_operator": { canView: true, canAdd: true, canEdit: true, canDelete: true },
-      "supervisor": { canView: true, canAdd: false, canEdit: false, canDelete: false },
-      "section_head": { canView: true, canAdd: false, canEdit: false, canDelete: false },
-      "operator": { canView: true, canAdd: false, canEdit: false, canDelete: false },
-      "planning": { canView: true, canAdd: false, canEdit: false, canDelete: false }
-    };
+    // ✅ Permissions are now managed through permissions.js v4.0
+    // All permissions controlled from Dashboard
 
     // Initialize page - removed window.load listener
     // checkLoginStatus is now called from onAuthStateChanged after user is set
