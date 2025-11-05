@@ -282,6 +282,7 @@ input,select{background:rgba(255,255,255,0.9);border-radius:12px;border:none;col
     <div class="nav-logo">🛢️ PBCR Calculator v8.2</div>
     <div class="nav-links">
       <a href="plcr.html" class="nav-link">⚗️ PLCR</a>
+      <a href="NMOGASBL.html" class="nav-link" id="nmogas-link" style="display:none">🔧 NMOGAS</a>
       <a href="live-tanks.html" class="nav-link">🔴 Live Tanks</a>
       <a href="vacation-planner.html" class="nav-link">🏖️ Vacation Planner</a>
       <a href="shift-roster.html" class="nav-link">📅 Shift Roster</a>
@@ -499,6 +500,14 @@ onAuthStateChanged(auth, async (user) => {
     if (typeof applyUIPermissions === 'function') {
       applyUIPermissions(userData);
     }
+        
+        // Show NMOGAS link if user has access
+        if (userData.pageAccess && userData.pageAccess.includes('NMOGASBL.html')) {
+          const nmogasLink = document.getElementById('nmogas-link');
+          if (nmogasLink) {
+            nmogasLink.style.display = 'inline-block';
+          }
+        }
     
     // Display user name
     const userNameEl = document.getElementById('userName');
@@ -543,6 +552,14 @@ onAuthStateChanged(auth, async (user) => {
     if (typeof applyUIPermissions === 'function') {
       applyUIPermissions(userData);
     }
+        
+        // Show NMOGAS link if user has access
+        if (userData.pageAccess && userData.pageAccess.includes('NMOGASBL.html')) {
+          const nmogasLink = document.getElementById('nmogas-link');
+          if (nmogasLink) {
+            nmogasLink.style.display = 'inline-block';
+          }
+        }
     
     // Display user name
     const userNameEl = document.getElementById('userName');

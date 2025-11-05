@@ -93,6 +93,14 @@
           applyUIPermissions(userData);
         }
         
+        // Show NMOGAS link if user has access
+        if (userData.pageAccess && userData.pageAccess.includes('NMOGASBL.html')) {
+          const nmogasLink = document.getElementById('nmogas-link');
+          if (nmogasLink) {
+            nmogasLink.style.display = 'inline-block';
+          }
+        }
+        
         // Display user name
         const userNameEl = document.getElementById('userName');
         if (userNameEl) {
@@ -137,6 +145,14 @@
         // Apply UI permissions
         if (typeof applyUIPermissions === 'function') {
           applyUIPermissions(userData);
+        }
+        
+        // Show NMOGAS link if user has access
+        if (userData.pageAccess && userData.pageAccess.includes('NMOGASBL.html')) {
+          const nmogasLink = document.getElementById('nmogas-link');
+          if (nmogasLink) {
+            nmogasLink.style.display = 'inline-block';
+          }
         }
         
         // Display user name
@@ -541,6 +557,7 @@
       <div class="nav-logo">⛗️ PLCR Calculator v7.0</div>
       <div class="nav-links">
         <a href="index.html" class="nav-link">🛢️ PBCR</a>
+        <a href="NMOGASBL.html" class="nav-link" id="nmogas-link" style="display:none">🔧 NMOGAS</a>
         <a href="live-tanks.html" class="nav-link">🔴 Live Tanks</a>
         <a href="vacation-planner.html" class="nav-link">🏖️ Vacation Planner</a>
         <a href="shift-roster.html" class="nav-link">📅 Shift Roster</a>
