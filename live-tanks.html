@@ -1054,7 +1054,8 @@
       document.getElementById('userName').textContent = currentUser.username;
       document.getElementById('userAvatar').textContent = (currentUser.fullName || currentUser.username).charAt(0).toUpperCase();
       
-      if (currentUser.username === 'fam030' || currentUser.role === 'admin') {
+      // Show admin link for admins or users with Dashboard access
+      if (currentUser.role === 'admin' || (typeof hasPageAccess === 'function' && hasPageAccess(currentUser, 'Dashboard'))) {
         document.getElementById('adminLink').style.display = 'inline-block';
       }
     }
