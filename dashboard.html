@@ -1968,7 +1968,7 @@
       permissionsModal.querySelector('#userJobTitle').value = jobTitle;
       
       // تعبئة صلاحيات Live Tanks
-      const permissions = user.customPermissions || localDefaults[specialization]?.permissions || {};
+      const permissions = user.permissions || user.customPermissions || localDefaults[specialization]?.permissions || {};
       permissionsModal.querySelector('#canViewLiveTanks').checked = permissions.canViewLiveTanks || false;
       permissionsModal.querySelector('#canEditLiveTanks').checked = permissions.canEditLiveTanks || false;
       permissionsModal.querySelector('#canAddToLiveTanks').checked = permissions.canAddToLiveTanks || false;

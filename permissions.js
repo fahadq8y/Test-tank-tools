@@ -1,64 +1,57 @@
 /**
- * 🔐 Tank Tools - Unified Permissions System v3.0
- * Developer: Fahad - 17877
- * Date: 2025-11-05
+ * ============================================
+ * TANK TOOLS - UNIFIED PERMISSIONS SYSTEM v4.0
+ * ============================================
  * 
- * ✅ Simple & Clear Permission System:
- * - Uses pageAccess array from Firestore
- * - Admin role gets all pages automatically
- * - No complex logic, just simple checks
+ * Complete rewrite from scratch
+ * All permissions controlled from Dashboard
+ * Simple, unified, and consistent across all pages
+ * 
+ * Developer: Fahad - 17877
+ * Last Updated: 2025-11-05
  */
 
-console.log('🔐 Permissions System v3.0 - Loading...');
+console.log('%c🔒 PERMISSIONS SYSTEM v4.0 LOADED', 'color:blue;font-size:16px;font-weight:bold');
 
-// =================== PAGE NAME MAPPING ===================
+// =================== PAGE MAPPINGS ===================
 
 /**
- * Map display names to actual file names
+ * Map display names to file names
  */
-const PAGE_NAME_MAP = {
-  'Dashboard': 'dashboard.html',
-  'Live Tanks': 'live-tanks.html',
-  'Shift Roster': 'shift-roster.html',
-  'Vacation Planner': 'vacation-planner.html',
-  'Tank Management': 'tank-management.html',
+const PAGE_MAP = {
   'PBCR': 'index.html',
   'PLCR': 'plcr.html',
-  'NMOGAS': 'nmogas.html'
+  'NMOGAS': 'nmogas.html',
+  'Live Tanks': 'live-tanks.html',
+  'Dashboard': 'dashboard.html',
+  'Shift Roster': 'shift-roster.html',
+  'Vacation Planner': 'vacation-planner.html',
+  'Tank Management': 'tank-management.html'
 };
 
 /**
- * Reverse map: file names to display names
- */
-const FILE_TO_DISPLAY_MAP = {
-  'dashboard.html': 'Dashboard',
-  'live-tanks.html': 'Live Tanks',
-  'shift-roster.html': 'Shift Roster',
-  'vacation-planner.html': 'Vacation Planner',
-  'tank-management.html': 'Tank Management',
-  'index.html': 'PBCR',
-  'plcr.html': 'PLCR',
-  'nmogas.html': 'NMOGAS'
-};
-
-// =================== CORE FUNCTIONS ===================
-
-/**
- * Get current page file name
- * @returns {string} Current page file name (e.g., 'dashboard.html')
+ * Get current page name (display name)
  */
 function getCurrentPageName() {
-  const path = window.location.pathname;
-  const fileName = path.split('/').pop() || 'index.html';
-  console.log('📄 Current page:', fileName);
-  return fileName;
+  const currentFile = window.location.pathname.split('/').pop() || 'index.html';
+  
+  // Find display name from file name
+  for (const [displayName, fileName] of Object.entries(PAGE_MAP)) {
+    if (fileName === currentFile) {
+      return displayName;
+    }
+  }
+  
+  return null;
 }
+
+// =================== PERMISSION CHECKS ===================
 
 /**
  * Check if user has access to a specific page
  * @param {Object} user - User object from Firestore
- * @param {string} pageName - Page name (display name like 'Dashboard' or file name like 'dashboard.html')
- * @returns {boolean}
+ * @param {string} pageName - Display name of the page (e.g., 'PBCR', 'Live Tanks')
+ * @returns {boolean} - True if user has access
  */
 function hasPageAccess(user, pageName) {
   if (!user) {
@@ -66,41 +59,77 @@ function hasPageAccess(user, pageName) {
     return false;
   }
   
-  // ✅ Admin has access to everything
+  // Admin has access to everything
   if (user.role === 'admin') {
-    console.log('✅ hasPageAccess: User is admin, access granted to', pageName);
+    console.log('✅ Admin access granted to:', pageName);
     return true;
   }
   
-  // Convert display name to file name if needed
-  let fileName = pageName;
-  if (PAGE_NAME_MAP[pageName]) {
-    fileName = PAGE_NAME_MAP[pageName];
-  }
+  // Check pageAccess array
+  const pageAccess = user.pageAccess || [];
+  const hasAccess = pageAccess.includes(pageName);
   
-  // Convert file name to display name for checking pageAccess array
-  let displayName = FILE_TO_DISPLAY_MAP[fileName] || pageName;
+  console.log(`${hasAccess ? '✅' : '❌'} User ${user.username} access to ${pageName}:`, hasAccess);
   
-  // Check pageAccess array from Firestore
-  if (user.pageAccess && Array.isArray(user.pageAccess)) {
-    const hasAccess = user.pageAccess.includes(displayName);
-    console.log(`${hasAccess ? '✅' : '❌'} hasPageAccess: ${displayName} ${hasAccess ? 'found' : 'not found'} in pageAccess:`, user.pageAccess);
-    return hasAccess;
-  }
-  
-  console.log('❌ hasPageAccess: No pageAccess array found for user');
-  return false;
+  return hasAccess;
 }
 
 /**
- * Check current page access and redirect if unauthorized
- * Call this function on page load
+ * Check if user has specific Live Tanks permission
+ * @param {Object} user - User object
+ * @param {string} permission - Permission name (canViewLiveTanks, canEditLiveTanks, etc.)
+ * @returns {boolean}
+ */
+function hasLiveTanksPermission(user, permission) {
+  if (!user) return false;
+  
+  // Admin has all permissions
+  if (user.role === 'admin') return true;
+  
+  // Check permissions object
+  const permissions = user.permissions || {};
+  return permissions[permission] === true;
+}
+
+/**
+ * Check if "Add to Live Tanks" button should be shown in a page
+ * @param {Object} user - User object
+ * @param {string} pageName - 'PBCR' or 'PLCR'
+ * @returns {boolean}
+ */
+function showAddToLiveTanksButton(user, pageName) {
+  if (!user) return false;
+  
+  // Admin sees all buttons
+  if (user.role === 'admin') return true;
+  
+  // Check customButtonAccess
+  const buttonAccess = user.customButtonAccess || {};
+  const addToLiveTanks = buttonAccess.addToLiveTanks || {};
+  
+  if (pageName === 'PBCR') {
+    return addToLiveTanks.index === true;
+  } else if (pageName === 'PLCR') {
+    return addToLiveTanks.plcr === true;
+  }
+  
+  return false;
+}
+
+// =================== PAGE PROTECTION ===================
+
+/**
+ * Check if current user has permission to view current page
+ * Redirects to login if not authorized
+ * Call this on page load
  */
 function checkPagePermissions() {
   const currentPage = getCurrentPageName();
   
+  console.log('🔍 Checking permissions for page:', currentPage);
+  
   // Allow login page without auth
-  if (currentPage === 'login.html') {
+  if (window.location.pathname.includes('login.html')) {
     console.log('✅ Login page, no permission check needed');
     return;
   }
@@ -128,12 +157,14 @@ function checkPagePermissions() {
   if (!hasPageAccess(user, currentPage)) {
     console.log('❌ Access denied to', currentPage);
     alert('ليس لديك صلاحية للدخول إلى هذه الصفحة');
-    window.location.href = 'live-tanks.html'; // Redirect to default page
+    window.location.href = 'login.html';
     return;
   }
   
   console.log('✅ Access granted to', currentPage);
 }
+
+// =================== UI PERMISSIONS ===================
 
 /**
  * Apply UI permissions - show/hide navigation buttons
@@ -150,29 +181,38 @@ function applyUIPermissions(user) {
   
   // List of all navigation elements to check
   const navElements = [
-    { selector: 'a[href="dashboard.html"]', page: 'Dashboard' },
-    { selector: '#dashboard-link', page: 'Dashboard' },
-    { selector: 'a[href="live-tanks.html"]', page: 'Live Tanks' },
-    { selector: '#live-tanks-link', page: 'Live Tanks' },
-    { selector: 'a[href="shift-roster.html"]', page: 'Shift Roster' },
-    { selector: 'a[href="vacation-planner.html"]', page: 'Vacation Planner' },
-    { selector: 'a[href="tank-management.html"]', page: 'Tank Management' },
     { selector: 'a[href="index.html"]', page: 'PBCR' },
     { selector: 'a[href="plcr.html"]', page: 'PLCR' },
-    { selector: 'a[href="nmogas.html"]', page: 'NMOGAS' }
+    { selector: 'a[href="nmogas.html"]', page: 'NMOGAS' },
+    { selector: 'a[href="live-tanks.html"]', page: 'Live Tanks' },
+    { selector: 'a[href="dashboard.html"]', page: 'Dashboard' },
+    { selector: 'a[href="shift-roster.html"]', page: 'Shift Roster' },
+    { selector: 'a[href="vacation-planner.html"]', page: 'Vacation Planner' },
+    { selector: 'a[href="tank-management.html"]', page: 'Tank Management' }
   ];
   
   // Show/hide each navigation element based on permissions
   navElements.forEach(({ selector, page }) => {
-    const element = document.querySelector(selector);
-    if (element) {
+    const elements = document.querySelectorAll(selector);
+    elements.forEach(element => {
       const hasAccess = hasPageAccess(user, page);
       element.style.display = hasAccess ? '' : 'none';
-      console.log(`${hasAccess ? '✅' : '❌'} ${page} button:`, hasAccess ? 'visible' : 'hidden', '| Selector:', selector, '| Element:', element);
-    } else {
-      console.log(`⚠️ ${page} button NOT FOUND | Selector:`, selector);
-    }
+      console.log(`${hasAccess ? '✅' : '❌'} ${page} button:`, hasAccess ? 'visible' : 'hidden');
+    });
   });
+  
+  // Handle "Add to Live Tanks" buttons in PBCR and PLCR
+  const currentPage = getCurrentPageName();
+  
+  if (currentPage === 'PBCR' || currentPage === 'PLCR') {
+    const addButtons = document.querySelectorAll('.add-to-live-tanks, #addToLiveTanks, [data-action="add-to-live-tanks"]');
+    const shouldShow = showAddToLiveTanksButton(user, currentPage);
+    
+    addButtons.forEach(button => {
+      button.style.display = shouldShow ? '' : 'none';
+      console.log(`${shouldShow ? '✅' : '❌'} Add to Live Tanks button in ${currentPage}:`, shouldShow ? 'visible' : 'hidden');
+    });
+  }
   
   console.log('✅ UI permissions applied');
 }
@@ -181,8 +221,10 @@ function applyUIPermissions(user) {
 
 // Make functions globally available
 window.hasPageAccess = hasPageAccess;
+window.hasLiveTanksPermission = hasLiveTanksPermission;
+window.showAddToLiveTanksButton = showAddToLiveTanksButton;
 window.checkPagePermissions = checkPagePermissions;
 window.applyUIPermissions = applyUIPermissions;
 window.getCurrentPageName = getCurrentPageName;
 
-console.log('✅ Permissions System v3.0 loaded successfully');
+console.log('✅ Permissions system v4.0 initialized');
