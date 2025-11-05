@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tank Tools - PWA Persistence v6.9</title>
+  <title>Tank Tools - PWA Persistence v7.0</title>
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" href="icon.png" type="image/png">
   <meta name="theme-color" content="#003366">
@@ -127,7 +127,7 @@
     </div>
 
     <div id="messageContainer"></div>
-    <div class="footer"><strong>🔥 Firebase Powered</strong><br>By <a href="#" class="whatsapp-link" onclick="openWhatsApp(); return false;">Fahad - 17877</a> | Version v6.9 - Unified Permissions System<br><small>Real-time cloud database</small></div>
+    <div class="footer"><strong>🔥 Firebase Powered</strong><br>By <a href="#" class="whatsapp-link" onclick="openWhatsApp(); return false;">Fahad - 17877</a> | Version v7.0 - Unified Permissions System<br><small>Real-time cloud database</small></div>
   </div>
 
   <!-- Device Fingerprinting System - Simple & Reliable -->
@@ -491,6 +491,9 @@
               email: 'fam030@knpc.com',
               role: 'admin',
               isActive: true,
+              pageAccess: [], // ✅ Admin gets all pages automatically
+              permissions: {}, // ✅ Admin gets all permissions automatically
+              customButtonAccess: {}, // ✅ Admin gets all buttons automatically
               loginTime: new Date().toISOString()
             };
             
@@ -543,6 +546,9 @@
                   email: 'fam030@knpc.com',
                   role: 'admin',
                   isActive: true,
+                  pageAccess: [],
+                  permissions: {},
+                  customButtonAccess: {},
                   loginTime: new Date().toISOString()
                 }));
                 
@@ -709,6 +715,8 @@
           role: userData.role || 'user',
           isActive: userData.isActive,
           pageAccess: userData.pageAccess || [], // ✅ Include pageAccess from Firestore
+          permissions: userData.permissions || {}, // ✅ Include Live Tanks permissions
+          customButtonAccess: userData.customButtonAccess || {}, // ✅ Include button permissions
           loginTime: new Date().toISOString()
         };
         
