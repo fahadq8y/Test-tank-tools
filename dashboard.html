@@ -1347,17 +1347,17 @@
       return nameMap[specialization] || 'User';
     }
 
-    // Get user Live Tanks access (using permissions.js)
+    // Get user Live Tanks access (using permissions.js v4.0)
     function getUserLiveTanksAccess(user) {
       // Check if user has full access (add, edit, delete)
-      if (hasFeatureAccess(user, 'add_to_live_tanks') && 
-          hasFeatureAccess(user, 'edit_live_tanks') && 
-          hasFeatureAccess(user, 'delete_live_tanks')) {
+      if (hasLiveTanksPermission(user, 'canAddToLiveTanks') && 
+          hasLiveTanksPermission(user, 'canEditLiveTanks') && 
+          hasLiveTanksPermission(user, 'canDeleteFromLiveTanks')) {
         return { class: 'badge-active', text: 'Full Access' };
       }
       
       // Check if user has view access
-      if (hasPageAccess(user, 'live-tanks.html')) {
+      if (hasLiveTanksPermission(user, 'canViewLiveTanks')) {
         return { class: 'badge-warning', text: 'View Only' };
       }
       
