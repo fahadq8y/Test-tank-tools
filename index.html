@@ -13,6 +13,7 @@
 <meta name="apple-mobile-web-app-title" content="Tank Tools">
 <link rel="apple-touch-icon" href="icon.png">
 <script src="permissions.js"></script>
+  <script src="session-manager.js"></script>
 <style>
 /* === CSS Variables & Themes === */
 /* === Mobile Safe Areas === */
@@ -473,15 +474,12 @@ onAuthStateChanged(auth, async (user) => {
     console.log('❌ No Firebase Auth user, checking localStorage...');
     
     // Fallback to localStorage for non-migrated users
-    const savedUser = localStorage.getItem('tanktools_current_user');
-    const savedSession = sessionStorage.getItem('tanktools_session');
-    
-    if (!savedUser || !savedSession) {
-      console.log('❌ No session found, redirecting to login...');
-      alert('يرجى تسجيل الدخول أولاً');
-      window.location.href = 'login.html';
-      return;
-    }
+    const userData = SessionManager.validateSession();
+      if (!userData) {
+        console.log('❌ Invalid or expired session');
+        showAccessDenied();
+        return;
+      }
     
     // Use localStorage data for non-migrated users
     const userData = JSON.parse(savedUser);

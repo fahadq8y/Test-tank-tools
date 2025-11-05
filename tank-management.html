@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Tank Management v2.0 - Added localStorage fallback for permissions -->
+<!-- Tank Management v3.0 - Session Manager integration -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -9,6 +9,7 @@
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#003366">
   <script src="permissions.js"></script>
+  <script src="session-manager.js"></script>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     body{background:linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.5)),url('background.jpg');background-size:cover;background-position:center;background-attachment:fixed;color:white;font-family:Arial,sans-serif;padding:20px;min-height:100vh}
@@ -293,22 +294,19 @@
     // ✅ AUTH STATE MANAGEMENT
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        console.log('❌ No Firebase Auth user, checking localStorage...');
+        console.log('❌ No Firebase Auth user, checking session...');
         
-        // Fallback to localStorage for non-migrated users
-        const savedUser = localStorage.getItem('tanktools_current_user');
-        const savedSession = sessionStorage.getItem('tanktools_session');
+        // ✅ Validate session using SessionManager
+        const userData = SessionManager.validateSession();
         
-        if (!savedUser || !savedSession) {
-          console.log('❌ No session found, redirecting to login...');
-          alert('يرجى تسجيل الدخول أولاً');
-          window.location.href = 'login.html';
+        if (!userData) {
+          console.log('❌ Invalid or expired session, redirecting to login...');
+          alert('انتهت الجلسة، يرجى تسجيل الدخول مرة أخرى');
+          SessionManager.redirectToLogin('tank-management.html');
           return;
         }
         
-        // Use localStorage data for non-migrated users
-        const userData = JSON.parse(savedUser);
-        console.log('✅ Using localStorage session for:', userData.username);
+        console.log('✅ Session valid for:', userData.username);
         window.currentUser = userData;
         
         // Check page permissions using new system
@@ -1001,9 +999,15 @@
 
     // Logout function
     function logout() {
-      if (confirm('Do you want to logout?')) {
-        sessionStorage.clear();
-        localStorage.clear();
+      if (confirm('هل أنت متأكد من تسجيل الخروج؟')) {
+        // Log activity if available
+        if (typeof logActivity === 'function' && window.currentUser) {
+          logActivity('user_logout', window.currentUser.username);
+        }
+        
+        // ✅ Destroy session using SessionManager (preserve settings)
+        SessionManager.destroySession(false);
+        
         window.location.href = 'login.html';
       }
     }

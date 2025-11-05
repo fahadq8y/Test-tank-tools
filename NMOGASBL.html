@@ -8,6 +8,7 @@
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#003366">
   <script src="permissions.js"></script>
+  <script src="session-manager.js"></script>
   <style>
 /* === CSS Variables & Themes === */
 /* === Mobile Safe Areas === */
@@ -354,7 +355,13 @@
       }
     }
     
-    window.logout=()=>{logActivity('user_logout',currentUser.username);sessionStorage.removeItem('tanktools_session');localStorage.removeItem('tanktools_current_user');window.location.href='login.html'};
+    window.logout=()=>{
+      if(confirm('هل أنت متأكد من تسجيل الخروج؟')){
+        logActivity('user_logout',currentUser.username);
+        SessionManager.destroySession(false);
+        window.location.href='login.html'
+      }
+    };
     
     function showMessage(message,type){
       const div=document.createElement('div');

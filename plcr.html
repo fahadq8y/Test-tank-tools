@@ -15,6 +15,7 @@
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#003366">
   <script src="permissions.js"></script>
+  <script src="session-manager.js"></script>
   
   <!-- Firebase v9 SDK -->
   <script type="module">
@@ -66,15 +67,12 @@
         console.log('❌ No Firebase Auth user, checking localStorage...');
         
         // Fallback to localStorage for non-migrated users
-        const savedUser = localStorage.getItem('tanktools_current_user');
-        const savedSession = sessionStorage.getItem('tanktools_session');
-        
-        if (!savedUser || !savedSession) {
-          console.log('❌ No session found, redirecting to login...');
-          alert('يرجى تسجيل الدخول أولاً');
-          window.location.href = 'login.html';
-          return;
-        }
+        const userData = SessionManager.validateSession();
+      if (!userData) {
+        console.log('❌ Invalid or expired session');
+        showAccessDenied();
+        return;
+      }
         
         // Use localStorage data for non-migrated users
         const userData = JSON.parse(savedUser);
@@ -962,7 +960,13 @@
       }
     }
     
-    window.logout=()=>{logActivity('user_logout',currentUser.username);sessionStorage.removeItem('tanktools_session');localStorage.removeItem('tanktools_current_user');window.location.href='login.html'};
+    window.logout=()=>{
+      if(confirm('هل أنت متأكد من تسجيل الخروج؟')){
+        logActivity('user_logout',currentUser.username);
+        SessionManager.destroySession(false);
+        window.location.href='login.html'
+      }
+    };
     
     function showMessage(message,type){
       const div=document.createElement('div');

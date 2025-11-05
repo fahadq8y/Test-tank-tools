@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Live Tanks v7.7 - Added permissions check in delete/edit/add functions -->
+<!-- Live Tanks v8.0 - Session Manager integration -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -9,6 +9,7 @@
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#003366">
   <script src="permissions.js"></script>
+  <script src="session-manager.js"></script>
   <style>
 /* === CSS Variables & Themes === */
 /* === Mobile Safe Areas === */
@@ -717,22 +718,19 @@
     // ✅ AUTH STATE MANAGEMENT
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        console.log('❌ No Firebase Auth user, checking localStorage...');
+        console.log('❌ No Firebase Auth user, checking session...');
         
-        // Fallback to localStorage for non-migrated users
-        const savedUser = localStorage.getItem('tanktools_current_user');
-        const savedSession = sessionStorage.getItem('tanktools_session');
+        // ✅ Validate session using SessionManager
+        const userData = SessionManager.validateSession();
         
-        if (!savedUser || !savedSession) {
-          console.log('❌ No session found, redirecting to login...');
-          alert('يرجى تسجيل الدخول أولاً');
-          window.location.href = 'login.html';
+        if (!userData) {
+          console.log('❌ Invalid or expired session, redirecting to login...');
+          alert('انتهت الجلسة، يرجى تسجيل الدخول مرة أخرى');
+          SessionManager.redirectToLogin('live-tanks.html');
           return;
         }
         
-        // Use localStorage data for non-migrated users
-        const userData = JSON.parse(savedUser);
-        console.log('✅ Using localStorage session for:', userData.username);
+        console.log('✅ Session valid for:', userData.username);
         window.currentUser = userData;
         
         // Check page permissions using new system
@@ -3207,15 +3205,24 @@
     }
 
     function logout() {
-      if (unsubscribe) unsubscribe();
-      logActivity('user_logout', currentUser.username);
-      sessionStorage.removeItem('tanktools_session');
-      localStorage.removeItem('tanktools_current_user');
-      window.location.href = 'login.html';
+      if (confirm('هل أنت متأكد من تسجيل الخروج؟')) {
+        if (unsubscribe) unsubscribe();
+        logActivity('user_logout', currentUser.username);
+        
+        // ✅ Destroy session using SessionManager (preserve settings)
+        SessionManager.destroySession(false);
+        
+        window.location.href = 'login.html';
+      }
     }
     
     // ========== LOGOUT (Unified) ==========
     function handleLogout() {
+      logout(); // Use the main logout function
+    }
+    
+    // Old handleLogout code (kept for reference)
+    function handleLogoutOld() {
       if (confirm('هل أنت متأكد من تسجيل الخروج؟')) {
         logout();
       }
