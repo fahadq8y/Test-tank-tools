@@ -1,10 +1,11 @@
 /**
  * Tank Tools - Session Manager
  * Developer: Fahad - 17877
- * Version: 1.0.0
+ * Version: 1.1.0
  * Last Updated: 2025-11-06
  * 
  * Centralized session management system with 7-day expiry
+ * PWA Compatible: Uses only localStorage (no sessionStorage)
  */
 
 const SessionManager = {
@@ -48,8 +49,7 @@ const SessionManager = {
         localStorage.setItem(this.KEYS.USERNAME, userData.username);
       }
 
-      // Set session as active in sessionStorage
-      sessionStorage.setItem('tanktools_session', 'active');
+      // Session is now tracked only in localStorage (PWA compatible)
 
       console.log('✅ Session created:', {
         sessionId: sessionData.id,
@@ -160,12 +160,10 @@ const SessionManager = {
       localStorage.removeItem(this.KEYS.USER_DATA);
       localStorage.removeItem(this.KEYS.SESSION_DATA);
       localStorage.removeItem(this.KEYS.USERNAME);
-      sessionStorage.removeItem('tanktools_session');
 
       // If clearAll is true, remove everything
       if (clearAll) {
         localStorage.clear();
-        sessionStorage.clear();
         console.log('🗑️ All storage cleared');
       } else {
         console.log('🗑️ Session destroyed (settings preserved)');
@@ -298,7 +296,8 @@ const SessionManager = {
    */
   redirectToLogin(returnUrl = null) {
     if (returnUrl) {
-      sessionStorage.setItem(this.KEYS.REDIRECT, returnUrl);
+      // Use localStorage for PWA compatibility
+      localStorage.setItem(this.KEYS.REDIRECT, returnUrl);
     }
     window.location.href = 'login.html';
   },
@@ -308,9 +307,9 @@ const SessionManager = {
    * @returns {string|null} Redirect URL or null
    */
   getRedirectUrl() {
-    const url = sessionStorage.getItem(this.KEYS.REDIRECT);
+    const url = localStorage.getItem(this.KEYS.REDIRECT);
     if (url) {
-      sessionStorage.removeItem(this.KEYS.REDIRECT);
+      localStorage.removeItem(this.KEYS.REDIRECT);
     }
     return url;
   }
