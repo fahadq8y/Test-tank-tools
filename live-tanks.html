@@ -1095,29 +1095,29 @@
         
         console.log('setupPermissions: Current user:', user);
         
-        // ✅ Wait for permissions.js to load
-        if (typeof hasPermission !== 'function') {
-          console.log('⏳ Waiting for permissions.js to load in setupPermissions...');
+        // ✅ Wait for permissions.js v4.0 to load
+        if (typeof hasLiveTanksPermission !== 'function') {
+          console.log('⏳ Waiting for permissions.js v4.0 to load in setupPermissions...');
           await new Promise(resolve => {
             const checkInterval = setInterval(() => {
-              if (typeof hasPermission === 'function') {
+              if (typeof hasLiveTanksPermission === 'function') {
                 clearInterval(checkInterval);
-                console.log('✅ permissions.js loaded in setupPermissions!');
+                console.log('✅ permissions.js v4.0 loaded in setupPermissions!');
                 resolve();
               }
             }, 100);
             setTimeout(() => {
               clearInterval(checkInterval);
-              console.error('❌ Timeout waiting for permissions.js in setupPermissions');
+              console.error('❌ Timeout waiting for permissions.js v4.0 in setupPermissions');
               resolve();
             }, 5000);
           });
         }
         
-        // استخدام دالة hasPermission من permissions.js
-        const canAddToLiveTanks = typeof hasPermission === 'function' ? await hasPermission('canAddToLiveTanks') : false;
-        const canEditLiveTanks = typeof hasPermission === 'function' ? await hasPermission('canEditLiveTanks') : false;
-        const canDeleteFromLiveTanks = typeof hasPermission === 'function' ? await hasPermission('canDeleteFromLiveTanks') : false;
+        // استخدام دالة hasLiveTanksPermission من permissions.js v4.0
+        const canAddToLiveTanks = typeof hasLiveTanksPermission === 'function' ? hasLiveTanksPermission(user, 'canAddToLiveTanks') : false;
+        const canEditLiveTanks = typeof hasLiveTanksPermission === 'function' ? hasLiveTanksPermission(user, 'canEditLiveTanks') : false;
+        const canDeleteFromLiveTanks = typeof hasLiveTanksPermission === 'function' ? hasLiveTanksPermission(user, 'canDeleteFromLiveTanks') : false;
         
         console.log('🔐 Live Tanks permissions:', {
           canAddToLiveTanks,
