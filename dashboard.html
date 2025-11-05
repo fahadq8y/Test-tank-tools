@@ -421,7 +421,7 @@
 <body>
   <!-- Navigation Bar -->
   <div class="nav-bar">
-    <div class="nav-logo">🔥 Firebase Admin Dashboard v6.5</div>
+    <div class="nav-logo">🔥 Firebase Admin Dashboard v6.6</div>
     <div class="nav-links">
       <a href="index.html" class="nav-link">🛢️ PBCR</a>
       <a href="plcr.html" class="nav-link">⚗️ PLCR</a>
@@ -1387,18 +1387,18 @@
 
     // Get user pages access
     function getUserPagesAccess(user) {
-      // إذا كان المستخدم يستخدم النظام القديم
-      if (user.role && !user.specialization) {
-        if (user.role === 'admin') return 'All Pages';
-        return 'Basic Pages';
-      }
-
-      // للمستخدمين الجدد
+      // ✅ Check pageAccess FIRST (new system v4.0)
       const userPages = user.pageAccess || user.customPages;
-      if (userPages && Array.isArray(userPages)) {
+      if (userPages && Array.isArray(userPages) && userPages.length > 0) {
         if (userPages.includes('all')) return 'All Pages';
         // ✅ Display names are already stored in Firestore, just join them
         return userPages.join(', ');
+      }
+
+      // Fallback: إذا كان المستخدم يستخدم النظام القديم
+      if (user.role && !user.specialization) {
+        if (user.role === 'admin') return 'All Pages';
+        return 'Basic Pages';
       }
 
       // تعريف محلي للصفحات الافتراضية (تجنب dependency على permissions.js)
@@ -2524,7 +2524,7 @@
     window.increaseFontSize = increaseFontSize;
     window.decreaseFontSize = decreaseFontSize;
 
-    console.log('%c🔥 FIREBASE ADMIN DASHBOARD v6.5 - Permissions System v4.0', 'color:orange;font-size:20px;font-weight:bold');
+    console.log('%c🔥 FIREBASE ADMIN DASHBOARD v6.6 - Permissions System v4.0', 'color:orange;font-size:20px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
     console.log('%cLive Tanks Access Control System', 'color:blue;font-size:14px');
 
@@ -3947,7 +3947,7 @@ Report End
   </script>
 
   <footer style="text-align:center;padding:20px;background:rgba(0,0,0,0.3);color:white;margin-top:30px">
-    By <a href="#" class="whatsapp-link" onclick="openWhatsApp(); return false;">Fahad - 17877</a> – Version v6.5 - Permissions System v4.0<br><small style="color:#999;font-size:10px;margin-top:5px;display:block">📱 WhatsApp: +965 55222550</small>
+    By <a href="#" class="whatsapp-link" onclick="openWhatsApp(); return false;">Fahad - 17877</a> – Version v6.6 - Permissions System v4.0<br><small style="color:#999;font-size:10px;margin-top:5px;display:block">📱 WhatsApp: +965 55222550</small>
   </footer>
 
   <style>
