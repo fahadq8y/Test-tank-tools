@@ -1,401 +1,186 @@
 /**
- * 🔐 Tank Tools - Unified Permissions System
+ * 🔐 Tank Tools - Unified Permissions System v3.0
  * Developer: Fahad - 17877
- * Version: 2.3 - Added custom pageAccess support + Enhanced UI permissions
- * Date: 2025-11-03
+ * Date: 2025-11-05
+ * 
+ * ✅ Simple & Clear Permission System:
+ * - Uses pageAccess array from Firestore
+ * - Admin role gets all pages automatically
+ * - No complex logic, just simple checks
  */
 
-// ✅ Permission definitions for each specialization
-const PERMISSIONS = {
-  'admin': {
-    pages: ['all'],
-    features: ['all']
-  },
-  'supervisor': {
-    pages: ['index.html', 'plcr.html', 'nmogas.html', 'live-tanks.html', 'dashboard.html', 'shift-roster.html'],
-    features: ['view_all', 'edit_tanks', 'view_dashboard']
-  },
-  'planning': {
-    pages: ['index.html', 'plcr.html', 'nmogas.html', 'dashboard.html', 'shift-roster.html'],
-    features: ['view_all', 'add_tanks', 'edit_tanks']
-  },
-  'control_panel': {
-    pages: ['index.html', 'plcr.html', 'nmogas.html', 'live-tanks.html', 'tank-management.html', 'dashboard.html', 'shift-roster.html'],
-    features: ['view_all', 'add_to_live_tanks', 'edit_live_tanks', 'delete_live_tanks']
-  },
-  'field_operator': {
-    pages: ['index.html', 'plcr.html', 'dashboard.html', 'shift-roster.html'],
-    features: ['view_assigned', 'update_level']
-  }
+console.log('🔐 Permissions System v3.0 - Loading...');
+
+// =================== PAGE NAME MAPPING ===================
+
+/**
+ * Map display names to actual file names
+ */
+const PAGE_NAME_MAP = {
+  'Dashboard': 'dashboard.html',
+  'Live Tanks': 'live-tanks.html',
+  'Shift Roster': 'shift-roster.html',
+  'Vacation Planner': 'vacation-planner.html',
+  'Tank Management': 'tank-management.html',
+  'PBCR': 'index.html',
+  'PLCR': 'plcr.html',
+  'NMOGAS': 'nmogas.html'
 };
 
 /**
- * Check if user has permission to access a page
- * @param {Object} user - User object with specialization or role
- * @param {string} pageName - Page file name (e.g., 'index.html')
+ * Reverse map: file names to display names
+ */
+const FILE_TO_DISPLAY_MAP = {
+  'dashboard.html': 'Dashboard',
+  'live-tanks.html': 'Live Tanks',
+  'shift-roster.html': 'Shift Roster',
+  'vacation-planner.html': 'Vacation Planner',
+  'tank-management.html': 'Tank Management',
+  'index.html': 'PBCR',
+  'plcr.html': 'PLCR',
+  'nmogas.html': 'NMOGAS'
+};
+
+// =================== CORE FUNCTIONS ===================
+
+/**
+ * Get current page file name
+ * @returns {string} Current page file name (e.g., 'dashboard.html')
+ */
+function getCurrentPageName() {
+  const path = window.location.pathname;
+  const fileName = path.split('/').pop() || 'index.html';
+  console.log('📄 Current page:', fileName);
+  return fileName;
+}
+
+/**
+ * Check if user has access to a specific page
+ * @param {Object} user - User object from Firestore
+ * @param {string} pageName - Page name (display name like 'Dashboard' or file name like 'dashboard.html')
  * @returns {boolean}
  */
 function hasPageAccess(user, pageName) {
   if (!user) {
+    console.log('❌ hasPageAccess: No user provided');
     return false;
   }
   
-  // ✅ Priority 1: Check custom pageAccess from Firestore (Dashboard permissions)
+  // ✅ Admin has access to everything
+  if (user.role === 'admin') {
+    console.log('✅ hasPageAccess: User is admin, access granted to', pageName);
+    return true;
+  }
+  
+  // Convert display name to file name if needed
+  let fileName = pageName;
+  if (PAGE_NAME_MAP[pageName]) {
+    fileName = PAGE_NAME_MAP[pageName];
+  }
+  
+  // Convert file name to display name for checking pageAccess array
+  let displayName = FILE_TO_DISPLAY_MAP[fileName] || pageName;
+  
+  // Check pageAccess array from Firestore
   if (user.pageAccess && Array.isArray(user.pageAccess)) {
-    console.log(`hasPageAccess: Checking custom pageAccess for ${pageName}:`, user.pageAccess);
-    if (user.pageAccess.includes(pageName)) {
-      console.log(`✅ hasPageAccess: ${pageName} found in custom pageAccess`);
-      return true;
-    }
+    const hasAccess = user.pageAccess.includes(displayName);
+    console.log(`${hasAccess ? '✅' : '❌'} hasPageAccess: ${displayName} ${hasAccess ? 'found' : 'not found'} in pageAccess:`, user.pageAccess);
+    return hasAccess;
   }
   
-  // ✅ Priority 2: Support new system (specialization)
-  if (user.specialization) {
-    const perms = PERMISSIONS[user.specialization];
-    if (perms) {
-      if (perms.pages.includes('all')) {
-        return true;
-      }
-      return perms.pages.includes(pageName);
-    }
-  }
-  
-  // ✅ Priority 3: Support old system (role) - for existing users
-  if (user.role) {
-    const roleMapping = {
-      'admin': 'admin',
-      'supervisor': 'supervisor',
-      'planning': 'planning',
-      'panel_operator': 'control_panel',
-      'operator': 'field_operator'
-    };
-    const mappedSpec = roleMapping[user.role];
-    if (mappedSpec) {
-      const perms = PERMISSIONS[mappedSpec];
-      if (perms) {
-        if (perms.pages.includes('all')) {
-          return true;
-        }
-        return perms.pages.includes(pageName);
-      }
-    }
-  }
-  
-  console.log(`❌ hasPageAccess: No access to ${pageName} for user`);
+  console.log('❌ hasPageAccess: No pageAccess array found for user');
   return false;
 }
 
 /**
- * Check if user has a specific feature permission
- * @param {Object} user - User object with specialization or role
- * @param {string} feature - Feature name
- * @returns {boolean}
+ * Check current page access and redirect if unauthorized
+ * Call this function on page load
  */
-function hasFeatureAccess(user, feature) {
-  if (!user) {
-    return false;
-  }
-  
-  // ✅ Support new system (specialization)
-  if (user.specialization) {
-    const perms = PERMISSIONS[user.specialization];
-    if (perms) {
-      if (perms.features.includes('all')) {
-        return true;
-      }
-      return perms.features.includes(feature);
-    }
-  }
-  
-  // ✅ Support old system (role) - for existing users
-  if (user.role) {
-    const roleMapping = {
-      'admin': 'admin',
-      'supervisor': 'supervisor',
-      'planning': 'planning',
-      'panel_operator': 'control_panel',
-      'operator': 'field_operator'
-    };
-    const mappedSpec = roleMapping[user.role];
-    if (mappedSpec) {
-      const perms = PERMISSIONS[mappedSpec];
-      if (perms) {
-        if (perms.features.includes('all')) {
-          return true;
-        }
-        return perms.features.includes(feature);
-      }
-    }
-  }
-  
-  return false;
-}
-
-/**
- * Get current page name
- * @returns {string}
- */
-function getCurrentPageName() {
-  const path = window.location.pathname;
-  return path.split('/').pop() || 'index.html';
-}
-
-/**
- * Check page access and redirect if unauthorized
- * @param {Object} user - User object with specialization
- */
-function checkPagePermissions(user) {
+function checkPagePermissions() {
   const currentPage = getCurrentPageName();
   
   // Allow login page without auth
   if (currentPage === 'login.html') {
+    console.log('✅ Login page, no permission check needed');
     return;
   }
   
-  if (!hasPageAccess(user, currentPage)) {
-    alert('ليس لديك صلاحية للدخول إلى هذه الصفحة');
-    window.location.href = 'index.html';
+  // Get user from localStorage
+  const savedUser = localStorage.getItem('tanktools_current_user');
+  if (!savedUser) {
+    console.log('❌ No user in localStorage, redirecting to login');
+    alert('يرجى تسجيل الدخول أولاً');
+    window.location.href = 'login.html';
+    return;
   }
+  
+  let user;
+  try {
+    user = JSON.parse(savedUser);
+  } catch (e) {
+    console.error('❌ Error parsing user data:', e);
+    alert('يرجى تسجيل الدخول أولاً');
+    window.location.href = 'login.html';
+    return;
+  }
+  
+  // Check if user has access to current page
+  if (!hasPageAccess(user, currentPage)) {
+    console.log('❌ Access denied to', currentPage);
+    alert('ليس لديك صلاحية للدخول إلى هذه الصفحة');
+    window.location.href = 'live-tanks.html'; // Redirect to default page
+    return;
+  }
+  
+  console.log('✅ Access granted to', currentPage);
 }
 
 /**
- * Apply UI permissions based on user features
- * @param {Object} user - User object with specialization
+ * Apply UI permissions - show/hide navigation buttons
+ * Call this function after loading user data
+ * @param {Object} user - User object from Firestore
  */
 function applyUIPermissions(user) {
-  console.log('🔒 Applying UI permissions for user:', user);
-  
-  // Show/hide PBCR link
-  const pbcrLink = document.querySelector('a[href="index.html"]');
-  if (pbcrLink && pbcrLink.classList.contains('nav-link')) {
-    pbcrLink.style.display = hasPageAccess(user, 'index.html') ? '' : 'none';
-    console.log('PBCR link:', hasPageAccess(user, 'index.html') ? 'visible' : 'hidden');
+  if (!user) {
+    console.log('❌ applyUIPermissions: No user provided');
+    return;
   }
   
-  // Show/hide PLCR link
-  const plcrLink = document.querySelector('a[href="plcr.html"]');
-  if (plcrLink && plcrLink.classList.contains('nav-link')) {
-    plcrLink.style.display = hasPageAccess(user, 'plcr.html') ? '' : 'none';
-    console.log('PLCR link:', hasPageAccess(user, 'plcr.html') ? 'visible' : 'hidden');
-  }
+  console.log('🔒 Applying UI permissions for:', user.username);
   
-  // Show/hide Live Tanks link
-  const liveTanksLink = document.getElementById('live-tanks-link') || 
-                        document.querySelector('a[href="live-tanks.html"]');
-  if (liveTanksLink) {
-    liveTanksLink.style.display = hasPageAccess(user, 'live-tanks.html') ? '' : 'none';
-    console.log('Live Tanks link:', hasPageAccess(user, 'live-tanks.html') ? 'visible' : 'hidden');
-  }
+  // List of all navigation elements to check
+  const navElements = [
+    { selector: 'a[href="dashboard.html"]', page: 'Dashboard' },
+    { selector: '#dashboard-link', page: 'Dashboard' },
+    { selector: 'a[href="live-tanks.html"]', page: 'Live Tanks' },
+    { selector: '#live-tanks-link', page: 'Live Tanks' },
+    { selector: 'a[href="shift-roster.html"]', page: 'Shift Roster' },
+    { selector: 'a[href="vacation-planner.html"]', page: 'Vacation Planner' },
+    { selector: 'a[href="tank-management.html"]', page: 'Tank Management' },
+    { selector: 'a[href="index.html"]', page: 'PBCR' },
+    { selector: 'a[href="plcr.html"]', page: 'PLCR' },
+    { selector: 'a[href="nmogas.html"]', page: 'NMOGAS' }
+  ];
   
-  // Show/hide Vacation Planner link
-  const vacationLink = document.querySelector('a[href="vacation-planner.html"]');
-  if (vacationLink && vacationLink.classList.contains('nav-link')) {
-    vacationLink.style.display = hasPageAccess(user, 'vacation-planner.html') ? '' : 'none';
-    console.log('Vacation Planner link:', hasPageAccess(user, 'vacation-planner.html') ? 'visible' : 'hidden');
-  }
-  
-  // Show/hide Shift Roster link
-  const shiftRosterLink = document.querySelector('a[href="shift-roster.html"]');
-  if (shiftRosterLink && shiftRosterLink.classList.contains('nav-link')) {
-    shiftRosterLink.style.display = hasPageAccess(user, 'shift-roster.html') ? '' : 'none';
-    console.log('Shift Roster link:', hasPageAccess(user, 'shift-roster.html') ? 'visible' : 'hidden');
-  }
-  
-  // Show/hide Dashboard link
-  const dashboardLink = document.getElementById('dashboard-link') ||
-                        document.querySelector('a[href="dashboard.html"]');
-  if (dashboardLink) {
-    dashboardLink.style.display = hasPageAccess(user, 'dashboard.html') ? '' : 'none';
-    console.log('Dashboard link:', hasPageAccess(user, 'dashboard.html') ? 'visible' : 'hidden');
-  }
-  
-  // Show/hide Add to Live Tanks button
-  const addToLiveTanksBtn = document.getElementById('add-to-live-tanks-btn');
-  if (addToLiveTanksBtn) {
-    addToLiveTanksBtn.style.display = hasFeatureAccess(user, 'add_to_live_tanks') ? '' : 'none';
-  }
-  
-  // Show/hide Tank Management link
-  const tankMgmtLink = document.querySelector('a[href="tank-management.html"]');
-  if (tankMgmtLink) {
-    tankMgmtLink.style.display = hasPageAccess(user, 'tank-management.html') ? '' : 'none';
-  }
+  // Show/hide each navigation element based on permissions
+  navElements.forEach(({ selector, page }) => {
+    const element = document.querySelector(selector);
+    if (element) {
+      const hasAccess = hasPageAccess(user, page);
+      element.style.display = hasAccess ? '' : 'none';
+      console.log(`${hasAccess ? '✅' : '❌'} ${page} button:`, hasAccess ? 'visible' : 'hidden');
+    }
+  });
   
   console.log('✅ UI permissions applied');
 }
 
-/**
- * Format specialization name for display
- * @param {string} specialization - User specialization
- * @returns {string}
- */
-function formatSpecializationName(specialization) {
-  const names = {
-    'admin': 'Admin',
-    'supervisor': 'Supervisor',
-    'planning': 'Planning',
-    'control_panel': 'Control Panel',
-    'field_operator': 'Field Operator'
-  };
-  return names[specialization] || specialization;
-}
+// =================== EXPORTS ===================
 
-/**
- * Get specialization badge class for styling
- * @param {string} specialization - User specialization
- * @returns {string}
- */
-function getSpecializationBadgeClass(specialization) {
-  const classes = {
-    'admin': 'badge-admin',
-    'supervisor': 'badge-supervisor',
-    'planning': 'badge-planning',
-    'control_panel': 'badge-control-panel',
-    'field_operator': 'badge-field-operator'
-  };
-  return classes[specialization] || 'badge-default';
-}
+// Make functions globally available
+window.hasPageAccess = hasPageAccess;
+window.checkPagePermissions = checkPagePermissions;
+window.applyUIPermissions = applyUIPermissions;
+window.getCurrentPageName = getCurrentPageName;
 
-// Log initialization
-console.log('✅ Permissions system v2.3 loaded - Custom pageAccess + Enhanced UI');
-
-/**
- * ✅ Check if current user has a specific permission (Firebase Auth + Firestore)
- * @param {string} permissionName - Permission name (e.g., 'canViewLiveTanks')
- * @returns {Promise<boolean>}
- */
-async function hasPermission(permissionName) {
-  try {
-    // Get current user from window.currentUser (set by onAuthStateChanged)
-    const user = window.currentUser;
-    
-    if (!user) {
-      console.log('hasPermission: No current user');
-      return false;
-    }
-    
-    const username = user.username || (user.email ? user.email.split('@')[0] : null);
-    console.log(`hasPermission: Checking ${permissionName} for user:`, username);
-    
-    // ⚡ Check cache first (sessionStorage)
-    const cacheKey = `permissions_cache_${username}`;
-    const cached = sessionStorage.getItem(cacheKey);
-    if (cached) {
-      try {
-        const cachedPermissions = JSON.parse(cached);
-        if (cachedPermissions[permissionName] !== undefined) {
-          console.log(`⚡ hasPermission: Using cached value for ${permissionName} = ${cachedPermissions[permissionName]}`);
-          return cachedPermissions[permissionName];
-        }
-      } catch (e) {
-        console.error('hasPermission: Cache parse error:', e);
-      }
-    }
-    
-    // ✅ Admin has all permissions
-    if (user.role === 'admin' || user.specialization === 'admin') {
-      console.log(`hasPermission: User is admin, granting ${permissionName}`);
-      
-      // ⚡ Save to cache
-      const cacheKey = `permissions_cache_${username}`;
-      const cached = sessionStorage.getItem(cacheKey);
-      const cachedPermissions = cached ? JSON.parse(cached) : {};
-      cachedPermissions[permissionName] = true;
-      sessionStorage.setItem(cacheKey, JSON.stringify(cachedPermissions));
-      
-      return true;
-    }
-    
-    // ✅ Check custom permissions from Firestore
-    if (window.db && window.getDoc && window.doc) {
-      try {
-        const username = user.username || (user.email ? user.email.split('@')[0] : null);
-        if (!username) {
-          console.error('hasPermission: No username found');
-          return false;
-        }
-        
-        const userDocRef = window.doc(window.db, 'users', username);
-        const userDoc = await window.getDoc(userDocRef);
-        
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          console.log(`hasPermission: User data from Firestore:`, userData);
-          
-          // Check if user has custom permissions object
-          if (userData.permissions && typeof userData.permissions === 'object') {
-            const hasIt = userData.permissions[permissionName] === true;
-            console.log(`hasPermission: ${permissionName} = ${hasIt}`);
-            
-            // ⚡ Save to cache
-            const cacheKey = `permissions_cache_${username}`;
-            const cached = sessionStorage.getItem(cacheKey);
-            const cachedPermissions = cached ? JSON.parse(cached) : {};
-            cachedPermissions[permissionName] = hasIt;
-            sessionStorage.setItem(cacheKey, JSON.stringify(cachedPermissions));
-            
-            return hasIt;
-          }
-          
-          // Fallback: Check if permission exists directly on user object
-          if (userData[permissionName] === true) {
-            console.log(`hasPermission: ${permissionName} found directly on user = true`);
-            
-            // ⚡ Save to cache
-            const cacheKey = `permissions_cache_${username}`;
-            const cached = sessionStorage.getItem(cacheKey);
-            const cachedPermissions = cached ? JSON.parse(cached) : {};
-            cachedPermissions[permissionName] = true;
-            sessionStorage.setItem(cacheKey, JSON.stringify(cachedPermissions));
-            
-            return true;
-          }
-        }
-      } catch (firestoreError) {
-        console.error('hasPermission: Firestore error:', firestoreError);
-      }
-    }
-    
-    // ✅ Fallback: Map permission names to role-based permissions
-    const permissionMapping = {
-      'canViewLiveTanks': ['admin', 'supervisor', 'control_panel', 'panel_operator'],
-      'canAddToLiveTanks': ['admin', 'control_panel', 'panel_operator'],
-      'canEditLiveTanks': ['admin', 'control_panel', 'panel_operator'],
-      'canDeleteFromLiveTanks': ['admin', 'control_panel', 'panel_operator'],
-      'canViewPBCR': ['admin', 'supervisor', 'planning', 'control_panel', 'panel_operator', 'field_operator', 'operator'],
-      'canAddToPBCR': ['admin', 'planning', 'control_panel', 'panel_operator'],
-      'canEditPBCR': ['admin', 'planning', 'control_panel', 'panel_operator'],
-      'canDeleteFromPBCR': ['admin', 'control_panel', 'panel_operator'],
-      'canViewPLCR': ['admin', 'supervisor', 'planning', 'control_panel', 'panel_operator', 'field_operator', 'operator'],
-      'canAddToPLCR': ['admin', 'planning', 'control_panel', 'panel_operator'],
-      'canEditPLCR': ['admin', 'planning', 'control_panel', 'panel_operator'],
-      'canDeleteFromPLCR': ['admin', 'control_panel', 'panel_operator'],
-      'canViewDashboard': ['admin', 'supervisor', 'planning', 'control_panel', 'panel_operator']
-    };
-    
-    const allowedRoles = permissionMapping[permissionName];
-    if (allowedRoles) {
-      const userRole = user.role || user.specialization;
-      const hasIt = allowedRoles.includes(userRole);
-      console.log(`hasPermission: Fallback role-based check: ${permissionName} for role ${userRole} = ${hasIt}`);
-      
-      // ⚡ Save to cache
-      const cacheKey = `permissions_cache_${username}`;
-      const cached = sessionStorage.getItem(cacheKey);
-      const cachedPermissions = cached ? JSON.parse(cached) : {};
-      cachedPermissions[permissionName] = hasIt;
-      sessionStorage.setItem(cacheKey, JSON.stringify(cachedPermissions));
-      
-      return hasIt;
-    }
-    
-    console.log(`hasPermission: No permission found for ${permissionName}, returning false`);
-    return false;
-    
-  } catch (error) {
-    console.error('hasPermission: Error:', error);
-    return false;
-  }
-}
-
-console.log('✅ hasPermission() function added to permissions system');
+console.log('✅ Permissions System v3.0 loaded successfully');

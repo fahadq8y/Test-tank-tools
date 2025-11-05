@@ -1377,17 +1377,8 @@
       const userPages = user.pageAccess || user.customPages;
       if (userPages && Array.isArray(userPages)) {
         if (userPages.includes('all')) return 'All Pages';
-        return userPages.map(page => {
-          const pageNames = {
-            'index.html': 'PBCR',
-            'plcr.html': 'PLCR',
-            'NMOGASBL.html': 'NMOGAS',
-            'live-tanks.html': 'Live Tanks',
-            'dashboard.html': 'Dashboard',
-            'verify.html': 'Verify'
-          };
-          return pageNames[page] || page;
-        }).join(', ');
+        // ✅ Display names are already stored in Firestore, just join them
+        return userPages.join(', ');
       }
 
       // تعريف محلي للصفحات الافتراضية (تجنب dependency على permissions.js)
@@ -1888,14 +1879,14 @@
             <div class="form-group">
               <label class="form-label">Pages Access:</label>
               <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
-                <label><input type="checkbox" value="index.html"> PBCR</label>
-                <label><input type="checkbox" value="plcr.html"> PLCR</label>
-                <label><input type="checkbox" value="NMOGASBL.html"> NMOGAS</label>
-                <label><input type="checkbox" value="live-tanks.html"> Live Tanks</label>
-                <label><input type="checkbox" value="dashboard.html"> Dashboard</label>
-                <label><input type="checkbox" value="verify.html"> Verification</label>
-                <label><input type="checkbox" value="shift-roster.html"> 📅 Shift Roster</label>
-                <label><input type="checkbox" value="vacation-planner.html"> 🏖️ Vacation Planner</label>
+                <label><input type="checkbox" value="PBCR"> 📈 PBCR</label>
+                <label><input type="checkbox" value="PLCR"> 🔮 PLCR</label>
+                <label><input type="checkbox" value="NMOGAS"> 🔧 NMOGAS</label>
+                <label><input type="checkbox" value="Live Tanks"> 🔴 Live Tanks</label>
+                <label><input type="checkbox" value="Dashboard"> 📊 Dashboard</label>
+                <label><input type="checkbox" value="Shift Roster"> 📅 Shift Roster</label>
+                <label><input type="checkbox" value="Vacation Planner"> 🏖️ Vacation Planner</label>
+                <label><input type="checkbox" value="Tank Management"> 🛢️ Tank Management</label>
               </div>
             </div>
             
