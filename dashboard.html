@@ -884,7 +884,7 @@
         
         // Check page permissions
         if (typeof hasPageAccess === 'function') {
-          if (!hasPageAccess(userData, 'dashboard.html')) {
+          if (!hasPageAccess(userData, 'Dashboard')) {
             alert('ليس لديك صلاحية للدخول إلى هذه الصفحة');
             window.location.href = 'index.html';
             return;
@@ -923,7 +923,7 @@
         
         // Check page permissions
         if (typeof hasPageAccess === 'function') {
-          if (!hasPageAccess(userData, 'dashboard.html')) {
+          if (!hasPageAccess(userData, 'Dashboard')) {
             alert('ليس لديك صلاحية للدخول إلى هذه الصفحة');
             window.location.href = 'index.html';
             return;

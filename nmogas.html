@@ -226,7 +226,7 @@
         
         // Check page permissions
         if (typeof hasPageAccess === 'function') {
-          if (!hasPageAccess(userData, 'nmogas.html')) {
+          if (!hasPageAccess(userData, 'NMOGAS')) {
             alert('ليس لديك صلاحية للدخول إلى هذه الصفحة');
             window.location.href = 'index.html';
             return;

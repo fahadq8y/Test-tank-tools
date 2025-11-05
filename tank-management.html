@@ -316,7 +316,7 @@
         
         // Check page permissions
         if (typeof hasPageAccess === 'function') {
-          if (!hasPageAccess(userData, 'tank-management.html')) {
+          if (!hasPageAccess(userData, 'Tank Management')) {
             alert('ليس لديك صلاحية للدخول إلى هذه الصفحة');
             window.location.href = 'index.html';
             return;

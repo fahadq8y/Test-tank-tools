@@ -83,7 +83,7 @@
         
         // Check page permissions
         if (typeof hasPageAccess === 'function') {
-          if (!hasPageAccess(userData, 'plcr.html')) {
+          if (!hasPageAccess(userData, 'PLCR')) {
             alert('ليس لديك صلاحية للدخول إلى هذه الصفحة');
             window.location.href = 'dashboard.html';
             return;
@@ -129,7 +129,7 @@
         
         // Check page permissions
         if (typeof hasPageAccess === 'function') {
-          if (!hasPageAccess(userData, 'plcr.html')) {
+          if (!hasPageAccess(userData, 'PLCR')) {
             alert('ليس لديك صلاحية للدخول إلى هذه الصفحة');
             window.location.href = 'dashboard.html';
             return;

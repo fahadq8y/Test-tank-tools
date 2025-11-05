@@ -490,7 +490,7 @@ onAuthStateChanged(auth, async (user) => {
     
     // Check page permissions
     if (typeof hasPageAccess === 'function') {
-      if (!hasPageAccess(userData, 'index.html')) {
+      if (!hasPageAccess(userData, 'PBCR')) {
         alert('ليس لديك صلاحية للدخول إلى هذه الصفحة');
         window.location.href = 'dashboard.html';
         return;
@@ -534,7 +534,7 @@ onAuthStateChanged(auth, async (user) => {
     
     // Check page permissions
     if (typeof hasPageAccess === 'function') {
-      if (!hasPageAccess(userData, 'index.html')) {
+      if (!hasPageAccess(userData, 'PBCR')) {
         alert('ليس لديك صلاحية للدخول إلى هذه الصفحة');
         window.location.href = 'dashboard.html';
         return;

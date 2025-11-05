@@ -735,11 +735,11 @@
         console.log('✅ Using localStorage session for:', userData.username);
         window.currentUser = userData;
         
-        // Check page permissions
+        // Check page permissions using new system
         if (typeof hasPageAccess === 'function') {
-          if (!hasPageAccess(userData, 'live-tanks.html')) {
+          if (!hasPageAccess(userData, 'Live Tanks')) {
             alert('ليس لديك صلاحية للدخول إلى هذه الصفحة');
-            window.location.href = 'dashboard.html';
+            window.location.href = 'login.html';
             return;
           }
         }
@@ -780,11 +780,11 @@
         const userData = userDoc.data();
         window.currentUser = userData;
         
-        // Check page permissions
+        // Check page permissions using new system
         if (typeof hasPageAccess === 'function') {
-          if (!hasPageAccess(userData, 'live-tanks.html')) {
+          if (!hasPageAccess(userData, 'Live Tanks')) {
             alert('ليس لديك صلاحية للدخول إلى هذه الصفحة');
-            window.location.href = 'index.html';
+            window.location.href = 'login.html';
             return;
           }
         }
