@@ -471,19 +471,19 @@ window.auth = auth;
 // ✅ AUTH STATE MANAGEMENT
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
-    console.log('❌ No Firebase Auth user, checking localStorage...');
+    console.log('❌ No Firebase Auth user, checking session...');
     
-    // Fallback to localStorage for non-migrated users
+    // ✅ Validate session using SessionManager
     const userData = SessionManager.validateSession();
-      if (!userData) {
-        console.log('❌ Invalid or expired session');
-        showAccessDenied();
-        return;
-      }
     
-    // Use localStorage data for non-migrated users
-    const userData = JSON.parse(savedUser);
-    console.log('✅ Using localStorage session for:', userData.username);
+    if (!userData) {
+      console.log('❌ Invalid or expired session, redirecting to login...');
+      alert('انتهت الجلسة، يرجى تسجيل الدخول مرة أخرى');
+      SessionManager.redirectToLogin('index.html');
+      return;
+    }
+    
+    console.log('✅ Session valid for:', userData.username);
     window.currentUser = userData;
     
     // Check page permissions
