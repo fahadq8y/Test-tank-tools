@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Live Tanks v7.6 - Removed permissions.js wait, added fallback -->
+<!-- Live Tanks v7.7 - Added permissions check in delete/edit/add functions -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -257,7 +257,7 @@
   <div id="mainContent">
     <!-- Navigation -->
     <div class="nav-bar">
-      <div class="nav-logo">🔴 Live Tanks v7.6</div>
+      <div class="nav-logo">🔴 Live Tanks v7.7</div>
       <div class="nav-links">
         <a href="index.html" class="nav-link">🛢️ PBCR</a>
         <a href="plcr.html" class="nav-link">⛗️ PLCR</a>
@@ -2293,6 +2293,13 @@
     document.getElementById('editTankForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       
+      // ✅ Check permissions first
+      const permissions = window.userLiveTanksPermissions || {};
+      if (!permissions.canEdit) {
+        showMessage('❌ You do not have permission to edit tanks!', 'error');
+        return;
+      }
+      
       if (!currentEditingTank) return;
       
       const tankNumber = document.getElementById('editTankNumber').value;
@@ -2495,6 +2502,13 @@
     // (Including all other functions from the original file)
     
     async function editTank(tankId) {
+      // ✅ Check permissions first
+      const permissions = window.userLiveTanksPermissions || {};
+      if (!permissions.canEdit) {
+        showMessage('❌ You do not have permission to edit tanks!', 'error');
+        return;
+      }
+      
       try {
         const tankDoc = await getDoc(doc(db, 'liveTanks', tankId));
         if (!tankDoc.exists()) {
@@ -2957,6 +2971,13 @@
 
     // Rest of the functions (same as original)
     async function deleteTank(tankId) {
+      // ✅ Check permissions first
+      const permissions = window.userLiveTanksPermissions || {};
+      if (!permissions.canDelete) {
+        showMessage('❌ You do not have permission to delete tanks!', 'error');
+        return;
+      }
+      
       if (!confirm('Are you sure you want to delete this tank?\n\nThis action cannot be undone!')) {
         return;
       }
@@ -2985,6 +3006,13 @@
     // Form submissions
     document.getElementById('addTankForm').addEventListener('submit', async function(e) {
       e.preventDefault();
+      
+      // ✅ Check permissions first
+      const permissions = window.userLiveTanksPermissions || {};
+      if (!permissions.canAdd) {
+        showMessage('❌ You do not have permission to add tanks!', 'error');
+        return;
+      }
       
       console.log('🚀 Starting tank addition...');
       

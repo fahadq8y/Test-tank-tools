@@ -471,11 +471,13 @@
       try {
         currentUser = JSON.parse(userData);
         
-        // Only admin and supervisors can access
-        if (currentUser.username !== 'fam030' && !['admin', 'supervisor'].includes(currentUser.role)) {
-          showMessage('❌ You do not have permission to access Tank Management!', 'error');
-          setTimeout(() => window.location.href = 'index.html', 3000);
-          return false;
+        // Check page access using new permissions system
+        if (typeof hasPageAccess === 'function') {
+          if (!hasPageAccess(currentUser, 'Tank Management')) {
+            showMessage('❌ You do not have permission to access Tank Management!', 'error');
+            setTimeout(() => window.location.href = 'index.html', 3000);
+            return false;
+          }
         }
         
         // Update UI
