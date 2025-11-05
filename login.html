@@ -708,6 +708,7 @@
           email: userData.email,
           role: userData.role || 'user',
           isActive: userData.isActive,
+          pageAccess: userData.pageAccess || [], // ✅ Include pageAccess from Firestore
           loginTime: new Date().toISOString()
         };
         
