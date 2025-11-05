@@ -1,6 +1,6 @@
 /**
  * ============================================
- * TANK TOOLS - UNIFIED PERMISSIONS SYSTEM v4.0
+ * TANK TOOLS - UNIFIED PERMISSIONS SYSTEM v4.1
  * ============================================
  * 
  * Complete rewrite from scratch
@@ -11,7 +11,7 @@
  * Last Updated: 2025-11-05
  */
 
-console.log('%c🔒 PERMISSIONS SYSTEM v4.0 LOADED', 'color:blue;font-size:16px;font-weight:bold');
+console.log('%c🔒 PERMISSIONS SYSTEM v4.1 LOADED', 'color:blue;font-size:16px;font-weight:bold');
 
 // =================== PAGE MAPPINGS ===================
 
@@ -21,7 +21,7 @@ console.log('%c🔒 PERMISSIONS SYSTEM v4.0 LOADED', 'color:blue;font-size:16px;
 const PAGE_MAP = {
   'PBCR': 'index.html',
   'PLCR': 'plcr.html',
-  'NMOGAS': 'nmogas.html',
+  'NMOGAS': 'NMOGASBL.html',
   'Live Tanks': 'live-tanks.html',
   'Dashboard': 'dashboard.html',
   'Shift Roster': 'shift-roster.html',
@@ -183,7 +183,7 @@ function applyUIPermissions(user) {
   const navElements = [
     { selector: 'a[href="index.html"]', page: 'PBCR' },
     { selector: 'a[href="plcr.html"]', page: 'PLCR' },
-    { selector: 'a[href="nmogas.html"]', page: 'NMOGAS' },
+    { selector: 'a[href="NMOGASBL.html"]', page: 'NMOGAS' },
     { selector: 'a[href="live-tanks.html"]', page: 'Live Tanks' },
     { selector: 'a[href="dashboard.html"]', page: 'Dashboard' },
     { selector: 'a[href="shift-roster.html"]', page: 'Shift Roster' },
