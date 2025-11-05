@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Live Tanks v7.2 - Fixed adminLink missing element error -->
+<!-- Live Tanks v7.6 - Removed permissions.js wait, added fallback -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -990,28 +990,13 @@
         currentUser = user;
         console.log('checkLoginStatus: Current user:', user);
         
-        // ✅ Wait for permissions.js v4.0 to load
-        if (typeof hasLiveTanksPermission !== 'function') {
-          console.log('⏳ Waiting for permissions.js v4.0 to load...');
-          await new Promise(resolve => {
-            const checkInterval = setInterval(() => {
-              if (typeof hasLiveTanksPermission === 'function') {
-                clearInterval(checkInterval);
-                console.log('✅ permissions.js v4.0 loaded!');
-                resolve();
-              }
-            }, 100);
-            // Timeout after 5 seconds
-            setTimeout(() => {
-              clearInterval(checkInterval);
-              console.error('❌ Timeout waiting for permissions.js v4.0');
-              resolve();
-            }, 5000);
-          });
-        }
+        // ✅ Check Live Tanks permission with fallback
+        const canViewLiveTanks = typeof hasLiveTanksPermission === 'function' 
+          ? hasLiveTanksPermission(user, 'canViewLiveTanks')
+          : (user.permissions?.canViewLiveTanks || user.role === 'admin' || false);
         
-        // استخدام دالة hasLiveTanksPermission من permissions.js v4.0
-        const canViewLiveTanks = typeof hasLiveTanksPermission === 'function' ? hasLiveTanksPermission(user, 'canViewLiveTanks') : false;
+        console.log('checkLoginStatus: hasLiveTanksPermission available:', typeof hasLiveTanksPermission === 'function');
+        console.log('checkLoginStatus: user.permissions:', user.permissions);
         
         console.log('checkLoginStatus: Can view Live Tanks:', canViewLiveTanks);
         
