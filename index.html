@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- PBCR Calculator v8.8 - Professional Avatar Design -->
+<!-- PBCR Calculator v8.9 - Fixed Desktop Mode error -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -581,7 +581,29 @@ window.addEventListener('load', () => {
 // --- نهاية التعديل المهم ---
 
 
-function loadUser(){if(!currentUser)return;document.getElementById('userName').textContent=currentUser.username;document.getElementById('userAvatar').textContent=(currentUser.fullName||currentUser.username).charAt(0).toUpperCase();if(currentUser.username==='fam030'||currentUser.role==='admin')document.getElementById('adminLink').style.display='inline-block';
+function loadUser() {
+  if (!currentUser) return;
+  
+  // Update user name (handled by NavbarComponent now)
+  const userNameEl = document.getElementById('userName');
+  if (userNameEl) {
+    userNameEl.textContent = currentUser.username;
+  }
+  
+  // Update user avatar (handled by NavbarComponent now)
+  const avatarLetterEl = document.querySelector('.avatar-letter');
+  if (avatarLetterEl) {
+    avatarLetterEl.textContent = (currentUser.fullName || currentUser.username).charAt(0).toUpperCase();
+  }
+  
+  // Admin link (if exists - old navbar compatibility)
+  if (currentUser.username === 'fam030' || currentUser.role === 'admin') {
+    const adminLink = document.getElementById('adminLink');
+    if (adminLink) {
+      adminLink.style.display = 'inline-block';
+    }
+  }
+  
   // checkLiveTanksAccess is now handled by permissions.js
 }
 
@@ -1031,7 +1053,7 @@ footer{margin-top:40px;color:#ccc;text-align:center}
     // Initialize Navbar
     const navbar = new NavbarComponent({
       title: '🛢️ PBCR Calculator',
-      version: '8.8',
+      version: '8.9',
       currentPage: 'pbcr-link',
       showNMOGAS: true
     });
@@ -1039,7 +1061,7 @@ footer{margin-top:40px;color:#ccc;text-align:center}
     
     // Initialize Footer
     const footer = new FooterComponent({
-      version: '8.8',
+      version: '8.9',
       developer: 'Fahad - 17877',
       whatsapp: '+965 55222550'
     });
@@ -1053,7 +1075,7 @@ footer{margin-top:40px;color:#ccc;text-align:center}
       }
     }, 100);
     
-    console.log('✅ PBCR v8.8 - Professional Avatar Design');
+    console.log('✅ PBCR v8.9 - Fixed Desktop Mode error');
   </script>
 </body>
 </html>
