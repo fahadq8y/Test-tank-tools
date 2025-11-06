@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- PLCR Calculator v7.2 - Unified Header from vacation-planner -->
+<!-- PLCR Calculator v7.3 - Unified Header from vacation-planner -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -894,9 +894,9 @@
     
     function checkLoginStatus(){
       const userData=SessionManager.validateSession();
-      if(session!=='active'||!userData){showAccessDenied();return}
+      if(!userData){showAccessDenied();return}
       try{
-        currentUser=JSON.parse(userData);
+        currentUser=userData;
         initializeApp();
         
         // Load Firebase tank data - CRITICAL FOR PURE FIREBASE ARCHITECTURE
