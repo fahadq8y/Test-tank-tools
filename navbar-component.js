@@ -1,4 +1,4 @@
-// Navbar Component v1.3 - Improved Avatar Design
+// Navbar Component v1.4 - Avatar Design Based on Vacation Planner
 // Unified navigation bar for all Tank Tools pages
 
 class NavbarComponent {
@@ -135,7 +135,7 @@ class NavbarComponent {
     // Store instance globally for logout button
     window.NavbarComponent = this;
     
-    console.log('✅ Navbar Component v1.3 mounted');
+    console.log('✅ Navbar Component v1.4 mounted');
   }
 }
 
@@ -171,36 +171,29 @@ avatarStyles.textContent = `
   flex-shrink: 0;
 }
 
-/* Avatar Circle - Smaller & More Compact */
+/* Avatar Circle - Vacation Planner Style */
 .user-avatar {
   position: relative;
-  width: 36px !important;
-  height: 36px !important;
+  width: 32px !important;
+  height: 32px !important;
   border-radius: 50%;
-  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%) !important;
+  background: linear-gradient(45deg, var(--primary, #B8860B), var(--secondary, #8B4513)) !important;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 
-    0 2px 8px rgba(255, 215, 0, 0.4),
-    inset 0 1px 2px rgba(255, 255, 255, 0.3) !important;
   transition: all 0.3s ease;
-  border: 2px solid rgba(255, 255, 255, 0.3) !important;
+  border: 2px solid var(--accent, #CD853F) !important;
 }
 
 .user-avatar:hover {
-  transform: scale(1.08);
-  box-shadow: 
-    0 4px 12px rgba(255, 215, 0, 0.5),
-    inset 0 1px 2px rgba(255, 255, 255, 0.4);
+  transform: scale(1.05);
 }
 
 /* Avatar Letter */
 .avatar-letter {
-  font-size: 16px;
-  font-weight: 700;
-  color: #fff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  font-size: 14px;
+  font-weight: bold;
+  color: white;
   z-index: 2;
 }
 
@@ -302,12 +295,12 @@ avatarStyles.textContent = `
   }
   
   .user-avatar {
-    width: 32px;
-    height: 32px;
+    width: 28px !important;
+    height: 28px !important;
   }
   
   .avatar-letter {
-    font-size: 14px;
+    font-size: 12px;
   }
   
   .user-name {
