@@ -390,7 +390,7 @@
       }
       
       try {
-        currentUser = JSON.parse(userData);
+        currentUser = userData;
         
         // Check page access using new permissions system
         if (typeof hasPageAccess === 'function') {

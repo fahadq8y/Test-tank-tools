@@ -847,11 +847,11 @@
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:14px');
     
     // ✅ Wait for FirebaseAuthHandler to set currentUser, then load dashboard
-    const checkUserInterval = setInterval(async () => {
-      if (window.currentUser) {
+    const checkUserInterval = setInterval(() => {
+      if (window.currentUser && typeof window.loadDashboardData === 'function') {
         clearInterval(checkUserInterval);
         console.log('✅ Dashboard loading for:', window.currentUser.name);
-        await loadDashboardData();
+        window.loadDashboardData();
       }
     }, 100);
     
@@ -859,6 +859,8 @@
       clearInterval(checkUserInterval);
       if (!window.currentUser) {
         console.error('❌ Failed to load user data');
+      } else if (typeof window.loadDashboardData !== 'function') {
+        console.error('❌ loadDashboardData function not found');
       }
     }, 5000);
   </script>
