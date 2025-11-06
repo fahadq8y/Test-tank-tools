@@ -64,7 +64,22 @@
     html += `❌ No session data<br>`;
   }
 
+  // Show last page
+  const lastPage = localStorage.getItem('tanktools_last_page');
+  if (lastPage) {
+    html += `✅ Last page: ${lastPage}<br>`;
+  } else {
+    html += `❌ No last page saved<br>`;
+  }
+
   html += `<br><small>localStorage keys: ${localStorage.length}</small>`;
+  
+  // Show redirect info (only on login page)
+  const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+  if (currentPage === 'login.html' && userData && sessionData) {
+    const redirectTo = lastPage || 'dashboard.html';
+    html += `<br><strong style="color: yellow;">🔄 Will redirect to: ${redirectTo}</strong>`;
+  }
 
   banner.innerHTML = html;
 
