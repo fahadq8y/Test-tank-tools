@@ -1,4 +1,4 @@
-// Navbar Component v1.2 - Professional Avatar Design
+// Navbar Component v1.3 - Improved Avatar Design - Professional Avatar Design
 // Unified navigation bar for all Tank Tools pages
 
 class NavbarComponent {
@@ -150,69 +150,63 @@ avatarStyles.textContent = `
 .user-profile {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
+  gap: 10px;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 50px;
+  border: 1px solid rgba(255, 215, 0, 0.2);
   transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
 }
 
 .user-profile:hover {
-  background: rgba(255, 255, 255, 0.1);
-  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 215, 0, 0.4);
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.2);
 }
 
 /* Avatar Wrapper */
 .user-avatar-wrapper {
   position: relative;
+  flex-shrink: 0;
 }
 
-/* Avatar Circle */
+/* Avatar Circle - Smaller & More Compact */
 .user-avatar {
   position: relative;
-  width: 48px;
-  height: 48px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #B8860B 0%, #CD853F 50%, #8B4513 100%);
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: 
-    0 4px 12px rgba(184, 134, 11, 0.3),
-    inset 0 2px 4px rgba(255, 255, 255, 0.2);
+    0 2px 8px rgba(255, 215, 0, 0.4),
+    inset 0 1px 2px rgba(255, 255, 255, 0.3);
   transition: all 0.3s ease;
-  cursor: pointer;
+  border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
 .user-avatar:hover {
-  transform: scale(1.05);
+  transform: scale(1.08);
   box-shadow: 
-    0 6px 16px rgba(184, 134, 11, 0.4),
-    inset 0 2px 4px rgba(255, 255, 255, 0.3);
+    0 4px 12px rgba(255, 215, 0, 0.5),
+    inset 0 1px 2px rgba(255, 255, 255, 0.4);
 }
 
 /* Avatar Letter */
 .avatar-letter {
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 700;
   color: #fff;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
   z-index: 2;
 }
 
-/* Animated Ring */
+/* Animated Ring - Removed for cleaner look */
 .avatar-ring {
-  position: absolute;
-  top: -3px;
-  left: -3px;
-  right: -3px;
-  bottom: -3px;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  border-top-color: #FFD700;
-  border-right-color: #FFD700;
-  animation: rotate 3s linear infinite;
-  opacity: 0.6;
+  display: none;
 }
 
 @keyframes rotate {
@@ -220,35 +214,41 @@ avatarStyles.textContent = `
   100% { transform: rotate(360deg); }
 }
 
-/* User Details */
+/* User Details - More Compact */
 .user-details {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
 }
 
 .user-name {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: #FFD700;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .user-status {
-  font-size: 11px;
+  font-size: 10px;
   color: #90EE90;
   display: flex;
   align-items: center;
   gap: 4px;
+  white-space: nowrap;
 }
 
 .user-status::before {
   content: '';
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: #90EE90;
-  box-shadow: 0 0 8px #90EE90;
+  box-shadow: 0 0 6px #90EE90;
   animation: pulse 2s ease-in-out infinite;
 }
 
@@ -297,17 +297,17 @@ avatarStyles.textContent = `
 /* Mobile Responsive */
 @media (max-width: 768px) {
   .user-profile {
-    padding: 6px 10px;
+    padding: 5px 10px;
     gap: 8px;
   }
   
   .user-avatar {
-    width: 40px;
-    height: 40px;
+    width: 32px;
+    height: 32px;
   }
   
   .avatar-letter {
-    font-size: 16px;
+    font-size: 14px;
   }
   
   .user-name {
@@ -315,7 +315,7 @@ avatarStyles.textContent = `
   }
   
   .user-status {
-    font-size: 10px;
+    font-size: 9px;
   }
   
   .logout-text {
@@ -323,8 +323,9 @@ avatarStyles.textContent = `
   }
   
   .logout-btn {
-    padding: 10px;
-    min-width: 44px;
+    padding: 8px;
+    min-width: 40px;
+    min-height: 40px;
   }
 }
 `;
