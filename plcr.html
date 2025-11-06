@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- PLCR Calculator v7.4 - Using Firebase Auth Handler -->
+<!-- PLCR Calculator v7.5 - Using Navbar & Footer Components -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -17,12 +17,39 @@
   <script src="permissions.js"></script>
   <script src="session-manager.js"></script>
   <script src="last-page-tracker.js"></script>
+  <script src="navbar-component.js"></script>
+  <script src="footer-component.js"></script>
   
   <!-- Firebase Auth Handler -->
   <script src="firebase-auth-handler.js" type="module"></script>
   <script type="module">
     import FirebaseAuthHandler from './firebase-auth-handler.js';
     import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, limit, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    
+    // Initialize Navbar
+    const navbar = new NavbarComponent({
+      title: '⛗️ PLCR Calculator',
+      version: '7.5',
+      currentPage: 'plcr-link',
+      showNMOGAS: true
+    });
+    navbar.mount('#navbar-container');
+    
+    // Initialize Footer
+    const footer = new FooterComponent({
+      version: '7.5',
+      developer: 'Fahad - 17877',
+      whatsapp: '+965 55222550'
+    });
+    footer.mount('#footer-container');
+    
+    // Update navbar user info when currentUser is available
+    const updateNavbarUser = setInterval(() => {
+      if (window.currentUser && navbar) {
+        navbar.updateUserInfo(window.currentUser);
+        clearInterval(updateNavbarUser);
+      }
+    }, 100);
     
     // ✅ Initialize Firebase Auth Handler
     FirebaseAuthHandler.init({
@@ -429,36 +456,8 @@
 
   <!-- Main Content -->
   <div id="mainContent">
-    <div class="nav-bar">
-      <div class="nav-logo">⛗️ PLCR Calculator v7.4</div>
-      <div class="nav-links">
-        <a href="index.html" class="nav-link">🛢️ PBCR</a>
-        <a href="NMOGASBL.html" class="nav-link" id="nmogas-link" style="display:none">🔧 NMOGAS</a>
-        <a href="live-tanks.html" class="nav-link">🔴 Live Tanks</a>
-        <a href="vacation-planner.html" class="nav-link">🏖️ Vacation Planner</a>
-        <a href="shift-roster.html" class="nav-link">📅 Shift Roster</a>
-        <a href="dashboard.html" class="nav-link">📊 Dashboard</a>
-      </div>
-      <div class="user-info">
-        <div class="font-controls">
-          <button class="font-btn" onclick="decreaseFontSize()" title="تصغير الخط">-</button>
-          <button class="font-btn" onclick="increaseFontSize()" title="تكبير الخط">+</button>
-        </div>
-        <div class="theme-switcher">
-          <button class="theme-btn" onclick="toggleThemeDropdown()" title="تغيير الثيم">🎨</button>
-          <div class="theme-dropdown" id="themeDropdown">
-            <div class="theme-option" data-theme="default" onclick="setTheme('default')">🏭 Industrial Bronze</div>
-            <div class="theme-option" data-theme="ocean" onclick="setTheme('ocean')">🌊 Ocean Blue</div>
-            <div class="theme-option" data-theme="dark" onclick="setTheme('dark')">⚫ Dark Carbon</div>
-            <div class="theme-option" data-theme="sunset" onclick="setTheme('sunset')">🌅 Sunset Amber</div>
-            <div class="theme-option" data-theme="forest" onclick="setTheme('forest')">🌲 Forest Green</div>
-          </div>
-        </div>
-        <div class="user-avatar" id="userAvatar">F</div>
-        <span class="user-name" id="userName">fam030@knpc.com</span>
-        <button class="logout-btn" onclick="handleLogout()">🚪 Logout</button>
-      </div>
-    </div>
+    <!-- Navigation Bar (Component) -->
+    <div id="navbar-container"></div>
 
     <div class="container">
       <h2>PLCR - Tank Calculator</h2>
@@ -529,10 +528,8 @@
     
     <button id="darkModeButton" class="action-button" title="Dark Mode">🌙</button>
     
-    <footer>
-      By <a href="#" class="whatsapp-link" onclick="openWhatsApp(); return false;">Fahad - 17877</a> – Version v7.4
-      <br><small style="color:#999;font-size:10px;margin-top:5px;display:block">📱 WhatsApp: +965 55222550</small>
-    </footer>
+    <!-- Footer (Component) -->
+    <div id="footer-container"></div>
   </div>
   
   <script>

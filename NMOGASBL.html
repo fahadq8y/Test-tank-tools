@@ -10,6 +10,8 @@
   <script src="session-manager.js"></script>
   <script src="last-page-tracker.js"></script>
   <script src="permissions.js"></script>
+  <script src="navbar-component.js"></script>
+  <script src="footer-component.js"></script>
   <style>
 /* === CSS Variables & Themes === */
 /* === Mobile Safe Areas === */
@@ -151,35 +153,8 @@
 
   <!-- Main Content -->
   <div id="mainContent">
-    <div class="nav-bar">
-      <div class="nav-logo">NMOGAS Blender v6.1</div>
-      <div class="nav-links">
-        <a class="nav-link" href="index.html">PBCR</a>
-        <a class="nav-link" href="plcr.html">PLCR</a>
-        <a class="nav-link active" href="NMOGASBL.html">NMOGAS</a>
-        <a class="nav-link" href="live-tanks.html" id="live-tanks-btn" style="display:none">🔴 Live Tanks</a>
-        <a class="nav-admin" href="dashboard.html" id="adminLink" style="display:none">🔐 Dashboard</a>
-      </div>
-      <div class="nav-user" id="navUser">
-        <div class="font-controls">
-          <button class="font-btn" onclick="decreaseFontSize()" title="تصغير الخط">-</button>
-          <button class="font-btn" onclick="increaseFontSize()" title="تكبير الخط">+</button>
-        </div>
-        <div class="theme-switcher">
-          <button class="theme-btn" onclick="toggleThemeDropdown()" title="Change Theme">🎨</button>
-          <div class="theme-dropdown" id="themeDropdown">
-            <div class="theme-option active" data-theme="industrial" onclick="setTheme('industrial')">🏭 Industrial Bronze</div>
-            <div class="theme-option" data-theme="ocean" onclick="setTheme('ocean')">🌊 Ocean Blue</div>
-            <div class="theme-option" data-theme="dark" onclick="setTheme('dark')">⚫ Dark Carbon</div>
-            <div class="theme-option" data-theme="sunset" onclick="setTheme('sunset')">🌅 Sunset Amber</div>
-            <div class="theme-option" data-theme="forest" onclick="setTheme('forest')">🌲 Forest Green</div>
-          </div>
-        </div>
-        <div class="user-avatar" id="userAvatar">U</div>
-        <div id="userName">User</div>
-        <button class="logout-btn" onclick="logout()">Logout</button>
-      </div>
-    </div>
+    <!-- Navigation Bar (Component) -->
+    <div id="navbar-container"></div>
 
     <h2>NMOGAS Blender</h2>
 
@@ -199,10 +174,8 @@
 
     <button id="darkModeButton" class="action-button" title="Dark Mode">🌙</button>
 
-    <footer>
-      By <a href="#" class="whatsapp-link" onclick="openWhatsApp(); return false;">Fahad - 17877</a> – Version v6.1
-      <br><small style="color:#999;font-size:10px;margin-top:5px;display:block">📱 WhatsApp: +965 55222550</small>
-    </footer>
+    <!-- Footer (Component) -->
+    <div id="footer-container"></div>
   </div>
 
   <script>
@@ -633,13 +606,38 @@ window.setTheme = setTheme;
   <script type="module">
     import FirebaseAuthHandler from './firebase-auth-handler.js';
     
+    // Initialize Navbar
+    const navbar = new NavbarComponent({
+      title: '🌪️ NMOGAS Blender',
+      version: '6.2',
+      currentPage: 'nmogas-link',
+      showNMOGAS: false // Hide NMOGAS link on NMOGAS page
+    });
+    navbar.mount('#navbar-container');
+    
+    // Initialize Footer
+    const footer = new FooterComponent({
+      version: '6.2',
+      developer: 'Fahad - 17877',
+      whatsapp: '+965 55222550'
+    });
+    footer.mount('#footer-container');
+    
+    // Update navbar user info when currentUser is available
+    const updateNavbarUser = setInterval(() => {
+      if (window.currentUser && navbar) {
+        navbar.updateUserInfo(window.currentUser);
+        clearInterval(updateNavbarUser);
+      }
+    }, 100);
+    
     FirebaseAuthHandler.init({
       pageName: 'NMOGAS',
       redirectPage: 'index.html',
       checkPermissions: true
     });
     
-    console.log('%c📦 NMOGAS v6.1 - Using Firebase Auth Handler', 'color:#4CAF50;font-size:16px;font-weight:bold');
+    console.log('%c📦 NMOGAS v6.2 - Using Navbar & Footer Components', 'color:#4CAF50;font-size:16px;font-weight:bold');
   </script>
   
   <script src="pwa-install-banner.js"></script>
