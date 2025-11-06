@@ -282,24 +282,19 @@
     const blendingData={"720":[{tank:"TK-61-275",pump:"P-61-309 A/B",min:133.8,max:446,tankShort:"275",pumpShort:"309"},{tank:"TK-61-277",pump:"P-61-309 A/B",min:133.8,max:446,tankShort:"277",pumpShort:"309"}],"721":[{tank:"TK-61-276",pump:"P-61-310",min:107.1,max:357,tankShort:"276",pumpShort:"310"}],"722":[{tank:"TK-61-221/254",pump:"P-61-308 A/B",min:231.6,max:772,tankShort:"221/254",pumpShort:"308"}],"723":[{tank:"TK-61-272",pump:"P-61-113 B",min:70.5,max:235,tankShort:"272",pumpShort:"113 B"},{tank:"TK-61-273",pump:"P-61-113 B",min:70.5,max:235,tankShort:"273",pumpShort:"113 B"},{tank:"TK-61-274",pump:"P-61-113 B",min:70.5,max:235,tankShort:"274",pumpShort:"113 B"},{tank:"TK-61-275",pump:"P-61-113 B",min:70.5,max:235,tankShort:"275",pumpShort:"113 B"},{tank:"TK-61-277",pump:"P-61-113 B",min:70.5,max:235,tankShort:"277",pumpShort:"113 B"},{tank:"TK-61-272",pump:"P-61-115",min:65.1,max:150,tankShort:"272",pumpShort:"115"},{tank:"TK-61-273",pump:"P-61-115",min:65.1,max:150,tankShort:"273",pumpShort:"115"},{tank:"TK-61-274",pump:"P-61-115",min:65.1,max:150,tankShort:"274",pumpShort:"115"}],"724":[{tank:"TK-61-274",pump:"P-61-173 A/B",min:122.4,max:180,tankShort:"274",pumpShort:"173"},{tank:"TK-61-277",pump:"P-61-173 A/B",min:122.4,max:180,tankShort:"277",pumpShort:"173"},{tank:"TK-61-278",pump:"P-61-173 A/B",min:122.4,max:180,tankShort:"278",pumpShort:"173"},{tank:"TK-61-279",pump:"P-61-173 A/B",min:122.4,max:180,tankShort:"279",pumpShort:"173"}],"725":[{tank:"TK-61-272",pump:"P-61-118 A/B",min:34.5,max:115,tankShort:"272",pumpShort:"118"},{tank:"TK-61-273",pump:"P-61-118 A/B",min:34.5,max:115,tankShort:"273",pumpShort:"118"},{tank:"TK-61-274",pump:"P-61-118 A/B",min:34.5,max:115,tankShort:"274",pumpShort:"118"},{tank:"TK-61-274",pump:"P-61-172 A/B",min:26.1,max:87,tankShort:"274",pumpShort:"172"},{tank:"TK-61-277",pump:"P-61-172 A/B",min:26.1,max:87,tankShort:"277",pumpShort:"172"},{tank:"TK-61-278",pump:"P-61-172 A/B",min:26.1,max:87,tankShort:"278",pumpShort:"172"},{tank:"TK-61-279",pump:"P-61-172 A/B",min:26.1,max:87,tankShort:"279",pumpShort:"172"}],"726":[{tank:"V-61-301/2",pump:"P-61-305 A/B",min:60,max:200,tankShort:"301/2",pumpShort:"305"}],"727":[{tank:"TK-61-303/4",pump:"P-61-307 A/B",min:185.1,max:617,tankShort:"303/4",pumpShort:"307"}]};
 
     // Core Functions
-    // ✅ Auth is handled by FirebaseAuthHandler - no need for checkLoginStatus
+    // ✅ Auth is handled by FirebaseAuthHandler
     window.addEventListener('load',()=>{
-      // Wait for FirebaseAuthHandler to set currentUser
+      console.log('✅ NMOGAS page loaded, waiting for Firebase Auth...');
+      
+      // Wait for currentUser to be set by FirebaseAuthHandler
       const checkUser = setInterval(() => {
         if (window.currentUser) {
           clearInterval(checkUser);
+          console.log('✅ User data loaded, initializing app...');
           initializeApp();
           logActivity('nmogas_accessed', window.currentUser.username);
         }
       }, 100);
-      
-      // Timeout after 5 seconds
-      setTimeout(() => {
-        clearInterval(checkUser);
-        if (!window.currentUser) {
-          console.error('❌ Failed to load user data');
-        }
-      }, 5000);
     });
     
     function showAccessDenied(){document.getElementById('mainContent').style.display='none';document.getElementById('accessDenied').style.display='flex'}
