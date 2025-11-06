@@ -7,6 +7,8 @@
   <title>الورديات - Shift Roster</title>
   <link href="icon.png" rel="icon" type="image/png"/>
   <script src="permissions.js"></script>
+  <script src="session-manager.js"></script>
+  <script src="last-page-tracker.js"></script>
   <style>
     :root {
       --primary: #B8860B;
@@ -1499,10 +1501,9 @@
         console.log('❌ No Firebase Auth user, checking localStorage...');
         
         // Fallback to localStorage for non-migrated users
-        const savedUser = localStorage.getItem('tanktools_current_user');
-        const savedSession = sessionStorage.getItem('tanktools_session');
+        const userData = SessionManager.validateSession();
         
-        if (!savedUser || !savedSession) {
+        if (!userData) {
           console.log('❌ No session found, redirecting to login...');
           alert('يرجى تسجيل الدخول أولاً');
           window.location.href = 'login.html';

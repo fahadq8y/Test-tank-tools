@@ -314,7 +314,7 @@
     window.addEventListener('load',()=>checkLoginStatus());
     
     function checkLoginStatus(){
-      const session=sessionStorage.getItem('tanktools_session'),userData=localStorage.getItem('tanktools_current_user');
+      const userData=SessionManager.validateSession();
       if(session!=='active'||!userData){showAccessDenied();return}
       try{currentUser=JSON.parse(userData);initializeApp();logActivity('nmogas_accessed',currentUser.username)}catch{showAccessDenied()}
     }

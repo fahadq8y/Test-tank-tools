@@ -458,10 +458,9 @@
 
     // Check admin access
     function checkAdminAccess() {
-      const session = sessionStorage.getItem('tanktools_session');
-      const userData = localStorage.getItem('tanktools_current_user');
+      const userData = SessionManager.validateSession();
       
-      if (session !== 'active' || !userData) {
+      if (!userData) {
         showMessage('❌ Login required to access this page', 'error');
         setTimeout(() => window.location.href = 'login.html', 3000);
         return false;
