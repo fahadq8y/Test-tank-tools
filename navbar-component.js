@@ -1,4 +1,4 @@
-// Navbar Component v1.3 - Improved Avatar Design - Professional Avatar Design
+// Navbar Component v1.3 - Improved Avatar Design
 // Unified navigation bar for all Tank Tools pages
 
 class NavbarComponent {
