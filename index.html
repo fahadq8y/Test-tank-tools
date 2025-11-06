@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- PBCR Calculator v8.5 - Using Firebase Auth Handler -->
+<!-- PBCR Calculator v8.6 - Using Navbar & Footer Components -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -15,6 +15,8 @@
 <script src="permissions.js"></script>
 <script src="session-manager.js"></script>
 <script src="last-page-tracker.js"></script>
+<script src="navbar-component.js"></script>
+<script src="footer-component.js"></script>
 <style>
 /* === CSS Variables & Themes === */
 /* === Mobile Safe Areas === */
@@ -278,37 +280,8 @@ input,select{background:rgba(255,255,255,0.9);border-radius:12px;border:none;col
 </div>
 </div>
 <div id="mainContent" style="display:none;">
-<!-- Navigation Bar -->
-  <div class="nav-bar">
-    <div class="nav-logo">🛢️ PBCR Calculator v8.5</div>
-    <div class="nav-links">
-      <a href="plcr.html" class="nav-link">⚗️ PLCR</a>
-      <a href="NMOGASBL.html" class="nav-link" id="nmogas-link" style="display:none">🔧 NMOGAS</a>
-      <a href="live-tanks.html" class="nav-link">🔴 Live Tanks</a>
-      <a href="vacation-planner.html" class="nav-link">🏖️ Vacation Planner</a>
-      <a href="shift-roster.html" class="nav-link">📅 Shift Roster</a>
-      <a href="dashboard.html" class="nav-link">📊 Dashboard</a>
-    </div>
-    <div class="user-info">
-      <div class="font-controls">
-        <button class="font-btn" onclick="decreaseFontSize()" title="تصغير الخط">-</button>
-        <button class="font-btn" onclick="increaseFontSize()" title="تكبير الخط">+</button>
-      </div>
-      <div class="theme-switcher">
-        <button class="theme-btn" onclick="toggleThemeDropdown()" title="Change Theme">🎨</button>
-        <div class="theme-dropdown" id="themeDropdown">
-          <div class="theme-option" data-theme="industrial" onclick="setTheme('industrial')">🏭 Industrial Bronze</div>
-          <div class="theme-option" data-theme="ocean" onclick="setTheme('ocean')">🌊 Ocean Blue</div>
-          <div class="theme-option" data-theme="dark" onclick="setTheme('dark')">⚫ Dark Carbon</div>
-          <div class="theme-option" data-theme="sunset" onclick="setTheme('sunset')">🌅 Sunset Amber</div>
-          <div class="theme-option" data-theme="forest" onclick="setTheme('forest')">🌲 Forest Green</div>
-        </div>
-      </div>
-      <div class="user-avatar" id="userAvatar">U</div>
-      <span class="user-name" id="userName">Loading...</span>
-      <button class="logout-btn" onclick="handleLogout()">🚪 Logout</button>
-    </div>
-  </div>
+<!-- Navigation Bar (Component) -->
+  <div id="navbar-container"></div>
 <h2 style="text-align:center">PBCR & WASHERY</h2>
 <div class="main-container">
 <div class="row">
@@ -1036,10 +1009,8 @@ function handleLogout() {
 }
 
 </script>
-<footer>
-  By <a href="#" class="whatsapp-link" onclick="window.open('https://wa.me/96555222550','_blank'); return false;">Fahad - 17877</a> – Version v8.5
-  <br><small style="color:#999;font-size:10px;margin-top:5px;display:block">📱 WhatsApp: +965 55222550</small>
-</footer>
+<!-- Footer (Component) -->
+<div id="footer-container"></div>
 <style>
 footer{margin-top:40px;color:#ccc;text-align:center}
 .whatsapp-link{color:#25D366;text-decoration:none;font-weight:bold;transition:all 0.3s ease;cursor:pointer}
@@ -1048,5 +1019,35 @@ footer{margin-top:40px;color:#ccc;text-align:center}
 @media(max-width:768px){body{padding:10px;padding-top:calc(10px + var(--safe-area-inset-top));padding-bottom:calc(10px + var(--safe-area-inset-bottom))}.main-container{padding:20px;margin:10px auto}.nav-link{padding:6px 12px;font-size:14px}input,select{width:100%;max-width:100%;font-size:16px}#tankTable{font-size:12px}#tankTable th,#tankTable td{padding:8px 5px}.theme-dropdown{right:auto;left:0}}
 </style>
   <script src="pwa-install-banner.js"></script>
+  
+  <!-- Initialize Navbar & Footer Components -->
+  <script>
+    // Initialize Navbar
+    const navbar = new NavbarComponent({
+      title: '🛢️ PBCR Calculator',
+      version: '8.6',
+      currentPage: 'pbcr-link',
+      showNMOGAS: true
+    });
+    navbar.mount('#navbar-container');
+    
+    // Initialize Footer
+    const footer = new FooterComponent({
+      version: '8.6',
+      developer: 'Fahad - 17877',
+      whatsapp: '+965 55222550'
+    });
+    footer.mount('#footer-container');
+    
+    // Update navbar user info when currentUser is available
+    const updateNavbarUser = setInterval(() => {
+      if (window.currentUser) {
+        navbar.updateUserInfo(window.currentUser);
+        clearInterval(updateNavbarUser);
+      }
+    }, 100);
+    
+    console.log('✅ PBCR v8.6 - Using Navbar & Footer Components');
+  </script>
 </body>
 </html>
