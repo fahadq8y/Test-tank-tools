@@ -1,4 +1,4 @@
-// Navbar Component v1.4 - Avatar Design Based on Vacation Planner
+// Navbar Component v1.5 - Complete Vacation Planner Layout
 // Unified navigation bar for all Tank Tools pages
 
 class NavbarComponent {
@@ -54,18 +54,8 @@ class NavbarComponent {
             <div class="theme-option" data-theme="forest" onclick="setTheme('forest')">🌲 Forest Green</div>
           </div>
         </div>
-        <div class="user-profile">
-          <div class="user-avatar-wrapper">
-            <div class="user-avatar" id="userAvatar">
-              <span class="avatar-letter">${this.userAvatar}</span>
-              <div class="avatar-ring"></div>
-            </div>
-          </div>
-          <div class="user-details">
-            <span class="user-name" id="userName">${this.userName}</span>
-            <span class="user-status">Online</span>
-          </div>
-        </div>
+        <div class="user-avatar" id="userAvatar">${this.userAvatar}</div>
+        <span class="user-name" id="userName">${this.userName}</span>
         <button class="logout-btn" onclick="window.NavbarComponent.handleLogout()">
           <span class="logout-icon">🚪</span>
           <span class="logout-text">Logout</span>
@@ -92,10 +82,10 @@ class NavbarComponent {
     this.userAvatar = (userData.name || userData.username || 'U').charAt(0).toUpperCase();
     
     const userNameEl = document.getElementById('userName');
-    const avatarLetterEl = document.querySelector('.avatar-letter');
+    const avatarEl = document.getElementById('userAvatar');
     
     if (userNameEl) userNameEl.textContent = this.userName;
-    if (avatarLetterEl) avatarLetterEl.textContent = this.userAvatar;
+    if (avatarEl) avatarEl.textContent = this.userAvatar;
   }
   
   handleLogout() {
@@ -135,7 +125,7 @@ class NavbarComponent {
     // Store instance globally for logout button
     window.NavbarComponent = this;
     
-    console.log('✅ Navbar Component v1.4 mounted');
+    console.log('✅ Navbar Component v1.5 mounted');
   }
 }
 
@@ -146,34 +136,10 @@ window.NavbarComponent = NavbarComponent;
 // Professional Avatar Styles
 const avatarStyles = document.createElement('style');
 avatarStyles.textContent = `
-/* User Profile Container */
-.user-profile {
-  display: flex;
-  align-items: center;
-  gap: 10px !important;
-  padding: 6px 12px;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 50px !important;
-  border: 1px solid rgba(255, 215, 0, 0.2);
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
-}
+/* User Profile - Removed, using simple layout like Vacation Planner */
 
-.user-profile:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 215, 0, 0.4);
-  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.2);
-}
-
-/* Avatar Wrapper */
-.user-avatar-wrapper {
-  position: relative;
-  flex-shrink: 0;
-}
-
-/* Avatar Circle - Vacation Planner Style */
+/* User Avatar - Vacation Planner Style */
 .user-avatar {
-  position: relative;
   width: 32px !important;
   height: 32px !important;
   border-radius: 50%;
@@ -181,25 +147,11 @@ avatarStyles.textContent = `
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.3s ease;
-  border: 2px solid var(--accent, #CD853F) !important;
-}
-
-.user-avatar:hover {
-  transform: scale(1.05);
-}
-
-/* Avatar Letter */
-.avatar-letter {
-  font-size: 14px;
   font-weight: bold;
+  font-size: 14px;
   color: white;
-  z-index: 2;
-}
-
-/* Animated Ring - Removed for cleaner look */
-.avatar-ring {
-  display: none;
+  border: 2px solid var(--accent, #CD853F) !important;
+  transition: all 0.3s ease;
 }
 
 @keyframes rotate {
@@ -207,47 +159,14 @@ avatarStyles.textContent = `
   100% { transform: rotate(360deg); }
 }
 
-/* User Details - More Compact */
-.user-details {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  flex: 1;
-  min-width: 0;
-}
-
+/* User Name - Vacation Planner Style */
 .user-name {
-  font-size: 13px;
-  font-weight: 600;
-  color: #FFD700;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.user-status {
-  font-size: 10px;
-  color: #90EE90;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  white-space: nowrap;
-}
-
-.user-status::before {
-  content: '';
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #90EE90;
-  box-shadow: 0 0 6px #90EE90;
-  animation: pulse 2s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  background: rgba(255,255,255,0.1);
+  padding: 6px 12px;
+  border-radius: 5px;
+  border: 1px solid rgba(255,255,255,0.2);
+  font-size: 14px;
+  color: white;
 }
 
 /* Logout Button Enhanced */
@@ -297,9 +216,6 @@ avatarStyles.textContent = `
   .user-avatar {
     width: 28px !important;
     height: 28px !important;
-  }
-  
-  .avatar-letter {
     font-size: 12px;
   }
   
