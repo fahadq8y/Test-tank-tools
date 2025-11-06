@@ -2195,7 +2195,7 @@
     });
     
     // ========== INITIALIZE ==========
-    console.log('%c🏖️ VACATION PLANNER v2.3.3', 'color:#4CAF50;font-size:20px;font-weight:bold');
+    console.log('%c🏖️ VACATION PLANNER v2.7 - Fixed Firebase Auth', 'color:#4CAF50;font-size:20px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
   </script>
   
@@ -2260,7 +2260,6 @@
         }
         
         // Use localStorage data for non-migrated users
-        const userData = JSON.parse(savedUser);
         console.log('✅ Using localStorage session for:', userData.username);
         window.currentUser = userData;
         currentUser = userData;

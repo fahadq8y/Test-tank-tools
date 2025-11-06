@@ -1455,7 +1455,7 @@
     switchView(); // This will render the appropriate view
     loadHolidays(); // Load Kuwait holidays
     
-    console.log('%c📅 SHIFT ROSTER v9.3 - Responsive Buttons', 'color:#B8860B;font-size:20px;font-weight:bold');
+    console.log('%c📅 SHIFT ROSTER v9.7 - Fixed Firebase Auth', 'color:#B8860B;font-size:20px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
   </script>
   
@@ -1511,7 +1511,6 @@
         }
         
         // Use localStorage data for non-migrated users
-        const userData = JSON.parse(savedUser);
         console.log('✅ Using localStorage session for:', userData.username);
         window.currentUser = userData;
         
