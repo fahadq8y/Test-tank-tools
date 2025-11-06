@@ -191,15 +191,7 @@
       transform: translateY(-1px);
     }
     
-    /* User Avatar - now handled by navbar-component.js */
-    
-    .user-name {
-      background: rgba(255,255,255,0.1);
-      padding: 6px 12px;
-      border-radius: 5px;
-      border: 1px solid rgba(255,255,255,0.2);
-      font-size: 14px;
-    }
+    /* User Avatar and user-name - now handled by navbar-component.js */
     
     .logout-btn {
       background: rgba(255,0,0,0.3);
@@ -346,9 +338,8 @@
     @keyframes spin{to{transform:rotate(360deg)}}
     
     @media (max-width:600px){
-      .nav-bar{flex-direction:column;gap:15px;padding:15px}
+      /* nav-bar layout and nav-user - now handled by navbar-component.js */
       .nav-links{order:1;justify-content:center;width:100%}
-      .nav-user{order:2;width:100%;justify-content:space-between}
       .nav-link{padding:10px 15px;font-size:14px}
       .nav-admin{padding:10px 15px;font-size:14px;display:inline-flex;align-items:center}
       .container{padding:15px;margin:10px}
