@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Vacation Planner v2.6 - Permissions System v4.0-->
+<!-- Vacation Planner v2.8 - Using Firebase Auth Handler -->
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
@@ -1019,7 +1019,7 @@
 <body>
   <!-- Navigation Bar -->
   <div class="nav-bar">
-    <div class="nav-logo">🏖️ مخطط الإجازات - Vacation Planner v2.4</div>
+    <div class="nav-logo">🏖️ مخطط الإجازات - Vacation Planner v2.8</div>
     <div class="nav-links">
       <a href="index.html" class="nav-link">🛢️ PBCR</a>
       <a href="plcr.html" class="nav-link">⚗️ PLCR</a>
@@ -2195,42 +2195,22 @@
     });
     
     // ========== INITIALIZE ==========
-    console.log('%c🏖️ VACATION PLANNER v2.7 - Fixed Firebase Auth', 'color:#4CAF50;font-size:20px;font-weight:bold');
+    console.log('%c🏖️ VACATION PLANNER v2.8 - Using Firebase Auth Handler', 'color:#4CAF50;font-size:20px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
   </script>
   
-  <!-- Firebase SDK & Auth -->
+  <!-- Firebase Auth Handler -->
+  <script src="firebase-auth-handler.js" type="module"></script>
   <script type="module">
-    import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import FirebaseAuthHandler from './firebase-auth-handler.js';
     import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-    import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
-    // Firebase configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyBCdv37V6vOFMe42rGlPyl9lVq-9JldEPg",
-      authDomain: "tank-tools-knpc-c2d95.firebaseapp.com",
-      projectId: "tank-tools-knpc-c2d95",
-      storageBucket: "tank-tools-knpc-c2d95.appspot.com",
-      messagingSenderId: "678793823159",
-      appId: "1:678793823159:web:7a7b1398aefdb7f24462b9"
-    };
-
-    // Initialize Firebase
-    let app, db;
-    const existingApps = getApps();
-    if (existingApps.length === 0) {
-      app = initializeApp(firebaseConfig);
-      console.log('🔥 Firebase initialized for Vacation Planner!');
-    } else {
-      app = getApp();
-      console.log('🔄 Using existing Firebase app');
-    }
-    db = getFirestore(app);
-    
-    // Make Firebase globally available
-    window.db = db;
-    window.doc = doc;
-    window.getDoc = getDoc;
+    // ✅ Initialize Firebase Auth Handler
+    FirebaseAuthHandler.init({
+      pageName: 'Vacation Planner',
+      redirectPage: 'index.html',
+      checkPermissions: true
+    });
     
     // Import additional Firestore functions
     import { collection, getDocs, addDoc, deleteDoc, query, where } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
@@ -2241,122 +2221,44 @@
     window.query = query;
     window.where = where;
     
-    const auth = getAuth(app);
-    window.auth = auth;
+    console.log('%c🏖️ VACATION PLANNER v2.8 - Using Firebase Auth Handler', 'color:#4CAF50;font-size:16px;font-weight:bold');
+    console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:14px');
     
-    // AUTH STATE MANAGEMENT
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        console.log('❌ No Firebase Auth user, checking localStorage...');
-        
-        // Fallback to localStorage for non-migrated users
-        const userData = SessionManager.validateSession();
-        
-        if (!userData) {
-          console.log('❌ No session found, redirecting to login...');
-          alert('يرجى تسجيل الدخول أولاً');
-          window.location.href = 'login.html';
-          return;
-        }
-        
-        // Use localStorage data for non-migrated users
-        console.log('✅ Using localStorage session for:', userData.username);
-        window.currentUser = userData;
-        currentUser = userData;
-        
-        // Check page permissions
-        if (typeof hasPageAccess === 'function') {
-          if (!hasPageAccess(userData, 'Vacation Planner')) {
-            alert('ليس لديك صلاحية للدخول إلى هذه الصفحة');
-            window.location.href = 'index.html';
-            return;
-          }
-        }
-        
-        // Apply UI permissions (hide/show navigation links)
-        if (typeof applyUIPermissions === 'function') {
-          applyUIPermissions(userData);
-        }
+    // ✅ Wait for FirebaseAuthHandler to set currentUser
+    const checkUserInterval = setInterval(async () => {
+      if (window.currentUser) {
+        clearInterval(checkUserInterval);
+        currentUser = window.currentUser;
         
         // Update UI with user name
-        document.getElementById('userName').textContent = userData.name || userData.username;
+        const userNameEl = document.getElementById('userName');
+        if (userNameEl) {
+          userNameEl.textContent = window.currentUser.name || window.currentUser.username;
+        }
         
         // Update user avatar with first letter
         const avatarElement = document.getElementById('userAvatar');
         if (avatarElement) {
-          const firstLetter = (userData.name || userData.username || 'U').charAt(0).toUpperCase();
+          const firstLetter = (window.currentUser.name || window.currentUser.username || 'U').charAt(0).toUpperCase();
           avatarElement.textContent = firstLetter;
         }
         
-        console.log('✅ Vacation Planner loaded for:', userData.name);
+        console.log('✅ Vacation Planner loaded for:', window.currentUser.name);
         
         // Load user leaves
         await loadUserLeaves();
         
         // Load all leaves for annual roster
         await loadAllLeaves();
-        return;
       }
-      
-      console.log('✅ Firebase Auth user logged in:', user.email);
-      
-      // Get username from email
-      const username = user.email.split('@')[0];
-      console.log('🔍 Looking up user in Firestore:', username);
-      
-      // Get user data from Firestore
-      try {
-        const userDoc = await getDoc(doc(db, 'users', username));
-        if (!userDoc.exists()) {
-          console.error('❌ User document not found for:', username);
-          alert('حساب غير موجود');
-          await signOut(auth);
-          window.location.href = 'login.html';
-          return;
-        }
-        
-        const userData = userDoc.data();
-        window.currentUser = userData;
-        currentUser = userData;
-        
-        // Check page permissions
-        if (typeof hasPageAccess === 'function') {
-          if (!hasPageAccess(userData, 'Vacation Planner')) {
-            alert('ليس لديك صلاحية للدخول إلى هذه الصفحة');
-            window.location.href = 'index.html';
-            return;
-          }
-        }
-        
-        // Apply UI permissions (hide/show navigation links)
-        if (typeof applyUIPermissions === 'function') {
-          applyUIPermissions(userData);
-        }
-        
-        // Update UI with user name
-        document.getElementById('userName').textContent = userData.name || username;
-        
-        // Update user avatar with first letter
-        const avatarElement = document.getElementById('userAvatar');
-        if (avatarElement) {
-          const firstLetter = (userData.name || username || 'U').charAt(0).toUpperCase();
-          avatarElement.textContent = firstLetter;
-        }
-        
-        console.log('✅ Vacation Planner loaded for:', userData.name);
-        
-        // Load user leaves
-        await loadUserLeaves();
-        
-        // Load all leaves for annual roster
-        await loadAllLeaves();
-        
-      } catch (error) {
-        console.error('❌ Error loading user data:', error);
-        alert('خطأ في تحميل بيانات المستخدم');
-        window.location.href = 'login.html';
+    }, 100);
+    
+    setTimeout(() => {
+      clearInterval(checkUserInterval);
+      if (!window.currentUser) {
+        console.error('❌ Failed to load user data');
       }
-    });
+    }, 5000);
   </script>
   <script src="pwa-install-banner.js"></script>
 </body>
