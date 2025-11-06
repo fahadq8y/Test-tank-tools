@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Shift Roster v9.8 - Using Firebase Auth Handler -->
+<!-- Shift Roster v9.9 - Using Navbar & Footer Components -->
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
@@ -845,36 +845,8 @@
   </style>
 </head>
 <body>
-  <!-- Navigation Bar -->
-  <div class="nav-bar">
-    <div class="nav-logo">📅 الورديات - Shift Roster v9.8</div>
-    <div class="nav-links">
-      <a href="index.html" class="nav-link">🛢️ PBCR</a>
-      <a href="plcr.html" class="nav-link">⚗️ PLCR</a>
-      <a href="live-tanks.html" class="nav-link">🔴 Live Tanks</a>
-      <a href="vacation-planner.html" class="nav-link">🏭️ Vacation Planner</a>
-      <a href="dashboard.html" class="nav-link">📊 Dashboard</a>
-    </div>
-    <div class="user-info">
-      <div class="font-controls">
-        <button class="font-btn" onclick="decreaseFontSize()" title="تصغير الخط">-</button>
-        <button class="font-btn" onclick="increaseFontSize()" title="تكبير الخط">+</button>
-      </div>
-      <div class="theme-switcher">
-        <button class="theme-btn" onclick="toggleThemeMenu()" title="Change Theme">🎨</button>
-        <div class="theme-dropdown" id="themeMenu">
-          <div class="theme-option" data-theme="industrial" onclick="setTheme('industrial')">🏭 Industrial Bronze</div>
-          <div class="theme-option" data-theme="ocean" onclick="setTheme('ocean')">🌊 Ocean Blue</div>
-          <div class="theme-option" data-theme="dark" onclick="setTheme('dark')">⚫ Dark Carbon</div>
-          <div class="theme-option" data-theme="sunset" onclick="setTheme('sunset')">🌅 Sunset Amber</div>
-          <div class="theme-option" data-theme="forest" onclick="setTheme('forest')">🌲 Forest Green</div>
-        </div>
-      </div>
-      <div class="user-avatar" id="userAvatar">U</div>
-      <span class="user-name" id="userName">Loading...</span>
-      <button class="logout-btn" onclick="handleLogout()">🚪 Logout</button>
-    </div>
-  </div>
+  <!-- Navbar Container -->
+  <div id="navbar-container"></div>
   
   <!-- Main Container -->
   <div class="main-container">
@@ -935,10 +907,8 @@
         </div>
       </div>
       
-      <!-- Footer -->
-      <div class="footer">
-        <div class="date-display" id="dateDisplay">4 نوفمبر 2025</div>
-      </div>
+      <!-- Footer Container -->
+      <div id="footer-container"></div>
       
       <!-- Events Section (Old View) -->
       <div class="events-section">
@@ -1502,6 +1472,26 @@
       }
     }, 5000);
   </script>
+  
+  <!-- Navbar Component -->
+  <script src="navbar-component.js"></script>
+  <script>
+    const navbar = new NavbarComponent({
+      title: '📅 الورديات - Shift Roster',
+      version: '9.9',
+      currentPage: 'shift-roster-link',
+      showShiftRoster: false
+    });
+    navbar.mount('#navbar-container');
+  </script>
+  
+  <!-- Footer Component -->
+  <script src="footer-component.js"></script>
+  <script>
+    const footer = new FooterComponent();
+    footer.mount('#footer-container');
+  </script>
+  
   <script src="pwa-install-banner.js"></script>
 </body>
 </html>
