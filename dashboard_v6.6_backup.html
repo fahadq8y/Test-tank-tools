@@ -1,0 +1,3958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tank Tools - Firebase Admin Dashboard</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="icon.png" type="image/png">
+  <meta name="theme-color" content="#003366">
+  <script src="permissions.js"></script>
+  <style>
+    /* === CSS Variables & Themes === */
+    :root {
+      --primary: #B8860B;
+      --secondary: #8B4513;
+      --accent: #CD853F;
+      --text: #FFD700;
+    }
+    
+    [data-theme="ocean"] {
+      --primary: #1e3a5f;
+      --secondary: #2c5f8d;
+      --accent: #4a90c4;
+      --text: #87CEEB;
+    }
+    
+    [data-theme="dark"] {
+      --primary: #2c2c2c;
+      --secondary: #1a1a1a;
+      --accent: #ff6b35;
+      --text: #ff6b35;
+    }
+    
+    [data-theme="sunset"] {
+      --primary: #ff6b35;
+      --secondary: #f7931e;
+      --accent: #ffd700;
+      --text: #ffd700;
+    }
+    
+    [data-theme="forest"] {
+      --primary: #2d5016;
+      --secondary: #4a7c59;
+      --accent: #6b9b37;
+      --text: #90EE90;
+    }
+    
+    /* Theme Switcher */
+    .theme-switcher {
+      position: relative;
+      display: inline-block;
+    }
+    
+    .theme-btn {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 18px;
+      transition: all 0.3s ease;
+      min-width: 36px;
+      min-height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .theme-btn:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-1px);
+    }
+    
+    .theme-dropdown {
+      display: none;
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 5px;
+      background: rgba(0,0,0,0.9);
+      border-radius: 8px;
+      min-width: 180px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      z-index: 10000;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    .theme-dropdown.show {
+      display: block;
+      animation: slideDown 0.3s ease;
+    }
+    
+    .theme-option {
+      padding: 10px 15px;
+      cursor: pointer;
+      color: white;
+      transition: all 0.2s ease;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .theme-option:last-child {
+      border-bottom: none;
+    }
+    
+    .theme-option:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    
+    .theme-option.active {
+      background: var(--primary);
+      font-weight: bold;
+    }
+    
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    *{margin:0;padding:0;box-sizing:border-box}body{background:linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.5)),url('background.jpg');background-size:cover;background-position:center;background-attachment:fixed;font-family:Arial,sans-serif;min-height:100vh;color:white}
+    /* Navigation Bar */
+    .nav-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 30px;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(10px);
+      border-bottom: 2px solid var(--primary);
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 15px;
+      position: relative;
+      z-index: 1000;
+    }
+    
+    .nav-logo {
+      font-size: 24px;
+      font-weight: bold;
+      color: var(--primary);
+    }
+    
+    .nav-links {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    
+    .nav-link {
+      color: white;
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      background: rgba(255,255,255,0.1);
+      font-weight: 500;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    .nav-link:hover {
+      background: var(--primary);
+      transform: translateY(-1px);
+    }
+    
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    /* Font Controls */
+    .font-controls {
+      display: flex;
+      gap: 5px;
+    }
+    
+    .font-btn {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: white;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      transition: all 0.3s ease;
+      min-width: 32px;
+      min-height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .font-btn:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-1px);
+    }
+    
+    /* User Avatar */
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, var(--primary), var(--secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 14px;
+      color: white;
+      border: 2px solid var(--accent);
+    }
+    
+    .user-details {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    
+    .user-name {
+      background: rgba(255,255,255,0.1);
+      padding: 4px 10px;
+      border-radius: 5px;
+      border: 1px solid rgba(255,255,255,0.2);
+      font-size: 13px;
+      font-weight: bold;
+    }
+    
+    .user-email {
+      font-size: 11px;
+      opacity: 0.8;
+      padding: 2px 10px;
+    }
+    
+    .logout-btn {
+      background: rgba(255,0,0,0.3);
+      color: white;
+      border: 1px solid rgba(255,0,0,0.5);
+      padding: 6px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 14px;
+    }
+    
+    .logout-btn:hover {
+      background: rgba(255,0,0,0.5);
+      transform: translateY(-2px);
+    }
+    .container{max-width:100%;margin:20px auto;padding:0 20px}
+    .admin-banner{text-align:center;margin-bottom:30px;background:rgba(255,255,255,0.1);padding:20px;border-radius:15px;backdrop-filter:blur(10px)}
+    .admin-badge{display:inline-block;background:linear-gradient(45deg,#FFD700,#FFA500);color:#003366;padding:8px 20px;border-radius:25px;font-weight:bold;margin-bottom:15px;font-size:1.1rem}
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;margin-bottom:30px}
+    .stat-card{background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);border-radius:15px;padding:20px;text-align:center;border:1px solid rgba(255,255,255,0.2);transition:transform 0.3s ease}
+    .stat-card:hover{transform:translateY(-5px)}
+    .stat-number{font-size:2.2rem;font-weight:bold;background:linear-gradient(45deg,#FFD700,#FFA500);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:5px}
+    .stat-label{font-size:0.9rem;opacity:0.8}
+    .section{background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);border-radius:15px;padding:25px;margin-bottom:25px;border:1px solid rgba(255,255,255,0.2)}
+    .section-title{font-size:1.4rem;margin-bottom:20px;background:linear-gradient(45deg,#FFD700,#FFA500);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:bold;border-bottom:2px solid rgba(255,215,0,0.3);padding-bottom:10px}
+    .controls{display:flex;gap:15px;margin-bottom:20px;flex-wrap:wrap;align-items:center}
+    .search-box{padding:12px 15px;border:none;border-radius:10px;background:rgba(255,255,255,0.9);color:#003366;font-size:14px;flex:1;min-width:250px}
+    .filter-select{padding:12px 15px;border:none;border-radius:10px;background:rgba(255,255,255,0.9);color:#003366;font-size:14px}
+    .btn{padding:12px 20px;border:none;border-radius:10px;cursor:pointer;font-weight:600;transition:all 0.3s ease;font-size:14px;display:inline-flex;align-items:center;gap:8px}
+    .btn-primary{background:linear-gradient(45deg,#4CAF50,#45a049);color:white}
+    .btn-secondary{background:linear-gradient(45deg,#2196F3,#1976D2);color:white}
+    .btn-warning{background:linear-gradient(45deg,#ff9800,#f57c00);color:white}
+    .btn-danger{background:linear-gradient(45deg,#f44336,#d32f2f);color:white}
+    .btn:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(0,0,0,0.3)}
+    .users-table,.activities-table{width:100%;background:rgba(255,255,255,0.95);border-radius:15px;overflow:hidden;color:#003366;box-shadow:0 5px 15px rgba(0,0,0,0.2);border-collapse:collapse}
+    .users-table th,.users-table td,.activities-table th,.activities-table td{padding:15px 12px;text-align:left;border-bottom:1px solid rgba(0,51,102,0.1)}
+    .users-table th,.activities-table th{background:#003366;color:white;font-weight:bold;font-size:14px}
+    .users-table tr:hover,.activities-table tr:hover{background:rgba(255,215,0,0.1)}
+    .activities-table-container{width:100%;overflow-x:auto}
+    .activities-table{min-width:620px}
+    .status-badge{display:inline-block;padding:6px 12px;border-radius:20px;font-size:11px;font-weight:bold;text-transform:uppercase}
+    .badge-active{background:#4CAF50;color:white}
+    .badge-inactive{background:#f44336;color:white}
+    .badge-pending{background:#ff9800;color:white}
+    .badge-admin{background:#FFD700;color:#003366}
+    .badge-user{background:#2196F3;color:white}
+    .badge-panel-operator{background:#9C27B0;color:white}
+    .badge-supervisor{background:#FF5722;color:white}
+    .badge-section-head{background:#795548;color:white}
+    .badge-operator{background:#607D8B;color:white}
+    .badge-planning{background:#E91E63;color:white}
+    .badge-info{background:#17a2b8;color:white}
+    .action-buttons{display:flex;gap:8px;flex-wrap:wrap}
+    .action-btn{padding:8px 12px;border:none;border-radius:8px;cursor:pointer;font-size:12px;font-weight:500;transition:all 0.3s ease}
+    .action-btn:hover{transform:scale(1.05)}
+    .loading{text-align:center;padding:40px;font-size:18px}
+    .loading-spinner{display:inline-block;width:40px;height:40px;border:4px solid rgba(255,255,255,0.3);border-radius:50%;border-top:4px solid #FFD700;animation:spin 1s linear infinite;margin-bottom:10px}
+    @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+    .message{padding:15px 20px;border-radius:10px;margin-bottom:20px;font-weight:500;border-left:5px solid}
+    .message.success{background:rgba(76,175,80,0.2);border-color:#4CAF50;color:#4CAF50}
+    .message.error{background:rgba(244,67,54,0.2);border-color:#f44336;color:#f44336}
+    .message.info{background:rgba(33,150,243,0.2);border-color:#2196F3;color:#2196F3}
+    .message.warning{background:rgba(255,193,7,0.2);border-color:#ffc107;color:#ffc107}
+    .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:1000;backdrop-filter:blur(5px)}
+    .modal.show{display:flex;justify-content:center;align-items:center}
+    .modal-content{background:rgba(255,255,255,0.95);padding:30px;border-radius:15px;max-width:600px;width:90%;color:#003366;max-height:90vh;overflow-y:auto}
+    .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:15px;border-bottom:2px solid #ddd}
+    .modal-title{font-size:1.3rem;font-weight:bold;color:#003366}
+    .close-btn{background:none;border:none;font-size:28px;cursor:pointer;color:#666;font-weight:bold}
+    .close-btn:hover{color:#f44336}
+    .form-group{margin-bottom:20px}
+    .form-label{display:block;margin-bottom:8px;font-weight:600;color:#003366}
+    .form-input,.form-select{width:100%;padding:12px;border:2px solid #ddd;border-radius:8px;font-size:14px;transition:border-color 0.3s ease}
+    .form-input:focus,.form-select:focus{outline:none;border-color:#4CAF50}
+    .activities-container{max-height:400px;overflow-y:auto;background:rgba(255,255,255,0.95);border-radius:10px;padding:15px}
+    .activity-item{padding:12px;border-bottom:1px solid rgba(0,51,102,0.1);display:flex;justify-content:space-between;align-items:center;color:#003366}
+    .activity-item:last-child{border-bottom:none}
+    .activity-info{flex:1}
+    .activity-user{font-weight:bold;color:#003366}
+    .activity-action{margin-top:4px;font-size:13px;color:#666}
+    .activity-time{font-size:12px;color:#999;text-align:right}
+    .pending-users-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:15px}
+    .pending-card{background:rgba(255,193,7,0.1);border:2px solid rgba(255,193,7,0.3);border-radius:12px;padding:20px;transition:all 0.3s ease}
+    .pending-card:hover{transform:translateY(-3px);box-shadow:0 5px 15px rgba(255,193,7,0.2)}
+    .pending-header{display:flex;justify-content:between;align-items:center;margin-bottom:15px}
+    .pending-name{font-size:1.1rem;font-weight:bold;color:#f57c00}
+    .pending-details{margin-bottom:15px;line-height:1.6}
+    .pending-actions{display:flex;gap:10px}
+    .switch{position:relative;display:inline-block;width:60px;height:34px}
+    .switch input{opacity:0;width:0;height:0}
+    .slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background-color:#ccc;transition:.4s;border-radius:34px}
+    .slider:before{position:absolute;content:"";height:26px;width:26px;left:4px;bottom:4px;background-color:white;transition:.4s;border-radius:50%}
+    input:checked + .slider{background-color:#4CAF50}
+    input:focus + .slider{box-shadow:0 0 1px #4CAF50}
+    input:checked + .slider:before{transform:translateX(26px)}
+    .role-settings-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
+    .role-setting{background:rgba(255,255,255,0.1);padding:20px;border-radius:12px;display:flex;justify-content:space-between;align-items:center;border:1px solid rgba(255,255,255,0.2)}
+    .role-info{flex:1}
+    .role-name{font-weight:bold;font-size:1.1rem;margin-bottom:5px}
+    .role-desc{font-size:0.9rem;opacity:0.8}
+    .role-control{margin-left:15px}
+    @media(max-width:768px){.header{flex-direction:column;gap:15px}.controls{flex-direction:column}.stats-grid{grid-template-columns:repeat(2,1fr)}.users-table{font-size:12px}.users-table th,.users-table td{padding:8px 6px}.action-buttons{flex-direction:column}.role-settings-grid{grid-template-columns:1fr}}
+    /* Force activities table to stay full width on all screen sizes */
+    .activities-table-container{overflow-x:auto !important;width:100% !important;-webkit-overflow-scrolling:touch !important}
+    .activities-table{min-width:800px !important;width:100% !important}
+    .activities-table th,.activities-table td{padding:15px 20px !important;white-space:nowrap !important}
+    .activities-table th{font-size:14px !important}
+    .activities-table td{font-size:13px !important}
+    
+    /* Users table mobile scroll fix */
+    .users-table-container{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;background:rgba(255,255,255,0.95);border-radius:15px;box-shadow:0 5px 15px rgba(0,0,0,0.2)}
+    .users-table{min-width:900px;width:100%;color:#003366;border-collapse:collapse}
+    
+    /* Pagination styles */
+    .pagination-buttons{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .page-btn{padding:8px 12px;border:none;border-radius:6px;cursor:pointer;font-weight:600;transition:all 0.3s ease;min-width:35px;height:35px;display:flex;align-items:center;justify-content:center}
+    .page-btn.active{background:linear-gradient(45deg,#FFD700,#FFA500);color:#003366}
+    .page-btn:not(.active){background:rgba(255,255,255,0.2);color:white;border:1px solid rgba(255,255,255,0.3)}
+    .page-btn:hover:not(.active){background:rgba(255,255,255,0.3);transform:translateY(-1px)}
+    .page-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+    
+    /* Mobile Responsive */
+    @media (max-width: 480px) {
+      .nav-bar {
+        padding: 8px 10px;
+      }
+      
+      .nav-logo {
+        font-size: 14px;
+      }
+      
+      .nav-links {
+        flex-wrap: nowrap;
+      }
+      
+      .nav-link {
+        padding: 4px 6px;
+        font-size: 10px;
+      }
+      
+      .font-controls {
+        gap: 3px;
+      }
+      
+      .font-btn {
+        min-width: 28px;
+        min-height: 28px;
+        padding: 4px 8px;
+        font-size: 14px;
+      }
+      
+      .user-avatar {
+        width: 28px;
+        height: 28px;
+        font-size: 12px;
+      }
+      
+      .user-name {
+        font-size: 11px;
+        padding: 3px 6px;
+      }
+      
+      .user-email {
+        font-size: 9px;
+      }
+      
+      .logout-btn {
+        padding: 4px 8px;
+        font-size: 11px;
+      }
+      
+      .theme-btn {
+        min-width: 28px;
+        min-height: 28px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation Bar -->
+  <div class="nav-bar">
+    <div class="nav-logo">🔥 Firebase Admin Dashboard v6.6</div>
+    <div class="nav-links">
+      <a href="index.html" class="nav-link">🛢️ PBCR</a>
+      <a href="plcr.html" class="nav-link">⚗️ PLCR</a>
+      <a href="live-tanks.html" class="nav-link">🔴 Live Tanks</a>
+      <a href="shift-roster.html" class="nav-link">📅 Shift Roster</a>
+      <a href="vacation-planner.html" class="nav-link">🏖️ Vacation Planner</a>
+      <a href="tank-management.html" class="nav-link" id="tank-management-link" style="display:none">🛢️ Tank Management</a>
+      <a href="#device-management" onclick="showDeviceManagement()" class="nav-link" id="device-management-link" style="display:none">📱 Device Management</a>
+    </div>
+    <div class="user-info">
+      <div class="font-controls">
+        <button class="font-btn" onclick="decreaseFontSize()" title="تصغير الخط">-</button>
+        <button class="font-btn" onclick="increaseFontSize()" title="تكبير الخط">+</button>
+      </div>
+      <div class="theme-switcher">
+        <button class="theme-btn" onclick="toggleThemeDropdown()" title="Change Theme">🎨</button>
+        <div class="theme-dropdown" id="themeDropdown">
+          <div class="theme-option active" data-theme="industrial" onclick="setTheme('industrial')">🏭 Industrial Bronze</div>
+          <div class="theme-option" data-theme="ocean" onclick="setTheme('ocean')">🌊 Ocean Blue</div>
+          <div class="theme-option" data-theme="dark" onclick="setTheme('dark')">⚫ Dark Carbon</div>
+          <div class="theme-option" data-theme="sunset" onclick="setTheme('sunset')">🌅 Sunset Amber</div>
+          <div class="theme-option" data-theme="forest" onclick="setTheme('forest')">🌲 Forest Green</div>
+        </div>
+      </div>
+      <div class="user-avatar" id="userAvatar">F</div>
+      <div class="user-details">
+        <span class="user-name" id="userName">Loading...</span>
+        <span class="user-email" id="userEmail">Loading...</span>
+      </div>
+      <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="admin-banner">
+      <div class="admin-badge">🔥 FIREBASE ADMIN CONTROL</div>
+      <h2>🎛️ Master User Management System</h2>
+      <p>Real-time Firebase database with advanced user controls</p>
+      <p id="currentTime" style="margin-top:10px;opacity:0.8"></p>
+    </div>
+
+    <div id="messageContainer"></div>
+
+    <!-- Statistics -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-number" id="totalUsers">-</div>
+        <div class="stat-label">Total Users</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="activeUsers">-</div>
+        <div class="stat-label">Active Users</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="pendingUsers">-</div>
+        <div class="stat-label">Pending Approval</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="usersWithLiveTanks">-</div>
+        <div class="stat-label">Live Tanks Access</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="totalActivities">-</div>
+        <div class="stat-label">Total Activities</div>
+      </div>
+    </div>
+
+    <!-- User Management Section -->
+    <div class="section">
+      <div class="section-title">👥 Advanced User Management</div>
+      
+      <div class="controls">
+        <input type="text" class="search-box" id="userSearch" placeholder="🔍 Search users by name, username, or email...">
+        <select class="filter-select" id="statusFilter">
+          <option value="all">All Status</option>
+          <option value="active">Active Only</option>
+          <option value="inactive">Inactive Only</option>
+          <option value="pending">Pending Approval</option>
+        </select>
+        <select class="filter-select" id="roleFilter">
+          <option value="all">All Roles</option>
+          <option value="admin">Admin</option>
+          <option value="panel_operator">Panel Operator</option>
+          <option value="supervisor">Supervisor</option>
+          <option value="section_head">Section Head</option>
+          <option value="operator">Operator</option>
+          <option value="planning">Planning</option>
+        </select>
+        <button class="btn btn-primary" onclick="loadDashboardData()">🔄 Refresh</button>
+        <button class="btn btn-warning" onclick="showPendingUsers()">⏳ Pending</button>
+      </div>
+
+      <div id="usersContainer">
+        <div class="loading">
+          <div class="loading-spinner"></div>
+          <div>Loading users from Firebase...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Device Management Section - User-Based View -->
+    <div class="section" id="deviceManagementSection" style="display:none">
+      <div class="section-title">📱 User Device Management</div>
+      
+      <div class="controls">
+        <input type="text" class="search-box" id="userSearch" placeholder="🔍 Search users by username or name...">
+        <select class="filter-select" id="userDeviceFilter">
+          <option value="all">All Users</option>
+          <option value="has_devices">Users with Devices</option>
+          <option value="over_limit">Over Device Limit</option>
+          <option value="no_devices">No Devices</option>
+        </select>
+        <button class="btn btn-primary" onclick="loadUsersDeviceData()">🔄 Refresh</button>
+        <button class="btn btn-warning" onclick="showDeviceRequests()">📋 Device Requests</button>
+        <button class="btn btn-secondary" onclick="showDeviceLimitsConfig()">⚙️ Device Limits</button>
+        <button class="btn btn-info" onclick="showBulkDeviceActions()">🛠️ Bulk Actions</button>
+      </div>
+
+      <!-- User Device Statistics -->
+      <div class="stats-grid" style="margin-bottom: 20px;">
+        <div class="stat-card">
+          <div class="stat-number" id="totalUsersCount">0</div>
+          <div class="stat-label">Total Users</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="usersWithDevicesCount">0</div>
+          <div class="stat-label">Users with Devices</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="totalDevicesCount">0</div>
+          <div class="stat-label">Total Devices</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="pendingDeviceRequestsCount">0</div>
+          <div class="stat-label">Pending Requests</div>
+        </div>
+      </div>
+
+      <div id="usersDeviceContainer">
+        <div class="loading">
+          <div class="loading-spinner"></div>
+          <div>Loading users and devices from Firebase...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Activities -->
+    <div style="background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 15px; padding: 25px; margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.2); width: 100%; max-width: none;">
+      <div class="section-title">📋 Recent Activities</div>
+      <div class="activities-controls" style="margin-bottom: 20px; display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+        <input type="text" id="activitySearch" placeholder="🔍 Search activities..." style="padding: 10px 15px; border: none; border-radius: 8px; background: rgba(255,255,255,0.9); color: #003366; flex: 1; min-width: 250px;">
+        <select id="activityFilter" style="padding: 10px 15px; border: none; border-radius: 8px; background: rgba(255,255,255,0.9); color: #003366;">
+          <option value="">All Activities</option>
+          <option value="login">Login</option>
+          <option value="pbcr_calculation">PBCR Calculations</option>
+          <option value="live_tanks">Live Tanks</option>
+          <option value="admin">Admin Actions</option>
+        </select>
+        <button class="btn btn-secondary" onclick="refreshActivities()">🔄 Refresh</button>
+      </div>
+      
+      <div class="activities-table-container" style="width: 100%; background: rgba(255,255,255,0.95); border-radius: 15px; overflow-x: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
+        <table class="activities-table" style="width: 100%; min-width: 800px; color: #003366; border-collapse: collapse;">
+          <thead style="background: #003366; color: white;">
+            <tr>
+              <th style="padding: 15px 20px; text-align: left; font-weight: bold; width: 15%;">👤 User</th>
+              <th style="padding: 15px 20px; text-align: left; font-weight: bold; width: 35%;">📝 Activity</th>
+              <th style="padding: 15px 20px; text-align: center; font-weight: bold; width: 15%;">📅 Date</th>
+              <th style="padding: 15px 20px; text-align: center; font-weight: bold; width: 15%;">⏰ Time</th>
+              <th style="padding: 15px 20px; text-align: center; font-weight: bold; width: 20%;">🌐 Source</th>
+            </tr>
+          </thead>
+          <tbody id="activitiesTableBody">
+            <tr>
+              <td colspan="5" style="padding: 30px; text-align: center; color: #666;">
+                <div class="loading">
+                  <div class="loading-spinner"></div>
+                  <div>Loading activities...</div>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      
+      <div class="pagination-container" style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+        <div class="pagination-info" style="color: rgba(255,255,255,0.8); font-size: 14px;">
+          عرض <span id="activitiesStart">0</span> - <span id="activitiesEnd">0</span> من أصل <span id="activitiesTotal">0</span> نشاط
+        </div>
+        <div class="pagination-controls" style="display: flex; gap: 10px; align-items: center;">
+          <div class="pagination-buttons">
+            <button class="page-btn" id="prevPageBtn" onclick="goToPreviousPage()" title="الصفحة السابقة">‹</button>
+            <div id="pageNumbers" style="display: flex; gap: 5px;"></div>
+            <button class="page-btn" id="nextPageBtn" onclick="goToNextPage()" title="الصفحة التالية">›</button>
+          </div>
+          <span style="color: rgba(255,255,255,0.8); font-size: 14px; margin-left: 10px;">صفحة <span id="currentPage">1</span> من <span id="totalPages">1</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- User Edit Modal -->
+  <div id="userModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modalTitle">Edit User</h3>
+        <button class="close-btn" onclick="closeModal()">&times;</button>
+      </div>
+      <form id="userForm">
+        <div class="form-group">
+          <label class="form-label">Full Name:</label>
+          <input type="text" class="form-input" id="editFullName" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Username:</label>
+          <input type="text" class="form-input" id="editUsername" readonly>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email:</label>
+          <input type="email" class="form-input" id="editEmail" readonly>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Role:</label>
+          <select class="form-select" id="editRole">
+            <option value="operator">Operator</option>
+            <option value="panel_operator">Panel Operator</option>
+            <option value="supervisor">Supervisor</option>
+            <option value="section_head">Section Head</option>
+            <option value="planning">Planning</option>
+            <option value="admin">Admin</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status:</label>
+          <select class="form-select" id="editStatus">
+            <option value="true">Active</option>
+            <option value="false">Inactive</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Live Tanks Access:</label>
+          <label class="switch">
+            <input type="checkbox" id="editLiveTanksAccess">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="form-group">
+          <label class="form-label">New Password (Optional):</label>
+          <input type="password" class="form-input" id="editPassword" placeholder="Leave empty to keep current">
+        </div>
+        <div style="display:flex;gap:15px;justify-content:flex-end;margin-top:25px">
+          <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Pending Users Modal -->
+  <div id="pendingModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">⏳ Pending User Approvals</h3>
+        <button class="close-btn" onclick="closePendingModal()">&times;</button>
+      </div>
+      <div id="pendingUsersContainer">
+        <div class="loading">
+          <div class="loading-spinner"></div>
+          <div>Loading pending users...</div>
+        </div>
+      </div>
+      <div style="margin-top:20px;text-align:center">
+        <button class="btn btn-primary" onclick="approveAllPending()">✅ Approve All</button>
+        <button class="btn btn-secondary" onclick="closePendingModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Device Management Modals -->
+  
+  <!-- User Devices Details Modal -->
+  <div id="userDevicesModal" class="modal">
+    <div class="modal-content" style="max-width: 800px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="userDevicesModalTitle">👤 User Device Details</h3>
+        <button class="close-btn" onclick="closeUserDevicesModal()">&times;</button>
+      </div>
+      <div id="userDevicesModalContent">
+        <!-- User devices will be loaded here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Device Limits Configuration Modal -->
+  <div id="deviceLimitsModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">⚙️ Device Limits Configuration</h3>
+        <button class="close-btn" onclick="closeDeviceLimitsModal()">&times;</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Default Device Limit for New Users:</label>
+        <input type="number" class="form-input" id="defaultDeviceLimit" value="1" min="1" max="10">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Bulk Update Device Limits:</label>
+        <select class="form-select" id="bulkLimitAction">
+          <option value="">Choose action...</option>
+          <option value="set_all_1">Set all users to 1 device</option>
+          <option value="set_all_2">Set all users to 2 devices</option>
+          <option value="set_all_3">Set all users to 3 devices</option>
+          <option value="reset_defaults">Reset all to default</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:15px;justify-content:flex-end;margin-top:25px">
+        <button type="button" class="btn btn-secondary" onclick="closeDeviceLimitsModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="saveDeviceLimitsConfig()">💾 Save Configuration</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Device Requests Modal -->
+  <div id="deviceRequestsModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">📋 Pending Device Requests</h3>
+        <button class="close-btn" onclick="closeDeviceRequestsModal()">&times;</button>
+      </div>
+      <div id="deviceRequestsContainer">
+        <div class="loading">
+          <div class="loading-spinner"></div>
+          <div>Loading device requests...</div>
+        </div>
+      </div>
+      <div style="margin-top:20px;text-align:center">
+        <button class="btn btn-primary" onclick="approveAllDeviceRequests()">✅ Approve All</button>
+        <button class="btn btn-danger" onclick="rejectAllDeviceRequests()">❌ Reject All</button>
+        <button class="btn btn-secondary" onclick="closeDeviceRequestsModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Device Details Modal -->
+  <div id="deviceModal" class="modal">
+    <div class="modal-content" style="max-width: 800px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="deviceModalTitle">📱 Device Details</h3>
+        <button class="close-btn" onclick="closeDeviceModal()">&times;</button>
+      </div>
+      <div id="deviceModalContent">
+        <!-- Device details will be loaded here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Bulk Device Actions Modal -->
+  <div id="bulkDeviceModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">⚙️ Bulk Device Actions</h3>
+        <button class="close-btn" onclick="closeBulkDeviceModal()">&times;</button>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Select Action:</label>
+        <select class="form-select" id="bulkDeviceAction">
+          <option value="">Choose an action...</option>
+          <option value="deactivate_inactive">Deactivate Inactive Devices (30+ days)</option>
+          <option value="remove_old">Remove Old Devices (90+ days)</option>
+          <option value="reset_user_devices">Reset Specific User's Devices</option>
+          <option value="device_audit">Generate Device Audit Report</option>
+        </select>
+      </div>
+      <div class="form-group" id="userSelectGroup" style="display:none">
+        <label class="form-label">Select User:</label>
+        <select class="form-select" id="bulkDeviceUser">
+          <!-- Users will be populated dynamically -->
+        </select>
+      </div>
+      <div style="margin-top: 20px; padding: 15px; background: rgba(255,193,7,0.1); border-radius: 8px; border: 1px solid rgba(255,193,7,0.3);">
+        <div style="color: #f57c00; font-weight: bold; margin-bottom: 10px;">⚠️ Warning</div>
+        <div style="color: #666; font-size: 14px;">
+          These actions are irreversible. Please ensure you understand the consequences before proceeding.
+        </div>
+      </div>
+      <div style="display:flex;gap:15px;justify-content:flex-end;margin-top:25px">
+        <button type="button" class="btn btn-secondary" onclick="closeBulkDeviceModal()">Cancel</button>
+        <button type="button" class="btn btn-danger" onclick="executeBulkDeviceAction()">🚀 Execute Action</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, getDocs, addDoc, serverTimestamp, query, orderBy, limit, where } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+    import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBCdv37V6vOFMe42rGlPyl9lVq-9JldEPg",
+      authDomain: "tank-tools-knpc-c2d95.firebaseapp.com",
+      projectId: "tank-tools-knpc-c2d95",
+      storageBucket: "tank-tools-knpc-c2d95.appspot.com",
+      messagingSenderId: "678793823159",
+      appId: "1:678793823159:web:7a7b1398aefdb7f24462b9"
+    };
+
+    // ✅ PREVENT DUPLICATE APP INITIALIZATION
+    let app, db;
+    const existingApps = getApps();
+    if (existingApps.length === 0) {
+        app = initializeApp(firebaseConfig);
+        console.log('🔥 Firebase initialized for Dashboard!');
+    } else {
+        app = getApp();
+        console.log('🔄 Using existing Firebase app for Dashboard');
+    }
+    db = getFirestore(app);
+
+    // Make Firebase functions globally available
+    window.db = db;
+    window.doc = doc;
+    window.getDoc = getDoc;
+    window.setDoc = setDoc;
+    window.updateDoc = updateDoc;
+    window.deleteDoc = deleteDoc;
+    window.collection = collection;
+    window.getDocs = getDocs;
+    window.addDoc = addDoc;
+     window.serverTimestamp = serverTimestamp;
+    window.query = query;
+    window.orderBy = orderBy;
+    window.limit = limit;
+    window.where = where;
+    console.log('🔥 Firebase Dashboard initialized successfully!');
+    
+    const auth = getAuth(app);
+    window.auth = auth;
+    
+    // ✅ AUTH STATE MANAGEMENT
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        console.log('❌ No Firebase Auth user, checking localStorage...');
+        
+        // Fallback to localStorage for non-migrated users
+        const savedUser = localStorage.getItem('tanktools_current_user');
+        const savedSession = sessionStorage.getItem('tanktools_session');
+        
+        if (!savedUser || !savedSession) {
+          console.log('❌ No session found, redirecting to login...');
+          alert('يرجى تسجيل الدخول أولاً');
+          window.location.href = 'login.html';
+          return;
+        }
+        
+        // Use localStorage data for non-migrated users
+        const userData = JSON.parse(savedUser);
+        console.log('✅ Using localStorage session for:', userData.username);
+        window.currentUser = userData;
+        
+        // Check page permissions
+        if (typeof hasPageAccess === 'function') {
+          if (!hasPageAccess(userData, 'Dashboard')) {
+            alert('ليس لديك صلاحية للدخول إلى هذه الصفحة');
+            window.location.href = 'index.html';
+            return;
+          }
+        }
+        
+        // Apply UI permissions
+        if (typeof applyUIPermissions === 'function') {
+          applyUIPermissions(userData);
+        }
+        
+        // Load dashboard data
+        await loadDashboardData();
+        return;
+      }
+      
+      console.log('✅ Firebase Auth user logged in:', user.email);
+      
+      // Get username from email (format: username@knpc.com)
+      const username = user.email.split('@')[0];
+      console.log('🔍 Looking up user in Firestore:', username);
+      
+      // Get user data from Firestore using username
+      try {
+        const userDoc = await getDoc(doc(window.db, 'users', username));
+        if (!userDoc.exists()) {
+          console.error('❌ User document not found for:', username);
+          alert('حساب غير موجود');
+          await signOut(auth);
+          window.location.href = 'login.html';
+          return;
+        }
+        
+        const userData = userDoc.data();
+        window.currentUser = userData;
+        
+        // Check page permissions
+        if (typeof hasPageAccess === 'function') {
+          if (!hasPageAccess(userData, 'Dashboard')) {
+            alert('ليس لديك صلاحية للدخول إلى هذه الصفحة');
+            window.location.href = 'index.html';
+            return;
+          }
+        }
+        
+        // Apply UI permissions
+        if (typeof applyUIPermissions === 'function') {
+          applyUIPermissions(userData);
+        }
+        
+        console.log('✅ Permissions applied for:', userData.name || user.email);
+        
+        // ✅ Load dashboard data after auth
+        await loadDashboardData();
+      } catch (error) {
+        console.error('❌ Error loading user data:', error);
+        alert('خطأ في تحميل بيانات المستخدم');
+      }
+    });
+  </script>
+
+  <script>
+    // ========== THEME FUNCTIONS ==========
+    function toggleThemeDropdown() {
+      const dropdown = document.getElementById('themeDropdown');
+      dropdown.classList.toggle('show');
+    }
+    
+    function setTheme(themeName) {
+      // Remove active class from all options
+      document.querySelectorAll('.theme-option').forEach(opt => opt.classList.remove('active'));
+      
+      // Add active class to selected option
+      const selectedOption = document.querySelector(`[data-theme="${themeName}"]`);
+      if (selectedOption) {
+        selectedOption.classList.add('active');
+      }
+      
+      // Apply theme to html element
+      document.documentElement.setAttribute('data-theme', themeName);
+      
+      // Save to localStorage
+      localStorage.setItem('selectedTheme', themeName);
+      
+      // Close dropdown
+      document.getElementById('themeDropdown').classList.remove('show');
+      
+      console.log('Theme changed to:', themeName);
+    }
+    
+    // Load saved theme on page load
+    function loadTheme() {
+      const savedTheme = localStorage.getItem('selectedTheme') || 'industrial';
+      setTheme(savedTheme);
+    }
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(event) {
+      const themeSwitcher = document.querySelector('.theme-switcher');
+      if (themeSwitcher && !themeSwitcher.contains(event.target)) {
+        document.getElementById('themeDropdown').classList.remove('show');
+      }
+    });
+    
+    // Load theme on page load
+    loadTheme();
+    console.log('✅ Theme Switcher initialized');
+    
+    let currentUser = null;
+    let currentEditingUser = null;
+    let allUsers = [];
+    let allActivities = [];
+
+    
+    // Pagination variables
+    let currentActivitiesPage = 1;
+    let activitiesPerPage = 50;
+    let filteredActivities = [];
+
+    // Check admin access
+    function checkAdminAccess() {
+      console.log('Checking admin access...');
+      
+      // ✅ Use window.currentUser set by onAuthStateChanged
+      const user = window.currentUser;
+      
+      if (!user) {
+        console.log('No user data available');
+        showMessage('❌ Please login first', 'error');
+        setTimeout(() => window.location.href = 'login.html', 3000);
+        return false;
+      }
+      
+      try {
+        console.log('Current user:', user);
+        
+        // Set currentUser globally
+        window.currentUser = user;
+        currentUser = user;
+        
+        // Check admin access - allow admin specialization or role
+        if (user.specialization === 'admin' || user.role === 'admin') {
+          console.log('Admin access granted');
+          
+          // Update UI with admin info
+          document.getElementById('userName').textContent = user.fullName || user.username;
+          document.getElementById('userEmail').textContent = user.email || `${user.username}@knpc.com`;
+          const firstLetter = (user.fullName || user.username).charAt(0).toUpperCase();
+          document.getElementById('userAvatar').textContent = firstLetter;
+          
+          // Show admin links
+          document.getElementById('tank-management-link').style.display = 'inline-block';
+          document.getElementById('device-management-link').style.display = 'inline-block';
+          
+          return true;
+        } else {
+          console.log('Access denied - not admin');
+          showMessage('❌ Access Denied! Admin privileges required.', 'error');
+          setTimeout(() => window.location.href = 'index.html', 3000);
+          return false;
+        }
+        
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+        showMessage('❌ Session error. Redirecting to login...', 'error');
+        setTimeout(() => window.location.href = 'login.html', 3000);
+        return false;
+      }
+    }
+
+    // Load dashboard data
+    async function loadDashboardData() {
+      console.log('Starting loadDashboardData...');
+      
+      if (!checkAdminAccess()) {
+        console.log('Admin access check failed');
+        return;
+      }
+      
+      console.log('Admin access check passed');
+      showMessage('🔄 Loading dashboard data from Firebase...', 'info');
+      
+      try {
+        console.log('Loading users from Firebase...');
+        // Load users
+        const usersSnapshot = await getDocs(collection(db, 'users'));
+        allUsers = [];
+        
+        usersSnapshot.forEach((doc) => {
+          const userData = { id: doc.id, ...doc.data() };
+          allUsers.push(userData);
+        });
+        
+        console.log(`Loaded ${allUsers.length} users`);
+
+        console.log('Loading activities from Firebase...');
+        // Load ALL activities (no limit)
+        const activitiesSnapshot = await getDocs(
+          query(collection(db, 'activities'), orderBy('timestamp', 'desc'))
+        );
+        allActivities = [];
+        
+        activitiesSnapshot.forEach((doc) => {
+          const activityData = { id: doc.id, ...doc.data() };
+          allActivities.push(activityData);
+        });
+        
+        console.log(`Loaded ${allActivities.length} activities`);
+
+
+        // Update statistics
+        console.log('Updating statistics...');
+        updateStatistics();
+        
+        // Display users
+        console.log('Displaying users...');
+        displayUsers(allUsers);
+        
+        // Display activities
+        console.log('Displaying activities...');
+        displayActivities(allActivities);
+        
+        showMessage('✅ Dashboard data loaded successfully!', 'success');
+        
+        // Add activity log
+        await addActivity('admin_dashboard_loaded', currentUser.username);
+        
+      } catch (error) {
+        console.error('Error loading dashboard:', error);
+        showMessage('❌ Error loading data: ' + error.message, 'error');
+        
+        // Show fallback data
+        const container = document.getElementById('usersContainer');
+        if (container) {
+          container.innerHTML = '<div class="loading">❌ Failed to load users. Please check your connection and try again.</div>';
+        }
+        
+        const tbody = document.getElementById('activitiesTableBody');
+        if (tbody) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="5" style="padding: 30px; text-align: center; color: #f44336;">
+                ❌ Failed to load activities: ${error.message}
+              </td>
+            </tr>
+          `;
+        }
+      }
+    }
+
+
+
+
+    // Update statistics
+    function updateStatistics() {
+      // Check if elements exist before updating
+      const totalUsersEl = document.getElementById('totalUsers');
+      const activeUsersEl = document.getElementById('activeUsers');
+      const pendingUsersEl = document.getElementById('pendingUsers');
+      const usersWithLiveTanksEl = document.getElementById('usersWithLiveTanks');
+      const totalActivitiesEl = document.getElementById('totalActivities');
+      
+      if (!totalUsersEl || !activeUsersEl || !pendingUsersEl || !usersWithLiveTanksEl || !totalActivitiesEl) {
+        console.error('Statistics elements not found');
+        return;
+      }
+      
+      // Ensure allUsers is defined
+      if (!allUsers || !Array.isArray(allUsers)) {
+        allUsers = [];
+      }
+      
+      // Ensure allActivities is defined
+      if (!allActivities || !Array.isArray(allActivities)) {
+        allActivities = [];
+      }
+      
+      const totalUsers = allUsers.length;
+      const activeUsers = allUsers.filter(u => u.isActive).length;
+      const pendingUsers = allUsers.filter(u => !u.isActive).length;
+      
+      // Calculate users with Live Tanks access (using permissions.js)
+      let usersWithAccess = 0;
+      allUsers.forEach(user => {
+        if (hasPageAccess(user, 'live-tanks.html')) {
+          usersWithAccess++;
+        }
+      });
+      
+      // Calculate today's logins
+      const today = new Date().toDateString();
+      const todayLogins = allActivities.filter(activity => {
+        const activityDate = activity.timestamp?.toDate?.()?.toDateString() || 
+                             new Date(activity.timestamp?.seconds * 1000).toDateString();
+        return activityDate === today && activity.action === 'user_login';
+      }).length;
+
+      totalUsersEl.textContent = totalUsers;
+      activeUsersEl.textContent = activeUsers;
+      pendingUsersEl.textContent = pendingUsers;
+      usersWithLiveTanksEl.textContent = usersWithAccess;
+      totalActivitiesEl.textContent = allActivities.length;
+    }
+
+    // Display users in table
+    function displayUsers(users) {
+      const container = document.getElementById('usersContainer');
+      
+      if (!container) {
+        console.error('usersContainer element not found');
+        return;
+      }
+      
+      if (!users || !Array.isArray(users) || users.length === 0) {
+        container.innerHTML = '<div class="loading">No users found in Firebase database.</div>';
+        return;
+      }
+      
+      // تنظيف المستخدمين المكررين قبل العرض
+      const uniqueUsers = [];
+      const userMap = new Map();
+      
+      // تجميع المستخدمين حسب اسم المستخدم (بغض النظر عن حالة الأحرف)
+      users.forEach(user => {
+        const normalizedUsername = user.username.toLowerCase();
+        if (!userMap.has(normalizedUsername)) {
+          userMap.set(normalizedUsername, user);
+          uniqueUsers.push(user);
+        }
+      });
+      
+      let html = `
+        <div class="users-table-container">
+          <table class="users-table">
+            <thead>
+              <tr>
+                <th>👤 Avatar</th>
+                <th>📛 Full Name</th>
+                <th>🔑 Username</th>
+                <th>📧 Email</th>
+                <th>👔 Job Title</th>
+                <th>📄 Pages Access</th>
+                <th>🔘 Add Buttons</th>
+                <th>🔄 Status</th>
+                <th>⏰ Last Login</th>
+                <th>⚙️ Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+      
+      uniqueUsers.forEach(user => {
+        const avatar = (user.fullName || user.username).charAt(0).toUpperCase();
+        const specialization = user.specialization || user.role || 'planning';
+        const specializationClass = getSpecializationBadgeClass(specialization);
+        const statusClass = user.isActive ? 'badge-active' : 'badge-inactive';
+        const statusText = user.isActive ? 'Active' : 'Pending';
+        
+        // Check Live Tanks access
+        const liveTanksAccess = getUserLiveTanksAccess(user);
+        
+        // Get pages access
+        const pagesAccess = getUserPagesAccess(user);
+        
+        // Get job title (السلم الوظيفي)
+        const jobTitle = getUserJobTitle(user);
+        
+        // Get Add to Live Tanks button access
+        const buttonAccess = getUserButtonAccess(user);
+        
+        const lastLoginDate = user.lastLogin?.toDate?.() || (user.lastLogin ? new Date(user.lastLogin?.seconds * 1000) : null);
+        
+        html += `
+          <tr>
+            <td>
+              <div style="width:35px;height:35px;border-radius:50%;background:${specialization === 'admin' ? '#FFD700' : '#4CAF50'};display:flex;align-items:center;justify-content:center;color:${specialization === 'admin' ? '#003366' : 'white'};font-weight:bold;">
+                ${avatar}
+              </div>
+            </td>
+            <td><strong>${user.fullName || user.username}</strong></td>
+            <td>${user.username}</td>
+            <td>${user.email || `${user.username}@example.com`}</td>
+            <td><span class="status-badge badge-info">${jobTitle}</span></td>
+            <td><small>${pagesAccess}</small></td>
+            <td><small>${buttonAccess}</small></td>
+            <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+            <td>${lastLoginDate ? lastLoginDate.toLocaleString() : 'Never'}</td>
+            <td>
+              <div class="action-buttons">
+                ${user.username !== 'fam030' ? `
+                  <button class="action-btn btn-primary" onclick="editUserPermissions('${user.username}')" title="Edit Permissions">🔧 Permissions</button>
+                  <button class="action-btn ${user.isActive ? 'btn-warning' : 'btn-primary'}" onclick="toggleUserStatus('${user.username}')" title="${user.isActive ? 'Deactivate' : 'Activate'} User">
+                    ${user.isActive ? '❌' : '✅'}
+                  </button>
+                  <button class="action-btn btn-danger" onclick="deleteUser('${user.username}')" title="Delete User">🗑️</button>
+                ` : '<span class="status-badge badge-admin">🔒 MASTER</span>'}
+              </div>
+            </td>
+          </tr>
+        `;
+      });
+      
+      html += '</tbody></table></div>';
+      container.innerHTML = html;
+    }
+
+    // Check if user has Live Tanks access
+    function checkUserLiveTanksAccess(user) {
+      // Use permissions.js to check access
+      return hasPageAccess(user, 'live-tanks.html');
+    }
+
+    // Get role badge class
+    function getRoleBadgeClass(role) {
+      const classMap = {
+        'admin': 'badge-admin',
+        'panel_operator': 'badge-panel-operator',
+        'supervisor': 'badge-supervisor',
+        'section_head': 'badge-section-head',
+        'operator': 'badge-operator',
+        'planning': 'badge-planning'
+      };
+      return classMap[role] || 'badge-user';
+    }
+
+    // Format role name
+    function formatRoleName(role) {
+      const nameMap = {
+        'admin': 'Admin',
+        'panel_operator': 'Panel Operator',
+        'supervisor': 'Supervisor',
+        'section_head': 'Section Head',
+        'operator': 'Operator',
+        'planning': 'Planning'
+      };
+      return nameMap[role] || 'User';
+    }
+
+    // Get specialization badge class
+    function getSpecializationBadgeClass(specialization) {
+      const classMap = {
+        'admin': 'badge-admin',
+        'supervisor': 'badge-supervisor',
+        'planning': 'badge-planning',
+        'control_panel': 'badge-panel-operator',
+        'field_operator': 'badge-operator'
+      };
+      return classMap[specialization] || 'badge-user';
+    }
+
+    // Format specialization name
+    function formatSpecializationName(specialization) {
+      const nameMap = {
+        'admin': 'Administrator',
+        'supervisor': 'Supervisor',
+        'planning': 'Planning',
+        'control_panel': 'Control Panel',
+        'field_operator': 'Field Operator'
+      };
+      return nameMap[specialization] || 'User';
+    }
+
+    // Get user Live Tanks access (using permissions.js v4.0)
+    function getUserLiveTanksAccess(user) {
+      // ✅ Check if permissions.js is loaded
+      if (typeof hasLiveTanksPermission !== 'function') {
+        console.warn('⚠️ permissions.js not loaded, using fallback');
+        // Fallback: check permissions directly from user object
+        const perms = user.permissions || {};
+        
+        // Check if user has full access (add, edit, delete)
+        if (perms.canAddToLiveTanks && perms.canEditLiveTanks && perms.canDeleteFromLiveTanks) {
+          return { class: 'badge-active', text: 'Full Access' };
+        }
+        
+        // Check if user has view access
+        if (perms.canViewLiveTanks) {
+          return { class: 'badge-warning', text: 'View Only' };
+        }
+        
+        // No access
+        return { class: 'badge-inactive', text: 'No Access' };
+      }
+      
+      // Use permissions.js v4.0
+      if (hasLiveTanksPermission(user, 'canAddToLiveTanks') && 
+          hasLiveTanksPermission(user, 'canEditLiveTanks') && 
+          hasLiveTanksPermission(user, 'canDeleteFromLiveTanks')) {
+        return { class: 'badge-active', text: 'Full Access' };
+      }
+      
+      // Check if user has view access
+      if (hasLiveTanksPermission(user, 'canViewLiveTanks')) {
+        return { class: 'badge-warning', text: 'View Only' };
+      }
+      
+      // No access
+      return { class: 'badge-inactive', text: 'No Access' };
+    }
+
+    // Get user pages access
+    function getUserPagesAccess(user) {
+      // ✅ Check pageAccess FIRST (new system v4.0)
+      const userPages = user.pageAccess || user.customPages;
+      if (userPages && Array.isArray(userPages) && userPages.length > 0) {
+        if (userPages.includes('all')) return 'All Pages';
+        // ✅ Display names are already stored in Firestore, just join them
+        return userPages.join(', ');
+      }
+
+      // Fallback: إذا كان المستخدم يستخدم النظام القديم
+      if (user.role && !user.specialization) {
+        if (user.role === 'admin') return 'All Pages';
+        return 'Basic Pages';
+      }
+
+      // تعريف محلي للصفحات الافتراضية (تجنب dependency على permissions.js)
+      const localDefaultPages = {
+        'admin': ['all'],
+        'supervisor': ['index.html', 'plcr.html', 'NMOGASBL.html', 'dashboard.html'],
+        'planning': ['index.html', 'plcr.html', 'NMOGASBL.html', 'dashboard.html'],
+        'control_panel': ['live-tanks.html', 'dashboard.html'],
+        'field_operator': ['dashboard.html'],
+        'default_user': ['index.html', 'plcr.html', 'dashboard.html']
+      };
+
+      // استخدام الصفحات الافتراضية للتخصص
+      const specialization = user.specialization || 'default_user';
+      if (localDefaultPages[specialization]) {
+        const defaultPages = localDefaultPages[specialization];
+        if (defaultPages.includes('all')) return 'All Pages';
+        return defaultPages.map(page => {
+          const pageNames = {
+            'index.html': 'PBCR',
+            'plcr.html': 'PLCR',
+            'NMOGASBL.html': 'NMOGAS',
+            'live-tanks.html': 'Live Tanks',
+            'dashboard.html': 'Dashboard',
+            'verify.html': 'Verify'
+          };
+          return pageNames[page] || page;
+        }).join(', ');
+      }
+
+      return 'Dashboard';
+    }
+
+    // ✅ دالة الحصول على السلم الوظيفي للمستخدم
+    function getUserJobTitle(user) {
+      try {
+        // تعريف محلي للوظائف (في حالة عدم توفر permissions.js)
+        const localJobTitles = {
+          'section_head': 'Section Head',
+          'planning': 'Planning',
+          'supervisor': 'Supervisor',
+          'panel_operator': 'Panel Operator',
+          'senior': 'Senior',
+          'field_operator': 'Field Operator'
+        };
+        
+        const localSpecializations = {
+          'admin': 'Admin',
+          'supervisor': 'Supervisor',
+          'planning': 'Planning',
+          'control_panel': 'Control Panel',
+          'field_operator': 'Field Operator',
+          'default_user': 'Default User'
+        };
+        
+        // إذا كان السلم الوظيفي محدد مخصصاً
+        if (user.jobTitle && localJobTitles[user.jobTitle]) {
+          return localJobTitles[user.jobTitle];
+        }
+        
+        // استخدام التخصص كسلم وظيفي افتراضي
+        if (user.specialization && localSpecializations[user.specialization]) {
+          return localSpecializations[user.specialization];
+        }
+        
+        // إذا كان يستخدم النظام القديم
+        if (user.role) {
+          const roleMapping = {
+            'admin': 'Admin',
+            'supervisor': 'Supervisor',
+            'panel_operator': 'Panel Operator',
+            'field_operator': 'Field Operator'
+          };
+          return roleMapping[user.role] || user.role;
+        }
+        
+        return 'غير محدد';
+      } catch (error) {
+        console.error('Error in getUserJobTitle:', error);
+        return 'غير محدد';
+      }
+    }
+
+    // ✅ دالة الحصول على حالة أزرار Add to Live Tanks للمستخدم
+    function getUserButtonAccess(user) {
+      try {
+        // للأدمن: كل الأزرار تظهر
+        if (user.username === 'fam030' || user.role === 'admin') {
+          return 'All Buttons ✅';
+        }
+
+        // فحص الصلاحيات المخصصة أولاً
+        if (user.customButtonAccess && user.customButtonAccess.addToLiveTanks) {
+          const buttonAccess = user.customButtonAccess.addToLiveTanks;
+          const indexAccess = buttonAccess.index ? '📊' : '❌';
+          const plcrAccess = buttonAccess.plcr ? '🔧' : '❌';
+          return `PBCR: ${indexAccess} | PLCR: ${plcrAccess}`;
+        }
+
+        // تعريف محلي للصلاحيات الافتراضية
+        const localDefaults = {
+          'admin': { index: true, plcr: true },
+          'control_panel': { index: true, plcr: true },
+          'supervisor': { index: false, plcr: false },
+          'planning': { index: false, plcr: false },
+          'field_operator': { index: false, plcr: false },
+          'default_user': { index: false, plcr: false }
+        };
+
+        // استخدام الصلاحيات الافتراضية للتخصص
+        const specialization = user.specialization || 'default_user';
+        if (localDefaults[specialization]) {
+          const buttonAccess = localDefaults[specialization];
+          const indexAccess = buttonAccess.index ? '📊' : '❌';
+          const plcrAccess = buttonAccess.plcr ? '🔧' : '❌';
+          return `PBCR: ${indexAccess} | PLCR: ${plcrAccess}`;
+        }
+
+        // الافتراضي: مخفية للجميع
+        return 'Hidden ❌';
+      } catch (error) {
+        console.error('Error in getUserButtonAccess:', error);
+        return 'Hidden ❌';
+      }
+    }
+
+    // Display activities in table format with pagination
+    function displayActivities(activities) {
+      const tbody = document.getElementById('activitiesTableBody');
+      
+      // Store all activities for pagination
+      filteredActivities = activities.slice();
+      
+      if (filteredActivities.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" style="padding: 30px; text-align: center; color: #666;">
+              📭 لا توجد أنشطة
+            </td>
+          </tr>
+        `;
+        updatePaginationInfo(0, 0, 0);
+        return;
+      }
+      
+      // Sort by timestamp (newest first)
+      filteredActivities.sort((a, b) => {
+        const timeA = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(a.timestamp);
+        const timeB = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(b.timestamp);
+        return timeB - timeA;
+      });
+      
+      // Calculate pagination
+      const totalActivities = filteredActivities.length;
+      const totalPages = Math.ceil(totalActivities / activitiesPerPage);
+      const startIndex = (currentActivitiesPage - 1) * activitiesPerPage;
+      const endIndex = Math.min(startIndex + activitiesPerPage, totalActivities);
+      
+      // Get activities for current page
+      const pageActivities = filteredActivities.slice(startIndex, endIndex);
+      
+      tbody.innerHTML = pageActivities.map((activity, index) => {
+        const timestamp = activity.timestamp?.toDate ? activity.timestamp.toDate() : new Date(activity.timestamp);
+        const date = timestamp.toLocaleDateString('en-GB');
+        const time = timestamp.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+        
+        let activityText = activity.action || 'Unknown activity';
+        let activityIcon = '📝';
+        let sourceIcon = '🌐';
+        let hasDetails = false;
+        let detailsButton = '';
+        
+        // Check if activity has detailed information
+        if (activity.details && activity.details.changes) {
+          hasDetails = true;
+          detailsButton = ` <span class="details-btn" onclick="showActivityDetails(${index})" style="cursor: pointer; color: #ff6b35; font-weight: bold; font-size: 16px;" title="Click to view details">❗</span>`;
+        }
+        
+        // Clean up activity text - make it shorter and clearer
+        if (activityText.includes('تم حساب Tank') && activityText.includes('PBCR Calculator')) {
+          const tankMatch = activityText.match(/Tank (\d+)/);
+          const tankNumber = tankMatch ? tankMatch[1] : 'Unknown';
+          activityText = `PBCR Calculation - Tank ${tankNumber}`;
+          activityIcon = '🧮';
+        } else if (activityText.includes('دخول المستخدم') || activityText.includes('login')) {
+          activityText = 'User Login';
+          activityIcon = '🔐';
+        } else if (activityText.includes('admin_dashboard_loaded')) {
+          activityText = 'Dashboard Access';
+          activityIcon = '👨‍💼';
+        } else if (activityText.includes('Tank') && activityText.includes('Updated')) {
+          activityIcon = '🛢️';
+        } else if (activityText.includes('Tank') && activityText.includes('Added')) {
+          activityIcon = '➕';
+        } else if (activityText.includes('Tank') && activityText.includes('Deleted')) {
+          activityIcon = '🗑️';
+        } else if (activityText.includes('Live Tanks')) {
+          activityText = 'Live Tanks Activity';
+          activityIcon = '🛢️';
+        }
+        
+        // Determine source
+        let source = 'Unknown';
+        if (activity.page === 'pbcr-calculator' || activityText.includes('PBCR')) {
+          source = 'PBCR Calculator';
+          sourceIcon = '🧮';
+        } else if (activity.page === 'live-tanks' || activityText.includes('Live Tanks') || activityText.includes('Tank')) {
+          source = 'Live Tanks';
+          sourceIcon = '🛢️';
+        } else if (activity.page === 'login' || activityText.includes('Login')) {
+          source = 'Login Page';
+          sourceIcon = '🔐';
+        } else if (activity.ip === 'admin-dashboard' || activityText.includes('Dashboard')) {
+          source = 'Admin Dashboard';
+          sourceIcon = '👨‍💼';
+        }
+        
+        return `
+          <tr style="border-bottom: 1px solid rgba(0,51,102,0.1);" onmouseover="this.style.background='rgba(255,215,0,0.1)'" onmouseout="this.style.background=''">
+            <td style="padding: 15px 20px; font-weight: bold; color: #003366; white-space: nowrap;">
+              👤 ${activity.username || 'Unknown'}
+            </td>
+            <td style="padding: 15px 20px; color: #003366;">
+              ${activityIcon} ${activityText}${detailsButton}
+            </td>
+            <td style="padding: 15px 20px; color: #666; white-space: nowrap; text-align: center; font-size: 13px;">
+              📅 ${date}
+            </td>
+            <td style="padding: 15px 20px; color: #666; white-space: nowrap; text-align: center; font-size: 13px;">
+              ⏰ ${time}
+            </td>
+            <td style="padding: 15px 20px; color: #666; text-align: center; font-size: 13px;">
+              ${sourceIcon} ${source}
+            </td>
+          </tr>
+        `;
+      }).join('');
+      
+      // Store activities globally for details popup
+      window.currentActivities = pageActivities;
+      
+      // Update pagination info and controls
+      updatePaginationInfo(startIndex + 1, endIndex, totalActivities);
+      updatePaginationControls(currentActivitiesPage, totalPages);
+    }
+    
+    // Update pagination information
+    function updatePaginationInfo(start, end, total) {
+      document.getElementById('activitiesStart').textContent = start;
+      document.getElementById('activitiesEnd').textContent = end;
+      document.getElementById('activitiesTotal').textContent = total;
+      document.getElementById('currentPage').textContent = currentActivitiesPage;
+      
+      const totalPages = Math.ceil(total / activitiesPerPage);
+      document.getElementById('totalPages').textContent = totalPages;
+    }
+    
+    // Update pagination controls
+    function updatePaginationControls(currentPage, totalPages) {
+      const pageNumbersContainer = document.getElementById('pageNumbers');
+      const prevBtn = document.getElementById('prevPageBtn');
+      const nextBtn = document.getElementById('nextPageBtn');
+      
+      // Update previous/next buttons
+      prevBtn.disabled = currentPage <= 1;
+      nextBtn.disabled = currentPage >= totalPages;
+      
+      // Generate page numbers
+      pageNumbersContainer.innerHTML = '';
+      
+      let startPage = Math.max(1, currentPage - 2);
+      let endPage = Math.min(totalPages, currentPage + 2);
+      
+      // Ensure we show at least 5 pages when possible
+      if (endPage - startPage < 4) {
+        if (startPage === 1) {
+          endPage = Math.min(totalPages, startPage + 4);
+        } else {
+          startPage = Math.max(1, endPage - 4);
+        }
+      }
+      
+      for (let i = startPage; i <= endPage; i++) {
+        const pageBtn = document.createElement('button');
+        pageBtn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+        pageBtn.textContent = i;
+        pageBtn.onclick = () => goToPage(i);
+        pageNumbersContainer.appendChild(pageBtn);
+      }
+      
+      // Add dots if needed
+      if (startPage > 1) {
+        const firstPageBtn = document.createElement('button');
+        firstPageBtn.className = 'page-btn';
+        firstPageBtn.textContent = '1';
+        firstPageBtn.onclick = () => goToPage(1);
+        pageNumbersContainer.insertBefore(firstPageBtn, pageNumbersContainer.firstChild);
+        
+        if (startPage > 2) {
+          const dots = document.createElement('span');
+          dots.textContent = '...';
+          dots.style.padding = '8px';
+          dots.style.color = 'rgba(255,255,255,0.6)';
+          pageNumbersContainer.insertBefore(dots, pageNumbersContainer.children[1]);
+        }
+      }
+      
+      if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+          const dots = document.createElement('span');
+          dots.textContent = '...';
+          dots.style.padding = '8px';
+          dots.style.color = 'rgba(255,255,255,0.6)';
+          pageNumbersContainer.appendChild(dots);
+        }
+        
+        const lastPageBtn = document.createElement('button');
+        lastPageBtn.className = 'page-btn';
+        lastPageBtn.textContent = totalPages;
+        lastPageBtn.onclick = () => goToPage(totalPages);
+        pageNumbersContainer.appendChild(lastPageBtn);
+      }
+    }
+    
+    // Navigation functions
+    function goToPage(page) {
+      const totalPages = Math.ceil(filteredActivities.length / activitiesPerPage);
+      if (page >= 1 && page <= totalPages) {
+        currentActivitiesPage = page;
+        displayActivities(filteredActivities);
+      }
+    }
+    
+    function goToPreviousPage() {
+      if (currentActivitiesPage > 1) {
+        goToPage(currentActivitiesPage - 1);
+      }
+    }
+    
+    function goToNextPage() {
+      const totalPages = Math.ceil(filteredActivities.length / activitiesPerPage);
+      if (currentActivitiesPage < totalPages) {
+        goToPage(currentActivitiesPage + 1);
+      }
+    }
+
+    // Show activity details popup
+    function showActivityDetails(index) {
+      const activity = window.currentActivities[index];
+      if (!activity || !activity.details) return;
+      
+      const details = activity.details;
+      const timestamp = activity.timestamp?.toDate ? activity.timestamp.toDate() : new Date(activity.timestamp);
+      const dateTime = timestamp.toLocaleString('en-GB');
+      
+      let detailsHTML = `
+        <div style="background: rgba(255,255,255,0.95); border-radius: 15px; padding: 25px; max-width: 600px; margin: 20px auto; box-shadow: 0 10px 30px rgba(0,0,0,0.3); color: #003366;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #003366; padding-bottom: 15px;">
+            <h3 style="margin: 0; color: #003366;">📊 Tank ${details.tankNumber} Changes</h3>
+            <button onclick="closeActivityDetails()" style="background: #ff4444; color: white; border: none; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-size: 16px;">×</button>
+          </div>
+          
+          <div style="margin-bottom: 15px;">
+            <strong>🏭 Department:</strong> ${details.department}<br>
+            <strong>👤 Modified by:</strong> ${activity.username}<br>
+            <strong>📅 Date & Time:</strong> ${dateTime}
+          </div>
+      `;
+      
+      if (details.action === 'updated' && details.changes) {
+        detailsHTML += `<div style="background: #f8f9fa; border-radius: 10px; padding: 15px; margin: 15px 0;">
+          <h4 style="margin: 0 0 15px 0; color: #003366;">🔄 Changes Made:</h4>`;
+        
+        Object.keys(details.changes).forEach(key => {
+          const change = details.changes[key];
+          const fieldName = key.charAt(0).toUpperCase() + key.slice(1);
+          detailsHTML += `
+            <div style="margin: 10px 0; padding: 10px; background: white; border-radius: 8px; border-left: 4px solid #4CAF50;">
+              <strong>${fieldName}:</strong><br>
+              <span style="color: #ff4444;">❌ Before: ${change.from || 'Not set'}</span><br>
+              <span style="color: #4CAF50;">✅ After: ${change.to}</span>
+            </div>
+          `;
+        });
+        
+        detailsHTML += `</div>`;
+      } else if (details.action === 'added') {
+        detailsHTML += `
+          <div style="background: #e8f5e8; border-radius: 10px; padding: 15px; margin: 15px 0; border-left: 4px solid #4CAF50;">
+            <h4 style="margin: 0 0 10px 0; color: #4CAF50;">➕ Tank Added</h4>
+            <p style="margin: 0;">${details.details}</p>
+          </div>
+        `;
+      } else if (details.action === 'deleted') {
+        detailsHTML += `
+          <div style="background: #ffe8e8; border-radius: 10px; padding: 15px; margin: 15px 0; border-left: 4px solid #ff4444;">
+            <h4 style="margin: 0 0 10px 0; color: #ff4444;">🗑️ Tank Deleted</h4>
+            <p style="margin: 0;">${details.details}</p>
+          </div>
+        `;
+      }
+      
+      detailsHTML += `</div>`;
+      
+      // Create overlay
+      const overlay = document.createElement('div');
+      overlay.id = 'activityDetailsOverlay';
+      overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.7);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(5px);
+      `;
+      overlay.innerHTML = detailsHTML;
+      
+      // Close on overlay click
+      overlay.addEventListener('click', function(e) {
+        if (e.target === overlay) {
+          closeActivityDetails();
+        }
+      });
+      
+      document.body.appendChild(overlay);
+    }
+    
+    // Close activity details popup
+    function closeActivityDetails() {
+      const overlay = document.getElementById('activityDetailsOverlay');
+      if (overlay) {
+        overlay.remove();
+      }
+    }
+
+    // Edit user
+    function editUser(username) {
+      const user = allUsers.find(u => u.username === username);
+      if (!user) {
+        showMessage('❌ User not found!', 'error');
+        return;
+      }
+      
+      currentEditingUser = user;
+      
+      document.getElementById('modalTitle').textContent = `Edit User: ${user.username}`;
+      document.getElementById('editFullName').value = user.fullName || '';
+      document.getElementById('editUsername').value = user.username;
+      document.getElementById('editEmail').value = user.email;
+      document.getElementById('editRole').value = user.role || 'operator';
+      document.getElementById('editStatus').value = user.isActive ? 'true' : 'false';
+      document.getElementById('editLiveTanksAccess').checked = checkUserLiveTanksAccess(user);
+      document.getElementById('editPassword').value = '';
+      
+      document.getElementById('userModal').classList.add('show');
+    }
+
+    // Edit user permissions (new function)
+    function editUserPermissions(username) {
+      // توحيد حالة الأحرف في معرف المستخدم للبحث
+      const normalizedUsername = username.toLowerCase();
+      
+      // البحث عن المستخدم بغض النظر عن حالة الأحرف
+      const user = allUsers.find(u => u.username.toLowerCase() === normalizedUsername);
+      if (!user) {
+        showMessage('❌ User not found!', 'error');
+        return;
+      }
+      
+      // إنشاء نافذة منبثقة لتعديل الصلاحيات
+      const permissionsModal = document.createElement('div');
+      permissionsModal.className = 'modal show';
+      permissionsModal.innerHTML = `
+        <div class="modal-content" style="max-width: 800px;">
+          <div class="modal-header">
+            <h2 class="modal-title">🔧 Edit Permissions: ${user.username}</h2>
+            <button class="close-btn" onclick="this.closest('.modal').remove()">&times;</button>
+          </div>
+          <div style="padding: 20px;">
+            <div class="form-group">
+              <label class="form-label">👔 Job Title (السلم الوظيفي للعرض):</label>
+              <select id="userJobTitle" class="form-select">
+                <option value="">اختر السلم الوظيفي</option>
+                <option value="section_head">Section Head</option>
+                <option value="planning">Planning</option>
+                <option value="supervisor">Supervisor</option>
+                <option value="panel_operator">Panel Operator</option>
+                <option value="senior">Senior</option>
+                <option value="field_operator">Field Operator</option>
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Pages Access:</label>
+              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                <label><input type="checkbox" value="PBCR"> 📈 PBCR</label>
+                <label><input type="checkbox" value="PLCR"> 🔮 PLCR</label>
+                <label><input type="checkbox" value="NMOGAS"> 🔧 NMOGAS</label>
+                <label><input type="checkbox" value="Live Tanks"> 🔴 Live Tanks</label>
+                <label><input type="checkbox" value="Dashboard"> 📊 Dashboard</label>
+                <label><input type="checkbox" value="Shift Roster"> 📅 Shift Roster</label>
+                <label><input type="checkbox" value="Vacation Planner"> 🏖️ Vacation Planner</label>
+                <label><input type="checkbox" value="Tank Management"> 🛢️ Tank Management</label>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">Live Tanks Permissions:</label>
+              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                <label><input type="checkbox" id="canViewLiveTanks"> View Live Tanks</label>
+                <label><input type="checkbox" id="canEditLiveTanks"> Edit Live Tanks</label>
+                <label><input type="checkbox" id="canAddToLiveTanks"> Add to Live Tanks</label>
+                <label><input type="checkbox" id="canDeleteFromLiveTanks"> Delete from Live Tanks</label>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">🔘 Add to Live Tanks Button Access:</label>
+              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; background: rgba(0,51,102,0.1); padding: 15px; border-radius: 10px;">
+                <label><input type="checkbox" id="showAddButtonIndex"> 📊 Show in PBCR (Index)</label>
+                <label><input type="checkbox" id="showAddButtonPLCR"> 🔧 Show in PLCR</label>
+              </div>
+              <small style="color: #666; margin-top: 5px; display: block;">💡 يتحكم في ظهور/اختفاء زر "Add to Live Tanks" في صفحات الحساب</small>
+            </div>
+            
+            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+              <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancel</button>
+              <button class="btn btn-primary" onclick="saveUserPermissions('${user.username}', this.closest('.modal'))">Save Permissions</button>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      document.body.appendChild(permissionsModal);
+      
+      // تعبئة القيم الحالية
+      const specialization = user.specialization || user.role || 'planning';
+      
+      // تعريف محلي للصفحات والصلاحيات الافتراضية
+      const localDefaults = {
+        'admin': {
+          pages: ['all'],
+          permissions: { canViewLiveTanks: true, canEditLiveTanks: true, canAddToLiveTanks: true, canDeleteFromLiveTanks: true },
+          buttons: { index: true, plcr: true }
+        },
+        'supervisor': {
+          pages: ['index.html', 'plcr.html', 'NMOGASBL.html', 'dashboard.html'],
+          permissions: { canViewLiveTanks: true, canEditLiveTanks: false, canAddToLiveTanks: false, canDeleteFromLiveTanks: false },
+          buttons: { index: false, plcr: false }
+        },
+        'planning': {
+          pages: ['index.html', 'plcr.html', 'NMOGASBL.html', 'dashboard.html'],
+          permissions: { canViewLiveTanks: false, canEditLiveTanks: false, canAddToLiveTanks: false, canDeleteFromLiveTanks: false },
+          buttons: { index: false, plcr: false }
+        },
+        'control_panel': {
+          pages: ['live-tanks.html', 'dashboard.html'],
+          permissions: { canViewLiveTanks: true, canEditLiveTanks: true, canAddToLiveTanks: true, canDeleteFromLiveTanks: true },
+          buttons: { index: true, plcr: true }
+        },
+        'field_operator': {
+          pages: ['dashboard.html'],
+          permissions: { canViewLiveTanks: false, canEditLiveTanks: false, canAddToLiveTanks: false, canDeleteFromLiveTanks: false },
+          buttons: { index: false, plcr: false }
+        },
+        'default_user': {
+          pages: ['index.html', 'plcr.html', 'dashboard.html'],
+          permissions: { canViewLiveTanks: true, canEditLiveTanks: false, canAddToLiveTanks: false, canDeleteFromLiveTanks: false },
+          buttons: { index: false, plcr: false }
+        }
+      };
+      
+      // تعبئة الصفحات المسموحة
+      const currentPages = user.pageAccess || user.customPages || localDefaults[specialization]?.pages || [];
+      const pageCheckboxes = permissionsModal.querySelectorAll('input[type="checkbox"][value]');
+      pageCheckboxes.forEach(checkbox => {
+        checkbox.checked = currentPages.includes(checkbox.value) || currentPages.includes('all');
+      });
+      
+      // تعبئة السلم الوظيفي
+      const jobTitle = user.jobTitle || '';
+      permissionsModal.querySelector('#userJobTitle').value = jobTitle;
+      
+      // تعبئة صلاحيات Live Tanks
+      const permissions = user.permissions || user.customPermissions || localDefaults[specialization]?.permissions || {};
+      permissionsModal.querySelector('#canViewLiveTanks').checked = permissions.canViewLiveTanks || false;
+      permissionsModal.querySelector('#canEditLiveTanks').checked = permissions.canEditLiveTanks || false;
+      permissionsModal.querySelector('#canAddToLiveTanks').checked = permissions.canAddToLiveTanks || false;
+      permissionsModal.querySelector('#canDeleteFromLiveTanks').checked = permissions.canDeleteFromLiveTanks || false;
+      
+      // تعبئة صلاحيات الأزرار
+      const buttonAccess = user.customButtonAccess?.addToLiveTanks || localDefaults[specialization]?.buttons || {};
+      permissionsModal.querySelector('#showAddButtonIndex').checked = buttonAccess.index || false;
+      permissionsModal.querySelector('#showAddButtonPLCR').checked = buttonAccess.plcr || false;
+    }
+
+    // Save user permissions
+    async function saveUserPermissions(username, modal) {
+      try {
+        // إضافة console.log للتشخيص
+        console.log('Saving permissions for:', username);
+        
+        // توحيد حالة الأحرف في معرف المستخدم (تحويله إلى lowercase)
+        const normalizedUsername = username.toLowerCase();
+        console.log('Normalized username:', normalizedUsername);
+        
+        // جمع السلم الوظيفي
+        const jobTitle = modal.querySelector('#userJobTitle').value;
+        console.log('Job Title:', jobTitle);
+        
+        // جمع الصفحات المحددة
+        const selectedPages = [];
+        const pageCheckboxes = modal.querySelectorAll('input[type="checkbox"][value]:checked');
+        pageCheckboxes.forEach(checkbox => selectedPages.push(checkbox.value));
+        console.log('Selected pages:', selectedPages);
+        
+        // جمع صلاحيات Live Tanks
+        const customPermissions = {
+          canViewLiveTanks: modal.querySelector('#canViewLiveTanks').checked,
+          canEditLiveTanks: modal.querySelector('#canEditLiveTanks').checked,
+          canAddToLiveTanks: modal.querySelector('#canAddToLiveTanks').checked,
+          canDeleteFromLiveTanks: modal.querySelector('#canDeleteFromLiveTanks').checked
+        };
+        console.log('Custom permissions:', customPermissions);
+        
+        // جمع صلاحيات الأزرار
+        const customButtonAccess = {
+          addToLiveTanks: {
+            index: modal.querySelector('#showAddButtonIndex').checked,
+            plcr: modal.querySelector('#showAddButtonPLCR').checked
+          }
+        };
+        console.log('Custom button access:', customButtonAccess);
+        
+        // البحث عن المستخدم بغض النظر عن حالة الأحرف
+        const usersRef = collection(db, 'users');
+        const q = query(usersRef, where('username', '==', username));
+        const querySnapshot = await getDocs(q);
+        
+        let existingUser = null;
+        let existingDocId = null;
+        
+        // التحقق من وجود المستخدم بأي حالة أحرف
+        if (!querySnapshot.empty) {
+          querySnapshot.forEach((doc) => {
+            existingUser = doc.data();
+            existingDocId = doc.id;
+          });
+          console.log('Found existing user with ID:', existingDocId);
+        }
+        
+        // التحقق من وجود المستخدم بالمعرف المحدد
+        const userRef = doc(db, 'users', normalizedUsername);
+        const userDoc = await getDoc(userRef);
+        
+        if (userDoc.exists() || existingUser) {
+          // المستخدم موجود - تحديث الصلاحيات مع الحفاظ على البيانات الأصلية
+          const userData = userDoc.exists() ? userDoc.data() : existingUser;
+          const updateData = {
+            username: normalizedUsername, // تخزين المعرف بحالة موحدة
+            jobTitle: jobTitle, // ✅ السلم الوظيفي
+            pageAccess: selectedPages, // ✅ الصفحات المصرح بها
+            permissions: customPermissions, // ✅ الصلاحيات
+            customButtonAccess: customButtonAccess, // ✅ صلاحيات الأزرار
+            updatedAt: serverTimestamp()
+          };
+          
+          // استخدام المعرف الموجود أو المعرف الموحد
+          const targetRef = existingDocId ? doc(db, 'users', existingDocId) : userRef;
+          await updateDoc(targetRef, updateData);
+          console.log('User permissions updated successfully');
+          
+          // إذا كان المستخدم موجود بمعرف مختلف، نحذف المستند المكرر
+          if (existingDocId && existingDocId !== normalizedUsername) {
+            console.log('Cleaning up duplicate user document');
+            // نقل جميع البيانات إلى المستند الموحد
+            await setDoc(userRef, {
+              ...userData,
+              ...updateData
+            });
+            // حذف المستند القديم
+            await deleteDoc(doc(db, 'users', existingDocId));
+          }
+        } else {
+          // المستخدم غير موجود - إنشاء مستند جديد مع البيانات الأساسية
+          const updateData = {
+            username: normalizedUsername, // تخزين المعرف بحالة موحدة
+            fullName: username, // قيمة افتراضية
+            email: `${normalizedUsername}@example.com`, // قيمة افتراضية
+            jobTitle: jobTitle, // ✅ السلم الوظيفي
+            pageAccess: selectedPages, // ✅ الصفحات المصرح بها
+            permissions: customPermissions, // ✅ الصلاحيات
+            customButtonAccess: customButtonAccess, // ✅ صلاحيات الأزرار
+            isActive: true,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+          };
+          
+          await setDoc(userRef, updateData);
+          console.log('New user created with permissions');
+        }
+        
+        console.log('Permissions updated successfully in Firebase');
+        showMessage('✅ Permissions updated successfully!', 'success');
+        modal.remove();
+        
+        // استدعاء الدالة الصحيحة لتحديث الجدول
+        loadDashboardData();
+        
+      } catch (error) {
+        console.error('Error updating permissions:', error);
+        showMessage('❌ Error updating permissions: ' + error.message, 'error');
+      }
+    }
+
+    // Close modal
+    function closeModal() {
+      document.getElementById('userModal').classList.remove('show');
+      currentEditingUser = null;
+    }
+
+    // Handle form submission
+    document.getElementById('userForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      if (!currentEditingUser) return;
+      
+      const fullName = document.getElementById('editFullName').value;
+      const role = document.getElementById('editRole').value;
+      const isActive = document.getElementById('editStatus').value === 'true';
+      const liveTanksAccess = document.getElementById('editLiveTanksAccess').checked;
+      const newPassword = document.getElementById('editPassword').value;
+      
+      try {
+        const updateData = {
+          fullName: fullName,
+          role: role,
+          isActive: isActive,
+          'accessOverride.liveTanksAccess': liveTanksAccess,
+          lastModified: serverTimestamp(),
+          modifiedBy: currentUser.username
+        };
+        
+        if (newPassword) {
+          updateData.password = newPassword;
+        }
+        
+        await updateDoc(doc(db, 'users', currentEditingUser.username), updateData);
+        
+        await addActivity('user_updated_by_admin', currentUser.username);
+        
+        showMessage('✅ User updated successfully!', 'success');
+        closeModal();
+        loadDashboardData(); // Refresh data
+        
+      } catch (error) {
+        console.error('Error updating user:', error);
+        showMessage('❌ Error updating user: ' + error.message, 'error');
+      }
+    });
+
+    // Toggle user status
+    async function toggleUserStatus(username) {
+      const user = allUsers.find(u => u.username === username);
+      if (!user || user.username === 'fam030') return;
+      
+      const newStatus = !user.isActive;
+      
+      try {
+        await updateDoc(doc(db, 'users', username), {
+          isActive: newStatus,
+          lastModified: serverTimestamp(),
+          modifiedBy: currentUser.username
+        });
+        
+        await addActivity(newStatus ? 'user_activated_by_admin' : 'user_deactivated_by_admin', currentUser.username);
+        
+        showMessage(`✅ User ${username} ${newStatus ? 'activated' : 'deactivated'} successfully!`, 'success');
+        loadDashboardData(); // Refresh data
+        
+      } catch (error) {
+        console.error('Error toggling user status:', error);
+        showMessage('❌ Error updating user status: ' + error.message, 'error');
+      }
+    }
+
+    // Delete user
+    async function deleteUser(username) {
+      if (username === 'fam030') {
+        showMessage('❌ Cannot delete master admin account!', 'error');
+        return;
+      }
+      
+      if (!confirm(`Are you sure you want to delete user "${username}"?\n\nThis action cannot be undone!`)) {
+        return;
+      }
+      
+      try {
+        await deleteDoc(doc(db, 'users', username));
+        
+        await addActivity('user_deleted_by_admin', currentUser.username);
+        
+        showMessage(`✅ User ${username} deleted successfully!`, 'success');
+        loadDashboardData(); // Refresh data
+        
+      } catch (error) {
+        console.error('Error deleting user:', error);
+        showMessage('❌ Error deleting user: ' + error.message, 'error');
+      }
+    }
+
+    // Show pending users
+    function showPendingUsers() {
+      const pendingUsers = allUsers.filter(u => !u.isActive);
+      const container = document.getElementById('pendingUsersContainer');
+      
+      if (pendingUsers.length === 0) {
+        container.innerHTML = '<p style="text-align:center;color:#666;padding:20px;">No pending users found.</p>';
+      } else {
+        let html = '<div class="pending-users-grid">';
+        
+        pendingUsers.forEach(user => {
+          const createdDate = user.createdAt?.toDate?.() || new Date(user.createdAt?.seconds * 1000) || new Date();
+          
+          html += `
+            <div class="pending-card">
+              <div class="pending-header">
+                <div class="pending-name">${user.fullName || user.username}</div>
+              </div>
+              <div class="pending-details">
+                <div><strong>Username:</strong> ${user.username}</div>
+                <div><strong>Email:</strong> ${user.email}</div>
+                <div><strong>Role:</strong> ${formatRoleName(user.role || 'operator')}</div>
+                <div><strong>Registered:</strong> ${createdDate.toLocaleString()}</div>
+              </div>
+              <div class="pending-actions">
+                <button class="btn btn-primary" onclick="approveUser('${user.username}')">✅ Approve</button>
+                <button class="btn btn-danger" onclick="deleteUser('${user.username}')">❌ Reject</button>
+              </div>
+            </div>
+          `;
+        });
+        
+        html += '</div>';
+        container.innerHTML = html;
+      }
+      
+      document.getElementById('pendingModal').classList.add('show');
+    }
+
+    // Close pending modal
+    function closePendingModal() {
+      document.getElementById('pendingModal').classList.remove('show');
+    }
+
+    // Approve user
+    async function approveUser(username) {
+      try {
+        await updateDoc(doc(db, 'users', username), {
+          isActive: true,
+          lastModified: serverTimestamp(),
+          modifiedBy: currentUser.username
+        });
+        
+        await addActivity('user_approved_by_admin', currentUser.username);
+        
+        showMessage(`✅ User ${username} approved successfully!`, 'success');
+        loadDashboardData(); // Refresh data
+        showPendingUsers(); // Refresh modal
+        
+      } catch (error) {
+        console.error('Error approving user:', error);
+        showMessage('❌ Error approving user: ' + error.message, 'error');
+      }
+    }
+
+    // Approve all pending users
+    async function approveAllPending() {
+      const pendingUsers = allUsers.filter(u => !u.isActive);
+      
+      if (pendingUsers.length === 0) {
+        showMessage('ℹ️ No pending users to approve.', 'info');
+        return;
+      }
+      
+      if (!confirm(`Approve all ${pendingUsers.length} pending users?`)) {
+        return;
+      }
+      
+      try {
+        const promises = pendingUsers.map(user => 
+          updateDoc(doc(db, 'users', user.username), { 
+            isActive: true,
+            lastModified: serverTimestamp(),
+            modifiedBy: currentUser.username
+          })
+        );
+        
+        await Promise.all(promises);
+        
+        await addActivity('bulk_approval_by_admin', currentUser.username);
+        
+        showMessage(`✅ ${pendingUsers.length} users approved successfully!`, 'success');
+        loadDashboardData(); // Refresh data
+        closePendingModal();
+        
+      } catch (error) {
+        console.error('Error approving all users:', error);
+        showMessage('❌ Error approving users: ' + error.message, 'error');
+      }
+    }
+
+    // Filter users
+    function filterUsers() {
+      const searchTerm = document.getElementById('userSearch').value.toLowerCase();
+      const statusFilter = document.getElementById('statusFilter').value;
+      const roleFilter = document.getElementById('roleFilter').value;
+      
+      let filteredUsers = allUsers.filter(user => {
+        const matchesSearch = (user.fullName || '').toLowerCase().includes(searchTerm) ||
+                             user.username.toLowerCase().includes(searchTerm) ||
+                             user.email.toLowerCase().includes(searchTerm);
+        
+        const matchesStatus = statusFilter === 'all' ||
+                             (statusFilter === 'active' && user.isActive) ||
+                             (statusFilter === 'inactive' && !user.isActive) ||
+                             (statusFilter === 'pending' && !user.isActive);
+        
+        const userRole = user.role || 'operator';
+        const matchesRole = roleFilter === 'all' || userRole === roleFilter;
+        
+        return matchesSearch && matchesStatus && matchesRole;
+      });
+      
+      displayUsers(filteredUsers);
+    }
+
+    // Load activities with simple approach
+    async function loadActivities() {
+      try {
+        console.log('Loading activities...');
+        
+        const tbody = document.getElementById('activitiesTableBody');
+        if (!tbody) {
+          console.error('activitiesTableBody element not found');
+          return;
+        }
+        
+        const activitiesSnapshot = await getDocs(collection(db, 'activities'));
+        
+        if (activitiesSnapshot.empty) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="5" style="padding: 30px; text-align: center; color: #666;">
+                📭 No activities found
+              </td>
+            </tr>
+          `;
+          return;
+        }
+        
+        const activities = [];
+        activitiesSnapshot.forEach((doc) => {
+          activities.push({ id: doc.id, ...doc.data() });
+        });
+        
+        // Use displayActivities function
+        displayActivities(activities);
+        
+        console.log('Activities loaded successfully');
+        
+      } catch (error) {
+        console.error('Error loading activities:', error);
+        const tbody = document.getElementById('activitiesTableBody');
+        if (tbody) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="5" style="padding: 30px; text-align: center; color: #f44336;">
+                ❌ Error loading activities: ${error.message}
+              </td>
+            </tr>
+          `;
+        }
+      }
+    }
+
+    // Add activity to Firebase
+    async function addActivity(action, username) {
+      try {
+        await addDoc(collection(db, 'activities'), {
+          action: action,
+          username: username,
+          timestamp: serverTimestamp(),
+          ip: 'admin-dashboard',
+          userAgent: navigator.userAgent.substring(0, 100)
+        });
+      } catch (error) {
+        console.error('Error adding activity:', error);
+      }
+    }
+
+    // Update current time
+    function updateCurrentTime() {
+      const now = new Date();
+      const timeString = now.toLocaleString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      document.getElementById('currentTime').textContent = timeString;
+    }
+
+    // Show message
+    function showMessage(message, type) {
+      const container = document.getElementById('messageContainer');
+      container.innerHTML = `<div class="message ${type}">${message}</div>`;
+      setTimeout(() => container.innerHTML = '', 7000);
+    }
+
+    // Logout
+    function logout() {
+      localStorage.removeItem('tanktools_current_user');
+      sessionStorage.removeItem('tanktools_session');
+      window.location.href = 'login.html';
+    }
+
+    // Initialize dashboard
+    window.addEventListener('load', () => {
+      updateCurrentTime();
+      setInterval(updateCurrentTime, 60000);
+      
+      // Add event listeners
+      document.getElementById('userSearch').addEventListener('input', filterUsers);
+      document.getElementById('statusFilter').addEventListener('change', filterUsers);
+      document.getElementById('roleFilter').addEventListener('change', filterUsers);
+      
+      // ✅ Dashboard data will be loaded by onAuthStateChanged
+      console.log('🚀 Dashboard initialization ready, waiting for auth...');
+    });
+
+    // Make functions globally available
+    window.loadDashboardData = loadDashboardData;
+    window.editUser = editUser;
+    window.editUserPermissions = editUserPermissions;
+    window.saveUserPermissions = saveUserPermissions;
+    window.closeModal = closeModal;
+    window.toggleUserStatus = toggleUserStatus;
+    window.deleteUser = deleteUser;
+    window.showPendingUsers = showPendingUsers;
+    window.closePendingModal = closePendingModal;
+    window.approveUser = approveUser;
+    window.approveAllPending = approveAllPending;
+
+
+    window.logout = logout;
+    window.loadActivities = loadActivities;
+    window.refreshActivities = () => loadActivities();
+
+    // Font size control functions
+    let currentFontSize = parseInt(localStorage.getItem('tanktools_font_size_dashboard') || '14');
+    
+    function increaseFontSize() {
+      if (currentFontSize < 22) {
+        currentFontSize += 2;
+        applyFontSize();
+        localStorage.setItem('tanktools_font_size_dashboard', currentFontSize);
+        showFontMessage(`📈 Font size increased to ${currentFontSize}px`);
+      }
+    }
+    
+    function decreaseFontSize() {
+      if (currentFontSize > 10) {
+        currentFontSize -= 2;
+        applyFontSize();
+        localStorage.setItem('tanktools_font_size_dashboard', currentFontSize);
+        showFontMessage(`📉 Font size decreased to ${currentFontSize}px`);
+      }
+    }
+    
+    function applyFontSize() {
+      const style = document.createElement('style');
+      style.id = 'dynamic-font-style';
+      
+      const existingStyle = document.getElementById('dynamic-font-style');
+      if (existingStyle) {
+        existingStyle.remove();
+      }
+      
+      style.textContent = `
+        .users-table { font-size: ${currentFontSize}px !important; }
+        .users-table th, .users-table td { font-size: ${currentFontSize}px !important; padding: ${Math.max(8, currentFontSize/2)}px ${Math.max(6, currentFontSize/3)}px !important; }
+        .form-input, .form-select, .search-box, .filter-select { font-size: ${currentFontSize}px !important; }
+        .btn { font-size: ${currentFontSize}px !important; }
+        .stat-number { font-size: ${currentFontSize + 8}px !important; }
+        .stat-label { font-size: ${currentFontSize - 2}px !important; }
+        .section-title { font-size: ${currentFontSize + 6}px !important; }
+        .activity-item { font-size: ${currentFontSize}px !important; }
+        .pending-card { font-size: ${currentFontSize}px !important; }
+      `;
+      
+      document.head.appendChild(style);
+    }
+    
+    function showFontMessage(message) {
+      const msgDiv = document.createElement('div');
+      msgDiv.style.cssText = 'position:fixed;top:80px;right:20px;background:rgba(76,175,80,0.9);color:white;padding:10px 15px;border-radius:8px;font-size:12px;z-index:1000;animation:slideIn 0.3s ease';
+      msgDiv.textContent = message;
+      document.body.appendChild(msgDiv);
+      setTimeout(() => msgDiv.remove(), 3000);
+    }
+    
+    // Apply saved font size on page load
+    applyFontSize();
+    
+    window.increaseFontSize = increaseFontSize;
+    window.decreaseFontSize = decreaseFontSize;
+
+    console.log('%c🔥 FIREBASE ADMIN DASHBOARD v6.6 - Permissions System v4.0', 'color:orange;font-size:20px;font-weight:bold');
+    console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
+    console.log('%cLive Tanks Access Control System', 'color:blue;font-size:14px');
+
+    // WhatsApp functionality
+    const WHATSAPP_NUMBER="96555222550";
+    window.openWhatsApp=()=>{
+      const message="مرحبا، أتواصل معك من خلال تطبيق Dashboard";
+      const whatsappURL=`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+      try{
+        const newWindow=window.open(whatsappURL,'_blank','noopener,noreferrer');
+        if(!newWindow)window.location.href=whatsappURL
+      }catch{
+        navigator.clipboard.writeText(whatsappURL).then(()=>alert(`تم نسخ رابط الواتساب:\n${whatsappURL}`)).catch(()=>alert(`رابط الواتساب:\n${whatsappURL}`))
+      }
+    };
+    
+    // ========================================
+    // USER-BASED DEVICE MANAGEMENT SYSTEM
+    // ========================================
+    
+    let allDevices = [];
+    let allDeviceRequests = [];
+    let allUsersWithDevices = [];
+    let deviceLimitsConfig = {};
+    let currentViewingUser = null;
+    
+    // Show Device Management Section
+    function showDeviceManagement() {
+      // Hide other sections
+      document.querySelector('#deviceManagementSection').style.display = 'block';
+      document.querySelector('#deviceManagementSection').scrollIntoView({ behavior: 'smooth' });
+      
+      // Show admin link
+      document.getElementById('device-management-link').style.display = 'inline-block';
+      
+      // Load users device data
+      loadUsersDeviceData();
+    }
+    
+    // Load Users Device Data from Firebase
+    async function loadUsersDeviceData() {
+      try {
+        console.log('🔄 Loading users and device data...');
+        showMessage('👥 Loading users and devices...', 'info');
+        
+        // Load all users
+        const usersRef = collection(db, 'users');
+        const usersSnapshot = await getDocs(usersRef);
+        
+        const allUsers = [];
+        usersSnapshot.forEach(doc => {
+          const userData = doc.data();
+          allUsers.push({
+            id: doc.id,
+            username: userData.username,
+            fullName: userData.fullName,
+            email: userData.email,
+            isActive: userData.isActive,
+            role: userData.role
+          });
+        });
+        
+        // Load registered devices
+        const devicesRef = collection(db, 'userDevices');
+        const devicesSnapshot = await getDocs(devicesRef);
+        
+        allDevices = [];
+        devicesSnapshot.forEach(doc => {
+          const deviceData = doc.data();
+          allDevices.push({
+            id: doc.id,
+            ...deviceData,
+            registeredAt: deviceData.registeredAt?.toDate?.() || new Date(deviceData.registeredAt),
+            lastUsed: deviceData.lastUsed?.toDate?.() || new Date(deviceData.lastUsed)
+          });
+        });
+        
+        // Load device requests
+        const requestsRef = collection(db, 'deviceRequests');
+        const requestsSnapshot = await getDocs(requestsRef);
+        
+        allDeviceRequests = [];
+        requestsSnapshot.forEach(doc => {
+          const requestData = doc.data();
+          allDeviceRequests.push({
+            id: doc.id,
+            ...requestData,
+            timestamp: requestData.timestamp?.toDate?.() || new Date(requestData.timestamp)
+          });
+        });
+        
+        // Load device limits configuration
+        await loadDeviceLimitsConfig();
+        
+        // Combine users with their devices
+        allUsersWithDevices = allUsers.map(user => {
+          const userDevices = allDevices.filter(device => device.username === user.username);
+          const deviceLimit = deviceLimitsConfig[user.username] || deviceLimitsConfig.default || 1;
+          
+          return {
+            ...user,
+            devices: userDevices,
+            deviceCount: userDevices.length,
+            deviceLimit: deviceLimit,
+            isOverLimit: userDevices.length > deviceLimit
+          };
+        });
+        
+        console.log(`👥 Loaded ${allUsersWithDevices.length} users with ${allDevices.length} devices`);
+        
+        // Update statistics
+        updateUserDeviceStatistics();
+        
+        // Render users table
+        renderUsersDeviceTable();
+        
+        showMessage(`✅ Loaded ${allUsersWithDevices.length} users successfully`, 'success');
+        
+      } catch (error) {
+        console.error('❌ Error loading users device data:', error);
+        showMessage(`❌ Failed to load data: ${error.message}`, 'error');
+      }
+    }
+    
+    // Load Device Limits Configuration
+    async function loadDeviceLimitsConfig() {
+      try {
+        const limitsRef = doc(db, 'config', 'deviceLimits');
+        const limitsDoc = await getDoc(limitsRef);
+        
+        if (limitsDoc.exists()) {
+          deviceLimitsConfig = limitsDoc.data();
+        } else {
+          // Set default configuration
+          deviceLimitsConfig = { default: 1 };
+          await setDoc(limitsRef, deviceLimitsConfig);
+        }
+      } catch (error) {
+        console.warn('⚠️ Could not load device limits config:', error);
+        deviceLimitsConfig = { default: 1 };
+      }
+    }
+
+    // Update User Device Statistics
+    function updateUserDeviceStatistics() {
+      const totalUsers = allUsersWithDevices.length;
+      const usersWithDevices = allUsersWithDevices.filter(user => user.deviceCount > 0).length;
+      const totalDevices = allDevices.length;
+      const pendingRequests = allDeviceRequests.filter(req => req.status === 'pending').length;
+      
+      document.getElementById('totalUsersCount').textContent = totalUsers;
+      document.getElementById('usersWithDevicesCount').textContent = usersWithDevices;
+      document.getElementById('totalDevicesCount').textContent = totalDevices;
+      document.getElementById('pendingDeviceRequestsCount').textContent = pendingRequests;
+    }
+    
+    // Alias function for compatibility
+    function updateUsersDeviceStatistics() {
+      updateUserDeviceStatistics();
+    }
+    
+    // Render Users Device Table
+    function renderUsersDeviceTable() {
+      const container = document.getElementById('usersDeviceContainer');
+      
+      if (allUsersWithDevices.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 40px; color: rgba(255,255,255,0.7);">
+            👥 No users found
+          </div>
+        `;
+        return;
+      }
+      
+      // Apply filters
+      let filteredUsers = [...allUsersWithDevices];
+      
+      const searchTerm = document.getElementById('userSearch')?.value?.toLowerCase() || '';
+      const userFilter = document.getElementById('userDeviceFilter')?.value || 'all';
+      
+      if (searchTerm) {
+        filteredUsers = filteredUsers.filter(user => 
+          user.username?.toLowerCase().includes(searchTerm) ||
+          user.fullName?.toLowerCase().includes(searchTerm) ||
+          user.email?.toLowerCase().includes(searchTerm)
+        );
+      }
+      
+      if (userFilter !== 'all') {
+        filteredUsers = filteredUsers.filter(user => {
+          switch(userFilter) {
+            case 'has_devices': return user.deviceCount > 0;
+            case 'over_limit': return user.isOverLimit;
+            case 'no_devices': return user.deviceCount === 0;
+            default: return true;
+          }
+        });
+      }
+      
+      // Sort by device count (highest first), then by username
+      filteredUsers.sort((a, b) => b.deviceCount - a.deviceCount || a.username.localeCompare(b.username));
+      
+      const tableHTML = `
+        <div class="users-table-container" style="width: 100%; overflow-x: auto;">
+          <table class="users-table" style="min-width: 900px;">
+            <thead>
+              <tr>
+                <th>👤 User Info</th>
+                <th>📱 Devices</th>
+                <th>⚙️ Device Limit</th>
+                <th>📊 Status</th>
+                <th>⚙️ Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filteredUsers.map(user => `
+                <tr>
+                  <td>
+                    <div style="font-weight: bold; color: #003366;">${user.fullName || user.username || 'Unknown'}</div>
+                    <div style="font-size: 12px; color: #666;">${user.username}@knpc.com</div>
+                    <div style="font-size: 11px; color: #888; margin-top: 2px;">
+                      <span style="background: rgba(0,51,102,0.1); color: #003366; padding: 1px 4px; border-radius: 3px;">
+                        ${user.role || 'operator'}
+                      </span>
+                      ${user.isActive ? '<span style="color: #4CAF50; margin-left: 5px;">✓ Active</span>' : '<span style="color: #f44336; margin-left: 5px;">❌ Inactive</span>'}
+                    </div>
+                  </td>
+                  <td>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <div style="font-size: 18px; font-weight: bold; color: ${user.deviceCount > user.deviceLimit ? '#f44336' : user.deviceCount > 0 ? '#4CAF50' : '#999'};">
+                        ${user.deviceCount}
+                      </div>
+                      <div>
+                        <div style="font-size: 11px; color: #666;">devices registered</div>
+                        ${user.deviceCount > 0 ? `
+                          <div style="font-size: 10px; color: #888;">
+                            Last: ${user.lastDeviceUsed || 'Unknown'}
+                          </div>
+                        ` : ''}
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <div style="font-size: 16px; font-weight: bold; color: #2196F3;">
+                        ${user.deviceLimit || 1}
+                      </div>
+                      <div>
+                        <div style="font-size: 11px; color: #666;">device limit</div>
+                        <button class="action-btn" onclick="editUserDeviceLimit('${user.username}', ${user.deviceLimit || 1})"
+                                style="font-size: 10px; padding: 2px 6px; background: #FF9800; color: white; border: none; border-radius: 3px; cursor: pointer;">
+                          Edit
+                        </button>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div style="text-align: center;">
+                      ${user.isOverLimit ? `
+                        <div style="color: #f44336; font-weight: bold; font-size: 12px;">⚠️ OVER LIMIT</div>
+                        <div style="font-size: 10px; color: #666;">+${user.deviceCount - user.deviceLimit} extra</div>
+                      ` : user.deviceCount === 0 ? `
+                        <div style="color: #999; font-size: 12px;">📵 No Devices</div>
+                      ` : `
+                        <div style="color: #4CAF50; font-size: 12px;">✅ Normal</div>
+                        <div style="font-size: 10px; color: #666;">${user.deviceLimit - user.deviceCount} available</div>
+                      `}
+                    </div>
+                  </td>
+                  <td>
+                    <div class="action-buttons" style="display: flex; gap: 5px; flex-wrap: wrap;">
+                      ${user.deviceCount > 0 ? `
+                        <button class="action-btn" onclick="showUserDevicesModal('${user.username}')" 
+                                style="font-size: 11px; padding: 4px 8px; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                          📱 View Devices
+                        </button>
+                      ` : ''}
+                      <button class="action-btn" onclick="resetUserDevices('${user.username}')" 
+                              style="font-size: 11px; padding: 4px 8px; background: #FF9800; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        🔄 Reset
+                      </button>
+                      ${user.isOverLimit ? `
+                        <button class="action-btn" onclick="removeExtraDevices('${user.username}')" 
+                                style="font-size: 11px; padding: 4px 8px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                          ✂️ Remove Extra
+                        </button>
+                      ` : ''}
+                    </div>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+        
+        <div style="margin-top: 15px; text-align: center; color: rgba(255,255,255,0.7); font-size: 13px;">
+          Showing ${filteredUsers.length} users
+          ${filteredUsers.length !== allUsersWithDevices.length ? ` of ${allUsersWithDevices.length} total` : ''}
+        </div>
+      `;
+      
+      container.innerHTML = tableHTML;
+    }
+    
+    // View Device Details
+    async function viewDeviceDetails(deviceId) {
+      const device = allDevices.find(d => d.id === deviceId);
+      if (!device) {
+        showMessage('❌ Device not found', 'error');
+        return;
+      }
+      
+      const deviceInfo = device.fullDeviceInfo || {};
+      
+      const detailsHTML = `
+        <div style="max-height: 500px; overflow-y: auto;">
+          <div style="margin-bottom: 20px; padding: 15px; background: rgba(33,150,243,0.1); border-radius: 8px; border: 1px solid rgba(33,150,243,0.3);">
+            <h4 style="color: #2196F3; margin-bottom: 10px;">📱 Basic Information</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 14px;">
+              <div><strong>User:</strong> ${device.username}</div>
+              <div><strong>Device Name:</strong> ${device.deviceName || 'Unknown'}</div>
+              <div><strong>Device Type:</strong> ${device.deviceType || 'Unknown'}</div>
+              <div><strong>Status:</strong> ${device.isActive ? '✅ Active' : '❌ Inactive'}</div>
+              <div><strong>Registered:</strong> ${device.registeredAt ? formatDateTime(device.registeredAt) : 'Unknown'}</div>
+              <div><strong>Last Used:</strong> ${device.lastUsed ? formatDateTime(device.lastUsed) : 'Never'}</div>
+            </div>
+          </div>
+          
+          <div style="margin-bottom: 20px; padding: 15px; background: rgba(76,175,80,0.1); border-radius: 8px; border: 1px solid rgba(76,175,80,0.3);">
+            <h4 style="color: #4CAF50; margin-bottom: 10px;">💻 System Information</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 14px;">
+              <div><strong>Browser:</strong> ${device.browser || 'Unknown'}</div>
+              <div><strong>Operating System:</strong> ${device.os || 'Unknown'}</div>
+              <div><strong>Screen Resolution:</strong> ${device.screenResolution || 'Unknown'}</div>
+              <div><strong>Last IP Address:</strong> ${device.lastIP || 'Unknown'}</div>
+            </div>
+          </div>
+          
+          <div style="margin-bottom: 20px; padding: 15px; background: rgba(255,152,0,0.1); border-radius: 8px; border: 1px solid rgba(255,152,0,0.3);">
+            <h4 style="color: #FF9800; margin-bottom: 10px;">🔒 Security Information</h4>
+            <div style="font-size: 14px;">
+              <div style="margin-bottom: 8px;"><strong>Device ID:</strong> 
+                <code style="background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 4px; font-size: 12px;">
+                  ${device.deviceId || 'Unknown'}
+                </code>
+              </div>
+              <div style="margin-bottom: 8px;"><strong>Registration Type:</strong> 
+                ${device.registeredDuringSignup ? 'During User Signup' : 'During Login'}
+              </div>
+            </div>
+          </div>
+          
+          ${deviceInfo.readableInfo ? `
+          <div style="margin-bottom: 20px; padding: 15px; background: rgba(156,39,176,0.1); border-radius: 8px; border: 1px solid rgba(156,39,176,0.3);">
+            <h4 style="color: #9C27B0; margin-bottom: 10px;">🔍 Detailed Device Fingerprint</h4>
+            <div style="font-size: 13px; line-height: 1.6;">
+              <div><strong>Timezone:</strong> ${deviceInfo.readableInfo.timezone || 'Unknown'}</div>
+              <div><strong>Language:</strong> ${deviceInfo.readableInfo.language || 'Unknown'}</div>
+              <div><strong>Cookie Enabled:</strong> ${deviceInfo.readableInfo.cookieEnabled ? 'Yes' : 'No'}</div>
+              <div><strong>Java Enabled:</strong> ${deviceInfo.readableInfo.javaEnabled ? 'Yes' : 'No'}</div>
+              <div><strong>Touch Support:</strong> ${deviceInfo.readableInfo.touchSupport ? 'Yes' : 'No'}</div>
+            </div>
+          </div>
+          ` : ''}
+        </div>
+        
+        <div style="display: flex; gap: 15px; justify-content: center; margin-top: 25px;">
+          <button class="btn btn-warning" onclick="toggleDeviceStatus('${device.id}'); closeDeviceModal();">
+            ${device.isActive ? '⏸️ Disable Device' : '▶️ Enable Device'}
+          </button>
+          <button class="btn btn-danger" onclick="removeDevice('${device.id}'); closeDeviceModal();">
+            🗑️ Remove Device
+          </button>
+          <button class="btn btn-secondary" onclick="closeDeviceModal()">Close</button>
+        </div>
+      `;
+      
+      document.getElementById('deviceModalTitle').textContent = `📱 Device: ${device.deviceName || 'Unknown'}`;
+      document.getElementById('deviceModalContent').innerHTML = detailsHTML;
+      document.getElementById('deviceModal').classList.add('show');
+    }
+    
+    // Toggle Device Status
+    async function toggleDeviceStatus(deviceId) {
+      const device = allDevices.find(d => d.id === deviceId);
+      if (!device) {
+        showMessage('❌ Device not found', 'error');
+        return;
+      }
+      
+      const newStatus = !device.isActive;
+      const action = newStatus ? 'enabled' : 'disabled';
+      
+      try {
+        await updateDoc(doc(db, 'userDevices', deviceId), {
+          isActive: newStatus,
+          lastModified: serverTimestamp(),
+          modifiedBy: currentUser.username
+        });
+        
+        device.isActive = newStatus;
+        renderDevicesTable();
+        updateDeviceStatistics();
+        
+        showMessage(`✅ Device ${action} successfully`, 'success');
+        
+        // Log activity
+        await addDoc(collection(db, 'activities'), {
+          action: `Device ${action} by admin: ${device.deviceName} (${device.username})`,
+          username: currentUser.username,
+          timestamp: serverTimestamp(),
+          page: 'device-management'
+        });
+        
+      } catch (error) {
+        console.error('Error toggling device status:', error);
+        showMessage(`❌ Failed to ${action === 'enabled' ? 'enable' : 'disable'} device: ${error.message}`, 'error');
+      }
+    }
+    
+    // Remove Device
+    async function removeDevice(deviceId) {
+      const device = allDevices.find(d => d.id === deviceId);
+      if (!device) {
+        showMessage('❌ Device not found', 'error');
+        return;
+      }
+      
+      if (!confirm(`Are you sure you want to permanently remove device "${device.deviceName}" for user "${device.username}"?\n\nThis action cannot be undone.`)) {
+        return;
+      }
+      
+      try {
+        await deleteDoc(doc(db, 'userDevices', deviceId));
+        
+        // Remove from local array
+        const index = allDevices.findIndex(d => d.id === deviceId);
+        if (index > -1) {
+          allDevices.splice(index, 1);
+        }
+        
+        renderDevicesTable();
+        updateDeviceStatistics();
+        
+        showMessage(`✅ Device removed successfully`, 'success');
+        
+        // Log activity
+        await addDoc(collection(db, 'activities'), {
+          action: `Device removed by admin: ${device.deviceName} (${device.username})`,
+          username: currentUser.username,
+          timestamp: serverTimestamp(),
+          page: 'device-management'
+        });
+        
+      } catch (error) {
+        console.error('Error removing device:', error);
+        showMessage(`❌ Failed to remove device: ${error.message}`, 'error');
+      }
+    }
+    
+    // Show Device Requests
+    function showDeviceRequests() {
+      const pendingRequests = allDeviceRequests.filter(req => req.status === 'pending');
+      
+      if (pendingRequests.length === 0) {
+        showMessage('ℹ️ No pending device requests', 'info');
+        return;
+      }
+      
+      const requestsHTML = pendingRequests.map(request => `
+        <div class="pending-card" style="background: rgba(33,150,243,0.1); border: 2px solid rgba(33,150,243,0.3);">
+          <div class="pending-header">
+            <div class="pending-name" style="color: #2196F3;">📱 ${request.deviceInfo?.deviceName || 'Unknown Device'}</div>
+            <span class="status-badge badge-pending">Pending</span>
+          </div>
+          <div class="pending-details">
+            <div><strong>User:</strong> ${request.username}</div>
+            <div><strong>Device Type:</strong> ${request.deviceInfo?.deviceType || 'Unknown'}</div>
+            <div><strong>Browser:</strong> ${request.deviceInfo?.browser || 'Unknown'}</div>
+            <div><strong>OS:</strong> ${request.deviceInfo?.os || 'Unknown'}</div>
+            <div><strong>Requested:</strong> ${request.timestamp ? formatDateTime(request.timestamp) : 'Unknown'}</div>
+            <div><strong>IP:</strong> ${request.requestIP || 'Unknown'}</div>
+            ${request.existingDevices?.length > 0 ? `
+              <div style="margin-top: 10px; padding: 10px; background: rgba(255,193,7,0.1); border-radius: 6px;">
+                <strong>⚠️ Existing Devices:</strong>
+                ${request.existingDevices.map(device => 
+                  `<div style="font-size: 12px;">• ${device.name}</div>`
+                ).join('')}
+              </div>
+            ` : ''}
+          </div>
+          <div class="pending-actions">
+            <button class="btn btn-primary" onclick="approveDeviceRequest('${request.id}')">
+              ✅ Approve
+            </button>
+            <button class="btn btn-danger" onclick="rejectDeviceRequest('${request.id}')">
+              ❌ Reject
+            </button>
+          </div>
+        </div>
+      `).join('');
+      
+      document.getElementById('deviceRequestsContainer').innerHTML = 
+        `<div class="pending-users-grid">${requestsHTML}</div>`;
+      document.getElementById('deviceRequestsModal').classList.add('show');
+    }
+    
+    // Approve Device Request
+    async function approveDeviceRequest(requestId) {
+      try {
+        const request = allDeviceRequests.find(req => req.id === requestId);
+        if (!request) {
+          showMessage('❌ Request not found', 'error');
+          return;
+        }
+        
+        showMessage('🔄 Approving device request...', 'info');
+        
+        // Add device to userDevices
+        const deviceData = {
+          username: request.username,
+          deviceId: request.requestedDeviceId,
+          deviceName: request.deviceInfo?.deviceName || 'Approved Device',
+          deviceType: request.deviceInfo?.deviceType || 'Unknown',
+          browser: request.deviceInfo?.browser || 'Unknown',
+          os: request.deviceInfo?.os || 'Unknown',
+          screenResolution: request.deviceInfo?.screenResolution || 'Unknown',
+          registeredAt: serverTimestamp(),
+          lastUsed: serverTimestamp(),
+          isActive: true,
+          lastIP: request.requestIP || 'Unknown',
+          fullDeviceInfo: { readableInfo: request.deviceInfo },
+          approvedByAdmin: currentUser.username,
+          approvedAt: serverTimestamp()
+        };
+        
+        await addDoc(collection(db, 'userDevices'), deviceData);
+        
+        // Update request status
+        await updateDoc(doc(db, 'deviceRequests', requestId), {
+          status: 'approved',
+          approvedBy: currentUser.username,
+          approvedAt: serverTimestamp()
+        });
+        
+        // Update local arrays
+        const requestIndex = allDeviceRequests.findIndex(req => req.id === requestId);
+        if (requestIndex > -1) {
+          allDeviceRequests[requestIndex].status = 'approved';
+        }
+        
+        showMessage(`✅ Device approved for ${request.username}`, 'success');
+        
+        // Refresh the requests modal
+        showDeviceRequests();
+        
+        // Log activity
+        await addDoc(collection(db, 'activities'), {
+          action: `Device request approved by admin: ${request.deviceInfo?.deviceName} for ${request.username}`,
+          username: currentUser.username,
+          timestamp: serverTimestamp(),
+          page: 'device-management'
+        });
+        
+      } catch (error) {
+        console.error('Error approving device request:', error);
+        showMessage(`❌ Error approving request: ${error.message}`, 'error');
+      }
+    }
+    
+    // Reject Device Request  
+    async function rejectDeviceRequest(requestId) {
+      try {
+        const request = allDeviceRequests.find(req => req.id === requestId);
+        if (!request) {
+          showMessage('❌ Request not found', 'error');
+          return;
+        }
+        
+        if (!confirm(`Are you sure you want to reject device request from ${request.username}?`)) {
+          return;
+        }
+        
+        showMessage('🔄 Rejecting device request...', 'info');
+        
+        // Update request status
+        await updateDoc(doc(db, 'deviceRequests', requestId), {
+          status: 'rejected',
+          rejectedBy: currentUser.username,
+          rejectedAt: serverTimestamp()
+        });
+        
+        // Update local array
+        const requestIndex = allDeviceRequests.findIndex(req => req.id === requestId);
+        if (requestIndex > -1) {
+          allDeviceRequests[requestIndex].status = 'rejected';
+        }
+        
+        showMessage(`❌ Device request rejected for ${request.username}`, 'success');
+        
+        // Refresh the requests modal
+        showDeviceRequests();
+        
+        // Log activity
+        await addDoc(collection(db, 'activities'), {
+          action: `Device request rejected by admin: ${request.deviceInfo?.deviceName} for ${request.username}`,
+          username: currentUser.username,
+          timestamp: serverTimestamp(),
+          page: 'device-management'
+        });
+        
+      } catch (error) {
+        console.error('Error rejecting device request:', error);
+        showMessage(`❌ Error rejecting request: ${error.message}`, 'error');
+      }
+    }
+    
+    // Approve All Device Requests
+    async function approveAllDeviceRequests() {
+      const pendingRequests = allDeviceRequests.filter(req => req.status === 'pending');
+      
+      if (pendingRequests.length === 0) {
+        showMessage('ℹ️ No pending requests to approve', 'info');
+        return;
+      }
+      
+      if (!confirm(`Are you sure you want to approve all ${pendingRequests.length} pending device requests?`)) {
+        return;
+      }
+      
+      try {
+        showMessage(`🔄 Approving ${pendingRequests.length} requests...`, 'info');
+        
+        for (const request of pendingRequests) {
+          await approveDeviceRequest(request.id);
+          // Small delay to avoid overwhelming Firebase
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+        
+        showMessage(`✅ All ${pendingRequests.length} requests approved successfully`, 'success');
+        
+      } catch (error) {
+        console.error('Error approving all requests:', error);
+        showMessage(`❌ Error approving all requests: ${error.message}`, 'error');
+      }
+    }
+    
+    // Reject All Device Requests
+    async function rejectAllDeviceRequests() {
+      const pendingRequests = allDeviceRequests.filter(req => req.status === 'pending');
+      
+      if (pendingRequests.length === 0) {
+        showMessage('ℹ️ No pending requests to reject', 'info');
+        return;
+      }
+      
+      if (!confirm(`Are you sure you want to REJECT all ${pendingRequests.length} pending device requests?\n\nThis action cannot be undone.`)) {
+        return;
+      }
+      
+      try {
+        showMessage(`🔄 Rejecting ${pendingRequests.length} requests...`, 'info');
+        
+        for (const request of pendingRequests) {
+          await rejectDeviceRequest(request.id);
+          // Small delay to avoid overwhelming Firebase
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+        
+        showMessage(`❌ All ${pendingRequests.length} requests rejected`, 'success');
+        
+      } catch (error) {
+        console.error('Error rejecting all requests:', error);
+        showMessage(`❌ Error rejecting all requests: ${error.message}`, 'error');
+      }
+    }
+    
+    // Show Bulk Device Actions
+    function showBulkDeviceActions() {
+      document.getElementById('bulkDeviceModal').classList.add('show');
+      
+      // Populate user list for reset action
+      const userSelect = document.getElementById('bulkDeviceUser');
+      const uniqueUsers = [...new Set(allDevices.map(d => d.username))].sort();
+      
+      userSelect.innerHTML = '<option value="">Select a user...</option>' +
+        uniqueUsers.map(username => `<option value="${username}">${username}</option>`).join('');
+    }
+    
+    // Execute Bulk Device Action
+    async function executeBulkDeviceAction() {
+      const action = document.getElementById('bulkDeviceAction').value;
+      
+      if (!action) {
+        showMessage('❌ Please select an action', 'error');
+        return;
+      }
+      
+      try {
+        switch(action) {
+          case 'deactivate_inactive':
+            await deactivateInactiveDevices();
+            break;
+          case 'remove_old':
+            await removeOldDevices();
+            break;
+          case 'reset_user_devices':
+            await bulkResetUserDevices();
+            break;
+          case 'device_audit':
+            await generateDeviceAuditReport();
+            break;
+          default:
+            showMessage('❌ Unknown action', 'error');
+            return;
+        }
+        
+        closeBulkDeviceModal();
+        
+      } catch (error) {
+        console.error('Error executing bulk action:', error);
+        showMessage(`❌ Error executing action: ${error.message}`, 'error');
+      }
+    }
+    
+    // Deactivate Inactive Devices (30+ days)
+    async function deactivateInactiveDevices() {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
+      const inactiveDevices = allDevices.filter(device => {
+        const lastUsed = device.lastUsed ? new Date(device.lastUsed) : new Date(device.registeredAt);
+        return device.isActive && lastUsed < thirtyDaysAgo;
+      });
+      
+      if (inactiveDevices.length === 0) {
+        showMessage('ℹ️ No inactive devices found (30+ days)', 'info');
+        return;
+      }
+      
+      if (!confirm(`Found ${inactiveDevices.length} devices inactive for 30+ days.\n\nDeactivate these devices?`)) {
+        return;
+      }
+      
+      showMessage(`🔄 Deactivating ${inactiveDevices.length} inactive devices...`, 'info');
+      
+      const updatePromises = inactiveDevices.map(device => 
+        updateDoc(doc(db, 'userDevices', device.id), {
+          isActive: false,
+          lastModified: serverTimestamp(),
+          modifiedBy: currentUser.username,
+          deactivatedReason: 'Bulk deactivation - inactive 30+ days'
+        })
+      );
+      
+      await Promise.all(updatePromises);
+      
+      // Update local data
+      inactiveDevices.forEach(device => device.isActive = false);
+      
+      renderUsersDeviceTable();
+      updateUsersDeviceStatistics();
+      
+      showMessage(`✅ Deactivated ${inactiveDevices.length} inactive devices`, 'success');
+      
+      // Log activity
+      await addDoc(collection(db, 'activities'), {
+        action: `Bulk deactivation: ${inactiveDevices.length} inactive devices (30+ days)`,
+        username: currentUser.username,
+        timestamp: serverTimestamp(),
+        page: 'device-management'
+      });
+    }
+    
+    // Remove Old Devices (90+ days)
+    async function removeOldDevices() {
+      const ninetyDaysAgo = new Date();
+      ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+      
+      const oldDevices = allDevices.filter(device => {
+        const lastUsed = device.lastUsed ? new Date(device.lastUsed) : new Date(device.registeredAt);
+        return lastUsed < ninetyDaysAgo;
+      });
+      
+      if (oldDevices.length === 0) {
+        showMessage('ℹ️ No old devices found (90+ days)', 'info');
+        return;
+      }
+      
+      if (!confirm(`Found ${oldDevices.length} devices not used for 90+ days.\n\nPERMANENTLY DELETE these devices?\n\nThis action cannot be undone.`)) {
+        return;
+      }
+      
+      showMessage(`🔄 Removing ${oldDevices.length} old devices...`, 'info');
+      
+      const deletePromises = oldDevices.map(device => deleteDoc(doc(db, 'userDevices', device.id)));
+      await Promise.all(deletePromises);
+      
+      // Remove from local arrays
+      oldDevices.forEach(device => {
+        const index = allDevices.findIndex(d => d.id === device.id);
+        if (index > -1) {
+          allDevices.splice(index, 1);
+        }
+      });
+      
+      // Update user device counts
+      const affectedUsernames = [...new Set(oldDevices.map(d => d.username))];
+      affectedUsernames.forEach(username => {
+        const user = allUsersWithDevices.find(u => u.username === username);
+        if (user) {
+          const removedCount = oldDevices.filter(d => d.username === username).length;
+          user.deviceCount = Math.max(0, user.deviceCount - removedCount);
+          user.isOverLimit = user.deviceCount > (user.deviceLimit || 1);
+        }
+      });
+      
+      renderUsersDeviceTable();
+      updateUsersDeviceStatistics();
+      
+      showMessage(`✅ Removed ${oldDevices.length} old devices`, 'success');
+      
+      // Log activity
+      await addDoc(collection(db, 'activities'), {
+        action: `Bulk removal: ${oldDevices.length} old devices (90+ days)`,
+        username: currentUser.username,
+        timestamp: serverTimestamp(),
+        page: 'device-management'
+      });
+    }
+    
+    // Bulk Reset User Devices
+    async function bulkResetUserDevices() {
+      const username = document.getElementById('bulkDeviceUser').value;
+      
+      if (!username) {
+        showMessage('❌ Please select a user', 'error');
+        return;
+      }
+      
+      await resetUserDevices(username);
+    }
+    
+    // Generate Device Audit Report
+    async function generateDeviceAuditReport() {
+      showMessage('🔄 Generating device audit report...', 'info');
+      
+      // Collect statistics
+      const totalDevices = allDevices.length;
+      const activeDevices = allDevices.filter(d => d.isActive).length;
+      const inactiveDevices = totalDevices - activeDevices;
+      const usersWithDevices = allUsersWithDevices.filter(u => u.deviceCount > 0).length;
+      const usersOverLimit = allUsersWithDevices.filter(u => u.isOverLimit).length;
+      
+      // Device types breakdown
+      const deviceTypes = {};
+      allDevices.forEach(device => {
+        const type = device.deviceType || 'Unknown';
+        deviceTypes[type] = (deviceTypes[type] || 0) + 1;
+      });
+      
+      // Browser breakdown
+      const browsers = {};
+      allDevices.forEach(device => {
+        const browser = device.browser || 'Unknown';
+        browsers[browser] = (browsers[browser] || 0) + 1;
+      });
+      
+      // Generate report
+      const report = `
+📊 DEVICE AUDIT REPORT
+Generated: ${new Date().toLocaleString()}
+Admin: ${currentUser.fullName || currentUser.username}
+
+═══════════════════════════════════════
+
+📈 DEVICE STATISTICS:
+• Total Devices: ${totalDevices}
+• Active Devices: ${activeDevices}
+• Inactive Devices: ${inactiveDevices}
+
+👥 USER STATISTICS:
+• Total Users: ${allUsersWithDevices.length}
+• Users with Devices: ${usersWithDevices}
+• Users Over Limit: ${usersOverLimit}
+
+📱 DEVICE TYPES:
+${Object.entries(deviceTypes).map(([type, count]) => `• ${type}: ${count}`).join('\n')}
+
+🌐 BROWSERS:
+${Object.entries(browsers).map(([browser, count]) => `• ${browser}: ${count}`).join('\n')}
+
+⚠️ USERS OVER DEVICE LIMIT:
+${allUsersWithDevices.filter(u => u.isOverLimit).map(user => 
+  `• ${user.username}: ${user.deviceCount}/${user.deviceLimit || 1} devices`
+).join('\n') || 'None'}
+
+📵 USERS WITHOUT DEVICES:
+${allUsersWithDevices.filter(u => u.deviceCount === 0).map(u => `• ${u.username}`).join('\n') || 'None'}
+
+═══════════════════════════════════════
+Report End
+      `;
+      
+      // Show report in modal
+      const reportWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes');
+      reportWindow.document.write(`
+        <html>
+          <head>
+            <title>Device Audit Report - ${new Date().toDateString()}</title>
+            <style>
+              body { font-family: 'Courier New', monospace; padding: 20px; background: #f5f5f5; }
+              .report { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); white-space: pre-wrap; }
+              .print-btn { margin-bottom: 20px; padding: 10px 20px; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; }
+              .print-btn:hover { background: #1976D2; }
+            </style>
+          </head>
+          <body>
+            <button class="print-btn" onclick="window.print()">🖨️ Print Report</button>
+            <div class="report">${report.replace(/\n/g, '<br>')}</div>
+          </body>
+        </html>
+      `);
+      
+      showMessage('✅ Device audit report generated', 'success');
+      
+      // Log activity
+      await addDoc(collection(db, 'activities'), {
+        action: `Device audit report generated (${totalDevices} devices, ${usersWithDevices} users)`,
+        username: currentUser.username,
+        timestamp: serverTimestamp(),
+        page: 'device-management'
+      });
+    }
+    
+    // Modal Functions
+    function closeDeviceModal() {
+      document.getElementById('deviceModal').classList.remove('show');
+    }
+    
+    function closeDeviceRequestsModal() {
+      document.getElementById('deviceRequestsModal').classList.remove('show');
+    }
+    
+    function closeBulkDeviceModal() {
+      document.getElementById('bulkDeviceModal').classList.remove('show');
+    }
+    
+    // Helper Functions
+    function formatDateTime(date) {
+      if (!date) return 'Unknown';
+      if (typeof date === 'string') date = new Date(date);
+      
+      const now = new Date();
+      const diff = now - date;
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      
+      if (days === 0) {
+        return 'Today ' + date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+      } else if (days === 1) {
+        return 'Yesterday ' + date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+      } else if (days < 7) {
+        return `${days} days ago`;
+      } else {
+        return date.toLocaleDateString('en-GB') + ' ' + date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+      }
+    }
+    
+    // Event Listeners for Device Management
+    document.addEventListener('DOMContentLoaded', function() {
+      // Search and filter events
+      const deviceSearch = document.getElementById('deviceSearch');
+      const deviceFilter = document.getElementById('deviceFilter');
+      const deviceTypeFilter = document.getElementById('deviceTypeFilter');
+      
+      if (deviceSearch) {
+        deviceSearch.addEventListener('input', () => {
+          setTimeout(renderDevicesTable, 300); // Debounce
+        });
+      }
+      
+      if (deviceFilter) {
+        deviceFilter.addEventListener('change', renderDevicesTable);
+      }
+      
+      if (deviceTypeFilter) {
+        deviceTypeFilter.addEventListener('change', renderDevicesTable);
+      }
+      
+      // Bulk device action select handler
+      const bulkActionSelect = document.getElementById('bulkDeviceAction');
+      if (bulkActionSelect) {
+        bulkActionSelect.addEventListener('change', function() {
+          const userSelectGroup = document.getElementById('userSelectGroup');
+          if (this.value === 'reset_user_devices') {
+            userSelectGroup.style.display = 'block';
+          } else {
+            userSelectGroup.style.display = 'none';
+          }
+        });
+      }
+    });
+    
+    // Make device management functions globally available
+    window.showDeviceManagement = showDeviceManagement;
+    // window.loadDeviceData = loadDeviceData; // ❌ Function not defined, commented out
+    window.viewDeviceDetails = viewDeviceDetails;
+    window.toggleDeviceStatus = toggleDeviceStatus;
+    window.removeDevice = removeDevice;
+    window.showDeviceRequests = showDeviceRequests;
+    window.approveDeviceRequest = approveDeviceRequest;
+    window.rejectDeviceRequest = rejectDeviceRequest;
+    window.showBulkDeviceActions = showBulkDeviceActions;
+    window.executeBulkDeviceAction = executeBulkDeviceAction;
+    window.closeDeviceModal = closeDeviceModal;
+    window.closeDeviceRequestsModal = closeDeviceRequestsModal;
+    window.closeBulkDeviceModal = closeBulkDeviceModal;
+    window.approveAllDeviceRequests = approveAllDeviceRequests;
+    window.rejectAllDeviceRequests = rejectAllDeviceRequests;
+    
+    // ========================================
+    // USER-CENTRIC DEVICE MANAGEMENT FUNCTIONS
+    // ========================================
+    
+    // Show User Devices Modal
+    async function showUserDevicesModal(username) {
+      try {
+        const user = allUsersWithDevices.find(u => u.username === username);
+        if (!user) {
+          showMessage('❌ User not found', 'error');
+          return;
+        }
+        
+        // Get user's devices
+        const userDevices = allDevices.filter(d => d.username === username);
+        
+        if (userDevices.length === 0) {
+          showMessage('ℹ️ User has no registered devices', 'info');
+          return;
+        }
+        
+        const devicesHTML = `
+          <div style="max-height: 500px; overflow-y: auto;">
+            <div style="margin-bottom: 20px; padding: 15px; background: rgba(33,150,243,0.1); border-radius: 8px; border: 1px solid rgba(33,150,243,0.3);">
+              <h4 style="color: #2196F3; margin-bottom: 10px;">👤 User Information</h4>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 14px;">
+                <div><strong>Full Name:</strong> ${user.fullName || 'N/A'}</div>
+                <div><strong>Username:</strong> ${user.username}</div>
+                <div><strong>Email:</strong> ${user.username}@knpc.com</div>
+                <div><strong>Role:</strong> ${user.role || 'operator'}</div>
+                <div><strong>Device Limit:</strong> ${user.deviceLimit || 1}</div>
+                <div><strong>Devices Count:</strong> ${userDevices.length}</div>
+              </div>
+            </div>
+            
+            <h4 style="color: #4CAF50; margin-bottom: 15px;">📱 Registered Devices (${userDevices.length})</h4>
+            
+            ${userDevices.map(device => `
+              <div style="margin-bottom: 15px; padding: 15px; background: rgba(76,175,80,0.1); border-radius: 8px; border: 1px solid rgba(76,175,80,0.3);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                  <div>
+                    <div style="font-weight: bold; color: #4CAF50; font-size: 16px;">${device.deviceName || 'Unknown Device'}</div>
+                    <div style="font-size: 12px; color: #666; margin-top: 2px;">
+                      <span style="background: rgba(255,152,0,0.2); color: #FF9800; padding: 2px 6px; border-radius: 4px;">
+                        ${device.deviceType || 'Unknown Type'}
+                      </span>
+                      <span style="margin-left: 10px; background: rgba(33,150,243,0.2); color: #2196F3; padding: 2px 6px; border-radius: 4px;">
+                        ID: ${device.deviceId ? device.deviceId.substring(0, 8) + '...' : 'Unknown'}
+                      </span>
+                    </div>
+                  </div>
+                  <div style="text-align: right;">
+                    <span class="status-badge ${device.isActive ? 'badge-active' : 'badge-inactive'}" style="font-size: 12px;">
+                      ${device.isActive ? '✅ Active' : '❌ Inactive'}
+                    </span>
+                  </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 13px; margin-bottom: 10px;">
+                  <div><strong>Browser:</strong> ${device.browser || 'Unknown'}</div>
+                  <div><strong>OS:</strong> ${device.os || 'Unknown'}</div>
+                  <div><strong>Screen:</strong> ${device.screenResolution || 'Unknown'}</div>
+                  <div><strong>Last IP:</strong> ${device.lastIP || 'Unknown'}</div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 12px; color: #666;">
+                  <div><strong>Registered:</strong> ${device.registeredAt ? formatDateTime(device.registeredAt) : 'Unknown'}</div>
+                  <div><strong>Last Used:</strong> ${device.lastUsed ? formatDateTime(device.lastUsed) : 'Never'}</div>
+                </div>
+                
+                <div style="margin-top: 10px; display: flex; gap: 8px;">
+                  <button class="btn" onclick="toggleDeviceStatus('${device.id}')" 
+                          style="font-size: 11px; padding: 4px 8px; background: ${device.isActive ? '#FF9800' : '#4CAF50'}; color: white; border: none; border-radius: 4px;">
+                    ${device.isActive ? '⏸️ Disable' : '▶️ Enable'}
+                  </button>
+                  <button class="btn" onclick="removeDevice('${device.id}')" 
+                          style="font-size: 11px; padding: 4px 8px; background: #f44336; color: white; border: none; border-radius: 4px;">
+                    🗑️ Remove
+                  </button>
+                  <button class="btn" onclick="viewDeviceDetails('${device.id}')" 
+                          style="font-size: 11px; padding: 4px 8px; background: #2196F3; color: white; border: none; border-radius: 4px;">
+                    👁️ Details
+                  </button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+          
+          <div style="display: flex; gap: 15px; justify-content: center; margin-top: 25px;">
+            <button class="btn btn-warning" onclick="resetUserDevices('${username}'); closeUserDevicesModal();">
+              🔄 Reset All Devices
+            </button>
+            ${userDevices.length > user.deviceLimit ? `
+              <button class="btn btn-danger" onclick="removeExtraDevices('${username}'); closeUserDevicesModal();">
+                ✂️ Remove Extra Devices
+              </button>
+            ` : ''}
+            <button class="btn btn-secondary" onclick="closeUserDevicesModal()">Close</button>
+          </div>
+        `;
+        
+        document.getElementById('userDevicesModalTitle').textContent = `👤 ${user.fullName || user.username} - Device Management`;
+        document.getElementById('userDevicesModalContent').innerHTML = devicesHTML;
+        document.getElementById('userDevicesModal').classList.add('show');
+        
+      } catch (error) {
+        console.error('Error showing user devices modal:', error);
+        showMessage('❌ Error loading user devices', 'error');
+      }
+    }
+    
+    // Close User Devices Modal
+    function closeUserDevicesModal() {
+      document.getElementById('userDevicesModal').classList.remove('show');
+    }
+    
+    // Edit User Device Limit
+    function editUserDeviceLimit(username, currentLimit) {
+      const newLimit = prompt(`Enter new device limit for user "${username}":\n\nCurrent limit: ${currentLimit}`, currentLimit);
+      
+      if (newLimit === null) return; // User cancelled
+      
+      const limit = parseInt(newLimit);
+      if (isNaN(limit) || limit < 1 || limit > 10) {
+        showMessage('❌ Device limit must be between 1 and 10', 'error');
+        return;
+      }
+      
+      updateUserDeviceLimit(username, limit);
+    }
+    
+    // Update User Device Limit
+    async function updateUserDeviceLimit(username, newLimit) {
+      try {
+        showMessage('🔄 Updating device limit...', 'info');
+        
+        // Update in Firebase users collection
+        await updateDoc(doc(db, 'users', username), {
+          deviceLimit: newLimit,
+          lastModified: serverTimestamp(),
+          modifiedBy: currentUser.username
+        });
+        
+        // Update in config/deviceLimits for persistence
+        const limitsRef = doc(db, 'config', 'deviceLimits');
+        const limitsDoc = await getDoc(limitsRef);
+        let limitsData = limitsDoc.exists() ? limitsDoc.data() : { default: 1 };
+        limitsData[username] = newLimit;
+        await setDoc(limitsRef, limitsData);
+        
+        // Update local deviceLimitsConfig
+        deviceLimitsConfig[username] = newLimit;
+        
+        // Update local data
+        const user = allUsersWithDevices.find(u => u.username === username);
+        if (user) {
+          user.deviceLimit = newLimit;
+          user.isOverLimit = user.deviceCount > newLimit;
+        }
+        
+        renderUsersDeviceTable();
+        updateUsersDeviceStatistics();
+        
+        showMessage(`✅ Device limit updated to ${newLimit} for user ${username}`, 'success');
+        
+        // Log activity
+        await addDoc(collection(db, 'activities'), {
+          action: `Device limit updated: ${username} limit set to ${newLimit}`,
+          username: currentUser.username,
+          timestamp: serverTimestamp(),
+          page: 'device-management'
+        });
+        
+      } catch (error) {
+        console.error('Error updating device limit:', error);
+        showMessage(`❌ Failed to update device limit: ${error.message}`, 'error');
+      }
+    }
+    
+    // Reset User Devices
+    async function resetUserDevices(username) {
+      if (!confirm(`Are you sure you want to reset ALL devices for user "${username}"?\n\nThis will remove all their registered devices and they will need to register again.\n\nThis action cannot be undone.`)) {
+        return;
+      }
+      
+      try {
+        showMessage('🔄 Resetting user devices...', 'info');
+        
+        // Get user's devices
+        const userDevices = allDevices.filter(d => d.username === username);
+        
+        if (userDevices.length === 0) {
+          showMessage('ℹ️ User has no devices to reset', 'info');
+          return;
+        }
+        
+        // Delete all user devices from Firebase
+        const deletePromises = userDevices.map(device => deleteDoc(doc(db, 'userDevices', device.id)));
+        await Promise.all(deletePromises);
+        
+        // Remove from local arrays
+        userDevices.forEach(device => {
+          const index = allDevices.findIndex(d => d.id === device.id);
+          if (index > -1) {
+            allDevices.splice(index, 1);
+          }
+        });
+        
+        // Update user data
+        const user = allUsersWithDevices.find(u => u.username === username);
+        if (user) {
+          user.deviceCount = 0;
+          user.isOverLimit = false;
+          user.lastDeviceUsed = null;
+        }
+        
+        renderUsersDeviceTable();
+        updateUsersDeviceStatistics();
+        
+        showMessage(`✅ Reset ${userDevices.length} devices for user ${username}`, 'success');
+        
+        // Log activity
+        await addDoc(collection(db, 'activities'), {
+          action: `User devices reset: ${username} (${userDevices.length} devices removed)`,
+          username: currentUser.username,
+          timestamp: serverTimestamp(),
+          page: 'device-management'
+        });
+        
+      } catch (error) {
+        console.error('Error resetting user devices:', error);
+        showMessage(`❌ Failed to reset devices: ${error.message}`, 'error');
+      }
+    }
+    
+    // Remove Extra Devices
+    async function removeExtraDevices(username) {
+      const user = allUsersWithDevices.find(u => u.username === username);
+      if (!user || !user.isOverLimit) {
+        showMessage('❌ User is not over device limit', 'error');
+        return;
+      }
+      
+      const extraCount = user.deviceCount - user.deviceLimit;
+      
+      if (!confirm(`User "${username}" has ${user.deviceCount} devices but limit is ${user.deviceLimit}.\n\nThis will remove the ${extraCount} oldest devices.\n\nContinue?`)) {
+        return;
+      }
+      
+      try {
+        showMessage('🔄 Removing extra devices...', 'info');
+        
+        // Get user's devices sorted by last used (oldest first)
+        const userDevices = allDevices
+          .filter(d => d.username === username)
+          .sort((a, b) => {
+            const aTime = a.lastUsed || a.registeredAt || 0;
+            const bTime = b.lastUsed || b.registeredAt || 0;
+            return aTime - bTime; // oldest first
+          });
+        
+        // Get devices to remove (oldest ones)
+        const devicesToRemove = userDevices.slice(0, extraCount);
+        
+        // Delete devices from Firebase
+        const deletePromises = devicesToRemove.map(device => deleteDoc(doc(db, 'userDevices', device.id)));
+        await Promise.all(deletePromises);
+        
+        // Remove from local arrays
+        devicesToRemove.forEach(device => {
+          const index = allDevices.findIndex(d => d.id === device.id);
+          if (index > -1) {
+            allDevices.splice(index, 1);
+          }
+        });
+        
+        // Update user data
+        user.deviceCount = user.deviceLimit;
+        user.isOverLimit = false;
+        
+        renderUsersDeviceTable();
+        updateUsersDeviceStatistics();
+        
+        showMessage(`✅ Removed ${devicesToRemove.length} extra devices for user ${username}`, 'success');
+        
+        // Log activity
+        await addDoc(collection(db, 'activities'), {
+          action: `Extra devices removed: ${username} (${devicesToRemove.length} devices removed)`,
+          username: currentUser.username,
+          timestamp: serverTimestamp(),
+          page: 'device-management'
+        });
+        
+      } catch (error) {
+        console.error('Error removing extra devices:', error);
+        showMessage(`❌ Failed to remove extra devices: ${error.message}`, 'error');
+      }
+    }
+    
+    // Show Device Limits Configuration Modal
+    function showDeviceLimitsConfig() {
+      document.getElementById('deviceLimitsModal').classList.add('show');
+    }
+    
+    // Close Device Limits Configuration Modal
+    function closeDeviceLimitsModal() {
+      document.getElementById('deviceLimitsModal').classList.remove('show');
+    }
+    
+    // Save Device Limits Configuration
+    async function saveDeviceLimitsConfig() {
+      try {
+        const defaultLimit = parseInt(document.getElementById('defaultDeviceLimit').value);
+        const bulkAction = document.getElementById('bulkLimitAction').value;
+        
+        if (isNaN(defaultLimit) || defaultLimit < 1 || defaultLimit > 10) {
+          showMessage('❌ Default device limit must be between 1 and 10', 'error');
+          return;
+        }
+        
+        showMessage('🔄 Updating device limits configuration...', 'info');
+        
+        // Update global settings
+        await updateDoc(doc(db, 'settings', 'global'), {
+          defaultDeviceLimit: defaultLimit,
+          lastModified: serverTimestamp(),
+          modifiedBy: currentUser.username
+        });
+        
+        // Handle bulk actions
+        if (bulkAction) {
+          const updatePromises = [];
+          let targetLimit = defaultLimit;
+          
+          switch(bulkAction) {
+            case 'set_all_1': targetLimit = 1; break;
+            case 'set_all_2': targetLimit = 2; break;
+            case 'set_all_3': targetLimit = 3; break;
+            case 'reset_defaults': targetLimit = defaultLimit; break;
+          }
+          
+          // Update all users
+          allUsersWithDevices.forEach(user => {
+            updatePromises.push(updateDoc(doc(db, 'users', user.username), {
+              deviceLimit: targetLimit,
+              lastModified: serverTimestamp(),
+              modifiedBy: currentUser.username
+            }));
+            
+            // Update local data
+            user.deviceLimit = targetLimit;
+            user.isOverLimit = user.deviceCount > targetLimit;
+          });
+          
+          await Promise.all(updatePromises);
+          
+          renderUsersDeviceTable();
+          updateUsersDeviceStatistics();
+          
+          showMessage(`✅ Updated device limits for ${allUsersWithDevices.length} users to ${targetLimit}`, 'success');
+          
+          // Log activity
+          await addDoc(collection(db, 'activities'), {
+            action: `Bulk device limit update: ${bulkAction} (${targetLimit} devices)`,
+            username: currentUser.username,
+            timestamp: serverTimestamp(),
+            page: 'device-management'
+          });
+        } else {
+          showMessage(`✅ Default device limit updated to ${defaultLimit}`, 'success');
+        }
+        
+        closeDeviceLimitsModal();
+        
+      } catch (error) {
+        console.error('Error saving device limits configuration:', error);
+        showMessage(`❌ Failed to save configuration: ${error.message}`, 'error');
+      }
+    }
+    
+    // Make user device management functions globally available
+    window.showUserDevicesModal = showUserDevicesModal;
+    window.closeUserDevicesModal = closeUserDevicesModal;
+    window.editUserDeviceLimit = editUserDeviceLimit;
+    window.updateUserDeviceLimit = updateUserDeviceLimit;
+    window.resetUserDevices = resetUserDevices;
+    window.removeExtraDevices = removeExtraDevices;
+    window.showDeviceLimitsConfig = showDeviceLimitsConfig;
+    window.closeDeviceLimitsModal = closeDeviceLimitsModal;
+    window.saveDeviceLimitsConfig = saveDeviceLimitsConfig;
+    
+    // ========================================
+    // END DEVICE MANAGEMENT SYSTEM
+    // ========================================
+
+    // Make pagination functions globally available
+    window.goToPage = goToPage;
+    window.goToPreviousPage = goToPreviousPage; 
+    window.goToNextPage = goToNextPage;
+  </script>
+
+  <footer style="text-align:center;padding:20px;background:rgba(0,0,0,0.3);color:white;margin-top:30px">
+    By <a href="#" class="whatsapp-link" onclick="openWhatsApp(); return false;">Fahad - 17877</a> – Version v6.6 - Permissions System v4.0<br><small style="color:#999;font-size:10px;margin-top:5px;display:block">📱 WhatsApp: +965 55222550</small>
+  </footer>
+
+  <style>
+    .whatsapp-link{color:#25D366;text-decoration:none;font-weight:bold;transition:all 0.3s ease;cursor:pointer}
+    .whatsapp-link:hover{color:#128C7E;text-shadow:0 0 5px rgba(37,211,102,0.5);transform:scale(1.05)}
+  </style>
+</body>
+</html>
