@@ -35,7 +35,7 @@
 @keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
     *{margin:0;padding:0;box-sizing:border-box}
     body{background:linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.5)),url('background.jpg');background-size:cover;background-position:center;background-attachment:fixed;color:white;font-family:Arial,sans-serif;padding:10px;text-align:center;min-height:100vh}
-    .nav-bar{display:flex;justify-content:space-between;align-items:center;padding:10px 20px;background:rgba(0,0,0,0.5);border-radius:10px;margin-bottom:20px;flex-wrap:wrap}
+    /* nav-bar styles removed - now handled by navbar-component.js */
     .nav-logo{font-size:24px;font-weight:bold;color:white}
     .nav-links{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
     .nav-link{color:white;text-decoration:none;padding:8px 16px;border-radius:8px;transition:all 0.3s ease;background:rgba(255,255,255,0.1);font-weight:500;border:1px solid rgba(255,255,255,0.2)}
@@ -120,7 +120,7 @@
       .security-buttons{flex-direction:column}
       .modal-btn{width:100%}
     }
-    @media (max-height:500px){.nav-bar{padding:4px}h2{margin:5px 0;font-size:1rem}label{display:inline-block}}
+    @media (max-height:500px){h2{margin:5px 0;font-size:1rem}label{display:inline-block}}
   </style>
 </head>
 <body>
