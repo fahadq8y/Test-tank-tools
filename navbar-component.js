@@ -135,7 +135,7 @@ class NavbarComponent {
     // Store instance globally for logout button
     window.NavbarComponent = this;
     
-    console.log('✅ Navbar Component v1.2 mounted');
+    console.log('✅ Navbar Component v1.3 mounted');
   }
 }
 
