@@ -150,10 +150,10 @@ avatarStyles.textContent = `
 .user-profile {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 10px !important;
   padding: 6px 12px;
   background: rgba(255, 255, 255, 0.08);
-  border-radius: 50px;
+  border-radius: 50px !important;
   border: 1px solid rgba(255, 215, 0, 0.2);
   transition: all 0.3s ease;
   backdrop-filter: blur(10px);
@@ -174,18 +174,18 @@ avatarStyles.textContent = `
 /* Avatar Circle - Smaller & More Compact */
 .user-avatar {
   position: relative;
-  width: 36px;
-  height: 36px;
+  width: 36px !important;
+  height: 36px !important;
   border-radius: 50%;
-  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%) !important;
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: 
     0 2px 8px rgba(255, 215, 0, 0.4),
-    inset 0 1px 2px rgba(255, 255, 255, 0.3);
+    inset 0 1px 2px rgba(255, 255, 255, 0.3) !important;
   transition: all 0.3s ease;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.3) !important;
 }
 
 .user-avatar:hover {
