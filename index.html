@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- PBCR Calculator v8.6 - Using Navbar & Footer Components -->
+<!-- PBCR Calculator v8.7 - Fixed Navbar Component errors -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -923,11 +923,17 @@ function setTheme(theme) {
   updateActiveTheme(theme);
   console.log('🎨 Theme changed to:', theme);
   // Close dropdown
-  document.getElementById('themeDropdown').classList.remove('show');
+  const dropdown = document.getElementById('themeDropdown');
+  if (dropdown) {
+    dropdown.classList.remove('show');
+  }
 }
 
 function toggleThemeDropdown() {
-  document.getElementById('themeDropdown').classList.toggle('show');
+  const dropdown = document.getElementById('themeDropdown');
+  if (dropdown) {
+    dropdown.classList.toggle('show');
+  }
 }
 
 function updateActiveTheme(theme) {
@@ -1025,7 +1031,7 @@ footer{margin-top:40px;color:#ccc;text-align:center}
     // Initialize Navbar
     const navbar = new NavbarComponent({
       title: '🛢️ PBCR Calculator',
-      version: '8.6',
+      version: '8.7',
       currentPage: 'pbcr-link',
       showNMOGAS: true
     });
@@ -1033,7 +1039,7 @@ footer{margin-top:40px;color:#ccc;text-align:center}
     
     // Initialize Footer
     const footer = new FooterComponent({
-      version: '8.6',
+      version: '8.7',
       developer: 'Fahad - 17877',
       whatsapp: '+965 55222550'
     });
@@ -1047,7 +1053,7 @@ footer{margin-top:40px;color:#ccc;text-align:center}
       }
     }, 100);
     
-    console.log('✅ PBCR v8.6 - Using Navbar & Footer Components');
+    console.log('✅ PBCR v8.7 - Fixed Navbar Component errors');
   </script>
 </body>
 </html>

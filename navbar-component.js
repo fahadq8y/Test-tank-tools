@@ -1,13 +1,16 @@
-// Navbar Component v1.0
+// Navbar Component v1.1 - Fixed showNMOGAS error
 // Unified navigation bar for all Tank Tools pages
 
 class NavbarComponent {
-  constructor(config) {
+  constructor(config = {}) {
+    // Set showNMOGAS first before calling getDefaultLinks
+    this.showNMOGAS = config.showNMOGAS !== false; // default true
+    
     this.config = {
       title: config.title || 'Tank Tools',
       version: config.version || '1.0',
       currentPage: config.currentPage || '',
-      showNMOGAS: config.showNMOGAS !== false, // default true
+      showNMOGAS: this.showNMOGAS,
       links: config.links || this.getDefaultLinks(),
       onLogout: config.onLogout || this.defaultLogout
     };
@@ -20,7 +23,7 @@ class NavbarComponent {
     return [
       { href: 'index.html', icon: '🛢️', text: 'PBCR', id: 'pbcr-link' },
       { href: 'plcr.html', icon: '⚗️', text: 'PLCR', id: 'plcr-link' },
-      { href: 'NMOGASBL.html', icon: '🔧', text: 'NMOGAS', id: 'nmogas-link', hidden: !this.config.showNMOGAS },
+      { href: 'NMOGASBL.html', icon: '🔧', text: 'NMOGAS', id: 'nmogas-link', hidden: !this.showNMOGAS },
       { href: 'live-tanks.html', icon: '🔴', text: 'Live Tanks', id: 'live-tanks-link' },
       { href: 'vacation-planner.html', icon: '🏖️', text: 'Vacation Planner', id: 'vacation-link' },
       { href: 'shift-roster.html', icon: '📅', text: 'Shift Roster', id: 'shift-link' },
