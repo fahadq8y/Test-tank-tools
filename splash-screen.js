@@ -178,16 +178,16 @@
   // Wait for page load
   if (document.readyState === 'complete') {
     // Page already loaded
-    setTimeout(hideSplash, 800); // Show for at least 800ms
+    setTimeout(hideSplash, 2000); // Show for at least 2 seconds
   } else {
     // Wait for load event
     window.addEventListener('load', () => {
-      setTimeout(hideSplash, 800); // Show for at least 800ms
+      setTimeout(hideSplash, 2000); // Show for at least 2 seconds
     });
   }
   
-  // Fallback: hide after 5 seconds max
-  setTimeout(hideSplash, 5000);
+  // Fallback: hide after 6 seconds max
+  setTimeout(hideSplash, 6000);
   
   console.log('✅ Splash Screen loaded - Tank Tools v1.0');
   
