@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- PLCR Calculator v7.5 - Using Navbar & Footer Components -->
+<!-- PLCR Calculator v7.6 - Using Navbar & Footer Components -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -68,7 +68,7 @@
     window.limit = limit;
     window.serverTimestamp = serverTimestamp;
     
-    console.log('%c⛗️ PLCR CALCULATOR v7.5 - Using Firebase Auth Handler', 'color:#B8860B;font-size:20px;font-weight:bold');
+    console.log('%c⛗️ PLCR CALCULATOR v7.6 - Using Firebase Auth Handler', 'color:#B8860B;font-size:20px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
   </script>
   <style>
@@ -1352,33 +1352,38 @@
           return;
         }
         
-        // استخدام دالة hasPermission من permissions.js
-        const canAddToLiveTanks = await hasPermission('canAddToLiveTanks');
-        
-        console.log('checkAddToLiveTanksPermission: Can add to Live Tanks:', canAddToLiveTanks);
-        
-        const addButton = document.getElementById('addToLiveTanksBtn');
-        
-        if (canAddToLiveTanks) {
-          if (addButton) {
-            addButton.style.display = 'block';
-            addButton.disabled = false;
+        // استخدام showAddToLiveTanksButton من permissions.js
+        if (window.showAddToLiveTanksButton && currentUser) {
+          const hasButtonAccess = window.showAddToLiveTanksButton(currentUser, 'PLCR');
+          
+          console.log('checkAddToLiveTanksPermission: Can add to Live Tanks:', hasButtonAccess);
+          
+          const liveTanksRow = document.getElementById('liveTanksRow');
+          
+          if (hasButtonAccess) {
+            if (liveTanksRow) {
+              liveTanksRow.style.display = 'flex';
+            }
+            console.log('✅ Add to Live Tanks button enabled');
+          } else {
+            if (liveTanksRow) {
+              liveTanksRow.style.display = 'none';
+            }
+            console.log('❌ Add to Live Tanks button disabled - no permission');
           }
-          console.log('✅ Add to Live Tanks button enabled');
         } else {
-          if (addButton) {
-            addButton.style.display = 'none';
-            addButton.disabled = true;
+          console.log('⚠️ showAddToLiveTanksButton function not available or no user, hiding button');
+          const liveTanksRow = document.getElementById('liveTanksRow');
+          if (liveTanksRow) {
+            liveTanksRow.style.display = 'none';
           }
-          console.log('❌ Add to Live Tanks button disabled - no permission');
         }
       } catch (error) {
         console.error('❌ Error checking Add to Live Tanks permission:', error);
         // في حالة الخطأ، إخفاء الزر للأمان
-        const addButton = document.getElementById('addToLiveTanksBtn');
-        if (addButton) {
-          addButton.style.display = 'none';
-          addButton.disabled = true;
+        const liveTanksRow = document.getElementById('liveTanksRow');
+        if (liveTanksRow) {
+          liveTanksRow.style.display = 'none';
         }
       }
     }

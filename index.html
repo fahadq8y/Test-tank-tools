@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- PBCR Calculator v8.9 - Fixed Desktop Mode error -->
+<!-- PBCR Calculator v9.0 - Fixed Desktop Mode error -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -678,26 +678,20 @@ window.calculate = () => {
       };
       
       // ✅ Check Add to Live Tanks button permission after successful calculation
-      if (window.checkAddToLiveTanksButtonAccess) {
-        window.checkAddToLiveTanksButtonAccess('index.html').then(hasButtonAccess => {
-          if (hasButtonAccess) {
-            document.getElementById('add-to-live-tanks-btn').style.display = 'inline-flex';
-            document.getElementById('add-to-live-tanks-help').style.display = 'inline-flex';
-            console.log('✅ Live Tanks button shown after permission check');
-          } else {
-            document.getElementById('add-to-live-tanks-btn').style.display = 'none';
-            document.getElementById('add-to-live-tanks-help').style.display = 'none';
-            console.log('❌ Live Tanks button hidden due to insufficient permissions');
-          }
-          console.log('🔘 Button access for index.html:', hasButtonAccess);
-        }).catch(error => {
-          console.error('Error checking button access:', error);
-          // في حالة الخطأ، نخفي الزر للأمان
+      if (window.showAddToLiveTanksButton && currentUser) {
+        const hasButtonAccess = window.showAddToLiveTanksButton(currentUser, 'PBCR');
+        if (hasButtonAccess) {
+          document.getElementById('add-to-live-tanks-btn').style.display = 'inline-flex';
+          document.getElementById('add-to-live-tanks-help').style.display = 'inline-flex';
+          console.log('✅ Live Tanks button shown after permission check');
+        } else {
           document.getElementById('add-to-live-tanks-btn').style.display = 'none';
           document.getElementById('add-to-live-tanks-help').style.display = 'none';
-        });
+          console.log('❌ Live Tanks button hidden due to insufficient permissions');
+        }
+        console.log('🔘 Button access for PBCR:', hasButtonAccess);
       } else {
-        console.log('⚠️ checkAddToLiveTanksButtonAccess function not available, hiding button');
+        console.log('⚠️ showAddToLiveTanksButton function not available or no user, hiding button');
         document.getElementById('add-to-live-tanks-btn').style.display = 'none';
         document.getElementById('add-to-live-tanks-help').style.display = 'none';
       }
@@ -1056,7 +1050,7 @@ footer{margin-top:40px;color:#ccc;text-align:center}
       }
     }, 100);
     
-    console.log('✅ PBCR v8.9 - Class-based components');
+    console.log('✅ PBCR v9.0 - Class-based components');
   </script>
 </body>
 </html>
