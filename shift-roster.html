@@ -845,8 +845,8 @@
   </style>
 </head>
 <body>
-  <!-- Navbar Container -->
-  <div id="navbar-container"></div>
+  <!-- Navbar Component -->
+  <navbar-component title="📅 الورديات - Shift Roster" version="10.0" current-page="shift-roster" show-nmogas="true"></navbar-component>
   
   <!-- Main Container -->
   <div class="main-container">
@@ -1467,36 +1467,11 @@
   </script>
   
   <script>
-    // Initialize Navbar
-    const navbar = new NavbarComponent({
-      title: '📅 الورديات - Shift Roster',
-      version: '10.0',
-      currentPage: 'shift-link',
-      showNMOGAS: true
-    });
-    navbar.mount('#navbar-container');
-    
-    // Initialize Footer
-    const footer = new FooterComponent({
-      version: '10.0',
-      developer: 'Fahad - 17877',
-      whatsapp: '+965 55222550'
-    });
-    footer.mount('#footer-container');
-    
-    // Update navbar user info when currentUser is available
-    const updateNavbarUser = setInterval(() => {
-      if (window.currentUser) {
-        navbar.updateUserInfo(window.currentUser);
-        clearInterval(updateNavbarUser);
-      }
-    }, 100);
-    
-    console.log('✅ Shift Roster v10.0 - Navbar & Footer initialized');
+    console.log('✅ Shift Roster v10.0 - Using Custom Elements');
   </script>
   
-  <!-- Footer Container -->
-  <div id="footer-container"></div>
+  <!-- Footer Component -->
+  <footer-component version="10.0" developer="Fahad - 17877" whatsapp="+965 55222550"></footer-component>
   
   <script src="pwa-install-banner.js"></script>
 </body>
