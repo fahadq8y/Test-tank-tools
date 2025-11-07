@@ -167,10 +167,17 @@
   `;
   
   // Inject styles first
-  document.head.insertAdjacentHTML('beforeend', splashStyles);
+  if (document.head) {
+    document.head.insertAdjacentHTML('beforeend', splashStyles);
+  }
   
   // Inject splash screen
-  document.body.insertAdjacentHTML('afterbegin', splashHTML);
+  if (document.body) {
+    document.body.insertAdjacentHTML('afterbegin', splashHTML);
+  } else {
+    console.warn('⚠️ document.body not ready for splash screen');
+    return;
+  }
   
   // Get splash screen element
   const splashScreen = document.getElementById('splash-screen');
