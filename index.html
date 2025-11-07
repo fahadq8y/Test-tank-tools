@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- PBCR Calculator v9.0 - Fixed Desktop Mode error -->
+<!-- PBCR Calculator v9.1 - Fixed Add to Live Tanks permissions -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -415,7 +415,7 @@ window.serverTimestamp = serverTimestamp;
 window.collection = collection;
 window.getDocs = getDocs;
 
-console.log('%c🛢️ PBCR CALCULATOR v9.0 - Using Firebase Auth Handler', 'color:#B8860B;font-size:20px;font-weight:bold');
+console.log('%c🛢️ PBCR CALCULATOR v9.1 - Using Firebase Auth Handler', 'color:#B8860B;font-size:20px;font-weight:bold');
 console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
 </script>
 <script>
@@ -873,9 +873,15 @@ document.addEventListener('DOMContentLoaded', function() {
       
       try {
         const finishDateTime = new Date(finishDate + ' ' + finishTime);
-        // Check if user is logged in for permission
-        if (!currentUser) {
+        // Check if user is logged in
+        if (!window.currentUser) {
           alert('⚠️ Please log in to add tanks to Live Tanks system.\n\nClick on any navigation link to go to login page.');
+          return;
+        }
+        
+        // Check permissions from permissions.js
+        if (window.showAddToLiveTanksButton && !window.showAddToLiveTanksButton(window.currentUser, 'PBCR')) {
+          alert('You do not have permission to add to Live Tanks');
           return;
         }
         
@@ -892,11 +898,11 @@ document.addEventListener('DOMContentLoaded', function() {
           finishTime: finishTime,
           finishDateTime: finishDateTime,
           notes: notes,
-          addedBy: currentUser.username,
-          userName: currentUser.fullName || currentUser.username,
+          addedBy: window.currentUser.username,
+          userName: window.currentUser.fullName || window.currentUser.username,
           addedAt: serverTimestamp(),
           lastModified: serverTimestamp(),
-          modifiedBy: currentUser.username,
+          modifiedBy: window.currentUser.username,
           status: 'active',
           source: 'PBCR_Calculator'
         };

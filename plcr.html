@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- PLCR Calculator v7.6 - Using Navbar & Footer Components -->
+<!-- PLCR Calculator v7.7 - Fixed Add to Live Tanks permissions with unified system -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -68,7 +68,7 @@
     window.limit = limit;
     window.serverTimestamp = serverTimestamp;
     
-    console.log('%c⛗️ PLCR CALCULATOR v7.6 - Using Firebase Auth Handler', 'color:#B8860B;font-size:20px;font-weight:bold');
+    console.log('%c⛗️ PLCR CALCULATOR v7.7 - Using Firebase Auth Handler', 'color:#B8860B;font-size:20px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
   </script>
   <style>
@@ -1395,47 +1395,15 @@
         return;
       }
       
-      // فحص الصلاحيات - تحسين الفحص
-      try {
-        if (!currentUser) {
-          alert('User information not available. Please refresh the page.');
-          return;
-        }
-        
-        // فحص الصلاحيات بطريقة محسنة
-        let hasAddPermission = false;
-        
-        // فحص مباشر للأدوار المسموحة
-        const allowedRoles = ['admin', 'control_panel', 'panel_operator'];
-        if (allowedRoles.includes(currentUser.role) || allowedRoles.includes(currentUser.specialization)) {
-          hasAddPermission = true;
-        }
-        
-        // فحص إضافي باستخدام hasPermission إذا كانت متوفرة
-        if (typeof window.hasPermission === 'function') {
-          try {
-            const permissionResult = await window.hasPermission('canAddToLiveTanks');
-            if (permissionResult) {
-              hasAddPermission = true;
-            }
-          } catch (error) {
-            console.log('Permission check failed, using role-based check:', error);
-          }
-        }
-        
-        // فحص خاص للمستخدم fam030
-        if (currentUser.username === 'fam030') {
-          hasAddPermission = true;
-        }
-        
-        if (!hasAddPermission) {
-          alert('You do not have permission to add to Live Tanks');
-          return;
-        }
-        
-      } catch (error) {
-        console.error('Error checking permissions:', error);
-        alert('Error checking permissions. Please try again.');
+      // فحص تسجيل الدخول
+      if (!window.currentUser) {
+        alert('⚠️ Please log in to add tanks to Live Tanks system.\n\nClick on any navigation link to go to login page.');
+        return;
+      }
+      
+      // فحص الصلاحيات من permissions.js
+      if (window.showAddToLiveTanksButton && !window.showAddToLiveTanksButton(window.currentUser, 'PLCR')) {
+        alert('You do not have permission to add to Live Tanks');
         return;
       }
       
@@ -1589,7 +1557,7 @@
         }
         
         // التحقق من بيانات المستخدم
-        if (!currentUser || !currentUser.username) {
+        if (!window.currentUser || !window.currentUser.username) {
           alert('User information not available. Please refresh the page.');
           return;
         }
@@ -1642,8 +1610,8 @@
           rate: calcData.withdrawalRate,
           rateUnit: 'MT/hr',
           conversionFactor: conversionFactor, // Add conversion factor
-          addedBy: currentUser.username,
-          userName: currentUser.fullName || currentUser.username,
+          addedBy: window.currentUser.username,
+          userName: window.currentUser.fullName || window.currentUser.username,
           finishTime: timeStr,
           finishDate: dateStr,
           finishDateTime: finishDateTime,
