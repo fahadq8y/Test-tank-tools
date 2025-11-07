@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Shift Roster v10.6 - Using navbar-component.js v1.5 + footer-component.js -->
+<!-- Shift Roster v10.7 - Using navbar-component.js v1.5 + footer-component.js -->
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
@@ -1272,8 +1272,11 @@
       // Update date display
       const arabicMonths = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 
                            'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
-      document.getElementById('dateDisplay').textContent = 
-        `${today.getDate()} ${arabicMonths[today.getMonth()]} ${today.getFullYear()}`;
+      const dateDisplayEl = document.getElementById('dateDisplay');
+      if (dateDisplayEl) {
+        dateDisplayEl.textContent = 
+          `${today.getDate()} ${arabicMonths[today.getMonth()]} ${today.getFullYear()}`;
+      }
     }
     
     // ========== NEW CALENDAR VIEW RENDER ==========
@@ -1491,7 +1494,7 @@
       switchView(); // This will render the appropriate view with holidays
     })();
     
-    console.log('%c📅 SHIFT ROSTER v10.6 - Using navbar-component.js v1.5 + footer-component.js', 'color:#B8860B;font-size:20px;font-weight:bold');
+    console.log('%c📅 SHIFT ROSTER v10.7 - Using navbar-component.js v1.5 + footer-component.js', 'color:#B8860B;font-size:20px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
   </script>
   
@@ -1507,7 +1510,7 @@
       checkPermissions: true
     });
     
-    console.log('%c📅 SHIFT ROSTER v10.6 - Using navbar-component.js v1.5 + footer-component.js', 'color:#4CAF50;font-size:16px;font-weight:bold');
+    console.log('%c📅 SHIFT ROSTER v10.7 - Using navbar-component.js v1.5 + footer-component.js', 'color:#4CAF50;font-size:16px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:14px');
     
     // ✅ Wait for FirebaseAuthHandler to set currentUser
@@ -1559,7 +1562,7 @@
       }
     }, 100);
     
-    console.log('✅ Shift Roster v10.6 - Class-based components');
+    console.log('✅ Shift Roster v10.7 - Class-based components');
   </script>
   
   <script src="pwa-install-banner.js"></script>

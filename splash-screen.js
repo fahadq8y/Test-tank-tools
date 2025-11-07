@@ -8,6 +8,14 @@
 (function() {
   'use strict';
   
+  // Wait for DOM to be ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSplash);
+  } else {
+    initSplash();
+  }
+  
+  function initSplash() {
   // Create splash screen HTML
   const splashHTML = `
     <div id="splash-screen" class="splash-screen">
@@ -190,5 +198,6 @@
   setTimeout(hideSplash, 6000);
   
   console.log('✅ Splash Screen loaded - Tank Tools v1.0');
+  }
   
 })();
