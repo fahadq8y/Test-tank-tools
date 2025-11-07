@@ -1146,7 +1146,10 @@
       const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
       const dayName = dayNames[today.getDay()];
       const dayNumber = today.getDate();
-      document.getElementById('daysHeader').textContent = `${dayName} ${dayNumber}`;
+      const daysHeader = document.getElementById('daysHeader');
+      if (daysHeader) {
+        daysHeader.textContent = `${dayName} ${dayNumber}`;
+      }
       
       shiftsGrid.innerHTML = '';
       daysGrid.innerHTML = '';
@@ -1464,6 +1467,35 @@
         console.log('✅ Shift Roster loaded for:', window.currentUser.name);
       }
     }, 100);
+  </script>
+  
+  <script>
+    // Initialize Navbar
+    const navbar = new NavbarComponent({
+      title: '📅 الورديات - Shift Roster',
+      version: '10.0',
+      currentPage: 'shift-link',
+      showNMOGAS: true
+    });
+    navbar.mount('#navbar-container');
+    
+    // Initialize Footer
+    const footer = new FooterComponent({
+      version: '10.0',
+      developer: 'Fahad - 17877',
+      whatsapp: '+965 55222550'
+    });
+    footer.mount('#footer-container');
+    
+    // Update navbar user info when currentUser is available
+    const updateNavbarUser = setInterval(() => {
+      if (window.currentUser) {
+        navbar.updateUserInfo(window.currentUser);
+        clearInterval(updateNavbarUser);
+      }
+    }, 100);
+    
+    console.log('✅ Shift Roster v10.0 - Navbar & Footer initialized');
   </script>
   
   <script src="pwa-install-banner.js"></script>

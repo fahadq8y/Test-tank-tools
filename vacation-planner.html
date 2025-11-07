@@ -2085,6 +2085,36 @@
       }
     }, 100);
   </script>
+  
+  <script>
+    // Initialize Navbar
+    const navbar = new NavbarComponent({
+      title: '🏖️ مخطط الإجازات - Vacation Planner',
+      version: '3.0',
+      currentPage: 'vacation-link',
+      showNMOGAS: true
+    });
+    navbar.mount('#navbar-container');
+    
+    // Initialize Footer
+    const footer = new FooterComponent({
+      version: '3.0',
+      developer: 'Fahad - 17877',
+      whatsapp: '+965 55222550'
+    });
+    footer.mount('#footer-container');
+    
+    // Update navbar user info when currentUser is available
+    const updateNavbarUser = setInterval(() => {
+      if (window.currentUser) {
+        navbar.updateUserInfo(window.currentUser);
+        clearInterval(updateNavbarUser);
+      }
+    }, 100);
+    
+    console.log('✅ Vacation Planner v3.0 - Navbar & Footer initialized');
+  </script>
+  
   <script src="pwa-install-banner.js"></script>
   
   <!-- Footer Container -->
