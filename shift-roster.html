@@ -1031,6 +1031,28 @@
     const KUWAIT_CALENDAR_ID = 'en.kw.official%23holiday@group.v.calendar.google.com';
     let kuwaitHolidays = [];
     
+    // Arabic translations for Kuwait holidays
+    const holidayTranslations = {
+      "New Year's Day": "رأس السنة الميلادية",
+      "New Year's Day observed": "عطلة رأس السنة الميلادية",
+      "National Day": "العيد الوطني",
+      "Liberation Day": "عيد التحرير",
+      "Isra and Mi'raj": "الإسراء والمعراج",
+      "Eid al-Fitr": "عيد الفطر",
+      "Eid al-Fitr Holiday": "عطلة عيد الفطر",
+      "Arafat Day": "يوم عرفة",
+      "Eid al-Adha": "عيد الأضحى",
+      "Eid al-Adha Holiday": "عطلة عيد الأضحى",
+      "Islamic New Year": "رأس السنة الهجرية",
+      "Prophet's Birthday": "المولد النبوي",
+      "Mawlid al-Nabi": "المولد النبوي الشريف"
+    };
+    
+    // Translate holiday name to Arabic
+    function translateHoliday(englishName) {
+      return holidayTranslations[englishName] || englishName;
+    }
+    
     // Fetch Kuwait holidays from Google Calendar API
     async function fetchKuwaitHolidays(year) {
       // Check cache first
@@ -1129,12 +1151,13 @@
       let html = '';
       monthHolidays.forEach(holiday => {
         const date = new Date(holiday.date);
-        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        const dateStr = `${monthNames[date.getMonth()]} ${date.getDate()}`;
+        const monthNames = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+        const dateStr = `${date.getDate()} ${monthNames[date.getMonth()]}`;
+        const arabicName = translateHoliday(holiday.name);
         html += `<div style="padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">
           <span style="color: var(--accent); font-weight: bold;">${dateStr}</span>
           <span style="margin: 0 10px;">•</span>
-          <span>${holiday.name}</span>
+          <span>${arabicName}</span>
           <span style="margin-left: 10px;">🔴</span>
         </div>`;
       });
