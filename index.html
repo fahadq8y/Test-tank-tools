@@ -415,7 +415,7 @@ window.serverTimestamp = serverTimestamp;
 window.collection = collection;
 window.getDocs = getDocs;
 
-console.log('%c🛢️ PBCR CALCULATOR v8.6 - Using Firebase Auth Handler', 'color:#B8860B;font-size:20px;font-weight:bold');
+console.log('%c🛢️ PBCR CALCULATOR v9.0 - Using Firebase Auth Handler', 'color:#B8860B;font-size:20px;font-weight:bold');
 console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
 </script>
 <script>
@@ -678,8 +678,8 @@ window.calculate = () => {
       };
       
       // ✅ Check Add to Live Tanks button permission after successful calculation
-      if (window.showAddToLiveTanksButton && currentUser) {
-        const hasButtonAccess = window.showAddToLiveTanksButton(currentUser, 'PBCR');
+      if (window.showAddToLiveTanksButton && window.currentUser) {
+        const hasButtonAccess = window.showAddToLiveTanksButton(window.currentUser, 'PBCR');
         if (hasButtonAccess) {
           document.getElementById('add-to-live-tanks-btn').style.display = 'inline-flex';
           document.getElementById('add-to-live-tanks-help').style.display = 'inline-flex';

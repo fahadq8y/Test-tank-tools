@@ -1353,8 +1353,8 @@
         }
         
         // استخدام showAddToLiveTanksButton من permissions.js
-        if (window.showAddToLiveTanksButton && currentUser) {
-          const hasButtonAccess = window.showAddToLiveTanksButton(currentUser, 'PLCR');
+        if (window.showAddToLiveTanksButton && window.currentUser) {
+          const hasButtonAccess = window.showAddToLiveTanksButton(window.currentUser, 'PLCR');
           
           console.log('checkAddToLiveTanksPermission: Can add to Live Tanks:', hasButtonAccess);
           
