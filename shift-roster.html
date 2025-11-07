@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Shift Roster v9.9 - Using Navbar & Footer Components -->
+<!-- Shift Roster v10.0 - Using navbar-component.js v1.5 + footer-component.js -->
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
@@ -1425,7 +1425,7 @@
     switchView(); // This will render the appropriate view
     loadHolidays(); // Load Kuwait holidays
     
-    console.log('%c📅 SHIFT ROSTER v9.8 - Using Firebase Auth Handler', 'color:#B8860B;font-size:20px;font-weight:bold');
+    console.log('%c📅 SHIFT ROSTER v10.0 - Using navbar-component.js v1.5 + footer-component.js', 'color:#B8860B;font-size:20px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
   </script>
   
@@ -1441,7 +1441,7 @@
       checkPermissions: true
     });
     
-    console.log('%c📅 SHIFT ROSTER v9.8 - Using Firebase Auth Handler', 'color:#4CAF50;font-size:16px;font-weight:bold');
+    console.log('%c📅 SHIFT ROSTER v10.0 - Using navbar-component.js v1.5 + footer-component.js', 'color:#4CAF50;font-size:16px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:14px');
     
     // ✅ Wait for FirebaseAuthHandler to set currentUser
@@ -1464,32 +1464,6 @@
         console.log('✅ Shift Roster loaded for:', window.currentUser.name);
       }
     }, 100);
-    
-    setTimeout(() => {
-      clearInterval(checkUserInterval);
-      if (!window.currentUser) {
-        console.error('❌ Failed to load user data');
-      }
-    }, 5000);
-  </script>
-  
-  <!-- Navbar Component -->
-  <script src="navbar-component.js"></script>
-  <script>
-    const navbar = new NavbarComponent({
-      title: '📅 الورديات - Shift Roster',
-      version: '9.9',
-      currentPage: 'shift-roster-link',
-      showShiftRoster: false
-    });
-    navbar.mount('#navbar-container');
-  </script>
-  
-  <!-- Footer Component -->
-  <script src="footer-component.js"></script>
-  <script>
-    const footer = new FooterComponent();
-    footer.mount('#footer-container');
   </script>
   
   <script src="pwa-install-banner.js"></script>

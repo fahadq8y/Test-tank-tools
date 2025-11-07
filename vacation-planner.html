@@ -2084,13 +2084,6 @@
         await loadAllLeaves();
       }
     }, 100);
-    
-    setTimeout(() => {
-      clearInterval(checkUserInterval);
-      if (!window.currentUser) {
-        console.error('❌ Failed to load user data');
-      }
-    }, 5000);
   </script>
   <script src="pwa-install-banner.js"></script>
   
