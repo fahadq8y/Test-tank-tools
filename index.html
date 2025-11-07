@@ -15,8 +15,8 @@
 <script src="permissions.js"></script>
 <script src="session-manager.js"></script>
 <script src="last-page-tracker.js"></script>
-<script src="navbar-component.js" defer></script>
-<script src="footer-component.js" defer></script>
+<script src="navbar-component.js"></script>
+<script src="footer-component.js"></script>
 <style>
 /* === CSS Variables & Themes === */
 /* === Mobile Safe Areas === */
@@ -47,6 +47,58 @@
 /* === Original CSS === */
 *{margin:0;padding:0;box-sizing:border-box}body{background:linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.5)),url('background.jpg');background-size:cover;background-position:center;background-attachment:fixed;color:white;font-family:Arial,sans-serif;padding:20px;padding-top:calc(20px + var(--safe-area-inset-top));padding-right:calc(20px + var(--safe-area-inset-right));padding-bottom:calc(20px + var(--safe-area-inset-bottom));padding-left:calc(20px + var(--safe-area-inset-left));min-height:100vh}
 
+    /* Navigation Bar */
+    .nav-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 30px;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(10px);
+      border-bottom: 2px solid var(--primary);
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 15px;
+      position: relative;
+      z-index: 1000;
+    }
+    
+    .nav-logo {
+      font-size: 24px;
+      font-weight: bold;
+      color: var(--primary);
+    }
+    
+    .nav-links {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    
+    .nav-link {
+      color: white;
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      background: rgba(255,255,255,0.1);
+      font-weight: 500;
+      border: 1px solid rgba(255,255,255,0.2);
+      font-size: 14px;
+    }
+    
+    .nav-link:hover {
+      background: var(--primary);
+      transform: translateY(-1px);
+    }
+    
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
     /* Font Controls */
     .font-controls {
       display: flex;
@@ -209,7 +261,7 @@ input,select{background:rgba(255,255,255,0.9);border-radius:12px;border:none;col
 </div>
 <div id="mainContent" style="display:none;">
 <!-- Navigation Bar (Component) -->
-  <navbar-component title="🛢️ PBCR Calculator" version="8.9" current-page="pbcr" show-nmogas="true"></navbar-component>
+  <div id="navbar-container"></div>
 <h2 style="text-align:center">PBCR & WASHERY</h2>
 <div class="main-container">
 <div class="row">
@@ -966,7 +1018,7 @@ function handleLogout() {
 
 </script>
 <!-- Footer (Component) -->
-<footer-component version="8.9" developer="Fahad - 17877" whatsapp="+965 55222550"></footer-component>
+<div id="footer-container"></div>
 <style>
 footer{margin-top:40px;color:#ccc;text-align:center}
 .whatsapp-link{color:#25D366;text-decoration:none;font-weight:bold;transition:all 0.3s ease;cursor:pointer}
@@ -976,8 +1028,34 @@ footer{margin-top:40px;color:#ccc;text-align:center}
 </style>
   <script src="pwa-install-banner.js"></script>
   
+  <!-- Initialize Navbar & Footer Components -->
   <script>
-    console.log('✅ PBCR v8.9 - Using Custom Elements');
+    // Initialize Navbar
+    const navbar = new NavbarComponent({
+      title: '🛢️ PBCR Calculator',
+      version: '8.9',
+      currentPage: 'pbcr-link',
+      showNMOGAS: true
+    });
+    navbar.mount('#navbar-container');
+    
+    // Initialize Footer
+    const footer = new FooterComponent({
+      version: '8.9',
+      developer: 'Fahad - 17877',
+      whatsapp: '+965 55222550'
+    });
+    footer.mount('#footer-container');
+    
+    // Update navbar user info when currentUser is available
+    const updateNavbarUser = setInterval(() => {
+      if (window.currentUser) {
+        navbar.updateUserInfo(window.currentUser);
+        clearInterval(updateNavbarUser);
+      }
+    }, 100);
+    
+    console.log('✅ PBCR v8.9 - Class-based components');
   </script>
 </body>
 </html>

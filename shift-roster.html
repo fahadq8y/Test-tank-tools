@@ -9,8 +9,8 @@
   <script src="permissions.js"></script>
   <script src="session-manager.js"></script>
   <script src="last-page-tracker.js"></script>
-  <script src="navbar-component.js" defer></script>
-  <script src="footer-component.js" defer></script>
+  <script src="navbar-component.js"></script>
+  <script src="footer-component.js"></script>
   <style>
     :root {
       --primary: #B8860B;
@@ -848,7 +848,7 @@
 </head>
 <body>
   <!-- Navbar Component -->
-  <navbar-component title="📅 الورديات - Shift Roster" version="10.0" current-page="shift-roster" show-nmogas="true"></navbar-component>
+  <div id="navbar-container"></div>
   
   <!-- Main Container -->
   <div class="main-container">
@@ -1468,12 +1468,38 @@
     }, 100);
   </script>
   
+  <!-- Initialize Navbar & Footer Components -->
   <script>
-    console.log('✅ Shift Roster v10.0 - Using Custom Elements');
+    // Initialize Navbar
+    const navbar = new NavbarComponent({
+      title: '📅 الورديات - Shift Roster',
+      version: '10.0',
+      currentPage: 'shift-link',
+      showNMOGAS: true
+    });
+    navbar.mount('#navbar-container');
+    
+    // Initialize Footer
+    const footer = new FooterComponent({
+      version: '10.0',
+      developer: 'Fahad - 17877',
+      whatsapp: '+965 55222550'
+    });
+    footer.mount('#footer-container');
+    
+    // Update navbar user info when currentUser is available
+    const updateNavbarUser = setInterval(() => {
+      if (window.currentUser) {
+        navbar.updateUserInfo(window.currentUser);
+        clearInterval(updateNavbarUser);
+      }
+    }, 100);
+    
+    console.log('✅ Shift Roster v10.0 - Class-based components');
   </script>
   
   <!-- Footer Component -->
-  <footer-component version="10.0" developer="Fahad - 17877" whatsapp="+965 55222550"></footer-component>
+  <div id="footer-container"></div>
   
   <script src="pwa-install-banner.js"></script>
 </body>
