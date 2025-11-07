@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Shift Roster v10.2 - Using navbar-component.js v1.5 + footer-component.js -->
+<!-- Shift Roster v10.3 - Using navbar-component.js v1.5 + footer-component.js -->
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
@@ -1134,22 +1134,25 @@
         return;
       }
       
-      // Filter holidays for current month
-      const monthHolidays = kuwaitHolidays.filter(h => {
-        const holidayDate = new Date(h.date);
-        return holidayDate.getMonth() === currentMonth && holidayDate.getFullYear() === currentYear;
-      });
+      // Filter upcoming holidays (from today onwards)
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
       
-      if (monthHolidays.length === 0) {
+      const upcomingHolidays = kuwaitHolidays
+        .filter(h => new Date(h.date) >= today)
+        .sort((a, b) => new Date(a.date) - new Date(b.date))
+        .slice(0, 5); // Show next 5 holidays
+      
+      if (upcomingHolidays.length === 0) {
         eventsLists.forEach(list => {
-          list.innerHTML = '<div style="color: #888; font-style: italic;">No holidays this month</div>';
+          list.innerHTML = '<div style="color: #888; font-style: italic;">لا توجد عطل قادمة</div>';
         });
         return;
       }
       
       // Display holidays
       let html = '';
-      monthHolidays.forEach(holiday => {
+      upcomingHolidays.forEach(holiday => {
         const date = new Date(holiday.date);
         const monthNames = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
         const dateStr = `${date.getDate()} ${monthNames[date.getMonth()]}`;
@@ -1487,7 +1490,7 @@
     switchView(); // This will render the appropriate view
     loadHolidays(); // Load Kuwait holidays
     
-    console.log('%c📅 SHIFT ROSTER v10.2 - Using navbar-component.js v1.5 + footer-component.js', 'color:#B8860B;font-size:20px;font-weight:bold');
+    console.log('%c📅 SHIFT ROSTER v10.3 - Using navbar-component.js v1.5 + footer-component.js', 'color:#B8860B;font-size:20px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
   </script>
   
@@ -1503,7 +1506,7 @@
       checkPermissions: true
     });
     
-    console.log('%c📅 SHIFT ROSTER v10.2 - Using navbar-component.js v1.5 + footer-component.js', 'color:#4CAF50;font-size:16px;font-weight:bold');
+    console.log('%c📅 SHIFT ROSTER v10.3 - Using navbar-component.js v1.5 + footer-component.js', 'color:#4CAF50;font-size:16px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:14px');
     
     // ✅ Wait for FirebaseAuthHandler to set currentUser
@@ -1533,7 +1536,7 @@
     // Initialize Navbar
     const navbar = new NavbarComponent({
       title: '📅 الورديات - Shift Roster',
-      version: '10.2',
+      version: '10.3',
       currentPage: 'shift-link',
       showNMOGAS: true
     });
@@ -1541,7 +1544,7 @@
     
     // Initialize Footer
     const footer = new FooterComponent({
-      version: '10.2',
+      version: '10.3',
       developer: 'Fahad - 17877',
       whatsapp: '+965 55222550'
     });
@@ -1555,7 +1558,7 @@
       }
     }, 100);
     
-    console.log('✅ Shift Roster v10.2 - Class-based components');
+    console.log('✅ Shift Roster v10.3 - Class-based components');
   </script>
   
   <script src="pwa-install-banner.js"></script>
