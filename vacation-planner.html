@@ -658,6 +658,7 @@
       
       .calendar-weekdays {
         gap: 3px;
+        margin-bottom: 5px;
       }
       
       .calendar-weekday {
@@ -1242,6 +1243,14 @@
       return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     }
     
+    // Format date object to YYYY-MM-DD without timezone conversion
+    function formatDateLocal(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+    
     // Load holidays for multiple years
     async function loadHolidays() {
       const currentYear = new Date().getFullYear();
@@ -1269,7 +1278,7 @@
       
       for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
         totalDays++;
-        const dateStr = d.toISOString().split('T')[0];
+        const dateStr = formatDateLocal(d);
         const dayOfWeek = d.getDay();
         
         // Skip Fridays (5) and official holidays
@@ -1972,7 +1981,7 @@
         // Iterate through each day of the leave
         for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
           if (d.getFullYear() === year) {
-            const dateStr = d.toISOString().split('T')[0];
+            const dateStr = formatDateLocal(d);
             dailyCounts[dateStr] = (dailyCounts[dateStr] || 0) + 1;
             
             if (!dailyPeople[dateStr]) dailyPeople[dateStr] = [];
@@ -2014,7 +2023,7 @@
         // Days of month
         for (let day = 1; day <= daysInMonth; day++) {
           const date = new Date(year, month, day);
-          const dateStr = date.toISOString().split('T')[0];
+          const dateStr = formatDateLocal(date);
           const count = dailyCounts[dateStr] || 0;
           
           // Check if this is a Kuwait holiday
@@ -2214,7 +2223,7 @@
       };
       
       let html = `
-        <div style="background: rgba(255,255,255,0.05); border-radius: 10px; padding: 20px; border: 2px solid rgba(255,255,255,0.1);">
+        <div style="background: rgba(0,0,0,0.4); border-radius: 10px; padding: 20px; border: 2px solid rgba(255,255,255,0.3); box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
           <h2 style="text-align: center; color: #4CAF50; margin-bottom: 20px; font-size: 20px;">
             📋 ملخص الإجازات
           </h2>
