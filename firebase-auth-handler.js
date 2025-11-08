@@ -130,8 +130,12 @@ class FirebaseAuthHandlerClass {
         // Firebase Auth user (migrated users)
         console.log('✅ Firebase Auth user:', user.email);
         
+        // Get username from email (e.g., fam030@knpc.com → fam030)
+        const username = user.email.split('@')[0];
+        console.log('🔍 Looking for user document with username:', username);
+        
         try {
-          const userDoc = await getDoc(doc(this.db, 'users', user.uid));
+          const userDoc = await getDoc(doc(this.db, 'users', username));
           if (!userDoc.exists()) {
             console.error('❌ User document not found');
             
