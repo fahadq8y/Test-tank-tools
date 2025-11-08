@@ -1028,7 +1028,7 @@
     let selectedShift = 'A'; // Default shift for calendar view
     
     // ========== GOOGLE CALENDAR API FOR KUWAIT HOLIDAYS ==========
-    const GOOGLE_API_KEY = 'AIzaSyC5GZwG7bOgSSke3mRzmAYvc0DIyrPxGzM';
+    let GOOGLE_API_KEY = null;
     const KUWAIT_CALENDAR_ID = 'en.kw.official%23holiday@group.v.calendar.google.com';
     let kuwaitHolidays = [];
     
@@ -1056,16 +1056,32 @@
     
     // Fetch Kuwait holidays from Google Calendar API
     async function fetchKuwaitHolidays(year) {
+      // Load API key if not loaded yet
+      if (!GOOGLE_API_KEY) {
+        try {
+          const response = await fetch('/api/calendar-api-key');
+          if (!response.ok) {
+            throw new Error(`Failed to load API key: ${response.status}`);
+          }
+          const data = await response.json();
+          GOOGLE_API_KEY = data.apiKey;
+          console.log('✅ Google Calendar API key loaded');
+        } catch (error) {
+          console.error('❌ Failed to load Google Calendar API key:', error);
+          return [];
+        }
+      }
+
       // Check cache first
-      const cacheKey = `kuwait-holidays-${year}`;
+      const cacheKey = `kuwait_holidays_${year}`;
       const cached = localStorage.getItem(cacheKey);
       
       if (cached) {
-        const data = JSON.parse(cached);
-        // Check if cache is still valid (30 days)
-        if (Date.now() - data.timestamp < 30 * 24 * 60 * 60 * 1000) {
-          console.log('✅ Using cached Kuwait holidays for', year);
-          return data.holidays;
+        const { holidays, timestamp } = JSON.parse(cached);
+        // Cache valid for 24 hours
+        if (Date.now() - timestamp < 24 * 60 * 60 * 1000) {
+          console.log(`✅ Using cached Kuwait holidays for ${year}`);
+          return holidays;
         }
       }
       

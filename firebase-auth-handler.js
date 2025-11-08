@@ -25,15 +25,8 @@ import { initializeApp, getApps, getApp } from 'https://www.gstatic.com/firebase
 import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
-// Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyBCdv37V6vOFMe42rGlPyl9lVq-9JldEPg",
-  authDomain: "tank-tools-knpc-c2d95.firebaseapp.com",
-  projectId: "tank-tools-knpc-c2d95",
-  storageBucket: "tank-tools-knpc-c2d95.appspot.com",
-  messagingSenderId: "678793823159",
-  appId: "1:678793823159:web:7a7b1398aefdb7f24462b9"
-};
+// Firebase configuration will be loaded from Edge Function
+let firebaseConfig = null;
 
 class FirebaseAuthHandlerClass {
   constructor() {
@@ -56,6 +49,22 @@ class FirebaseAuthHandlerClass {
       redirectPage = 'index.html',
       checkPermissions = true
     } = options;
+
+    // Load Firebase config from Edge Function (only once)
+    if (!firebaseConfig) {
+      try {
+        const response = await fetch('/api/firebase-config');
+        if (!response.ok) {
+          throw new Error(`Failed to load Firebase config: ${response.status}`);
+        }
+        firebaseConfig = await response.json();
+        console.log('✅ Firebase config loaded from Edge Function');
+      } catch (error) {
+        console.error('❌ Failed to load Firebase config:', error);
+        alert('Failed to initialize application. Please refresh the page.');
+        return;
+      }
+    }
 
     // Initialize Firebase (only once)
     if (!this.initialized) {
