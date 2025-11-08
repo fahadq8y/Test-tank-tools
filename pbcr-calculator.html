@@ -110,9 +110,30 @@ input,select{background:rgba(255,255,255,0.9);border-radius:12px;border:none;col
 let tankSpecsData = {};
 let c = 0, m = 0, x = 0;
 
+// Wait for Firebase to be ready
+function waitForFirebase() {
+  return new Promise((resolve) => {
+    if (window.db) {
+      resolve();
+    } else {
+      console.log('⏳ Waiting for Firebase to initialize...');
+      const checkInterval = setInterval(() => {
+        if (window.db) {
+          clearInterval(checkInterval);
+          console.log('✅ Firebase is ready!');
+          resolve();
+        }
+      }, 100); // Check every 100ms
+    }
+  });
+}
+
 // Load tank specifications from Firebase
 async function fetchTankSpecifications() {
   try {
+    // Wait for Firebase to be initialized
+    await waitForFirebase();
+    
     console.log('🔄 Loading tank specifications from Firebase...');
     
     const departments = ['pbcr', 'plcr', 'washery'];
