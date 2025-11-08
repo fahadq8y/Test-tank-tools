@@ -185,21 +185,29 @@
 
   <script>
     // Auto-redirect if already logged in (PWA fix)
-    (function() {
+    (async function() {
       const userData = SessionManager.validateSession();
       if (userData) {
         console.log('✅ User already logged in:', userData.username);
         
-        // Get last page visited
-        const lastPage = localStorage.getItem('tanktools_last_page');
-        const redirectTo = lastPage || 'dashboard.html';
-        
-        console.log('🔄 Redirecting to:', redirectTo);
-        
-        // Small delay to show debug banner
-        setTimeout(() => {
-          window.location.href = redirectTo;
-        }, 1000);
+        // ✅ تحقق من Firebase Auth state
+        if (window.auth && window.auth.currentUser) {
+          console.log('✅ Firebase Auth confirmed');
+          
+          // Get last page visited
+          const lastPage = localStorage.getItem('tanktools_last_page');
+          const redirectTo = lastPage || 'dashboard.html';
+          
+          console.log('🔄 Redirecting to:', redirectTo);
+          
+          // Small delay to show debug banner
+          setTimeout(() => {
+            window.location.href = redirectTo;
+          }, 1000);
+        } else {
+          console.log('⚠️ No Firebase Auth, clearing session...');
+          SessionManager.destroySession(false);
+        }
       }
     })();
   </script>

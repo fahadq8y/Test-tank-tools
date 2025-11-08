@@ -134,8 +134,12 @@ class FirebaseAuthHandlerClass {
           const userDoc = await getDoc(doc(this.db, 'users', user.uid));
           if (!userDoc.exists()) {
             console.error('❌ User document not found');
-            alert('حساب غير موجود');
+            
+            // ✅ حذف session من localStorage قبل alert
+            SessionManager.destroySession(false);
+            
             await signOut(this.auth);
+            alert('حساب غير موجود');
             window.location.href = 'login.html';
             return;
           }
