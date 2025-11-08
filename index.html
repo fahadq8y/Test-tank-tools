@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- PBCR Calculator v9.1 - Fixed Add to Live Tanks permissions -->
+<!-- PBCR Calculator v9.2 - Fixed Firebase timing issue -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -415,7 +415,7 @@ window.serverTimestamp = serverTimestamp;
 window.collection = collection;
 window.getDocs = getDocs;
 
-console.log('%c🛢️ PBCR CALCULATOR v9.1 - Using Firebase Auth Handler', 'color:#B8860B;font-size:20px;font-weight:bold');
+console.log('%c🛢️ PBCR CALCULATOR v9.2 - Using Firebase Auth Handler', 'color:#B8860B;font-size:20px;font-weight:bold');
 console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
 </script>
 <script>
@@ -428,17 +428,32 @@ const products={
   "PLCR":["NAPHA","PCNA","HSD-EGO","EGO","F.OIL","MOGAS","VGO","KKERO","ARDR","METHANOL","OTHER"]
 };
 
+// Wait for Firebase to be ready
+function waitForFirebase() {
+  return new Promise((resolve) => {
+    if (window.db && window.collection && window.getDocs) {
+      resolve();
+    } else {
+      console.log('⏳ Waiting for Firebase to initialize...');
+      const checkInterval = setInterval(() => {
+        if (window.db && window.collection && window.getDocs) {
+          clearInterval(checkInterval);
+          console.log('✅ Firebase is ready!');
+          resolve();
+        }
+      }, 100); // Check every 100ms
+    }
+  });
+}
+
 async function fetchTankSpecifications() {
     const departments = ['pbcr']; // ✅ FIXED: Load only PBCR to prevent data conflicts
     let allTanks = {};
     
-    console.log('🔄 Loading tank specifications from Firebase...');
+    // Wait for Firebase to be initialized
+    await waitForFirebase();
     
-    // Check if Firebase is ready
-    if (!window.db || !window.collection || !window.getDocs) {
-        console.error('❌ Firebase not initialized yet');
-        throw new Error('Firebase not ready - please refresh the page');
-    }
+    console.log('🔄 Loading tank specifications from Firebase...');
     try {
         for (const dept of departments) {
             console.log(`📊 Loading ${dept.toUpperCase()} tanks...`);
@@ -1056,7 +1071,7 @@ footer{margin-top:40px;color:#ccc;text-align:center}
       }
     }, 100);
     
-    console.log('✅ PBCR v9.0 - Class-based components');
+    console.log('✅ PBCR v9.2 - Class-based components');
   </script>
 </body>
 </html>
