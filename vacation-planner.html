@@ -1033,6 +1033,9 @@
       
       <!-- Conflict Suggestions -->
       <div id="conflictSuggestions" style="margin-top: 20px;"></div>
+      
+      <!-- Vacation Summary -->
+      <div id="vacationSummary" style="margin-top: 30px;"></div>
     </div>
   </div>
   
@@ -1133,13 +1136,128 @@
       'D': 6
     };
     
-    // Official Holidays (Kuwait)
-    const OFFICIAL_HOLIDAYS = [
-      '2026-01-01', // New Year
-      '2026-02-25', // National Day
-      '2026-02-26', // Liberation Day
-      // Add more holidays as needed
-    ];
+    // ========== GOOGLE CALENDAR API FOR KUWAIT HOLIDAYS ==========
+    let GOOGLE_API_KEY = null;
+    const KUWAIT_CALENDAR_ID = 'en.kw.official%23holiday@group.v.calendar.google.com';
+    let kuwaitHolidays = [];
+    let OFFICIAL_HOLIDAYS = []; // Will be populated from API
+    
+    // Arabic translations for Kuwait holidays
+    const holidayTranslations = {
+      "New Year's Day": "رأس السنة الميلادية",
+      "New Year's Day observed": "عطلة رأس السنة الميلادية",
+      "National Day": "العيد الوطني",
+      "Liberation Day": "عيد التحرير",
+      "Isra and Mi'raj": "الإسراء والمعراج",
+      "Eid al-Fitr": "عيد الفطر",
+      "Eid al-Fitr Holiday": "عطلة عيد الفطر",
+      "Arafat Day": "يوم عرفة",
+      "Eid al-Adha": "عيد الأضحى",
+      "Eid al-Adha Holiday": "عطلة عيد الأضحى",
+      "Islamic New Year": "رأس السنة الهجرية",
+      "Prophet's Birthday": "المولد النبوي",
+      "Mawlid al-Nabi": "المولد النبوي الشريف"
+    };
+    
+    // Translate holiday name to Arabic
+    function translateHoliday(englishName) {
+      return holidayTranslations[englishName] || englishName;
+    }
+    
+    // Fetch Kuwait holidays from Google Calendar API
+    async function fetchKuwaitHolidays(year) {
+      // Load API key if not loaded yet
+      if (!GOOGLE_API_KEY) {
+        try {
+          const response = await fetch('/api/calendar-api-key');
+          if (!response.ok) {
+            throw new Error(`Failed to load API key: ${response.status}`);
+          }
+          const data = await response.json();
+          GOOGLE_API_KEY = data.apiKey;
+          console.log('✅ Google Calendar API key loaded');
+        } catch (error) {
+          console.error('❌ Failed to load Google Calendar API key:', error);
+          return [];
+        }
+      }
+
+      // Check cache first
+      const cacheKey = `kuwait_holidays_${year}`;
+      const cached = localStorage.getItem(cacheKey);
+      
+      if (cached) {
+        const { holidays, timestamp } = JSON.parse(cached);
+        const cacheAge = Date.now() - timestamp;
+        const ONE_WEEK = 7 * 24 * 60 * 60 * 1000;
+        
+        if (cacheAge < ONE_WEEK) {
+          console.log('✅ Using cached Kuwait holidays for', year);
+          return holidays;
+        }
+      }
+      
+      // Fetch from API
+      try {
+        const timeMin = `${year}-01-01T00:00:00Z`;
+        const timeMax = `${year}-12-31T23:59:59Z`;
+        const url = `https://www.googleapis.com/calendar/v3/calendars/${KUWAIT_CALENDAR_ID}/events?key=${GOOGLE_API_KEY}&timeMin=${timeMin}&timeMax=${timeMax}&singleEvents=true&orderBy=startTime`;
+        
+        console.log('🔄 Fetching Kuwait holidays for', year);
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+          throw new Error(`API returned ${response.status}`);
+        }
+        
+        const data = await response.json();
+        const holidays = data.items.map(event => ({
+          date: event.start.date,
+          name: event.summary,
+          nameAr: translateHoliday(event.summary)
+        }));
+        
+        // Cache the results
+        localStorage.setItem(cacheKey, JSON.stringify({
+          holidays,
+          timestamp: Date.now()
+        }));
+        
+        console.log(`✅ Loaded ${holidays.length} Kuwait holidays for ${year}`);
+        return holidays;
+      } catch (error) {
+        console.error('❌ Failed to fetch Kuwait holidays:', error);
+        return [];
+      }
+    }
+    
+    // Check if a date is a Kuwait holiday
+    function isKuwaitHoliday(date) {
+      const dateStr = formatDate(date.getFullYear(), date.getMonth(), date.getDate());
+      return kuwaitHolidays.find(h => h.date === dateStr);
+    }
+    
+    // Format date as YYYY-MM-DD
+    function formatDate(year, month, day) {
+      return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    }
+    
+    // Load holidays for multiple years
+    async function loadHolidays() {
+      const currentYear = new Date().getFullYear();
+      const years = [currentYear, currentYear + 1, currentYear + 2];
+      
+      kuwaitHolidays = [];
+      for (const year of years) {
+        const holidays = await fetchKuwaitHolidays(year);
+        kuwaitHolidays.push(...holidays);
+      }
+      
+      // Update OFFICIAL_HOLIDAYS array for backward compatibility
+      OFFICIAL_HOLIDAYS = kuwaitHolidays.map(h => h.date);
+      
+      console.log(`✅ Total ${kuwaitHolidays.length} holidays loaded`);
+    }
     
     // Calculate vacation days (excluding Fridays and official holidays)
     function calculateVacationDays(startDateStr, endDateStr) {
@@ -1899,10 +2017,20 @@
           const dateStr = date.toISOString().split('T')[0];
           const count = dailyCounts[dateStr] || 0;
           
+          // Check if this is a Kuwait holiday
+          const holiday = kuwaitHolidays.find(h => h.date === dateStr);
+          const isHoliday = !!holiday;
+          
           let bgColor = 'rgba(255,255,255,0.05)';
           let textColor = '#fff';
           
-          if (count >= 4) {
+          // Holiday gets red background
+          if (isHoliday) {
+            bgColor = 'rgba(244,67,54,0.3)';
+            textColor = '#fff';
+          }
+          // Vacation conflicts (only if not a holiday)
+          else if (count >= 4) {
             bgColor = 'rgba(244,67,54,0.4)';
             textColor = '#fff';
           } else if (count === 3) {
@@ -1913,7 +2041,15 @@
             textColor = '#fff';
           }
           
-          const title = count > 0 ? `${count} أشخاص: ${dailyPeople[dateStr].join(', ')}` : '';
+          let title = '';
+          if (isHoliday) {
+            title = `🏦 ${holiday.nameAr}`;
+            if (count > 0) {
+              title += ` | ${count} أشخاص: ${dailyPeople[dateStr].join(', ')}`;
+            }
+          } else if (count > 0) {
+            title = `${count} أشخاص: ${dailyPeople[dateStr].join(', ')}`;
+          }
           
           html += `
             <div style="
@@ -1923,9 +2059,11 @@
               text-align: center;
               font-size: 12px;
               color: ${textColor};
-              cursor: ${count > 0 ? 'pointer' : 'default'};
-              border: ${count >= 4 ? '2px solid #f44336' : count === 3 ? '1px solid #FF9800' : 'none'};
-            " title="${title}" ${count > 0 ? `onclick="showDayDetails('${dateStr}')"` : ''}>
+              cursor: ${count > 0 || isHoliday ? 'pointer' : 'default'};
+              border: ${count >= 4 ? '2px solid #f44336' : count === 3 ? '1px solid #FF9800' : isHoliday ? '1px solid #f44336' : 'none'};
+              position: relative;
+            " title="${title}" ${count > 0 || isHoliday ? `onclick="showDayDetails('${dateStr}')"` : ''}>
+              ${isHoliday ? '<span style="position: absolute; top: 2px; right: 2px; font-size: 10px;">⭐</span>' : ''}
               ${day}${count > 0 ? `<br><span style="font-size: 10px;">(${count})</span>` : ''}
             </div>
           `;
@@ -2028,6 +2166,117 @@
           </div>
         `;
       }
+      
+      // Render vacation summary
+      renderVacationSummary();
+    }
+    
+    // ========== VACATION SUMMARY ==========
+    function renderVacationSummary() {
+      const summaryDiv = document.getElementById('vacationSummary');
+      
+      if (allLeaves.length === 0) {
+        summaryDiv.innerHTML = '';
+        return;
+      }
+      
+      // Group leaves by shift
+      const leavesByShift = {
+        'A': [],
+        'B': [],
+        'C': [],
+        'D': []
+      };
+      
+      allLeaves.forEach(leave => {
+        const shift = leave.shift || 'A';
+        if (leavesByShift[shift]) {
+          leavesByShift[shift].push(leave);
+        }
+      });
+      
+      // Sort leaves within each shift by userId, then by startDate
+      Object.keys(leavesByShift).forEach(shift => {
+        leavesByShift[shift].sort((a, b) => {
+          if (a.userId !== b.userId) {
+            return a.userId.localeCompare(b.userId);
+          }
+          return new Date(a.startDate) - new Date(b.startDate);
+        });
+      });
+      
+      // Shift colors and names
+      const shiftInfo = {
+        'A': { color: '#4CAF50', name: 'Shift A' },
+        'B': { color: '#FF9800', name: 'Shift B' },
+        'C': { color: '#2196F3', name: 'Shift C' },
+        'D': { color: '#9C27B0', name: 'Shift D' }
+      };
+      
+      let html = `
+        <div style="background: rgba(255,255,255,0.05); border-radius: 10px; padding: 20px; border: 2px solid rgba(255,255,255,0.1);">
+          <h2 style="text-align: center; color: #4CAF50; margin-bottom: 20px; font-size: 20px;">
+            📋 ملخص الإجازات
+          </h2>
+      `;
+      
+      // Render each shift
+      Object.keys(leavesByShift).forEach(shift => {
+        const leaves = leavesByShift[shift];
+        if (leaves.length === 0) return;
+        
+        const info = shiftInfo[shift];
+        html += `
+          <div style="margin-bottom: 25px;">
+            <h3 style="color: ${info.color}; font-size: 18px; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid ${info.color};">
+              🔵 ${info.name}
+            </h3>
+        `;
+        
+        // Group by user
+        let currentUserId = null;
+        leaves.forEach(leave => {
+          if (leave.userId !== currentUserId) {
+            if (currentUserId !== null) {
+              html += `</div>`; // Close previous user
+            }
+            currentUserId = leave.userId;
+            const userName = leave.userName || leave.userId;
+            html += `
+              <div style="margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px; border-left: 3px solid ${info.color};">
+                <div style="font-size: 16px; font-weight: bold; color: ${info.color}; margin-bottom: 8px;">
+                  👤 ${userName}
+                </div>
+            `;
+          }
+          
+          // Format dates
+          const startDate = new Date(leave.startDate);
+          const endDate = new Date(leave.endDate);
+          const startStr = startDate.toLocaleDateString('ar-EG', { day: 'numeric', month: 'long', year: 'numeric' });
+          const endStr = endDate.toLocaleDateString('ar-EG', { day: 'numeric', month: 'long', year: 'numeric' });
+          
+          // Calculate days
+          const days = calculateVacationDays(leave.startDate, leave.endDate);
+          
+          html += `
+            <div style="font-size: 14px; padding: 8px 0; padding-right: 15px; border-right: 2px solid rgba(255,255,255,0.1); margin-right: 10px;">
+              📅 <strong>من:</strong> ${startStr} <strong>إلى:</strong> ${endStr}
+              <br>
+              <span style="opacity: 0.8; font-size: 13px;">⏱️ ${days.workDays} أيام عمل / ${days.totalDays} أيام كلية</span>
+            </div>
+          `;
+        });
+        
+        if (currentUserId !== null) {
+          html += `</div>`; // Close last user
+        }
+        
+        html += `</div>`; // Close shift
+      });
+      
+      html += `</div>`;
+      summaryDiv.innerHTML = html;
     }
     
     // ========== THEME FUNCTIONS ==========
@@ -2127,6 +2376,9 @@
         }
         
         console.log('✅ Vacation Planner loaded for:', window.currentUser.name);
+        
+        // Load Kuwait holidays first
+        await loadHolidays();
         
         // Load user leaves
         await loadUserLeaves();
