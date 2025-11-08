@@ -399,9 +399,8 @@
     }
     
     .alert-error {
-      background: rgba(244,67,54,0.2);
+      background: rgba(0,0,0,0.3);
       border: 2px solid #f44336;
-      color: #f44336;
     }
     
     .alert-warning {
@@ -634,13 +633,13 @@
       
       .calendar-weekday {
         font-size: 11px;
-        padding: 3px;
+        padding: 2px;
       }
       
       .calendar-day {
         font-size: 11px;
         min-width: 0;
-        padding: 3px 1px;
+        padding: 2px;
       }
       
       .calendar-day-number {
@@ -659,11 +658,6 @@
       .calendar-weekdays {
         gap: 3px;
         margin-bottom: 5px;
-      }
-      
-      .calendar-weekday {
-        font-size: 10px;
-        padding: 2px;
       }
     }
     
@@ -2129,7 +2123,7 @@
         
         let suggestionsHtml = `
           <div class="alert alert-error">
-            <h3 style="margin-bottom: 15px;">🔴 تعارضات مكتشفة (${mergedConflicts.length} فترة)</h3>
+            <h3 style="margin-bottom: 15px; color: #f44336;">🔴 تعارضات مكتشفة (${mergedConflicts.length} فترة)</h3>
         `;
         
         mergedConflicts.forEach(conflict => {
@@ -2147,13 +2141,13 @@
               padding: 12px;
               margin-bottom: 10px;
             ">
-              <div style="font-size: 15px; font-weight: bold; color: #f44336; margin-bottom: 8px;">
+              <div style="font-size: 15px; font-weight: bold; color: #FF9800; margin-bottom: 8px;">
                 📅 ${dateRange}
               </div>
-              <div style="font-size: 14px; margin-bottom: 5px;">
-                ⚠️ تعارض: <strong>${conflict.count} أشخاص</strong>
+              <div style="font-size: 14px; margin-bottom: 5px; color: #FFC107;">
+                ⚠️ تعارض: <strong style="color: #FFC107;">${conflict.count} أشخاص</strong>
               </div>
-              <div style="font-size: 13px; opacity: 0.9;">
+              <div style="font-size: 13px; color: #e0e0e0;">
                 👥 ${peopleList}
               </div>
             </div>
