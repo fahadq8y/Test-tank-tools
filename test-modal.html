@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test Modal - Optimized</title>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('background.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  color: white;
+  font-family: Arial, sans-serif;
+  padding: 20px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
+.test-info {
+  background: rgba(0,0,0,0.8);
+  padding: 20px;
+  border-radius: 15px;
+  border: 2px solid #B8860B;
+  max-width: 600px;
+  text-align: center;
+}
+
+.test-info h1 {
+  color: #FFD700;
+  margin-bottom: 15px;
+  font-size: 24px;
+}
+
+.test-info p {
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+
+.test-info .highlight {
+  color: #4CAF50;
+  font-weight: bold;
+}
+
+.open-modal-btn {
+  background: linear-gradient(45deg, #B8860B, #CD853F);
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  transition: all 0.3s ease;
+}
+
+.open-modal-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+}
+
+/* Modal Styles - OPTIMIZED */
+.lt-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.85);
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+}
+
+.lt-modal.show {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.lt-modal-content {
+  background: rgba(0,0,0,0.95);
+  padding: 15px;  /* ✅ تقليل من 20px */
+  border-radius: 15px;
+  max-width: 500px;
+  width: 90%;
+  color: white;
+  border: 3px solid #CD853F;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5), 0 0 20px #CD853F;
+  backdrop-filter: blur(20px);
+  position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.lt-modal-content h3 {
+  color: #FFD700;
+  font-size: 18px;  /* ✅ تقليل من 20px */
+  margin-bottom: 12px;  /* ✅ تقليل من 15px */
+  padding-bottom: 8px;  /* ✅ تقليل من 10px */
+  border-bottom: 2px solid #CD853F;
+  text-shadow: 0 0 10px #FFD700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.close-btn {
+  background: #CD853F;
+  border: 2px solid #FFD700;
+  font-size: 24px;
+  cursor: pointer;
+  color: white;
+  font-weight: bold;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  transition: all 0.3s ease;
+}
+
+.close-btn:hover {
+  transform: rotate(90deg) scale(1.1);
+  background: #FFD700;
+  color: #000;
+}
+
+.form-group {
+  margin-bottom: 6px;  /* ✅ تقليل من 10px */
+}
+
+.form-row {
+  margin-bottom: 6px;  /* ✅ تقليل من 10px */
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 3px;  /* ✅ تقليل من 5px */
+  font-weight: 600;
+  color: #FFD700;
+  font-size: 12px;  /* ✅ تقليل من 13px */
+  text-shadow: 0 0 5px #FFD700;
+}
+
+.form-input,
+.form-select {
+  width: 100%;
+  padding: 8px;  /* ✅ تقليل من 10px */
+  border: 2px solid #CD853F;
+  border-radius: 8px;
+  font-size: 13px;
+  background: rgba(255,255,255,0.1);
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.form-input:focus,
+.form-select:focus {
+  outline: none;
+  border-color: #FFD700;
+  background: rgba(255,255,255,0.15);
+  box-shadow: 0 0 10px #CD853F;
+}
+
+.form-select option {
+  background: #1a1a1a;
+  color: white;
+  padding: 10px;
+}
+
+.form-input[readonly] {
+  background: rgba(255,255,255,0.2);
+  cursor: not-allowed;
+  opacity: 1;
+  color: white;
+  font-weight: 600;
+  text-shadow: 0 0 5px rgba(255,255,255,0.5);
+}
+
+.form-textarea {
+  width: 100%;
+  padding: 8px;  /* ✅ تقليل من 10px */
+  border: 2px solid #CD853F;
+  border-radius: 8px;
+  font-size: 13px;
+  min-height: 50px;  /* ✅ تقليل من 60px */
+  background: rgba(255,255,255,0.1);
+  color: white;
+  transition: all 0.3s ease;
+  resize: vertical;
+}
+
+.form-textarea:focus {
+  outline: none;
+  border-color: #FFD700;
+  background: rgba(255,255,255,0.15);
+  box-shadow: 0 0 10px #CD853F;
+}
+
+.btn {
+  padding: 8px 16px;  /* ✅ تقليل من 10px 20px */
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 12px;  /* ✅ تقليل من 13px */
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s ease;
+  min-height: 36px;  /* ✅ تقليل من 40px */
+}
+
+.btn-primary {
+  background: #B8860B;
+  color: white;
+  border: 2px solid #CD853F;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+  background: #8B4513;
+}
+
+.btn-secondary {
+  background: rgba(255,255,255,0.1);
+  color: white;
+  border: 2px solid #CD853F;
+}
+
+.btn-secondary:hover {
+  background: rgba(255,255,255,0.2);
+  transform: translateY(-2px);
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 12px;  /* ✅ تقليل من 20px */
+}
+
+.other-product-field {
+  display: none;
+}
+
+.other-product-field.show {
+  display: block;
+}
+
+/* ✅ الحل 2: إخفاء Notes بشكل افتراضي */
+.toggle-notes-btn {
+  width: 100%;
+  margin-bottom: 8px;
+  background: rgba(255,255,255,0.05);
+  border: 1px dashed #CD853F;
+  color: #FFD700;
+  padding: 6px 12px;
+  font-size: 11px;
+}
+
+.toggle-notes-btn:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+@media (max-width: 600px) {
+  .lt-modal-content {
+    padding: 12px;
+    max-width: 350px;
+  }
+  
+  .form-group {
+    margin-bottom: 5px;
+  }
+  
+  .form-row {
+    margin-bottom: 5px;
+  }
+  
+  .form-label {
+    font-size: 11px;
+  }
+  
+  .form-input,
+  .form-select {
+    padding: 7px;
+    font-size: 12px;
+  }
+  
+  .btn {
+    padding: 7px 14px;
+    font-size: 11px;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="test-info">
+  <h1>🧪 Test Modal - Optimized Version</h1>
+  <p>هذي نسخة تجريبية من الـ modal مع التحسينات:</p>
+  <ul style="text-align: left; margin: 15px 0; line-height: 1.8;">
+    <li><span class="highlight">✅ الحل 1:</span> تقليل Spacing (padding, margins)</li>
+    <li><span class="highlight">✅ الحل 2:</span> إخفاء Notes بشكل افتراضي (زر "Add Notes")</li>
+  </ul>
+  <p style="margin-top: 15px; color: #4CAF50;">
+    <strong>النتيجة المتوقعة:</strong> تقليل الطول بـ <strong>35-45%</strong> 🚀
+  </p>
+</div>
+
+<button class="open-modal-btn" onclick="openModal()">
+  🔴 Open Test Modal
+</button>
+
+<!-- Modal -->
+<div id="ltModal" class="lt-modal">
+  <div class="lt-modal-content">
+    <button class="close-btn" onclick="closeModal()">&times;</button>
+    <h3>🔴 Add to Live Tanks</h3>
+    <form id="ltForm" onsubmit="handleSubmit(event)">
+      <div class="form-group">
+        <label class="form-label">🏭 Department:</label>
+        <select class="form-select" id="ltDept" onchange="updateProducts()" required>
+          <option value="">Select Department</option>
+          <option value="PBCR">PBCR</option>
+          <option value="WASHERY">WASHERY</option>
+          <option value="PLCR">PLCR</option>
+        </select>
+      </div>
+      
+      <div class="form-row" style="display:flex;gap:10px">
+        <div class="form-group" style="flex:1">
+          <label class="form-label">🏷️ Tank Number:</label>
+          <input type="text" class="form-input" id="ltTank" value="T-101" readonly>
+        </div>
+        <div class="form-group" style="flex:1">
+          <label class="form-label">🛢️ Product Type:</label>
+          <select class="form-select" id="ltProduct" onchange="checkOther()" required>
+            <option value="">Select Product</option>
+            <option value="Coal">Coal</option>
+            <option value="Coke">Coke</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="form-group other-product-field" id="otherProductField">
+        <label class="form-label">📝 Specify Product (OTHER):</label>
+        <input type="text" class="form-input" id="otherProductInput" placeholder="Enter product name">
+      </div>
+      
+      <div class="form-row" style="display:flex;gap:10px">
+        <div class="form-group" style="flex:1">
+          <label class="form-label">📊 Target Value:</label>
+          <input type="number" step="any" class="form-input" id="ltTargetValue" placeholder="Enter target value" required>
+        </div>
+        <div class="form-group" style="flex:1">
+          <label class="form-label">🎯 Target Type:</label>
+          <select class="form-select" id="ltTargetType" required>
+            <option value="">Select Target Type</option>
+            <option value="pumpable">Pumpable</option>
+            <option value="ullage">Ullage</option>
+            <option value="level">Level</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="form-row" style="display:flex;gap:10px">
+        <div class="form-group" style="flex:1">
+          <label class="form-label">⚡ Flow Rate:</label>
+          <input type="number" step="any" class="form-input" id="ltRate" placeholder="Rate" required>
+        </div>
+        <div class="form-group" style="flex:1">
+          <label class="form-label">📏 Rate Unit:</label>
+          <select class="form-select" id="ltRateUnit" required>
+            <option value="bbl">bbl/hr</option>
+            <option value="m3">m³/hr</option>
+            <option value="mtr">meter/hr</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="form-row" style="display:flex;gap:10px">
+        <div class="form-group" style="flex:1">
+          <label class="form-label">📅 Finish Date:</label>
+          <input type="text" class="form-input" id="ltDate" value="2024-01-15" readonly>
+        </div>
+        <div class="form-group" style="flex:1">
+          <label class="form-label">⏰ Finish Time:</label>
+          <input type="text" class="form-input" id="ltTime" value="14:30" readonly>
+        </div>
+      </div>
+      
+      <!-- ✅ الحل 2: زر Add Notes -->
+      <button type="button" class="btn btn-secondary toggle-notes-btn" onclick="toggleNotes()" id="toggleNotesBtn">
+        ➕ Add Notes (Optional)
+      </button>
+      
+      <div class="form-group" id="notesGroup" style="display:none">
+        <label class="form-label">📝 Notes:</label>
+        <textarea class="form-textarea" id="ltNotes" placeholder="Additional information..."></textarea>
+      </div>
+      
+      <div class="modal-buttons">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">❌ Cancel</button>
+        <button type="submit" class="btn btn-primary">💾 Add to Live Tanks</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openModal() {
+  document.getElementById('ltModal').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('ltModal').classList.remove('show');
+}
+
+function updateProducts() {
+  // Dummy function
+}
+
+function checkOther() {
+  const product = document.getElementById('ltProduct').value;
+  const otherField = document.getElementById('otherProductField');
+  if (product === 'Other') {
+    otherField.classList.add('show');
+  } else {
+    otherField.classList.remove('show');
+  }
+}
+
+// ✅ الحل 2: Toggle Notes
+function toggleNotes() {
+  const notesGroup = document.getElementById('notesGroup');
+  const toggleBtn = document.getElementById('toggleNotesBtn');
+  
+  if (notesGroup.style.display === 'none') {
+    notesGroup.style.display = 'block';
+    toggleBtn.textContent = '➖ Hide Notes';
+  } else {
+    notesGroup.style.display = 'none';
+    toggleBtn.textContent = '➕ Add Notes (Optional)';
+  }
+}
+
+function handleSubmit(event) {
+  event.preventDefault();
+  alert('✅ Form submitted successfully! (This is a test)');
+  closeModal();
+}
+
+// Close modal on outside click
+document.getElementById('ltModal').addEventListener('click', function(e) {
+  if (e.target === this) {
+    closeModal();
+  }
+});
+</script>
+
+</body>
+</html>
