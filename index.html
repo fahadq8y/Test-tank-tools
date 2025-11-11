@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- PBCR Calculator v9.3 - Fixed user document lookup -->
+<!-- PBCR Calculator v9.4 - Optimized modal (reduced spacing + collapsible notes) -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -180,20 +180,20 @@ input,select{background:rgba(255,255,255,0.9);border-radius:12px;border:none;col
 .login-btn{padding:12px 25px;background:linear-gradient(45deg,#4CAF50,#45a049);color:white;border:none;border-radius:10px;cursor:pointer;font-size:16px}
 .lt-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:1000;backdrop-filter:blur(10px)}
 .lt-modal.show{display:flex;justify-content:center;align-items:center}
-.lt-modal-content{background:rgba(0,0,0,0.95);padding:20px;border-radius:15px;max-width:500px;width:90%;color:white;border:3px solid var(--accent);box-shadow:0 10px 40px rgba(0,0,0,0.5),0 0 20px var(--accent);backdrop-filter:blur(20px);animation:modalFadeIn 0.3s ease;position:relative}
-.lt-modal-content h3{color:var(--text);font-size:20px;margin-bottom:15px;padding-bottom:10px;border-bottom:2px solid var(--accent);text-shadow:0 0 10px var(--text);display:flex;align-items:center;gap:10px}
+.lt-modal-content{background:rgba(0,0,0,0.95);padding:15px;border-radius:15px;max-width:500px;width:90%;color:white;border:3px solid var(--accent);box-shadow:0 10px 40px rgba(0,0,0,0.5),0 0 20px var(--accent);backdrop-filter:blur(20px);animation:modalFadeIn 0.3s ease;position:relative}
+.lt-modal-content h3{color:var(--text);font-size:18px;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--accent);text-shadow:0 0 10px var(--text);display:flex;align-items:center;gap:10px}
 .close-btn{background:var(--accent);border:2px solid var(--text);font-size:24px;cursor:pointer;color:white;font-weight:bold;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;position:absolute;top:15px;right:15px;transition:all 0.3s ease}.close-btn:hover{transform:rotate(90deg) scale(1.1);background:var(--text);color:#000}
-.form-group{margin-bottom:10px}
-.form-row{margin-bottom:10px}
-.form-label{display:block;margin-bottom:5px;font-weight:600;color:var(--text);font-size:13px;text-shadow:0 0 5px var(--text)}
-.form-input,.form-select{width:100%;padding:10px;border:2px solid var(--accent);border-radius:8px;font-size:13px;background:rgba(255,255,255,0.1);color:white;transition:all 0.3s ease}.form-input:focus,.form-select:focus{outline:none;border-color:var(--text);background:rgba(255,255,255,0.15);box-shadow:0 0 10px var(--accent)}
+.form-group{margin-bottom:6px}
+.form-row{margin-bottom:6px}
+.form-label{display:block;margin-bottom:3px;font-weight:600;color:var(--text);font-size:12px;text-shadow:0 0 5px var(--text)}
+.form-input,.form-select{width:100%;padding:8px;border:2px solid var(--accent);border-radius:8px;font-size:13px;background:rgba(255,255,255,0.1);color:white;transition:all 0.3s ease}.form-input:focus,.form-select:focus{outline:none;border-color:var(--text);background:rgba(255,255,255,0.15);box-shadow:0 0 10px var(--accent)}
 .form-select option{background:#1a1a1a;color:white;padding:10px}
 .form-input[readonly]{background:rgba(255,255,255,0.2);cursor:not-allowed;opacity:1;color:white;font-weight:600;text-shadow:0 0 5px rgba(255,255,255,0.5)}
-.form-textarea{width:100%;padding:10px;border:2px solid var(--accent);border-radius:8px;font-size:13px;min-height:60px;background:rgba(255,255,255,0.1);color:white;transition:all 0.3s ease;resize:vertical}.form-textarea:focus{outline:none;border-color:var(--text);background:rgba(255,255,255,0.15);box-shadow:0 0 10px var(--accent)}
-.btn{padding:10px 20px;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;display:inline-flex;align-items:center;gap:6px;transition:all 0.3s ease;min-height:40px}
+.form-textarea{width:100%;padding:8px;border:2px solid var(--accent);border-radius:8px;font-size:13px;min-height:50px;background:rgba(255,255,255,0.1);color:white;transition:all 0.3s ease;resize:vertical}.form-textarea:focus{outline:none;border-color:var(--text);background:rgba(255,255,255,0.15);box-shadow:0 0 10px var(--accent)}
+.btn{padding:8px 16px;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:12px;display:inline-flex;align-items:center;gap:6px;transition:all 0.3s ease;min-height:36px}
 .btn-primary{background:var(--primary);color:white;border:2px solid var(--accent);box-shadow:0 4px 12px rgba(0,0,0,0.3)}.btn-primary:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,0.4);background:var(--secondary)}
 .btn-secondary{background:rgba(255,255,255,0.1);color:white;border:2px solid var(--accent)}.btn-secondary:hover{background:rgba(255,255,255,0.2);transform:translateY(-2px)}
-.modal-buttons{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+.modal-buttons{display:flex;gap:10px;justify-content:flex-end;margin-top:12px}
 .other-product-field{display:none;margin-top:10px}
 .other-product-field.show{display:block}
 .loading-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);display:flex;justify-content:center;align-items:center;z-index:10000;flex-direction:column;gap:15px}
@@ -383,8 +383,9 @@ input,select{background:rgba(255,255,255,0.9);border-radius:12px;border:none;col
 <input type="text" class="form-input" id="ltTime" readonly>
 </div>
 </div>
-<div class="form-group">
-<label class="form-label">📝 Notes (Optional):</label>
+<button type="button" class="btn btn-secondary" onclick="toggleLTNotes()" id="toggleLTNotesBtn" style="width:100%;margin-bottom:8px;background:rgba(255,255,255,0.05);border:1px dashed var(--accent);color:var(--text);padding:6px 12px;font-size:11px">➕ Add Notes (Optional)</button>
+<div class="form-group" id="ltNotesGroup" style="display:none">
+<label class="form-label">📝 Notes:</label>
 <textarea class="form-textarea" id="ltNotes" placeholder="Additional information..."></textarea>
 </div>
 <div class="modal-buttons">
@@ -800,6 +801,23 @@ window.closeLTModal = function() {
   document.getElementById('ltModal').classList.remove('show');
   document.getElementById('ltForm').reset();
   document.getElementById('otherProductField').classList.remove('show');
+  // Reset notes visibility
+  document.getElementById('ltNotesGroup').style.display = 'none';
+  document.getElementById('toggleLTNotesBtn').textContent = '➕ Add Notes (Optional)';
+};
+
+// ✅ الحل 2: Toggle Notes function
+window.toggleLTNotes = function() {
+  const notesGroup = document.getElementById('ltNotesGroup');
+  const toggleBtn = document.getElementById('toggleLTNotesBtn');
+  
+  if (notesGroup.style.display === 'none') {
+    notesGroup.style.display = 'block';
+    toggleBtn.textContent = '➖ Hide Notes';
+  } else {
+    notesGroup.style.display = 'none';
+    toggleBtn.textContent = '➕ Add Notes (Optional)';
+  }
 };
 
 window.updateLTProducts = function() {
