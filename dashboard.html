@@ -494,6 +494,15 @@
       </div>
     </div>
 
+    <!-- WhatsApp Notifications Section -->
+    <div class="section" style="background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); border: none; margin-bottom: 20px;">
+      <div class="section-title" style="color: white;">💬 WhatsApp Notifications</div>
+      <div class="controls" style="justify-content: center; gap: 15px;">
+        <button class="btn" style="background: white; color: #25D366; font-weight: bold;" onclick="sendTestWhatsApp()">📱 Send Test Message</button>
+        <button class="btn" style="background: rgba(255,255,255,0.2); color: white; border: 2px solid white;" onclick="showWhatsAppSettings()">⚙️ Settings</button>
+      </div>
+    </div>
+
     <!-- User Management Section -->
     <div class="section">
       <div class="section-title">👥 Advanced User Management</div>
@@ -4128,6 +4137,54 @@ Report End
 
     // ========================================
     // END USER DETAILS MODAL SYSTEM
+    // ========================================
+
+    // ========================================
+    // WHATSAPP NOTIFICATION SYSTEM
+    // ========================================
+
+    async function sendTestWhatsApp() {
+      try {
+        const phoneNumber = prompt('Enter phone number (with country code, e.g., +96555222550):');
+        if (!phoneNumber) return;
+
+        const message = prompt('Enter test message:', 'Hello from Tank Tools! This is a test notification.');
+        if (!message) return;
+
+        showMessage('Sending WhatsApp message...', 'info');
+
+        const response = await fetch('/api/send-whatsapp', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            to: phoneNumber,
+            message: message
+          })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          showMessage('✅ WhatsApp message sent successfully!', 'success');
+          console.log('WhatsApp sent:', result);
+        } else {
+          showMessage('❌ Failed to send WhatsApp: ' + result.error, 'error');
+          console.error('WhatsApp error:', result);
+        }
+      } catch (error) {
+        showMessage('❌ Error sending WhatsApp: ' + error.message, 'error');
+        console.error('WhatsApp error:', error);
+      }
+    }
+
+    function showWhatsAppSettings() {
+      alert('WhatsApp Settings\n\nCurrent Configuration:\n- Twilio Sandbox Mode\n- Number: +1 415 523 8886\n\nTo upgrade to production:\n1. Get a dedicated WhatsApp Business number\n2. Update TWILIO_WHATSAPP_NUMBER in Vercel\n3. Submit templates for approval');
+    }
+
+    // ========================================
+    // END WHATSAPP NOTIFICATION SYSTEM
     // ========================================
   </script>
 
