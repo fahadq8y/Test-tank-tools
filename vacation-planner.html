@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Vacation Planner v3.0 - Using navbar-component.js v1.5 + footer-component.js -->
+<!-- Vacation Planner v4.3 - Using navbar-component.js v1.5 + footer-component.js -->
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
@@ -1542,7 +1542,7 @@
         
         if (checkDate >= start && checkDate <= end) {
           peopleOnLeave.push({
-            name: leave.userName || leave.userId,
+            name: leave.fullName || leave.userName || leave.userId,
             shift: leave.shift,
             startDate: leave.startDate,
             endDate: leave.endDate
@@ -1926,6 +1926,69 @@
       }
     }
     
+    // ========== USERS CACHE ==========
+    let usersCache = {};
+    
+    // ========== LOAD USER DATA ==========
+    async function loadUserData(userIds) {
+      const usersData = {};
+      
+      try {
+        // Check cache first
+        const uncachedIds = userIds.filter(id => !usersCache[id]);
+        
+        if (uncachedIds.length > 0) {
+          console.log(`📥 Loading ${uncachedIds.length} new users from Firebase...`);
+          
+          // Load users from Firebase
+          for (const userId of uncachedIds) {
+            try {
+              const userDocRef = window.doc(window.db, 'users', userId);
+              const userDoc = await window.getDoc(userDocRef);
+              
+              if (userDoc.exists()) {
+                const userData = userDoc.data();
+                usersCache[userId] = {
+                  fullName: userData.fullName || userData.name || userId,
+                  username: userId
+                };
+              } else {
+                // User not found, use username as fallback
+                usersCache[userId] = {
+                  fullName: userId,
+                  username: userId
+                };
+              }
+            } catch (error) {
+              console.warn(`⚠️ Failed to load user ${userId}:`, error);
+              usersCache[userId] = {
+                fullName: userId,
+                username: userId
+              };
+            }
+          }
+          
+          console.log(`✅ Loaded ${uncachedIds.length} users. Cache size: ${Object.keys(usersCache).length}`);
+        } else {
+          console.log(`💾 Using cached data for ${userIds.length} users`);
+        }
+        
+        // Return requested users from cache
+        userIds.forEach(id => {
+          usersData[id] = usersCache[id];
+        });
+        
+      } catch (error) {
+        console.error('❌ Error loading users data:', error);
+        // Fallback: use userIds as names
+        userIds.forEach(id => {
+          usersData[id] = { fullName: id, username: id };
+        });
+      }
+      
+      return usersData;
+    }
+    
     // ========== LOAD ALL LEAVES ==========
     async function loadAllLeaves() {
       try {
@@ -1939,12 +2002,31 @@
           });
         });
         
+        // Collect unique userIds
+        const userIds = new Set();
+        allLeaves.forEach(leave => {
+          if (leave.userId && !leave.isTest) {
+            userIds.add(leave.userId);
+          }
+        });
+        
+        // Load users data with cache
+        const usersData = await loadUserData(Array.from(userIds));
+        
+        // Add fullName to each leave
+        allLeaves = allLeaves.map(leave => ({
+          ...leave,
+          fullName: leave.isTest ? leave.userName : (usersData[leave.userId]?.fullName || leave.userName || leave.userId),
+          userName: leave.userId // Keep username for internal use
+        }));
+        
         // Add test users' leaves
         testUsers.forEach(user => {
           user.leaves.forEach(leave => {
             allLeaves.push({
               userId: `test_${user.name}`,
-              userName: `🧪 ${user.name}`,
+              userName: `test_${user.name}`,
+              fullName: `🧪 ${user.name}`,
               shift: user.shift,
               startDate: leave.startDate,
               endDate: leave.endDate,
@@ -1953,7 +2035,7 @@
           });
         });
         
-        console.log('✅ Loaded', allLeaves.length, 'total leaves (including test users)');
+        console.log('✅ Loaded', allLeaves.length, 'total leaves (including test users) with full names');
         renderAnnualRoster();
       } catch (error) {
         console.error('❌ Error loading all leaves:', error);
@@ -2246,7 +2328,7 @@
               html += `</div>`; // Close previous user
             }
             currentUserId = leave.userId;
-            const userName = leave.userName || leave.userId;
+            const userName = leave.fullName || leave.userName || leave.userId;
             html += `
               <div style="margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px; border-left: 3px solid ${info.color};">
                 <div style="font-size: 16px; font-weight: bold; color: ${info.color}; margin-bottom: 8px;">
@@ -2332,7 +2414,7 @@
     });
     
     // ========== INITIALIZE ==========
-    console.log('%c🏖️ VACATION PLANNER v4.2 - Using navbar-component.js v1.5 + footer-component.js', 'color:#4CAF50;font-size:20px;font-weight:bold');
+    console.log('%c🏖️ VACATION PLANNER v4.3 - Using navbar-component.js v1.5 + footer-component.js', 'color:#4CAF50;font-size:20px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:16px');
   </script>
   
@@ -2357,8 +2439,10 @@
     window.deleteDoc = deleteDoc;
     window.query = query;
     window.where = where;
+    window.doc = doc;
+    window.getDoc = getDoc;
     
-    console.log('%c🏖️ VACATION PLANNER v4.2 - Using navbar-component.js v1.5 + footer-component.js', 'color:#4CAF50;font-size:16px;font-weight:bold');
+    console.log('%c🏖️ VACATION PLANNER v4.3 - Using navbar-component.js v1.5 + footer-component.js', 'color:#4CAF50;font-size:16px;font-weight:bold');
     console.log('%cDeveloper: Fahad - 17877', 'color:green;font-size:14px');
     
     // ✅ Wait for FirebaseAuthHandler to set currentUser
@@ -2399,7 +2483,7 @@
     // Initialize Navbar
     const navbar = new NavbarComponent({
       title: '🏭️ مخطط الإجازات - Vacation Planner',
-      version: '4.2',
+      version: '4.3',
       currentPage: 'vacation-link',
       showNMOGAS: true
     });
@@ -2407,7 +2491,7 @@
     
     // Initialize Footer
     const footer = new FooterComponent({
-      version: '4.2',
+      version: '4.3',
       developer: 'Fahad - 17877',
       whatsapp: '+965 55222550'
     });
@@ -2421,7 +2505,7 @@
       }
     }, 100);
     
-    console.log('✅ Vacation Planner v3.0 - Class-based components');
+    console.log('✅ Vacation Planner v4.3 - Class-based components with Full Name support');
   </script>
   
   <!-- Footer Component -->
