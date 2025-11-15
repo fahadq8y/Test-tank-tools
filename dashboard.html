@@ -1151,6 +1151,7 @@
       
       // تجميع المستخدمين حسب اسم المستخدم (بغض النظر عن حالة الأحرف)
       users.forEach(user => {
+        if (!user || !user.username) return; // Skip invalid users
         const normalizedUsername = user.username.toLowerCase();
         if (!userMap.has(normalizedUsername)) {
           userMap.set(normalizedUsername, user);
