@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Live Tanks v8.3 - Using Firebase Auth Handler -->
+<!-- Live Tanks v8.4 - WhatsApp Reminders Integration -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -260,7 +260,7 @@
   <div id="mainContent">
     <!-- Navigation -->
     <div class="nav-bar">
-      <div class="nav-logo">🔴 Live Tanks v8.3</div>
+      <div class="nav-logo">🔴 Live Tanks v8.4</div>
       <div class="nav-links">
         <a href="index.html" class="nav-link">🛢️ PBCR</a>
         <a href="plcr.html" class="nav-link">⛗️ PLCR</a>
@@ -1549,6 +1549,7 @@
           ${permissions.canEdit ? `<button class="btn btn-primary" onclick="editTank('${tank.id}')">✏️ Edit Tank</button>` : ''}
           ${permissions.canDelete ? `<button class="btn btn-danger" onclick="deleteTank('${tank.id}')">🗑️ Delete Tank</button>` : ''}
           <button class="btn btn-warning" onclick="addToGoogleCalendar('${tank.id}')">📅 Add to Google Calendar</button>
+          <button class="btn btn-success" onclick="setupWhatsAppReminder('${tank.id}')" style="background:#25D366">💬 WhatsApp Reminder</button>
         </div>
       `;
       document.getElementById('tankDetailsBody').innerHTML = detailsHTML;
@@ -3657,8 +3658,257 @@ window.setTheme = setTheme;
         // Handle alarm stop if needed
       }
     });
+
+    // ========================================
+    // WhatsApp Reminders Functions
+    // ========================================
+    
+    let currentTankId = null;
+    let userPhoneNumber = null;
+
+    // Setup WhatsApp Reminder
+    async function setupWhatsAppReminder(tankId) {
+      currentTankId = tankId;
+      console.log('💬 Setting up WhatsApp reminder for tank:', tankId);
+      
+      // Check if user has phone number
+      const user = window.auth.currentUser;
+      if (!user) {
+        alert('❌ Please login first');
+        return;
+      }
+
+      try {
+        const userDoc = await window.getDoc(window.doc(window.db, 'users', user.uid));
+        if (userDoc.exists() && userDoc.data().phoneNumber) {
+          userPhoneNumber = userDoc.data().phoneNumber;
+          // User has phone number, show reminder options
+          showWhatsAppReminderModal();
+        } else {
+          // User doesn't have phone number, show phone input
+          showWhatsAppPhoneModal();
+        }
+      } catch (error) {
+        console.error('❌ Error checking phone number:', error);
+        alert('❌ Error: ' + error.message);
+      }
+    }
+
+    // Show/Hide Modals
+    function showWhatsAppPhoneModal() {
+      document.getElementById('whatsappPhoneModal').classList.add('show');
+    }
+
+    function closeWhatsAppPhoneModal() {
+      document.getElementById('whatsappPhoneModal').classList.remove('show');
+      document.getElementById('whatsappPhoneInput').value = '';
+    }
+
+    function showWhatsAppOTPModal() {
+      document.getElementById('whatsappOTPModal').classList.add('show');
+    }
+
+    function closeWhatsAppOTPModal() {
+      document.getElementById('whatsappOTPModal').classList.remove('show');
+      document.getElementById('whatsappOTPInput').value = '';
+    }
+
+    function showWhatsAppReminderModal() {
+      document.getElementById('whatsappReminderModal').classList.add('show');
+    }
+
+    function closeWhatsAppReminderModal() {
+      document.getElementById('whatsappReminderModal').classList.remove('show');
+      // Uncheck all checkboxes
+      ['reminder_60', 'reminder_30', 'reminder_15', 'reminder_10', 'reminder_5'].forEach(id => {
+        document.getElementById(id).checked = false;
+      });
+    }
+
+    // Send OTP
+    async function sendOTP() {
+      const phoneInput = document.getElementById('whatsappPhoneInput').value.trim();
+      
+      if (!phoneInput || phoneInput.length !== 8) {
+        alert('❌ Please enter a valid 8-digit phone number');
+        return;
+      }
+
+      const fullPhone = '+965' + phoneInput;
+      userPhoneNumber = fullPhone;
+
+      try {
+        console.log('📩 Sending OTP to:', fullPhone);
+        const response = await fetch('/api/send-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phoneNumber: fullPhone })
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+          console.log('✅ OTP sent successfully');
+          alert('✅ Verification code sent to ' + fullPhone);
+          closeWhatsAppPhoneModal();
+          showWhatsAppOTPModal();
+        } else {
+          console.error('❌ Failed to send OTP:', data.error);
+          alert('❌ Failed to send code: ' + data.error);
+        }
+      } catch (error) {
+        console.error('❌ Error sending OTP:', error);
+        alert('❌ Error: ' + error.message);
+      }
+    }
+
+    // Verify OTP
+    async function verifyOTP() {
+      const otpCode = document.getElementById('whatsappOTPInput').value.trim();
+      
+      if (!otpCode || otpCode.length !== 6) {
+        alert('❌ Please enter a valid 6-digit code');
+        return;
+      }
+
+      try {
+        console.log('🔐 Verifying OTP...');
+        const response = await fetch('/api/verify-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            phoneNumber: userPhoneNumber,
+            code: otpCode 
+          })
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+          console.log('✅ Phone verified successfully');
+          
+          // Save phone number to user document
+          const user = window.auth.currentUser;
+          await window.setDoc(window.doc(window.db, 'users', user.uid), {
+            phoneNumber: userPhoneNumber,
+            phoneVerified: true,
+            phoneVerifiedAt: window.serverTimestamp()
+          }, { merge: true });
+
+          alert('✅ Phone number verified successfully!');
+          closeWhatsAppOTPModal();
+          showWhatsAppReminderModal();
+        } else {
+          console.error('❌ Invalid OTP:', data.error);
+          alert('❌ Invalid code: ' + data.error);
+        }
+      } catch (error) {
+        console.error('❌ Error verifying OTP:', error);
+        alert('❌ Error: ' + error.message);
+      }
+    }
+
+    // Save WhatsApp Reminders
+    async function saveWhatsAppReminders() {
+      const selectedIntervals = [];
+      ['reminder_60', 'reminder_30', 'reminder_15', 'reminder_10', 'reminder_5'].forEach(id => {
+        const checkbox = document.getElementById(id);
+        if (checkbox.checked) {
+          selectedIntervals.push(parseInt(checkbox.value));
+        }
+      });
+
+      if (selectedIntervals.length === 0) {
+        alert('❌ Please select at least one reminder time');
+        return;
+      }
+
+      try {
+        const user = window.auth.currentUser;
+        const reminderData = {
+          tankId: currentTankId,
+          userId: user.uid,
+          phoneNumber: userPhoneNumber,
+          intervals: selectedIntervals,
+          createdAt: window.serverTimestamp(),
+          active: true
+        };
+
+        // Save to Firebase
+        const reminderRef = window.doc(window.db, 'whatsappReminders', `${user.uid}_${currentTankId}`);
+        await window.setDoc(reminderRef, reminderData);
+
+        console.log('✅ Reminders saved:', reminderData);
+        alert('✅ WhatsApp reminders saved successfully!\n\nYou will receive notifications at:\n' + 
+          selectedIntervals.map(m => `• ${m} minutes before`).join('\n'));
+        
+        closeWhatsAppReminderModal();
+      } catch (error) {
+        console.error('❌ Error saving reminders:', error);
+        alert('❌ Error: ' + error.message);
+      }
+    }
     
   </script>
+
+  <!-- WhatsApp Phone Input Modal -->
+  <div id="whatsappPhoneModal" class="modal">
+    <div class="modal-content" style="max-width:450px">
+      <span class="close" onclick="closeWhatsAppPhoneModal()">&times;</span>
+      <h2 style="color:#25D366">📱 Add Phone Number</h2>
+      <p style="color:#666;margin-bottom:20px">Please add your phone number to enable WhatsApp reminders</p>
+      <div style="display:flex;gap:10px;margin-bottom:20px">
+        <input type="text" value="+965" readonly style="width:80px;text-align:center;background:#f0f0f0;font-weight:bold">
+        <input type="tel" id="whatsappPhoneInput" placeholder="55222550" maxlength="8" pattern="[0-9]{8}" style="flex:1;padding:12px;border:2px solid #25D366;border-radius:8px;font-size:16px">
+      </div>
+      <button onclick="sendOTP()" class="btn btn-success" style="width:100%;background:#25D366;padding:15px;font-size:16px">📩 Send Verification Code</button>
+    </div>
+  </div>
+
+  <!-- WhatsApp OTP Modal -->
+  <div id="whatsappOTPModal" class="modal">
+    <div class="modal-content" style="max-width:450px">
+      <span class="close" onclick="closeWhatsAppOTPModal()">&times;</span>
+      <h2 style="color:#25D366">🔐 Verify Phone Number</h2>
+      <p style="color:#666;margin-bottom:20px">Enter the 6-digit code sent to your phone</p>
+      <input type="text" id="whatsappOTPInput" placeholder="123456" maxlength="6" pattern="[0-9]{6}" style="width:100%;padding:15px;border:2px solid #25D366;border-radius:8px;font-size:24px;text-align:center;letter-spacing:10px;margin-bottom:20px">
+      <button onclick="verifyOTP()" class="btn btn-success" style="width:100%;background:#25D366;padding:15px;font-size:16px">✅ Verify Code</button>
+    </div>
+  </div>
+
+  <!-- WhatsApp Reminder Options Modal -->
+  <div id="whatsappReminderModal" class="modal">
+    <div class="modal-content" style="max-width:500px">
+      <span class="close" onclick="closeWhatsAppReminderModal()">&times;</span>
+      <h2 style="color:#25D366">⏰ WhatsApp Reminder Settings</h2>
+      <p style="color:#666;margin-bottom:20px">Select when you want to be reminded before the tank target is reached</p>
+      <div style="background:#f8f9fa;padding:20px;border-radius:10px;margin-bottom:20px">
+        <div style="margin-bottom:15px">
+          <label style="display:flex;align-items:center;cursor:pointer;padding:10px;background:white;border-radius:8px;margin-bottom:10px">
+            <input type="checkbox" id="reminder_60" value="60" style="width:20px;height:20px;margin-right:10px">
+            <span style="font-size:16px">🕔 1 hour before</span>
+          </label>
+          <label style="display:flex;align-items:center;cursor:pointer;padding:10px;background:white;border-radius:8px;margin-bottom:10px">
+            <input type="checkbox" id="reminder_30" value="30" style="width:20px;height:20px;margin-right:10px">
+            <span style="font-size:16px">🕙 30 minutes before</span>
+          </label>
+          <label style="display:flex;align-items:center;cursor:pointer;padding:10px;background:white;border-radius:8px;margin-bottom:10px">
+            <input type="checkbox" id="reminder_15" value="15" style="width:20px;height:20px;margin-right:10px">
+            <span style="font-size:16px">🕒 15 minutes before</span>
+          </label>
+          <label style="display:flex;align-items:center;cursor:pointer;padding:10px;background:white;border-radius:8px;margin-bottom:10px">
+            <input type="checkbox" id="reminder_10" value="10" style="width:20px;height:20px;margin-right:10px">
+            <span style="font-size:16px">🕙 10 minutes before</span>
+          </label>
+          <label style="display:flex;align-items:center;cursor:pointer;padding:10px;background:white;border-radius:8px">
+            <input type="checkbox" id="reminder_5" value="5" style="width:20px;height:20px;margin-right:10px">
+            <span style="font-size:16px">🕔 5 minutes before</span>
+          </label>
+        </div>
+      </div>
+      <button onclick="saveWhatsAppReminders()" class="btn btn-success" style="width:100%;background:#25D366;padding:15px;font-size:16px">💾 Save Reminders</button>
+    </div>
+  </div>
 
   <footer style="text-align:center;padding:20px;background:rgba(0,0,0,0.3);color:white;margin-top:30px">
     By <a href="#" class="whatsapp-link" onclick="openWhatsApp(); return false;">Fahad - 17877</a> – Version v8.4<br><small style="color:#999;font-size:10px;margin-top:5px;display:block">📱 WhatsApp: +965 55222550</small>
