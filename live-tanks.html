@@ -3714,7 +3714,40 @@ window.setTheme = setTheme;
       document.getElementById('whatsappOTPInput').value = '';
     }
 
-    function showWhatsAppReminderModal() {
+    async function showWhatsAppReminderModal() {
+      // First, uncheck all checkboxes
+      ['reminder_60', 'reminder_30', 'reminder_15', 'reminder_10', 'reminder_5'].forEach(id => {
+        document.getElementById(id).checked = false;
+      });
+
+      // Load existing reminders for this tank
+      try {
+        const user = window.auth.currentUser;
+        if (user && currentTankId) {
+          const username = user.email.split('@')[0].toLowerCase();
+          const reminderDocId = `${username}_${currentTankId}`;
+          const reminderDoc = await window.getDoc(window.doc(window.db, 'whatsappReminders', reminderDocId));
+          
+          if (reminderDoc.exists()) {
+            const reminderData = reminderDoc.data();
+            const savedIntervals = reminderData.intervals || [];
+            
+            // Check the saved intervals
+            savedIntervals.forEach(interval => {
+              const checkboxId = `reminder_${interval}`;
+              const checkbox = document.getElementById(checkboxId);
+              if (checkbox) {
+                checkbox.checked = true;
+              }
+            });
+            
+            console.log('✅ Loaded saved reminders:', savedIntervals);
+          }
+        }
+      } catch (error) {
+        console.error('❌ Error loading saved reminders:', error);
+      }
+
       document.getElementById('whatsappReminderModal').classList.add('show');
     }
 
