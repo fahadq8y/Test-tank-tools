@@ -3904,7 +3904,7 @@ Report End
     async function showUserDetailsModal(username) {
       try {
         // Find user
-        const user = allUsers.find(u => u.username.toLowerCase() === username.toLowerCase());
+        const user = allUsers.find(u => u && u.username && u.username.toLowerCase() === username.toLowerCase());
         if (!user) {
           showMessage('❌ User not found!', 'error');
           return;
