@@ -23,13 +23,34 @@ export default async function handler(req, res) {
     }
 
     // Get request body
-    const { to, message, type } = req.body;
+    const { to, message, type, tankName, status, remainingTime } = req.body;
 
     // Validate required fields
-    if (!to || !message) {
+    if (!to) {
       return res.status(400).json({ 
         error: 'Missing required fields',
-        details: 'Both "to" and "message" are required'
+        details: '"to" phone number is required'
+      });
+    }
+
+    // Build message content
+    let messageContent;
+    if (tankName && status && remainingTime) {
+      // Tank reminder message
+      messageContent = `🔔 *Tank Tools Reminder*
+
+📦 *Tank:* ${tankName}
+📊 *Status:* ${status}
+⏰ *Remaining Time:* ${remainingTime}
+
+This is an automated reminder from Tank Tools system.`;
+    } else if (message) {
+      // Custom message
+      messageContent = message;
+    } else {
+      return res.status(400).json({ 
+        error: 'Missing required fields',
+        details: 'Either provide "message" or tank details (tankName, status, remainingTime)'
       });
     }
 
@@ -54,7 +75,7 @@ export default async function handler(req, res) {
     const params = new URLSearchParams();
     params.append('From', fromNumber);
     params.append('To', formattedTo);
-    params.append('Body', message);
+    params.append('Body', messageContent);
 
     // Send request to Twilio
     const response = await fetch(twilioUrl, {
@@ -85,7 +106,8 @@ export default async function handler(req, res) {
       messageSid: data.sid,
       status: data.status,
       to: formattedTo,
-      type: type || 'general',
+      type: type || (tankName ? 'tank_reminder' : 'general'),
+      tankName: tankName || null,
       timestamp: new Date().toISOString()
     });
 
