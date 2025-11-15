@@ -3679,7 +3679,8 @@ window.setTheme = setTheme;
       }
 
       try {
-        const userDoc = await window.getDoc(window.doc(window.db, 'users', user.uid));
+        const username = user.email.split('@')[0].toLowerCase();
+        const userDoc = await window.getDoc(window.doc(window.db, 'users', username));
         if (userDoc.exists() && userDoc.data().phoneNumber) {
           userPhoneNumber = userDoc.data().phoneNumber;
           // User has phone number, show reminder options
@@ -3789,7 +3790,8 @@ window.setTheme = setTheme;
           
           // Save phone number to user document
           const user = window.auth.currentUser;
-          await window.setDoc(window.doc(window.db, 'users', user.uid), {
+          const username = user.email.split('@')[0].toLowerCase();
+          await window.setDoc(window.doc(window.db, 'users', username), {
             phoneNumber: userPhoneNumber,
             phoneVerified: true,
             phoneVerifiedAt: window.serverTimestamp()
@@ -3825,9 +3827,10 @@ window.setTheme = setTheme;
 
       try {
         const user = window.auth.currentUser;
+        const username = user.email.split('@')[0].toLowerCase();
         const reminderData = {
           tankId: currentTankId,
-          userId: user.uid,
+          userId: username,
           phoneNumber: userPhoneNumber,
           intervals: selectedIntervals,
           createdAt: window.serverTimestamp(),
@@ -3835,7 +3838,7 @@ window.setTheme = setTheme;
         };
 
         // Save to Firebase
-        const reminderRef = window.doc(window.db, 'whatsappReminders', `${user.uid}_${currentTankId}`);
+        const reminderRef = window.doc(window.db, 'whatsappReminders', `${username}_${currentTankId}`);
         await window.setDoc(reminderRef, reminderData);
 
         console.log('✅ Reminders saved:', reminderData);
